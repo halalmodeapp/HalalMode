@@ -1,5 +1,8 @@
 import { File } from 'expo-file-system';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
+import { Platform } from 'react-native';
 
+import { PHOTO_JPEG_QUALITY, photoResizeTarget } from '@/lib/photoPolicy';
 import { requireSupabase, USE_MOCKS } from '@/lib/supabase';
 import type { Profile, ProfileMediaSource } from '@/types';
 
@@ -39,18 +42,28 @@ const SIGNED_URL_SECONDS = 60 * 60;
 const PHOTO_STORAGE_PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|heic|heif)$/;
 const VOICE_STORAGE_PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(m4a|aac|mp3|webm)$/;
 
-/** Uploads a private object, then atomically attaches its verified path to the profile. */
+/**
+ * Uploads a private object, then atomically attaches its verified path to the
+ * profile.
+ *
+ * The photo is shrunk and re-encoded here rather than at the call site, because
+ * a call site is a thing somebody adds later and forgets — and the cost of
+ * forgetting is a bill that grows with every member. It also means what leaves
+ * the phone is always a JPEG, whatever the camera produced: an iPhone hands you
+ * HEIC, which no browser will render.
+ */
 export async function uploadProfilePhoto(
   media: LocalProfileMedia & { mimeType: ProfilePhotoMimeType }
 ): Promise<{ path: string; photos: string[] }> {
   if (USE_MOCKS) return { path: media.uri, photos: [media.uri] };
 
   const client = requireSupabase();
-  const body = await readLocalMedia(media.uri, PHOTO_LIMIT_BYTES);
-  const path = await createServerMediaPath('photo', media.mimeType);
+  const compressed = await compressProfilePhoto(media.uri);
+  const body = await readLocalMedia(compressed, PHOTO_LIMIT_BYTES);
+  const path = await createServerMediaPath('photo', 'image/jpeg');
   const { error: uploadError } = await client.storage
     .from(PROFILE_PHOTO_BUCKET)
-    .upload(path, body, { contentType: media.mimeType, upsert: false, cacheControl: '3600' });
+    .upload(path, body, { contentType: 'image/jpeg', upsert: false, cacheControl: '3600' });
   if (uploadError) throw uploadError;
 
   const { data, error: attachError } = await client.rpc('attach_profile_photo', {
@@ -180,14 +193,54 @@ async function createServerMediaPath(
   return data;
 }
 
+/**
+ * Shrinks a chosen photo to something worth storing and serving.
+ *
+ * Rendered once to learn its real size — the picker reports dimensions, but not
+ * on every platform and not after a rotation — then resized only if it is
+ * bigger than we keep, and always saved as JPEG.
+ *
+ * A failure here is not fatal. If the image cannot be decoded, the original is
+ * uploaded instead: an expensive photo is a better outcome than a member who
+ * cannot finish their profile.
+ */
+async function compressProfilePhoto(uri: string): Promise<string> {
+  try {
+    const source = await ImageManipulator.manipulate(uri).renderAsync();
+    const target = photoResizeTarget(source.width, source.height);
+    const rendered = target
+      ? await ImageManipulator.manipulate(source).resize(target).renderAsync()
+      : source;
+    const saved = await rendered.saveAsync({
+      format: SaveFormat.JPEG,
+      compress: PHOTO_JPEG_QUALITY,
+    });
+    return saved.uri;
+  } catch {
+    return uri;
+  }
+}
+
 async function readLocalMedia(uri: string, maxBytes: number): Promise<ArrayBuffer> {
+  const tooLarge = () =>
+    new Error(`The selected file must be smaller than ${Math.floor(maxBytes / 1024 / 1024)} MB.`);
+
+  // A browser has no file system to read. Both the picker and the manipulator
+  // hand back a blob: or data: URL there, which only fetch can open.
+  if (Platform.OS === 'web') {
+    if (!/^(blob:|data:|https?:)/.test(uri)) {
+      throw new Error('Choose media stored on this device.');
+    }
+    const buffer = await (await fetch(uri)).arrayBuffer();
+    if (buffer.byteLength <= 0 || buffer.byteLength > maxBytes) throw tooLarge();
+    return buffer;
+  }
+
   if (!uri.startsWith('file://') && !uri.startsWith('content://')) {
     throw new Error('Choose media stored on this device.');
   }
   const file = new File(uri);
   if (!file.exists) throw new Error('The selected media file is no longer available.');
-  if (file.size <= 0 || file.size > maxBytes) {
-    throw new Error(`The selected file must be smaller than ${Math.floor(maxBytes / 1024 / 1024)} MB.`);
-  }
+  if (file.size <= 0 || file.size > maxBytes) throw tooLarge();
   return file.arrayBuffer();
 }
