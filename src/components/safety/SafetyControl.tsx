@@ -20,6 +20,7 @@ import { useToast } from '@/state/toast';
 import { queryKeys } from '@/lib/queryClient';
 import { testIds } from '@/lib/testIds';
 import { alpha, color, radius, shadow, space } from '@/theme/tokens';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 export type SafetyScope =
   | { kind: 'connection'; id: string }
@@ -308,7 +309,7 @@ function SafetyOption({
 }
 
 const styles = StyleSheet.create({
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   trigger: {
     width: 44,
     height: 44,

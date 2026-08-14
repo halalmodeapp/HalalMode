@@ -41,6 +41,7 @@ import type { TranslationKey } from '@/i18n/catalog';
 import { USE_MOCKS } from '@/lib/supabase';
 import { alpha, color, font, radius } from '@/theme/tokens';
 import type { MarriageTimeline, Profile, ReligiousPractice, Sect } from '@/types';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 function profileSchema(t: Translate) {
   return z.object({
@@ -893,7 +894,7 @@ function showPermissionRecovery(
 }
 
 const styles = StyleSheet.create({
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   rowRTL: { flexDirection: 'row-reverse' },
   wrap: { gap: 12, paddingBottom: 24 },
   readinessCard: { gap: 5 },

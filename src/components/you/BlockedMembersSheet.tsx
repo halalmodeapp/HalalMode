@@ -8,6 +8,7 @@ import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
 import { color, font, radius, space } from '@/theme/tokens';
 import { testIds } from '@/lib/testIds';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 export function BlockedMembersSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { t, isRTL } = useI18n();
@@ -102,7 +103,7 @@ export function BlockedMembersSheet({ visible, onClose }: { visible: boolean; on
 const styles = StyleSheet.create({
   backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(10, 10, 10, 0.38)' },
   sheet: { maxHeight: '78%', backgroundColor: color.surface, borderTopLeftRadius: radius.panel, borderTopRightRadius: radius.panel, padding: space.xl, gap: 16 },
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   rowReverse: { flexDirection: 'row-reverse' },
   header: { flexDirection: 'row', gap: 12, alignItems: 'flex-start', justifyContent: 'space-between' },
   headerText: { flex: 1, gap: 4 },

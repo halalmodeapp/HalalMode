@@ -40,6 +40,7 @@ import { useFeatureFlags } from '@/state/featureFlags';
 import { alpha, color, font, radius, space } from '@/theme/tokens';
 import type { ChatMessage } from '@/types';
 import type { MessagePage } from '@/api/connections';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 type ConversationItem =
   | { kind: 'day'; id: string; date: string }
@@ -697,7 +698,7 @@ function formatDay(value: string, localeTag: string, todayLabel: string, yesterd
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   rowRTL: { flexDirection: 'row-reverse' },
 
   header: {

@@ -18,6 +18,7 @@ import { useI18n } from '@/i18n';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { color, font, radius, space } from '@/theme/tokens';
 import type { ConnectionStage } from '@/types';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 const NEXT_ROUTE: Record<ConnectionStage, string> = {
   choosing_questions: 'questions',
@@ -223,7 +224,7 @@ function MatchStatus({
 }
 
 const styles = StyleSheet.create({
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   status: {
     flex: 1,
     alignItems: 'center',

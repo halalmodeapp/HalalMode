@@ -12,6 +12,7 @@ import { Text } from '@/components/ui/Text';
 import { queryKeys } from '@/lib/queryClient';
 import { useI18n } from '@/i18n';
 import { color, space } from '@/theme/tokens';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 export default function WaitingForQuestionsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -83,7 +84,7 @@ export default function WaitingForQuestionsScreen() {
 }
 
 const styles = StyleSheet.create({
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   content: {
     flex: 1,
     alignItems: 'center',

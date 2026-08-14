@@ -20,6 +20,7 @@ import { testIds } from '@/lib/testIds';
 import { queryKeys } from '@/lib/queryClient';
 import { alpha, color, font, radius, space } from '@/theme/tokens';
 import { TIER_LIMITS, type Profile } from '@/types';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 export function SettingsTab({
   liveCount,
@@ -457,7 +458,7 @@ function SettingRow({
 }
 
 const styles = StyleSheet.create({
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   rowReverse: { flexDirection: 'row-reverse' },
   wrap: { gap: 22, paddingBottom: 30 },
   section: { gap: 10 },

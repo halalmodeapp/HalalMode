@@ -37,6 +37,7 @@ import type {
   ReligiousPractice,
   Sect,
 } from '@/types';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 type SubTab = 'them' | 'you';
 
@@ -562,7 +563,7 @@ function timelineLabel(value: MarriageTimeline, t: Translate): string {
 }
 
 const styles = StyleSheet.create({
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   rowReverse: { flexDirection: 'row-reverse' },
   wrap: { gap: 12, paddingBottom: 24 },
   card: { gap: 18 },

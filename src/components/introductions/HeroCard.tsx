@@ -33,6 +33,7 @@ import { Text } from '@/components/ui/Text';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useI18n } from '@/i18n';
 import { deckDirectionForAccessibilityAction } from '@/lib/roundInvariants';
+import { RTL_LAYOUT } from '@/lib/rtl';
 import { testIds } from '@/lib/testIds';
 import { color, radius } from '@/theme/tokens';
 import type { Profile } from '@/types';
@@ -1277,9 +1278,7 @@ function DeckCard({
 }
 
 const styles = StyleSheet.create({
-  rtl: {
-    direction: 'rtl',
-  },
+  rtl: RTL_LAYOUT,
 
   deck: {
     flex: 1,

@@ -14,6 +14,7 @@ import { questionText, QUESTIONS_TO_PICK, QUESTION_LIBRARY } from '@/data/questi
 import { useI18n } from '@/i18n';
 import { queryClient, queryKeys } from '@/lib/queryClient';
 import { alpha, color, radius, space } from '@/theme/tokens';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 export default function QuestionSelectScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -137,7 +138,7 @@ export default function QuestionSelectScreen() {
 }
 
 const styles = StyleSheet.create({
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   header: { paddingHorizontal: space.gutterWide, paddingTop: 8 },
   title: { marginTop: 8 },
   subtitle: { marginTop: 10 },

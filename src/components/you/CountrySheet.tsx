@@ -17,6 +17,7 @@ import { useI18n } from '@/i18n';
 import { testIds } from '@/lib/testIds';
 import { toggleCountrySelection } from '@/lib/countrySelection';
 import { alpha, color, font, radius, space } from '@/theme/tokens';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 export interface CountrySheetProps {
   visible: boolean;
@@ -203,7 +204,7 @@ export function CountrySheet({
 }
 
 const styles = StyleSheet.create({
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   rowReverse: { flexDirection: 'row-reverse' },
   scrim: { flex: 1, backgroundColor: alpha.scrim, justifyContent: 'flex-end' },
   sheet: {

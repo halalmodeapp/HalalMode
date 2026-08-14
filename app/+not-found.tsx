@@ -5,6 +5,7 @@ import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
 import { color } from '@/theme/tokens';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 export default function NotFound() {
   const { isRTL, t } = useI18n();
@@ -42,5 +43,5 @@ const styles = StyleSheet.create({
     backgroundColor: color.surface,
   },
   link: { marginTop: 6 },
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
 });

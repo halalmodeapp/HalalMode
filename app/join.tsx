@@ -19,6 +19,7 @@ import { nextSupportedLocale } from '@/i18n/locales';
 import { testIds } from '@/lib/testIds';
 import { useSession } from '@/state/session';
 import { alpha, color, radius, space } from '@/theme/tokens';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 /**
  * The public landing page behind halalmo.de.
@@ -190,7 +191,7 @@ export default function JoinScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   rowReverse: { flexDirection: 'row-reverse' },
   content: { padding: space.gutterWide, paddingBottom: space.xxl, gap: space.sm },
   language: { alignSelf: 'flex-start', paddingVertical: space.xs, paddingHorizontal: space.sm },

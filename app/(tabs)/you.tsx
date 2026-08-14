@@ -17,6 +17,7 @@ import { useI18n } from '@/i18n';
 import { queryKeys } from '@/lib/queryClient';
 import { useRound } from '@/state/round';
 import { color, radius, space } from '@/theme/tokens';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 type Tab = 'profile' | 'private' | 'settings';
 
@@ -131,7 +132,7 @@ export default function YouScreen() {
 }
 
 const styles = StyleSheet.create({
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   rowReverse: { flexDirection: 'row-reverse' },
   tabsRow: { paddingHorizontal: space.xl, paddingTop: 4 },
   content: { paddingHorizontal: space.xl, paddingTop: 20 },

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { LEGAL_DOCUMENTS } from '@/data/legalDocuments';
 import { useI18n } from '@/i18n';
 import { color, space } from '@/theme/tokens';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 /**
  * Renders the Terms or the Privacy Notice.
@@ -54,7 +55,7 @@ export function LegalDocumentScreen({ slug }: { slug: 'terms' | 'privacy' }) {
 }
 
 const styles = StyleSheet.create({
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   content: { padding: space.gutterWide, paddingBottom: space.xxl, gap: space.xs },
   title: { marginTop: space.xs },
   updated: { color: color.faint, marginTop: space.xs },

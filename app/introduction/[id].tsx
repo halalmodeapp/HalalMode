@@ -16,6 +16,7 @@ import { useI18n } from '@/i18n';
 import type { TranslationKey } from '@/i18n/catalog';
 import { useRound } from '@/state/round';
 import { alpha, color, radius, space } from '@/theme/tokens';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 export default function IntroductionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -199,7 +200,7 @@ const agreementValueKey = {
 } as const satisfies Record<string, TranslationKey>;
 
 const styles = StyleSheet.create({
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   rowRTL: { flexDirection: 'row-reverse' },
   content: { paddingBottom: 40 },
   missing: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },

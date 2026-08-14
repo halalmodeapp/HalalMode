@@ -14,6 +14,7 @@ import { useI18n } from '@/i18n';
 import { useSession } from '@/state/session';
 import { alpha, color, radius, space } from '@/theme/tokens';
 import { TIER_LIMITS, type Connection, type ConnectionStage } from '@/types';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 /** Where a tap on each stage should land. */
 const STAGE_ROUTE: Record<ConnectionStage, string> = {
@@ -123,7 +124,7 @@ function ConnectionRow({ connection }: { connection: Connection }) {
 }
 
 const styles = StyleSheet.create({
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   header: { paddingHorizontal: space.gutterWide, paddingTop: 10 },
   title: { marginTop: 8 },
   subtitle: { marginTop: 10 },

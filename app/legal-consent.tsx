@@ -19,6 +19,7 @@ import { documentFromStatus } from '@/lib/legalConsent';
 import { queryKeys } from '@/lib/queryClient';
 import { testIds } from '@/lib/testIds';
 import { alpha, color, radius, space } from '@/theme/tokens';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 export default function LegalConsentScreen() {
   const { t, isRTL, localeTag } = useI18n();
@@ -135,7 +136,7 @@ export default function LegalConsentScreen() {
 }
 
 const styles = StyleSheet.create({
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   rowReverse: { flexDirection: 'row-reverse' },
   content: { paddingHorizontal: space.xl, paddingBottom: space.xxl, gap: space.md },
   title: { marginTop: space.xs },

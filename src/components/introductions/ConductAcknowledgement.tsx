@@ -6,6 +6,7 @@ import { Text } from '@/components/ui/Text';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useI18n } from '@/i18n';
 import { color, font, radius, shadow, space } from '@/theme/tokens';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 interface ConductAcknowledgementProps {
   visible: boolean;
@@ -55,7 +56,7 @@ export function ConductAcknowledgement({ visible, onAccept }: ConductAcknowledge
 }
 
 const styles = StyleSheet.create({
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   rowReverse: { flexDirection: 'row-reverse' },
   scrim: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(10,10,10,0.48)' },
   card: {

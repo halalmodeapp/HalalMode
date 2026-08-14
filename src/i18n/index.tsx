@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
-import { I18nManager } from 'react-native';
+import { I18nManager, Platform } from 'react-native';
 
 import { type TranslationKey } from '@/i18n/catalog';
 import { getLocale, type AppLocale } from '@/i18n/locales';
@@ -23,6 +23,16 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const locale = getLocale(language);
   const desiredRTL = locale.direction === 'rtl';
   const nativeRestartRequired = I18nManager.isRTL !== desiredRTL;
+
+  useEffect(() => {
+    // A browser flips a page from the document element, not from a style on
+    // each view — so this is where Arabic actually becomes right-to-left on
+    // web. `lang` goes with it: it is what picks the right font shaping and
+    // what a screen reader reads the page in.
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    document.documentElement.dir = desiredRTL ? 'rtl' : 'ltr';
+    document.documentElement.lang = locale.tag;
+  }, [desiredRTL, locale.tag]);
 
   useEffect(() => {
     // Guarded because these are native-only. react-native-web ships an

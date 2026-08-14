@@ -12,6 +12,7 @@ import { testIds } from '@/lib/testIds';
 import { useSession } from '@/state/session';
 import { useAuth } from '@/state/auth';
 import { color, radius, space } from '@/theme/tokens';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 export default function AuthScreen() {
   const { t, isRTL } = useI18n();
@@ -151,7 +152,7 @@ export default function AuthScreen() {
 
 const styles = StyleSheet.create({
   content: { flex: 1, justifyContent: 'space-between', padding: space.gutterWide, paddingBottom: 48 },
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   language: {
     alignSelf: 'flex-end', borderWidth: 1, borderColor: '#D9D6CE', borderRadius: radius.pill,
     paddingVertical: 7, paddingHorizontal: 12, marginBottom: 28,

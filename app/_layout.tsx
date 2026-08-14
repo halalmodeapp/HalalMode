@@ -81,7 +81,18 @@ export default function RootLayout() {
                         <Stack
                           screenOptions={{
                             headerShown: false,
-                            contentStyle: { backgroundColor: color.surface },
+                            contentStyle: {
+                              backgroundColor: color.surface,
+                              // A phone screen stretched across a desktop
+                              // monitor: buttons a metre wide, a paragraph on
+                              // one line, and a lake of empty space in the
+                              // middle. Every screen here was drawn for a hand,
+                              // so on web it keeps a hand's width and sits in
+                              // the centre. Native ignores this entirely.
+                              ...(Platform.OS === 'web'
+                                ? { maxWidth: 560, width: '100%', alignSelf: 'center' }
+                                : null),
+                            },
                             animation: 'fade',
                           }}
                         >

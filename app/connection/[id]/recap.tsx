@@ -19,6 +19,7 @@ import { useI18n } from '@/i18n';
 import type { TranslationKey } from '@/i18n/catalog';
 import { alpha, color, radius, space } from '@/theme/tokens';
 import type { CompatibilityBreakdownItem, CompatibilityTopic, RecapItem } from '@/types';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 export default function RecapScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -178,7 +179,7 @@ function RecapCard({ item }: { item: RecapItem }) {
 }
 
 const styles = StyleSheet.create({
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   content: { paddingBottom: 40 },
   header: { paddingHorizontal: space.gutterWide, paddingTop: 8 },
   title: { marginTop: 8 },

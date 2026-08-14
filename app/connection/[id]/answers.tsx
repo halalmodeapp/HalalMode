@@ -24,6 +24,7 @@ import { queryKeys } from '@/lib/queryClient';
 import { useI18n } from '@/i18n';
 import { alpha, color, radius, space } from '@/theme/tokens';
 import type { QuestionAnswer } from '@/types';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 /**
  * Step 2 of 3 — answer, then reveal.
@@ -225,7 +226,7 @@ export default function AnswersScreen() {
 }
 
 const styles = StyleSheet.create({
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   flex: { flex: 1 },
   header: { paddingHorizontal: space.gutterWide, paddingTop: 8 },
   progress: { flexDirection: 'row', gap: 5, marginTop: 12 },

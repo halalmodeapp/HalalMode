@@ -37,6 +37,7 @@ import {
 } from '@/lib/birthDate';
 import { alpha, color, font, radius, space } from '@/theme/tokens';
 import { testIds } from '@/lib/testIds';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 type Gender = 'male' | 'female';
 
@@ -718,7 +719,7 @@ function readableDate(value: string, localeTag: string): string {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   rowReverse: { flexDirection: 'row-reverse' },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   progressHeader: {

@@ -6,6 +6,7 @@ import { Text } from '@/components/ui/Text';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useI18n } from '@/i18n';
 import { alpha, color, radius, shadow, space } from '@/theme/tokens';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 export interface ConfirmDialogProps {
   visible: boolean;
@@ -90,7 +91,7 @@ export function ConfirmDialog({
 }
 
 const styles = StyleSheet.create({
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   rowReverse: { flexDirection: 'row-reverse' },
   scrim: {
     flex: 1,

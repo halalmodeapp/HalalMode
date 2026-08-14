@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
 import { alpha, color, radius, shadow, space } from '@/theme/tokens';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 interface ToastValue {
   /** Shows a brief message. Replacing a visible one restarts its timer. */
@@ -74,7 +75,7 @@ export function useToast(): ToastValue {
 }
 
 const styles = StyleSheet.create({
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   host: {
     // Spelled out rather than absoluteFillObject, which RN 0.86 removed.
     position: 'absolute',

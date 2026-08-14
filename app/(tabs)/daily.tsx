@@ -40,6 +40,7 @@ import { testIds } from '@/lib/testIds';
 import { useRound } from '@/state/round';
 import { useAuth } from '@/state/auth';
 import { alpha, color, font, radius, space } from '@/theme/tokens';
+import { RTL_LAYOUT } from '@/lib/rtl';
 
 /**
  * Names the criterion in the member's own words, matching the label on the
@@ -690,7 +691,7 @@ function SetCompleteState({ onReset, waitingForConnection }: { onReset: () => vo
 }
 
 const styles = StyleSheet.create({
-  rtl: { direction: 'rtl' },
+  rtl: RTL_LAYOUT,
   rowReverse: { flexDirection: 'row-reverse' },
   centred: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
