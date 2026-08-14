@@ -105,8 +105,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     paddingVertical: space.xxl,
     paddingHorizontal: space.gutterWide,
+    // Already narrower than the app column, and deliberately so — a two-button
+    // question reads better tight. It only needs the centring.
     maxWidth: 290,
     width: '100%',
+    alignSelf: 'center',
     ...shadow.modal,
   },
   body: { marginTop: space.sm, marginBottom: space.xl, color: color.muted },

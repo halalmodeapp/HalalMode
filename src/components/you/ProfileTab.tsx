@@ -615,7 +615,10 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
           photos={media}
           onReorder={reorderPhotos}
           onRemove={removePhoto}
+          onAdd={() => void addPhoto('library')}
           removeDisabled={deletingPhoto !== null}
+          addDisabled={uploadingPhoto}
+          emptyLabel={t('profile.emptySlot')}
           mainLabel={t('profile.main')}
           removeLabel={(position) => t('profile.removePhotoA11y', { count: position })}
           dragHintLabel={t('profile.photoDragHint')}

@@ -26,7 +26,7 @@ import { RoundProvider } from '@/state/round';
 import { ToastProvider } from '@/state/toast';
 import { SessionProvider } from '@/state/session';
 import { FeatureFlagsProvider } from '@/state/featureFlags';
-import { color } from '@/theme/tokens';
+import { color, layout } from '@/theme/tokens';
 import { AppRecoveryBoundary } from '@/components/ui/AppRecoveryBoundary';
 
 void SplashScreen.preventAutoHideAsync();
@@ -90,7 +90,11 @@ export default function RootLayout() {
                               // so on web it keeps a hand's width and sits in
                               // the centre. Native ignores this entirely.
                               ...(Platform.OS === 'web'
-                                ? { maxWidth: 560, width: '100%', alignSelf: 'center' }
+                                ? {
+                                    maxWidth: layout.maxContentWidth,
+                                    width: '100%',
+                                    alignSelf: 'center',
+                                  }
                                 : null),
                             },
                             animation: 'fade',

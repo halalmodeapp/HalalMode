@@ -73,6 +73,21 @@ export const radius = {
   pill: 999,
 } as const;
 
+/**
+ * How wide the app is allowed to get.
+ *
+ * Every screen here was drawn for a hand. On a desktop monitor an unconstrained
+ * layout gives you buttons a metre wide and a line of body copy nobody can read
+ * across, so the whole app keeps a hand's width and sits in the middle.
+ *
+ * Modals need this too, and are the easy thing to forget: a Modal renders
+ * outside the navigator, so it does not inherit the screen's constraint and
+ * will happily fill a 27-inch display on top of a 560px app.
+ */
+export const layout = {
+  maxContentWidth: 560,
+} as const;
+
 export const space = {
   /** Standard horizontal screen gutter. */
   gutter: 22,

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
-import { color, font, radius, space } from '@/theme/tokens';
+import { color, font, layout, radius, space } from '@/theme/tokens';
 import { testIds } from '@/lib/testIds';
 import { RTL_LAYOUT } from '@/lib/rtl';
 
@@ -102,7 +102,12 @@ export function BlockedMembersSheet({ visible, onClose }: { visible: boolean; on
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(10, 10, 10, 0.38)' },
-  sheet: { maxHeight: '78%', backgroundColor: color.surface, borderTopLeftRadius: radius.panel, borderTopRightRadius: radius.panel, padding: space.xl, gap: 16 },
+  sheet: {
+    // A Modal renders outside the navigator, so it does not inherit the app's
+    // width. Without this it fills the whole monitor.
+    maxWidth: layout.maxContentWidth,
+    width: '100%',
+    alignSelf: 'center', maxHeight: '78%', backgroundColor: color.surface, borderTopLeftRadius: radius.panel, borderTopRightRadius: radius.panel, padding: space.xl, gap: 16 },
   rtl: RTL_LAYOUT,
   rowReverse: { flexDirection: 'row-reverse' },
   header: { flexDirection: 'row', gap: 12, alignItems: 'flex-start', justifyContent: 'space-between' },

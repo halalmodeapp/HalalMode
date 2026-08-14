@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
 import { RTL_LAYOUT } from '@/lib/rtl';
-import { alpha, color, font, radius, space } from '@/theme/tokens';
+import { alpha, color, font, layout, radius, space } from '@/theme/tokens';
 
 const SUPPORT_ADDRESS = 'safety@halalmo.de';
 
@@ -113,6 +113,11 @@ const styles = StyleSheet.create({
   rowReverse: { flexDirection: 'row-reverse' },
   scrim: { flex: 1, backgroundColor: alpha.scrim, justifyContent: 'flex-end' },
   sheet: {
+    // A Modal renders outside the navigator, so it does not inherit the app's
+    // width. Without this it fills the whole monitor.
+    maxWidth: layout.maxContentWidth,
+    width: '100%',
+    alignSelf: 'center',
     maxHeight: '88%',
     backgroundColor: color.surface,
     borderTopLeftRadius: radius.sheet,

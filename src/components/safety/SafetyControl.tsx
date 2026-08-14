@@ -19,7 +19,7 @@ import { useI18n } from '@/i18n';
 import { useToast } from '@/state/toast';
 import { queryKeys } from '@/lib/queryClient';
 import { testIds } from '@/lib/testIds';
-import { alpha, color, radius, shadow, space } from '@/theme/tokens';
+import { alpha, color, layout, radius, shadow, space } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
 
 export type SafetyScope =
@@ -328,6 +328,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(10,10,10,0.42)',
   },
   sheet: {
+    // A Modal renders outside the navigator, so it does not inherit the app's
+    // width. Without this it fills the whole monitor.
+    maxWidth: layout.maxContentWidth,
+    width: '100%',
+    alignSelf: 'center',
     backgroundColor: color.surface,
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,

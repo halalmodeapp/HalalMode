@@ -6,7 +6,6 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  withTiming,
 } from 'react-native-reanimated';
 import { Image } from 'expo-image';
 
@@ -14,11 +13,18 @@ import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
 import { moveItem, slotFromPosition, slotPosition } from '@/lib/reorder';
 import { RTL_LAYOUT } from '@/lib/rtl';
-import { color, font, radius } from '@/theme/tokens';
+import { alpha, color, font, radius } from '@/theme/tokens';
 
 const COLUMNS = 3;
 const GAP = 8;
 const ASPECT = 4 / 3;
+/** Six is the limit, and all six are always shown so the empty ones invite. */
+export const MAX_PHOTOS = 6;
+
+/** How a tile settles: quick, with a little overshoot at the end. */
+const SETTLE = { damping: 18, stiffness: 260, mass: 0.7 } as const;
+/** How a tile swells when picked up. Looser, so the overshoot is visible. */
+const LIFT = { damping: 9, stiffness: 210, mass: 0.6 } as const;
 
 export interface PhotoTile {
   /** Stable across a reorder — the storage path where there is one. */
@@ -30,48 +36,58 @@ export interface PhotoReorderGridProps {
   photos: readonly PhotoTile[];
   onReorder: (next: PhotoTile[]) => void;
   onRemove: (index: number) => void;
+  /** Tapping an empty slot. */
+  onAdd: () => void;
   removeDisabled?: boolean;
+  addDisabled?: boolean;
   mainLabel: string;
   removeLabel: (position: number) => string;
   dragHintLabel: string;
   moveEarlierLabel: string;
   moveLaterLabel: string;
+  emptyLabel: string;
 }
 
 /**
- * The photo gallery, rearrangeable by dragging.
+ * The photo gallery: six slots, rearrangeable by dragging.
+ *
+ * All six are always drawn. An empty one is not absence, it is an invitation —
+ * a member who sees two photos and four gaps knows what to do next, where a
+ * member who sees two photos and nothing else thinks they are finished.
  *
  * The first photo is the one every other member sees first, so which photo is
- * first is a real decision — and until now the only way to change it was to
- * delete photos and upload them again in a different order.
+ * first is a real decision. Press and hold to pick one up; the others slide
+ * aside as it passes, and it drops into the space they leave.
  *
- * Press and hold to pick one up. The hold is deliberate: this grid sits inside
- * a scrolling form, and a gesture that begins on the first pixel of movement
- * would fight the scroll every time somebody swiped past their own photos.
+ * The hold is deliberate. This grid sits inside a scrolling form, and a gesture
+ * that began on the first pixel of movement would fight the scroll every time
+ * somebody swiped past their own photos.
  *
  * Dragging is not usable by everybody, so each tile also carries "move earlier"
- * and "move later" accessibility actions. A screen reader reaches the same
- * arrangement by a different road.
+ * and "move later" accessibility actions.
  */
 export function PhotoReorderGrid({
   photos,
   onReorder,
   onRemove,
+  onAdd,
   removeDisabled = false,
+  addDisabled = false,
   mainLabel,
   removeLabel,
   dragHintLabel,
   moveEarlierLabel,
   moveLaterLabel,
+  emptyLabel,
 }: PhotoReorderGridProps) {
   const { isRTL } = useI18n();
   const [width, setWidth] = useState(0);
-  const [activeKey, setActiveKey] = useState<string | null>(null);
   const container = useRef<View | null>(null);
 
+  const filled = photos.slice(0, MAX_PHOTOS);
   const cellWidth = width > 0 ? (width - GAP * (COLUMNS - 1)) / COLUMNS : 0;
   const cellHeight = cellWidth * ASPECT;
-  const rows = Math.max(1, Math.ceil(photos.length / COLUMNS));
+  const rows = Math.ceil(MAX_PHOTOS / COLUMNS);
   // A provisional height until the first measurement, so the gallery reserves
   // roughly the right space instead of collapsing and then shoving the rest of
   // the form down a moment later.
@@ -86,9 +102,9 @@ export function PhotoReorderGrid({
    *
    * `onLayout` is how a React Native view is told its own size, and on a device
    * it arrives. In the browser neither it nor `measure()` ever fired for this
-   * view, and without a width there is no cell size, so nothing rendered at
-   * all. A ref to a view on web is the DOM node, which can simply be asked —
-   * and watched, so the grid stays right when a window is resized.
+   * view, and without a width there is no cell size. A ref to a view on web is
+   * the DOM node, which can simply be asked — and watched, so the grid stays
+   * right when a window is resized.
    */
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof ResizeObserver === 'undefined') return;
@@ -109,26 +125,54 @@ export function PhotoReorderGrid({
   const commit = useCallback(
     (from: number, to: number) => {
       if (from === to) return;
-      onReorder(moveItem(photos, from, to));
+      onReorder(moveItem(filled, from, to));
     },
-    [onReorder, photos],
+    [filled, onReorder],
+  );
+
+  const emptySlots = Array.from(
+    { length: MAX_PHOTOS - filled.length },
+    (_, index) => filled.length + index,
   );
 
   return (
     <View ref={container} style={[styles.grid, { height }]} onLayout={onLayout}>
-      {cellWidth > 0
-        ? photos.map((photo, index) => (
+      {cellWidth > 0 ? (
+        <>
+          {emptySlots.map((index) => {
+            const at = slotPosition({ index, cellWidth, cellHeight, gap: GAP, columns: COLUMNS, isRTL });
+            return (
+              <Pressable
+                key={`empty-${index}`}
+                accessibilityRole="button"
+                accessibilityLabel={emptyLabel}
+                accessibilityState={{ disabled: addDisabled }}
+                disabled={addDisabled}
+                onPress={onAdd}
+                style={({ pressed }) => [
+                  styles.cell,
+                  styles.empty,
+                  { width: cellWidth, height: cellHeight, left: at.x, top: at.y },
+                  pressed && styles.emptyPressed,
+                ]}
+              >
+                <Text style={styles.emptyPlus}>+</Text>
+                <Text variant="caption" center style={styles.emptyLabel}>
+                  {emptyLabel}
+                </Text>
+              </Pressable>
+            );
+          })}
+
+          {filled.map((photo, index) => (
             <PhotoCell
               key={photo.key}
               photo={photo}
               index={index}
-              count={photos.length}
+              count={filled.length}
               cellWidth={cellWidth}
               cellHeight={cellHeight}
               isRTL={isRTL}
-              isActive={activeKey === photo.key}
-              onPickUp={() => setActiveKey(photo.key)}
-              onDrop={() => setActiveKey(null)}
               onMove={commit}
               onRemove={() => onRemove(index)}
               removeDisabled={removeDisabled}
@@ -138,8 +182,9 @@ export function PhotoReorderGrid({
               moveEarlierLabel={moveEarlierLabel}
               moveLaterLabel={moveLaterLabel}
             />
-          ))
-        : null}
+          ))}
+        </>
+      ) : null}
     </View>
   );
 }
@@ -151,9 +196,6 @@ interface PhotoCellProps {
   cellWidth: number;
   cellHeight: number;
   isRTL: boolean;
-  isActive: boolean;
-  onPickUp: () => void;
-  onDrop: () => void;
   onMove: (from: number, to: number) => void;
   onRemove: () => void;
   removeDisabled: boolean;
@@ -171,9 +213,6 @@ function PhotoCell({
   cellWidth,
   cellHeight,
   isRTL,
-  isActive,
-  onPickUp,
-  onDrop,
   onMove,
   onRemove,
   removeDisabled,
@@ -188,27 +227,63 @@ function PhotoCell({
     [cellHeight, cellWidth, index, isRTL],
   );
 
-  const dragX = useSharedValue(0);
-  const dragY = useSharedValue(0);
-  const lifted = useSharedValue(0);
-  // The slot this tile has already been moved into during the current drag, so
-  // the same swap is not committed on every frame.
+  // Where this tile sits, and where it sat. The offset below is always measured
+  // from its current slot, so both the drag and the shuffle can share it.
+  const homeX = useSharedValue(home.x);
+  const homeY = useSharedValue(home.y);
+  const previousHome = useRef(home);
+
+  const offsetX = useSharedValue(0);
+  const offsetY = useSharedValue(0);
+  const lift = useSharedValue(0);
+  const dragging = useSharedValue(false);
+  /** Where the tile was when the finger landed on it. */
+  const grabbedAtX = useSharedValue(0);
+  const grabbedAtY = useSharedValue(0);
+  /** The slot this tile has already been moved into during the current drag. */
   const slot = useSharedValue(index);
+
+  /**
+   * Slide, rather than jump, when another tile displaces this one.
+   *
+   * A tile's slot is a plain style, so the moment the array reorders this view
+   * is already drawn in its new place. Cancelling that out with an equal and
+   * opposite offset and then springing the offset away turns the jump into the
+   * movement it should have been.
+   */
+  useEffect(() => {
+    const before = previousHome.current;
+    previousHome.current = home;
+    homeX.value = home.x;
+    homeY.value = home.y;
+    if (dragging.value) return;
+    if (before.x === home.x && before.y === home.y) return;
+
+    offsetX.value = before.x - home.x;
+    offsetY.value = before.y - home.y;
+    offsetX.value = withSpring(0, SETTLE);
+    offsetY.value = withSpring(0, SETTLE);
+  }, [dragging, home, homeX, homeY, offsetX, offsetY]);
 
   const pan = Gesture.Pan()
     .activateAfterLongPress(220)
     .enabled(count > 1)
     .onStart(() => {
+      dragging.value = true;
       slot.value = index;
-      lifted.value = withTiming(1, { duration: 140 });
-      runOnJS(onPickUp)();
+      grabbedAtX.value = homeX.value;
+      grabbedAtY.value = homeY.value;
+      lift.value = withSpring(1, LIFT);
     })
     .onUpdate((event) => {
-      dragX.value = event.translationX;
-      dragY.value = event.translationY;
+      // Measured from where the finger landed, not from wherever this tile has
+      // since been re-slotted to — otherwise it leaps out from under the finger
+      // the first time it swaps with a neighbour.
+      offsetX.value = grabbedAtX.value - homeX.value + event.translationX;
+      offsetY.value = grabbedAtY.value - homeY.value + event.translationY;
 
-      const centreX = home.x + event.translationX + cellWidth / 2;
-      const centreY = home.y + event.translationY + cellHeight / 2;
+      const centreX = grabbedAtX.value + event.translationX + cellWidth / 2;
+      const centreY = grabbedAtY.value + event.translationY + cellHeight / 2;
       const next = slotFromPosition({
         centreX,
         centreY,
@@ -227,30 +302,27 @@ function PhotoCell({
       }
     })
     .onFinalize(() => {
-      // The array has already been rearranged, so this tile's home has moved
-      // with it. Springing the offset back to zero lands it in its new slot.
-      dragX.value = withSpring(0, { damping: 20, stiffness: 220 });
-      dragY.value = withSpring(0, { damping: 20, stiffness: 220 });
-      lifted.value = withTiming(0, { duration: 160 });
-      runOnJS(onDrop)();
+      dragging.value = false;
+      offsetX.value = withSpring(0, SETTLE);
+      offsetY.value = withSpring(0, SETTLE);
+      lift.value = withSpring(0, SETTLE);
     });
 
   const animated = useAnimatedStyle(() => ({
     transform: [
-      { translateX: dragX.value },
-      { translateY: dragY.value },
-      { scale: 1 + lifted.value * 0.06 },
+      { translateX: offsetX.value },
+      { translateY: offsetY.value },
+      { scale: 1 + lift.value * 0.07 },
     ],
-    zIndex: lifted.value > 0 ? 20 : 1,
-    shadowOpacity: lifted.value * 0.28,
+    zIndex: lift.value > 0 ? 20 : 1,
   }));
 
   return (
     <GestureDetector gesture={pan}>
       {/* Two views on purpose. The outer one owns where the tile is and how
-          big it is, in plain numbers; the inner one owns the drag. Size and
-          position are not animated values and have no business depending on
-          the animation runtime being live. */}
+          big it is, in plain numbers; the inner one owns the movement. Size and
+          position are not animated values and have no business depending on the
+          animation runtime being live. */}
       <View
         style={[
           styles.cell,
@@ -287,7 +359,7 @@ function PhotoCell({
             accessibilityRole="button"
             accessibilityLabel={removeLabel(index + 1)}
             accessibilityState={{ disabled: removeDisabled }}
-            disabled={removeDisabled || isActive}
+            disabled={removeDisabled}
             hitSlop={8}
             onPress={onRemove}
             style={[styles.remove, isRTL && styles.removeRTL]}
@@ -303,26 +375,28 @@ function PhotoCell({
 const styles = StyleSheet.create({
   rtl: RTL_LAYOUT,
   grid: { marginTop: 14, position: 'relative' },
+  cell: { position: 'absolute', top: 0, left: 0 },
   surface: {
     flex: 1,
     borderRadius: radius.lg,
     overflow: 'hidden',
     backgroundColor: color.clay,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 16,
   },
-  cell: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
+
+  empty: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
     borderRadius: radius.lg,
-    overflow: 'hidden',
-    backgroundColor: color.clay,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 16,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: alpha.lineStrong,
+    backgroundColor: color.sandLight,
   },
+  emptyPressed: { backgroundColor: color.sand },
+  emptyPlus: { fontFamily: font.body, fontSize: 22, color: color.faintest, lineHeight: 24 },
+  emptyLabel: { color: color.faintest, paddingHorizontal: 6 },
+
   mainBadge: {
     position: 'absolute',
     top: 7,

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Text } from '@/components/ui/Text';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useI18n } from '@/i18n';
-import { color, font, radius, shadow, space } from '@/theme/tokens';
+import { color, font, layout, radius, shadow, space } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
 
 interface ConductAcknowledgementProps {
@@ -60,6 +60,11 @@ const styles = StyleSheet.create({
   rowReverse: { flexDirection: 'row-reverse' },
   scrim: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(10,10,10,0.48)' },
   card: {
+    // A Modal renders outside the navigator, so it does not inherit the app's
+    // width. Without this it fills the whole monitor.
+    maxWidth: layout.maxContentWidth,
+    width: '100%',
+    alignSelf: 'center',
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
     paddingHorizontal: space.gutterWide,

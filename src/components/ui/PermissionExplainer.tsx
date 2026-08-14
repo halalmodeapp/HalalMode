@@ -6,7 +6,7 @@ import { Text } from '@/components/ui/Text';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useI18n } from '@/i18n';
 import { RTL_LAYOUT } from '@/lib/rtl';
-import { alpha, color, font, radius, shadow, space } from '@/theme/tokens';
+import { alpha, color, font, layout, radius, shadow, space } from '@/theme/tokens';
 
 export interface PermissionExplainerProps {
   visible: boolean;
@@ -121,6 +121,11 @@ const styles = StyleSheet.create({
     padding: space.gutter,
   },
   card: {
+    // A Modal renders outside the navigator, so it does not inherit the app's
+    // width. Without this it fills the whole monitor.
+    maxWidth: layout.maxContentWidth,
+    width: '100%',
+    alignSelf: 'center',
     backgroundColor: color.surface,
     borderRadius: radius.sheet,
     padding: space.gutter,

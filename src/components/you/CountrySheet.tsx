@@ -16,7 +16,7 @@ import { COUNTRIES } from '@/data/preferences';
 import { useI18n } from '@/i18n';
 import { testIds } from '@/lib/testIds';
 import { toggleCountrySelection } from '@/lib/countrySelection';
-import { alpha, color, font, radius, space } from '@/theme/tokens';
+import { alpha, color, font, layout, radius, space } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
 
 export interface CountrySheetProps {
@@ -208,6 +208,11 @@ const styles = StyleSheet.create({
   rowReverse: { flexDirection: 'row-reverse' },
   scrim: { flex: 1, backgroundColor: alpha.scrim, justifyContent: 'flex-end' },
   sheet: {
+    // A Modal renders outside the navigator, so it does not inherit the app's
+    // width. Without this it fills the whole monitor.
+    maxWidth: layout.maxContentWidth,
+    width: '100%',
+    alignSelf: 'center',
     maxHeight: '88%',
     backgroundColor: color.surface,
     borderTopLeftRadius: radius.sheet,
