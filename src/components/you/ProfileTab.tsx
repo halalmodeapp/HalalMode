@@ -7,7 +7,6 @@ import {
   useAudioRecorder,
   useAudioRecorderState,
 } from 'expo-audio';
-import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -22,6 +21,7 @@ import {
   PROFILE_PHOTO_BUCKET,
   VOICE_INTRODUCTION_BUCKET,
   type ProfilePhotoMimeType,
+  reorderProfilePhotos,
   uploadProfilePhoto,
   uploadVoiceIntroduction,
 } from '@/api/profileMedia';
@@ -38,6 +38,12 @@ import { getProfileReadiness, type ProfileReadinessIssue } from '@/lib/profileRe
 import { deviceLocationFromReverseGeocode } from '@/lib/deviceLocation';
 import { useI18n, type Translate } from '@/i18n';
 import type { TranslationKey } from '@/i18n/catalog';
+import { PickerSheet } from '@/components/ui/PickerSheet';
+import { PhotoReorderGrid } from '@/components/you/PhotoReorderGrid';
+import { SelectField } from '@/components/ui/SelectField';
+import { storedLabel } from '@/data/catalogOption';
+import { EDUCATION_GROUPS } from '@/data/educationLevels';
+import { OCCUPATION_GROUPS } from '@/data/occupations';
 import { USE_MOCKS } from '@/lib/supabase';
 import { alpha, color, font, radius } from '@/theme/tokens';
 import type { MarriageTimeline, Profile, ReligiousPractice, Sect } from '@/types';
@@ -60,11 +66,32 @@ function profileSchema(t: Translate) {
 
 type FormValues = z.infer<ReturnType<typeof profileSchema>>;
 
+interface PhotoTile {
+  /** Stable across a reorder, so a dragged tile keeps its identity. */
+  key: string;
+  displayUrl: string;
+  /** Absent for a profile written before private buckets, and in mock mode. */
+  storagePath?: string;
+}
+
+function mediaFrom(profile: Profile): PhotoTile[] {
+  return profile.photos.map((displayUrl, index) => {
+    const storagePath = profile.photoMedia?.[index]?.storagePath;
+    return { key: storagePath ?? displayUrl, displayUrl, storagePath };
+  });
+}
+
 export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; onOpenPreferences?: () => void }) {
-  const { localeTag, isRTL, t } = useI18n();
+  const { localeTag, isRTL, language, t } = useI18n();
+  const [picking, setPicking] = useState<'occupation' | 'education' | null>(null);
   const schema = useMemo(() => profileSchema(t), [t]);
   const queryClient = useQueryClient();
-  const [photos, setPhotos] = useState(profile.photos);
+  // One list, holding both what a photo looks like and where it lives. They
+  // used to be two arrays lined up by index, which a reorder would have pulled
+  // apart the first time somebody dragged anything.
+  const [media, setMedia] = useState<PhotoTile[]>(() => mediaFrom(profile));
+  const photos = useMemo(() => media.map((tile) => tile.displayUrl), [media]);
+  const [photoOrderError, setPhotoOrderError] = useState<string | null>(null);
   const [voiceUrl, setVoiceUrl] = useState(profile.audioGreetingUrl);
   const [voiceDuration, setVoiceDuration] = useState(
     profile.audioDurationSeconds ?? 30
@@ -125,7 +152,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
     : draftReadiness;
 
   useEffect(() => {
-    setPhotos(profile.photos);
+    setMedia(mediaFrom(profile));
     setVoiceUrl(profile.audioGreetingUrl);
     setVoiceDuration(profile.audioDurationSeconds ?? 30);
     setPhotosDirty(false);
@@ -338,7 +365,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
     const asset = result.canceled ? null : result.assets[0];
     if (asset) {
       if (USE_MOCKS) {
-        setPhotos((current) => [...current, asset.uri]);
+        setMedia((current) => [...current, { key: asset.uri, displayUrl: asset.uri }]);
         setPhotosDirty(true);
         return;
       }
@@ -367,7 +394,10 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
           uploaded.path
         );
         const nextPhotos = [...photos, displayUrl];
-        setPhotos(nextPhotos);
+        setMedia((current) => [
+          ...current,
+          { key: uploaded.path, displayUrl, storagePath: uploaded.path },
+        ]);
         queryClient.setQueryData<Profile>(queryKeys.profile('me'), (current) =>
           current
             ? {
@@ -400,7 +430,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
 
     const removeLocally = () => {
       const nextPhotos = photos.filter((_, photoIndex) => photoIndex !== index);
-      setPhotos(nextPhotos);
+      setMedia((current) => current.filter((_, photoIndex) => photoIndex !== index));
       if (USE_MOCKS) {
         setPhotosDirty(true);
         return;
@@ -424,7 +454,9 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
       return;
     }
 
-    const storagePath = profile.photoMedia?.[index]?.storagePath;
+    // Read from the local list, not the cached profile: after a reorder those
+    // two disagree about which photo index 2 is.
+    const storagePath = media[index]?.storagePath;
     if (!storagePath) {
       Alert.alert(
         t('profile.removeLegacyTitle'),
@@ -452,6 +484,49 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
         },
       },
     ]);
+  };
+
+  /**
+   * The new order is shown immediately and saved behind it.
+   *
+   * Waiting for the server would make a drag feel like it had not worked, so
+   * the list moves first. If the save is refused the previous order comes back
+   * and the member is told, rather than being left with an arrangement that
+   * only exists on their own phone.
+   */
+  const reorderPhotos = (next: PhotoTile[]) => {
+    const previous = media;
+    setMedia(next);
+    setPhotoOrderError(null);
+
+    if (USE_MOCKS) {
+      setPhotosDirty(true);
+      return;
+    }
+
+    const paths = next.map((tile) => tile.storagePath);
+    // A profile from before private buckets has no paths to send.
+    if (paths.some((path) => !path)) return;
+
+    void reorderProfilePhotos(paths as string[])
+      .then(() => {
+        queryClient.setQueryData<Profile>(queryKeys.profile('me'), (current) =>
+          current
+            ? {
+                ...current,
+                photos: next.map((tile) => tile.displayUrl),
+                photoMedia: next.map((tile) => ({
+                  displayUrl: tile.displayUrl,
+                  storagePath: tile.storagePath,
+                })),
+              }
+            : current,
+        );
+      })
+      .catch(() => {
+        setMedia(previous);
+        setPhotoOrderError(t('profile.photoOrderError'));
+      });
   };
 
   return (
@@ -517,34 +592,29 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
           </View>
         </View>
 
-        <View style={styles.grid}>
-          {photos.slice(0, 6).map((photo, index) => (
-            <View key={`${photo}-${index}`} style={styles.gridCell}>
-              <Image
-                source={photo}
-                style={StyleSheet.absoluteFill}
-                contentFit="cover"
-                accessibilityIgnoresInvertColors
-              />
-              {index === 0 ? (
-                <View style={styles.mainBadge}>
-                  <Text style={styles.mainBadgeLabel}>{t('profile.main')}</Text>
-                </View>
-              ) : null}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={t('profile.removePhotoA11y', { count: index + 1 })}
-                accessibilityState={{ busy: deletingPhoto !== null }}
-                disabled={deletingPhoto !== null}
-                hitSlop={8}
-                onPress={() => removePhoto(index)}
-                style={styles.removePhoto}
-              >
-                <Text style={styles.removePhotoLabel}>×</Text>
-              </Pressable>
-            </View>
-          ))}
-        </View>
+        <PhotoReorderGrid
+          photos={media}
+          onReorder={reorderPhotos}
+          onRemove={removePhoto}
+          removeDisabled={deletingPhoto !== null}
+          mainLabel={t('profile.main')}
+          removeLabel={(position) => t('profile.removePhotoA11y', { count: position })}
+          dragHintLabel={t('profile.photoDragHint')}
+          moveEarlierLabel={t('profile.photoMoveEarlier')}
+          moveLaterLabel={t('profile.photoMoveLater')}
+        />
+
+        {media.length > 1 ? (
+          <Text variant="caption" style={styles.photoNote}>
+            {t('profile.photoOrderNote')}
+          </Text>
+        ) : null}
+
+        {photoOrderError ? (
+          <Text accessibilityRole="alert" variant="caption" style={styles.locationError}>
+            {photoOrderError}
+          </Text>
+        ) : null}
 
         <Text variant="caption" style={styles.photoNote}>
           {t('profile.photoNote')}
@@ -685,12 +755,27 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
           control={control}
           name="occupation"
           render={({ field }) => (
-            <Field
-              label={t('profile.profession')}
-              value={field.value}
-              onChangeText={field.onChange}
-              error={errors.occupation?.message}
-            />
+            <>
+              <SelectField
+                label={t('profile.profession')}
+                value={storedLabel(OCCUPATION_GROUPS, field.value, language)}
+                placeholder={t('profile.professionPlaceholder')}
+                onPress={() => setPicking('occupation')}
+                error={errors.occupation?.message}
+                testID={testIds.you.professionSelect}
+              />
+              <PickerSheet
+                visible={picking === 'occupation'}
+                groups={OCCUPATION_GROUPS}
+                selected={field.value ? [field.value] : []}
+                onChange={(next) => field.onChange(next[0] ?? '')}
+                onClose={() => setPicking(null)}
+                title={t('profile.profession')}
+                eyebrow={t('profile.professionEyebrow')}
+                searchLabel={t('profile.professionSearch')}
+                testID={testIds.you.professionSheet}
+              />
+            </>
           )}
         />
 
@@ -698,12 +783,28 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
           control={control}
           name="education"
           render={({ field }) => (
-            <Field
-              label={t('profile.education')}
-              value={field.value}
-              onChangeText={field.onChange}
-              error={errors.education?.message}
-            />
+            <>
+              <SelectField
+                label={t('profile.education')}
+                value={storedLabel(EDUCATION_GROUPS, field.value, language)}
+                placeholder={t('profile.educationPlaceholder')}
+                onPress={() => setPicking('education')}
+                error={errors.education?.message}
+                testID={testIds.you.educationSelect}
+              />
+              <PickerSheet
+                visible={picking === 'education'}
+                groups={EDUCATION_GROUPS}
+                selected={field.value ? [field.value] : []}
+                onChange={(next) => field.onChange(next[0] ?? '')}
+                onClose={() => setPicking(null)}
+                title={t('profile.education')}
+                eyebrow={t('profile.educationEyebrow')}
+                searchLabel={t('profile.educationSearch')}
+                clearLabel={t('profile.educationClear')}
+                testID={testIds.you.educationSheet}
+              />
+            </>
           )}
         />
 

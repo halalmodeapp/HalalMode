@@ -79,6 +79,21 @@ export async function uploadProfilePhoto(
   return { path, photos: (data ?? []) as string[] };
 }
 
+/**
+ * Saves a new order for photos the member already has.
+ *
+ * The server accepts a permutation and nothing else, so this cannot add or
+ * remove a photo however it is called.
+ */
+export async function reorderProfilePhotos(paths: string[]): Promise<string[]> {
+  if (USE_MOCKS) return paths;
+  const { data, error } = await requireSupabase().rpc('reorder_profile_photos', {
+    p_paths: paths,
+  });
+  if (error) throw error;
+  return (data ?? []) as string[];
+}
+
 /** Detaches authoritatively; byte cleanup is best-effort and must not roll back UI state. */
 export async function deleteProfilePhoto(path: string): Promise<void> {
   if (USE_MOCKS) return;

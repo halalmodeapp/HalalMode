@@ -45,6 +45,11 @@ export const testIds = {
     countryApply: 'matching-country-apply',
     photoGuide: 'profile-photo-guide',
     updateLocation: 'profile-update-location',
+    professionSelect: 'profile-profession-select',
+    professionSheet: 'profile-profession-sheet',
+    educationSelect: 'profile-education-select',
+    educationSheet: 'profile-education-sheet',
+    photoDragHandle: 'profile-photo-drag',
   },
   settings: {
     support: 'settings-support',

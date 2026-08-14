@@ -109,8 +109,12 @@ export async function updateMyPreferences(
 function profileFromRow(row: Record<string, unknown>): Profile {
   return {
     id: String(row.id),
-    name: String(row.name),
-    firstName: String(row.first_name),
+    // `String(null)` is the word "null" and `String(undefined)` is the word
+    // "undefined". Both columns are nullable, and both are edited in a text
+    // field — so an unset name arrived on screen as the literal word, ready to
+    // be saved as somebody's name the moment they pressed the button.
+    name: String(row.name ?? ''),
+    firstName: String(row.first_name ?? ''),
     age: ageFromDate(String(row.birth_date)),
     gender: row.gender as Profile['gender'],
     occupation: String(row.occupation ?? ''),
