@@ -38,6 +38,7 @@ import { getProfileReadiness, type ProfileReadinessIssue } from '@/lib/profileRe
 import { deviceLocationFromReverseGeocode } from '@/lib/deviceLocation';
 import { useI18n, type Translate } from '@/i18n';
 import type { TranslationKey } from '@/i18n/catalog';
+import { PermissionExplainer } from '@/components/ui/PermissionExplainer';
 import { PickerSheet } from '@/components/ui/PickerSheet';
 import { PhotoReorderGrid } from '@/components/you/PhotoReorderGrid';
 import { SelectField } from '@/components/ui/SelectField';
@@ -102,6 +103,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
   const [deletingPhoto, setDeletingPhoto] = useState<string | null>(null);
   const [updatingLocation, setUpdatingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [locationExplainer, setLocationExplainer] = useState(false);
   const loadedProfileId = useRef<string | null>(null);
   const finishingRecording = useRef(false);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
@@ -333,6 +335,23 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
       setUpdatingLocation(false);
     }
   }, [queryClient, t, updatingLocation]);
+
+  /**
+   * Explain first, but only while there is still something to explain.
+   *
+   * Once permission has been granted the reason has been made and accepted,
+   * and re-reading it every time somebody updates their city would be a
+   * lecture. So the sheet appears only when the system has not been asked yet.
+   */
+  const askForLocation = useCallback(async () => {
+    if (updatingLocation) return;
+    const existing = await Location.getForegroundPermissionsAsync().catch(() => null);
+    if (existing?.granted) {
+      void refreshDeviceLocation();
+      return;
+    }
+    setLocationExplainer(true);
+  }, [refreshDeviceLocation, updatingLocation]);
 
   const addPhoto = async (source: 'camera' | 'library') => {
     if (photos.length >= 6) {
@@ -742,7 +761,27 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
             label={t('profile.updateLocation')}
             variant="secondary"
             loading={updatingLocation}
-            onPress={() => void refreshDeviceLocation()}
+            onPress={() => void askForLocation()}
+          />
+          <PermissionExplainer
+            visible={locationExplainer}
+            eyebrow={t('permission.location.eyebrow')}
+            title={t('permission.location.title')}
+            body={t('permission.location.body')}
+            points={[
+              t('permission.location.p1'),
+              t('permission.location.p2'),
+              t('permission.location.p3'),
+            ]}
+            reassurance={t('permission.location.reassurance')}
+            continueLabel={t('permission.continue')}
+            cancelLabel={t('permission.notNow')}
+            onContinue={() => {
+              setLocationExplainer(false);
+              void refreshDeviceLocation();
+            }}
+            onCancel={() => setLocationExplainer(false)}
+            testID={testIds.you.locationExplainer}
           />
           {locationError ? (
             <Text accessibilityRole="alert" variant="caption" style={styles.locationError}>

@@ -2,13 +2,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Alert, Linking, Pressable, StyleSheet, Switch, View } from 'react-native';
 
-import { requestAccountDeletion, setProfilePaused } from '@/api/account';
+import { fetchMyReadReceipts, requestAccountDeletion, setMyReadReceipts, setProfilePaused } from '@/api/account';
 import { disableMyNotifications, enableMyNotifications, fetchMyNotificationConsent } from '@/api/notifications';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { InlineNotice } from '@/components/ui/AsyncState';
+import { PermissionExplainer } from '@/components/ui/PermissionExplainer';
 import { Text } from '@/components/ui/Text';
+import { ModerationSheet } from '@/components/safety/ModerationSheet';
 import { BlockedMembersSheet } from '@/components/you/BlockedMembersSheet';
 import { useI18n } from '@/i18n';
 import { nextSupportedLocale } from '@/i18n/locales';
@@ -41,6 +43,8 @@ export function SettingsTab({
   const [premiumConfirm, setPremiumConfirm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [blockedOpen, setBlockedOpen] = useState(false);
+  const [notificationsExplainer, setNotificationsExplainer] = useState(false);
+  const [moderationOpen, setModerationOpen] = useState(false);
   const limits = TIER_LIMITS[tier];
   const isPremium = tier === 'premium';
   const notificationsQuery = useQuery({
@@ -65,6 +69,16 @@ export function SettingsTab({
           : 'settings.notificationErrorBody';
       Alert.alert(t('settings.notificationErrorTitle'), t(key));
     },
+  });
+  const readReceiptsQuery = useQuery({
+    queryKey: ['read-receipts'],
+    queryFn: fetchMyReadReceipts,
+    enabled: !USE_MOCKS,
+  });
+  const readReceipts = useMutation({
+    mutationFn: setMyReadReceipts,
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['read-receipts'] }),
+    onError: () => Alert.alert(t('settings.activityErrorTitle'), t('settings.activityErrorBody')),
   });
   const premiumFeatures = [
     t('settings.premium.f1'),
@@ -112,8 +126,18 @@ export function SettingsTab({
         <SettingRow
           title={t('settings.activity')}
           subtitle={t('settings.activityBody')}
-          badge={t('settings.comingLater')}
+          value={readReceiptsQuery.data ?? true}
+          testID={testIds.settings.readReceipts}
+          disabled={readReceipts.isPending || readReceiptsQuery.isPending || readReceiptsQuery.isError}
+          onValueChange={(enabled) => readReceipts.mutate(enabled)}
         />
+        {readReceiptsQuery.isError ? (
+          <InlineNotice
+            message={t('settings.activityLoadError')}
+            actionLabel={t('common.tryAgain')}
+            onAction={() => void readReceiptsQuery.refetch()}
+          />
+        ) : null}
         <SettingRow
           title={t('settings.photos')}
           subtitle={t('settings.photosBody')}
@@ -145,8 +169,19 @@ export function SettingsTab({
         <SettingRow
           title={t('settings.reporting')}
           subtitle={t('settings.reportingBody')}
-          badge={t('settings.comingLater')}
+          trailing={
+            <Pressable
+              testID={testIds.settings.moderation}
+              accessibilityRole="button"
+              accessibilityLabel={t('settings.reporting')}
+              onPress={() => setModerationOpen(true)}
+              style={styles.disclosure}
+            >
+              <Text style={styles.arrow}>{isRTL ? '←' : '→'}</Text>
+            </Pressable>
+          }
         />
+        <ModerationSheet visible={moderationOpen} onClose={() => setModerationOpen(false)} />
       </Section>
 
       <Section eyebrow={t('settings.preferences')} title={t('settings.preferencesTitle')}>
@@ -175,8 +210,34 @@ export function SettingsTab({
           value={notificationsQuery.data ?? false}
           testID={testIds.settings.notifications}
           disabled={!pushNotifications || notifications.isPending || notificationsQuery.isPending || notificationsQuery.isError}
-          onValueChange={(enabled) => notifications.mutate(enabled)}
+          // Turning them on asks why first; turning them off is immediate. A
+          // member switching something off has already decided, and stopping
+          // them to explain would only be an obstacle.
+          onValueChange={(enabled) => {
+            if (enabled) setNotificationsExplainer(true);
+            else notifications.mutate(false);
+          }}
           badge={!pushNotifications ? t('settings.comingLater') : undefined}
+        />
+        <PermissionExplainer
+          visible={notificationsExplainer}
+          eyebrow={t('permission.notifications.eyebrow')}
+          title={t('permission.notifications.title')}
+          body={t('permission.notifications.body')}
+          points={[
+            t('permission.notifications.p1'),
+            t('permission.notifications.p2'),
+            t('permission.notifications.p3'),
+          ]}
+          reassurance={t('permission.notifications.reassurance')}
+          continueLabel={t('permission.continue')}
+          cancelLabel={t('permission.notNow')}
+          onContinue={() => {
+            setNotificationsExplainer(false);
+            notifications.mutate(true);
+          }}
+          onCancel={() => setNotificationsExplainer(false)}
+          testID={testIds.settings.notificationExplainer}
         />
         {notificationsQuery.isError ? (
           <InlineNotice
