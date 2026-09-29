@@ -1,5 +1,6 @@
 import type { AppLocale } from '@/i18n/locales';
-import { storedLabel, type CatalogGroup } from '@/data/catalogOption';
+// Relative: the tests load this file directly and do not resolve '@/'.
+import { storedLabel, type CatalogGroup } from './catalogOption';
 
 /**
  * What a member does, chosen rather than typed.
