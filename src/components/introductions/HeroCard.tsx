@@ -9,6 +9,7 @@ import {
   useRef,
 } from 'react';
 import {
+  Platform,
   StyleSheet,
   useWindowDimensions,
   View,
@@ -36,7 +37,7 @@ import { deckDirectionForAccessibilityAction } from '@/lib/roundInvariants';
 import { RTL_LAYOUT } from '@/lib/rtl';
 import { occupationLabel } from '@/data/occupations';
 import { testIds } from '@/lib/testIds';
-import { color, radius } from '@/theme/tokens';
+import { color, layout, radius } from '@/theme/tokens';
 import type { Profile } from '@/types';
 
 const RAD2DEG = 180 / Math.PI;
@@ -172,7 +173,14 @@ export function HeroCard({
 }: HeroCardProps) {
   const reducedMotion = useReducedMotion();
   const { t } = useI18n();
-  const { width } = useWindowDimensions();
+  const window = useWindowDimensions();
+  // The app keeps a phone's width on a desktop, so the window is the wrong
+  // ruler: sized to it, each card was over a thousand pixels wide inside a
+  // 560px screen, and the neighbours that should peek in from either side
+  // were placed far off it.
+  const width = Platform.OS === 'web'
+    ? Math.min(window.width, layout.maxContentWidth)
+    : window.width;
 
   const cardWidth = Math.max(
     width - 60,
@@ -1292,14 +1300,15 @@ const styles = StyleSheet.create({
     borderRadius: radius.hero,
     overflow: 'hidden',
     backgroundColor: color.clay,
+    // A lift, not a halo.
     shadowColor: '#000000',
-    shadowOpacity: 0.95,
-    shadowRadius: 999,
+    shadowOpacity: 0.16,
+    shadowRadius: 22,
     shadowOffset: {
       width: 0,
-      height: 12,
+      height: 10,
     },
-    elevation: 40,
+    elevation: 8,
   },
 
   cardChosen: {

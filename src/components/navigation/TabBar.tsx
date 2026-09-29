@@ -8,6 +8,7 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Platform,
   Pressable,
   StyleSheet,
   View,
@@ -626,6 +627,24 @@ export function TabBar({
   const insets = useSafeAreaInsets();
 
   const [layoutWidth, setLayoutWidth] = useState(0);
+  const barArea = useRef<View | null>(null);
+
+  // On the web, onLayout can arrive late or not at all, and the pill then sits
+  // at a stale position — slid off to the left of the tab it marks. Measuring
+  // the element directly, and watching it, keeps the pill under its tab.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof ResizeObserver === 'undefined') return;
+    const node = barArea.current as unknown as HTMLElement | null;
+    if (!node?.getBoundingClientRect) return;
+    const read = () => {
+      const measured = node.getBoundingClientRect().width;
+      if (measured > 0) setLayoutWidth((current) => (current === measured ? current : measured));
+    };
+    read();
+    const observer = new ResizeObserver(read);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   const pillCenterX = useSharedValue(0);
   const pillWidth = useSharedValue(
@@ -811,6 +830,7 @@ export function TabBar({
       ]}
     >
       <View
+        ref={barArea}
         style={[
           styles.barArea,
           isRTL && styles.rowReverse,

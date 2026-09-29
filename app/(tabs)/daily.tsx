@@ -463,12 +463,9 @@ export default function DailyScreen() {
 
       <View style={[styles.headline, isRTL && styles.rowReverse]}>
         <View style={styles.headlineText}>
-          <Text variant="micro">
-            {round.city ? t('daily.todayIn', { city: round.city }) : t('daily.today')}
-          </Text>
-          {countdownLabel ? (
-            <Text variant="micro" style={styles.countdown}>{countdownLabel}</Text>
-          ) : null}
+          {/* What this is, first; when it changes, underneath and quieter. It
+              used to be two small lines of timing above the title, which put
+              the least important thing first. */}
           <Text variant="display" style={styles.title}>
             {t(
               round.introductions.length === 1
@@ -478,6 +475,12 @@ export default function DailyScreen() {
                   : 'daily.title',
               { count: round.introductions.length }
             )}
+          </Text>
+          <Text variant="micro" style={styles.countdown}>
+            {[
+              round.city ? t('daily.resetsIn', { city: round.city }) : t('daily.resets'),
+              countdownLabel,
+            ].filter(Boolean).join(' · ')}
           </Text>
         </View>
         {USE_MOCKS ? (
@@ -715,9 +718,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 26,
     paddingTop: 6,
   },
-  countdown: { color: color.faintest, marginTop: 2 },
+  countdown: { color: color.faintest, marginTop: 6 },
   headlineText: { flex: 1 },
-  title: { marginTop: 4 },
+  title: { marginTop: 2 },
   resetButton: {
     width: 34,
     height: 34,
