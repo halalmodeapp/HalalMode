@@ -209,7 +209,10 @@ const styles = StyleSheet.create({
   hero: {
     marginHorizontal: space.gutter,
     marginTop: 12,
-    height: 330,
+    // Square, and scaled with the width rather than a fixed height: a fixed
+    // 330 became a wide letterbox on anything larger than a phone, cropping a
+    // face to a strip.
+    aspectRatio: 1,
     borderRadius: radius.hero,
     overflow: 'hidden',
     backgroundColor: color.clay,
