@@ -43,8 +43,21 @@ export async function fetchCurrentRoundState(
   }
 
   const client = requireSupabase();
-  const { data, error } = await client.rpc('get_current_round_state');
+  let { data, error } = await client.rpc('get_current_round_state');
   if (error) throw error;
+
+  // Nobody to meet yet: ask for a set of sample members instead. The server
+  // decides whether this member gets one — it is behind its own flag, once a
+  // day, and never for a member who has a real round — so asking costs one
+  // call and the answer is usually no. See migration 0148.
+  if ((data as { status?: unknown } | null)?.status === 'no_suitable_introductions') {
+    const sample = await client.rpc('request_demo_round');
+    if (!sample.error && (sample.data as { created?: unknown } | null)?.created === true) {
+      ({ data, error } = await client.rpc('get_current_round_state'));
+      if (error) throw error;
+    }
+  }
+
   const payload = data && typeof data === 'object'
     ? data as { status?: unknown; round?: IntroductionRound | null; criterion?: unknown; city?: unknown }
     : {};

@@ -17,10 +17,11 @@ import type { TranslationKey } from '@/i18n/catalog';
 import { useRound } from '@/state/round';
 import { alpha, color, radius, space } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
+import { occupationLabel } from '@/data/occupations';
 
 export default function IntroductionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { localeTag, isRTL, t } = useI18n();
+  const { localeTag, isRTL, language, t } = useI18n();
   const { round, live, release, refresh, keepLimit, submit, profileOpened, profileClosed } =
     useRound();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -112,7 +113,7 @@ export default function IntroductionDetailScreen() {
           >
             <Text style={styles.heroName}>{profile.name}</Text>
             <Text style={styles.heroLine}>
-              {number(profile.age)} · {profile.city} · {profile.occupation}
+              {number(profile.age)} · {profile.city} · {occupationLabel(profile.occupation, language)}
             </Text>
           </LinearGradient>
         </Pressable>

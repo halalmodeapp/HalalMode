@@ -34,6 +34,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useI18n } from '@/i18n';
 import { deckDirectionForAccessibilityAction } from '@/lib/roundInvariants';
 import { RTL_LAYOUT } from '@/lib/rtl';
+import { occupationLabel } from '@/data/occupations';
 import { testIds } from '@/lib/testIds';
 import { color, radius } from '@/theme/tokens';
 import type { Profile } from '@/types';
@@ -903,7 +904,7 @@ function DeckCard({
   chosen,
   reducedMotion,
 }: DeckCardProps) {
-  const { t, isRTL } =
+  const { t, isRTL, language } =
     useI18n();
 
   const pivotDepth = Math.max(
@@ -1254,7 +1255,7 @@ function DeckCard({
         <Text style={styles.line}>
           {profile.age} ·{' '}
           {profile.city} ·{' '}
-          {profile.occupation}
+          {occupationLabel(profile.occupation, language)}
         </Text>
       </View>
 

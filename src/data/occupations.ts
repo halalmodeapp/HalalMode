@@ -1,4 +1,5 @@
-import type { CatalogGroup } from '@/data/catalogOption';
+import type { AppLocale } from '@/i18n/locales';
+import { storedLabel, type CatalogGroup } from '@/data/catalogOption';
 
 /**
  * What a member does, chosen rather than typed.
@@ -314,3 +315,14 @@ export const OCCUPATION_GROUPS: readonly CatalogGroup[] = [
     ],
   },
 ];
+
+/**
+ * A profession as a reader should see it: the label, in their language.
+ *
+ * The profile stores an id — `software_engineer` — so anything showing another
+ * member's profession must come through here, or the card reads like a
+ * database column.
+ */
+export function occupationLabel(value: string | null | undefined, language: AppLocale): string {
+  return storedLabel(OCCUPATION_GROUPS, value, language);
+}
