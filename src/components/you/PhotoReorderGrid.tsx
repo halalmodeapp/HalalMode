@@ -84,7 +84,58 @@ export function PhotoReorderGrid({
   const [width, setWidth] = useState(0);
   const container = useRef<View | null>(null);
 
-  const filled = photos.slice(0, MAX_PHOTOS);
+  /**
+   * The order on screen, which during a drag runs ahead of the saved one.
+   *
+   * Each swap is applied to the latest order through a ref, never to the list
+   * this render happened to close over. A gesture keeps the callbacks it started
+   * with, so reading the prop there meant every swap after the first was
+   * applied to the original list and quietly undid the one before it — drag the
+   * third photo to the front and the first two swapped instead.
+   *
+   * Nothing is saved until the photo is let go. Saving on every swap sent a
+   * burst of racing writes for a single drag.
+   */
+  const [order, setOrder] = useState(() => photos.slice(0, MAX_PHOTOS));
+  const orderRef = useRef(order);
+  const draggingRef = useRef(false);
+  const latest = useRef({ photos, onReorder });
+  latest.current = { photos, onReorder };
+
+  useEffect(() => {
+    if (draggingRef.current) return;
+    const next = photos.slice(0, MAX_PHOTOS);
+    orderRef.current = next;
+    setOrder(next);
+  }, [photos]);
+
+  const move = useCallback((from: number, to: number) => {
+    if (from === to) return;
+    const next = moveItem(orderRef.current, from, to);
+    orderRef.current = next;
+    setOrder(next);
+  }, []);
+
+  const pickUp = useCallback(() => {
+    draggingRef.current = true;
+  }, []);
+
+  const drop = useCallback(() => {
+    draggingRef.current = false;
+    const final = orderRef.current;
+    const saved = latest.current.photos.slice(0, MAX_PHOTOS);
+    const unchanged =
+      final.length === saved.length && final.every((photo, i) => photo.key === saved[i]?.key);
+    if (!unchanged) latest.current.onReorder(final);
+  }, []);
+
+  /** One accessible step: move, then save as if it had been dropped. */
+  const step = useCallback((from: number, to: number) => {
+    move(from, to);
+    drop();
+  }, [drop, move]);
+
+  const filled = order;
   const cellWidth = width > 0 ? (width - GAP * (COLUMNS - 1)) / COLUMNS : 0;
   const cellHeight = cellWidth * ASPECT;
   const rows = Math.ceil(MAX_PHOTOS / COLUMNS);
@@ -121,14 +172,6 @@ export function PhotoReorderGrid({
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
-
-  const commit = useCallback(
-    (from: number, to: number) => {
-      if (from === to) return;
-      onReorder(moveItem(filled, from, to));
-    },
-    [filled, onReorder],
-  );
 
   const emptySlots = Array.from(
     { length: MAX_PHOTOS - filled.length },
@@ -173,7 +216,10 @@ export function PhotoReorderGrid({
               cellWidth={cellWidth}
               cellHeight={cellHeight}
               isRTL={isRTL}
-              onMove={commit}
+              onMove={move}
+              onPickUp={pickUp}
+              onDrop={drop}
+              onStep={step}
               onRemove={() => onRemove(index)}
               removeDisabled={removeDisabled}
               mainLabel={mainLabel}
@@ -197,6 +243,9 @@ interface PhotoCellProps {
   cellHeight: number;
   isRTL: boolean;
   onMove: (from: number, to: number) => void;
+  onPickUp: () => void;
+  onDrop: () => void;
+  onStep: (from: number, to: number) => void;
   onRemove: () => void;
   removeDisabled: boolean;
   mainLabel: string;
@@ -214,6 +263,9 @@ function PhotoCell({
   cellHeight,
   isRTL,
   onMove,
+  onPickUp,
+  onDrop,
+  onStep,
   onRemove,
   removeDisabled,
   mainLabel,
@@ -265,8 +317,13 @@ function PhotoCell({
     offsetY.value = withSpring(0, SETTLE);
   }, [dragging, home, homeX, homeY, offsetX, offsetY]);
 
-  const pan = Gesture.Pan()
-    .activateAfterLongPress(220)
+  // A finger holds first, so a swipe past the gallery still scrolls the form.
+  // A mouse is different: everybody clicks and drags at once, and a long-press
+  // gesture fails the instant it moves before its timer — so on the web a few
+  // pixels of movement is the whole signal. A scroll wheel never competes.
+  const pan = (Platform.OS === 'web'
+    ? Gesture.Pan().minDistance(4)
+    : Gesture.Pan().activateAfterLongPress(220))
     .enabled(count > 1)
     .onStart(() => {
       dragging.value = true;
@@ -274,6 +331,7 @@ function PhotoCell({
       grabbedAtX.value = homeX.value;
       grabbedAtY.value = homeY.value;
       lift.value = withSpring(1, LIFT);
+      runOnJS(onPickUp)();
     })
     .onUpdate((event) => {
       // Measured from where the finger landed, not from wherever this tile has
@@ -294,7 +352,6 @@ function PhotoCell({
         count,
         isRTL,
       });
-
       if (next !== slot.value) {
         const from = slot.value;
         slot.value = next;
@@ -306,6 +363,7 @@ function PhotoCell({
       offsetX.value = withSpring(0, SETTLE);
       offsetY.value = withSpring(0, SETTLE);
       lift.value = withSpring(0, SETTLE);
+      runOnJS(onDrop)();
     });
 
   const animated = useAnimatedStyle(() => ({
@@ -336,20 +394,25 @@ function PhotoCell({
         ]}
         onAccessibilityAction={(event) => {
           if (event.nativeEvent.actionName === 'moveEarlier' && index > 0) {
-            onMove(index, index - 1);
+            onStep(index, index - 1);
           }
           if (event.nativeEvent.actionName === 'moveLater' && index < count - 1) {
-            onMove(index, index + 1);
+            onStep(index, index + 1);
           }
         }}
       >
         <Animated.View style={[styles.surface, animated]}>
-          <Image
-            source={photo.displayUrl}
-            style={StyleSheet.absoluteFill}
-            contentFit="cover"
-            accessibilityIgnoresInvertColors
-          />
+          {/* Kept out of the pointer's way. On the web a photo is an <img>, and
+              a browser starts its own drag of any image you press on — which
+              takes the pointer and the gesture never sees it again. */}
+          <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+            <Image
+              source={photo.displayUrl}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              accessibilityIgnoresInvertColors
+            />
+          </View>
           {index === 0 ? (
             <View style={[styles.mainBadge, isRTL && styles.mainBadgeRTL]}>
               <Text style={styles.mainBadgeLabel}>{mainLabel}</Text>
