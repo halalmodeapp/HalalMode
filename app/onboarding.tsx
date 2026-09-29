@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ComponentProps } from 'react';
+import { useEffect, useMemo, useRef, useState, type ComponentProps, type RefObject } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ActivityIndicator,
@@ -26,6 +26,7 @@ import { PermissionExplainer } from '@/components/ui/PermissionExplainer';
 import { PickerSheet } from '@/components/ui/PickerSheet';
 import { CITY_GROUPS, placeForCity } from '@/data/cities';
 import { placeFromDevice } from '@/lib/deviceLocation';
+import { namesFromIdentity } from '@/lib/identityNames';
 import {
   clearOnboardingDraft,
   clearLegacyOnboardingDraft,
@@ -78,6 +79,11 @@ export default function OnboardingScreen() {
   const { user, refreshProfileStatus } = useAuth();
   const queryClient = useQueryClient();
   const draftMemberId = user?.id ?? 'current';
+  // Through a ref, not an effect dependency: the user object changes on every
+  // token refresh, and re-running the restore then would wipe a draft in
+  // progress.
+  const identity = useRef(user?.user_metadata);
+  identity.current = user?.user_metadata;
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<OnboardingDraft>(EMPTY_DRAFT);
   const [errors, setErrors] = useState<ValidationErrors>({});
@@ -105,7 +111,15 @@ export default function OnboardingScreen() {
       clearLegacyOnboardingDraft(draftMemberId),
     ])
       .then(([stored]) => {
-        if (!active || !stored) return;
+        if (!active) return;
+        if (!stored) {
+          // Somebody who signed in with Google or Apple has already told us
+          // their name once. Asking again, into two empty boxes, is the first
+          // thing a new member would reasonably complain about. It is only a
+          // starting point — both fields stay editable.
+          setDraft((current) => ({ ...current, ...namesFromIdentity(identity.current) }));
+          return;
+        }
         if (stored.draft) setDraft({ ...EMPTY_DRAFT, ...stored.draft });
         if (
           typeof stored.step === 'number' &&
@@ -500,6 +514,10 @@ function IdentityStep({
 
 function BasicDetailsStep({ draft, errors, patch }: StepProps) {
   const { t, isRTL } = useI18n();
+  // A full day moves on to the month, a full month to the year — the way a
+  // date is typed on paper. Without it every member tapped three boxes.
+  const monthInput = useRef<TextInput>(null);
+  const yearInput = useRef<TextInput>(null);
   return (
     <View>
       <StepHeading
@@ -516,20 +534,30 @@ function BasicDetailsStep({ draft, errors, patch }: StepProps) {
               label={t('onboarding.day')}
               value={draft.birthDay}
               maxLength={2}
-              onChangeText={(value) => patch('birthDay', normaliseDecimalDigits(value))}
+              onChangeText={(value) => {
+                const digits = normaliseDecimalDigits(value);
+                patch('birthDay', digits);
+                if (digits.length === 2) monthInput.current?.focus();
+              }}
             />
             <DatePart
               kind="month"
               label={t('onboarding.month')}
               value={draft.birthMonth}
               maxLength={2}
-              onChangeText={(value) => patch('birthMonth', normaliseDecimalDigits(value))}
+              inputRef={monthInput}
+              onChangeText={(value) => {
+                const digits = normaliseDecimalDigits(value);
+                patch('birthMonth', digits);
+                if (digits.length === 2) yearInput.current?.focus();
+              }}
             />
             <DatePart
               kind="year"
               label={t('onboarding.year')}
               value={draft.birthYear}
               maxLength={4}
+              inputRef={yearInput}
               onChangeText={(value) => patch('birthYear', normaliseDecimalDigits(value))}
             />
           </View>
@@ -723,15 +751,20 @@ function Field({
 }
 
 function DatePart(
-  props: ComponentProps<typeof TextInput> & { label: string; kind: 'day' | 'month' | 'year' }
+  props: ComponentProps<typeof TextInput> & {
+    label: string;
+    kind: 'day' | 'month' | 'year';
+    inputRef?: RefObject<TextInput | null>;
+  }
 ) {
   const { t, isRTL } = useI18n();
-  const { label, kind, ...inputProps } = props;
+  const { label, kind, inputRef, ...inputProps } = props;
   return (
     <View style={styles.datePart}>
       <Text variant="caption">{label}</Text>
       <TextInput
         {...inputProps}
+        ref={inputRef}
         accessibilityLabel={t('onboarding.birthPartLabel', { part: label })}
         keyboardType="number-pad"
         placeholder={kind === 'year' ? 'YYYY' : kind === 'month' ? 'MM' : 'DD'}

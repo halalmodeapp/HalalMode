@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
-import { color, space } from '@/theme/tokens';
+import { color, layout, space } from '@/theme/tokens';
 
 interface BoundaryProps {
   children: ReactNode;
@@ -55,6 +55,7 @@ class RecoveryBoundary extends Component<BoundaryProps, BoundaryState> {
           accessibilityHint={this.props.retryHint}
           label={this.props.retryLabel}
           onPress={this.recover}
+          style={styles.retry}
           testID="app-recovery-retry"
         />
       </View>
@@ -66,7 +67,10 @@ export function AppRecoveryBoundary({ children }: { children: ReactNode }) {
   const { t } = useI18n();
   return (
     <RecoveryBoundary
-      message={t('connections.errorBody')}
+      // Its own words. This used to borrow the Connections error, so a crash
+      // anywhere — onboarding, a profile, a chat — told the member their
+      // connections had failed to load.
+      message={t('common.crashBody')}
       retryHint={t('common.retryHint')}
       retryLabel={t('common.tryAgain')}
       title={t('common.errorTitle')}
@@ -86,4 +90,6 @@ const styles = StyleSheet.create({
     backgroundColor: color.surface,
   },
   message: { maxWidth: 320 },
+  // Above the navigator, so it does not inherit the app's width on a desktop.
+  retry: { width: '100%', maxWidth: layout.maxContentWidth },
 });

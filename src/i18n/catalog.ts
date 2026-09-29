@@ -1,4 +1,5 @@
 export const en = {
+  'common.crashBody': 'This screen hit a problem. Nothing you saved has been lost.',
   'common.tryAgain': 'Try again',
   'common.back': 'Back',
   'common.continue': 'Continue',
@@ -92,7 +93,7 @@ export const en = {
   'onboarding.birthDateHint': 'Enter your day, month and year. We will ask you to confirm your age next.',
   'onboarding.ageConfirmTitle': 'Are you {{age}} years old?',
   'onboarding.ageConfirmBody': 'Please make sure your date of birth is correct. It stays private and you can update it later through support.',
-  'onboarding.ageConfirmAccept': 'Yes, that is correct',
+  'onboarding.ageConfirmAccept': 'Yes, correct',
   'onboarding.ageConfirmChange': 'Change date',
   'onboarding.day': 'Day',
   'onboarding.month': 'Month',
@@ -807,6 +808,7 @@ export type TranslationKey = keyof typeof en;
 export type TranslationCatalog = Record<TranslationKey, string>;
 
 export const ar: TranslationCatalog = {
+  'common.crashBody': 'واجهت هذه الشاشة مشكلة. لم يُفقد أي شيء حفظته.',
   'common.tryAgain': 'حاول مرة أخرى',
   'common.back': 'رجوع',
   'common.continue': 'متابعة',
@@ -895,7 +897,7 @@ export const ar: TranslationCatalog = {
   'onboarding.birthDateHint': 'أدخل اليوم والشهر والسنة. سنطلب منك تأكيد عمرك بعد ذلك.',
   'onboarding.ageConfirmTitle': 'هل عمرك {{age}} عامًا؟',
   'onboarding.ageConfirmBody': 'تأكد من صحة تاريخ ميلادك. يبقى خاصًا ويمكنك طلب تعديله لاحقًا عبر الدعم.',
-  'onboarding.ageConfirmAccept': 'نعم، هذا صحيح',
+  'onboarding.ageConfirmAccept': 'نعم، صحيح',
   'onboarding.ageConfirmChange': 'تعديل التاريخ',
   'onboarding.day': 'اليوم',
   'onboarding.month': 'الشهر',
