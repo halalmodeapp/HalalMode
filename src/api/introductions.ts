@@ -52,7 +52,13 @@ export async function fetchCurrentRoundState(
   // call and the answer is usually no. See migration 0148.
   if ((data as { status?: unknown } | null)?.status === 'no_suitable_introductions') {
     const sample = await client.rpc('request_demo_round');
-    if (!sample.error && (sample.data as { created?: unknown } | null)?.created === true) {
+    const answer = sample.data as { created?: unknown; reason?: unknown } | null;
+    // "has_round" counts too. Two requests at once — which the app makes on
+    // first load — race: one creates the set, the other is told a set already
+    // exists. Treating that as "nothing" let the loser's empty answer overwrite
+    // the winner's, and the member saw "No suitable introductions" beside a set
+    // that was sitting there.
+    if (!sample.error && (answer?.created === true || answer?.reason === 'has_round')) {
       ({ data, error } = await client.rpc('get_current_round_state'));
       if (error) throw error;
     }
