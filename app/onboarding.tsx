@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ComponentProps } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -22,6 +22,10 @@ import { requireSupabase } from '@/lib/supabase';
 import { fetchMyLegalConsentStatus } from '@/api/legalConsent';
 import { documentFromStatus, type LegalConsentStatus } from '@/lib/legalConsent';
 import { queryKeys } from '@/lib/queryClient';
+import { PermissionExplainer } from '@/components/ui/PermissionExplainer';
+import { PickerSheet } from '@/components/ui/PickerSheet';
+import { CITY_GROUPS, placeForCity } from '@/data/cities';
+import { placeFromDevice } from '@/lib/deviceLocation';
 import {
   clearOnboardingDraft,
   clearLegacyOnboardingDraft,
@@ -72,6 +76,7 @@ const EMPTY_DRAFT: OnboardingDraft = {
 export default function OnboardingScreen() {
   const { t, isRTL } = useI18n();
   const { user, refreshProfileStatus } = useAuth();
+  const queryClient = useQueryClient();
   const draftMemberId = user?.id ?? 'current';
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<OnboardingDraft>(EMPTY_DRAFT);
@@ -82,6 +87,8 @@ export default function OnboardingScreen() {
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
+  const [locationExplainer, setLocationExplainer] = useState(false);
+  const [cityPicker, setCityPicker] = useState(false);
   const [ageConfirmationOpen, setAgeConfirmationOpen] = useState(false);
   const [legalAccepted, setLegalAccepted] = useState(false);
   const legalStatusQuery = useQuery({
@@ -140,31 +147,60 @@ export default function OnboardingScreen() {
     setSubmitError(null);
   };
 
+  /**
+   * Location is asked for by its own button, not by Continue.
+   *
+   * Continue used to fire the system prompt with nothing but a caption as the
+   * reason, and if the answer was no — or, on the web, where the browser cannot
+   * name a place at all — there was no way past this step. The member was
+   * locked out of the app. Now the reason comes first, and choosing a city
+   * from the list is always there as the other road.
+   */
+  const locateMe = async () => {
+    setLocating(true);
+    setErrors({});
+    try {
+      const permission = await Location.requestForegroundPermissionsAsync();
+      if (permission.status !== 'granted') {
+        setErrors({ city: t('onboarding.locationDeniedChooseCity') });
+        return;
+      }
+      const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      const places = await Location.reverseGeocodeAsync(position.coords).catch(() => []);
+      const resolved = placeFromDevice(places[0], position.coords);
+      if (!resolved) {
+        setErrors({ city: t('onboarding.locationUnknownChooseCity') });
+        return;
+      }
+      setDraft((current) => ({ ...current, ...resolved }));
+    } catch {
+      setErrors({ city: t('onboarding.locationUnknownChooseCity') });
+    } finally {
+      setLocating(false);
+    }
+  };
+
+  // The reason is shown only while the system has not been asked yet. Once
+  // permission is granted it has been accepted, and repeating it is a lecture.
+  const askForLocation = async () => {
+    const existing = await Location.getForegroundPermissionsAsync().catch(() => null);
+    if (existing?.granted) {
+      void locateMe();
+      return;
+    }
+    setLocationExplainer(true);
+  };
+
+  const chooseCity = (id: string | undefined) => {
+    const place = id ? placeForCity(id) : null;
+    if (!place) return;
+    setDraft((current) => ({ ...current, ...place }));
+    setErrors({});
+  };
+
   const goNext = async () => {
     if (step === 3 && (draft.latitude === undefined || draft.longitude === undefined)) {
-      setLocating(true);
-      try {
-        const permission = await Location.requestForegroundPermissionsAsync();
-        if (permission.status !== 'granted') {
-          setErrors({ city: t('onboarding.locationPermissionRequired') });
-          return;
-        }
-        const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-        const [place] = await Location.reverseGeocodeAsync(position.coords);
-        const city = place?.city ?? place?.subregion ?? place?.region ?? '';
-        const country = place?.country ?? '';
-        if (city.length < 2 || country.length < 2) {
-          setErrors({ city: t('onboarding.locationUnavailable') });
-          return;
-        }
-        setDraft((current) => ({ ...current, city, country, latitude: position.coords.latitude, longitude: position.coords.longitude }));
-        setErrors({});
-        setStep((current) => Math.min(LAST_STEP, current + 1));
-      } catch {
-        setErrors({ city: t('onboarding.locationUnavailable') });
-      } finally {
-        setLocating(false);
-      }
+      setErrors({ city: t('onboarding.locationRequired') });
       return;
     }
     const nextErrors = validateStep(step, draft, t);
@@ -218,6 +254,13 @@ export default function OnboardingScreen() {
       });
       if (error) throw error;
       await clearOnboardingDraft(draftMemberId);
+      // Everything fetched before this moment was fetched about somebody who did
+      // not exist yet, and is cached for five minutes. Two of those answers did
+      // real damage: consent ("not agreed") sent every new member to agree a
+      // second time, and the round ("consent required") had the Daily screen
+      // bouncing them back to the consent screen in a loop. Throw them all away
+      // so the app asks again about the member who now does exist.
+      queryClient.removeQueries();
       setCompleted(true);
       await refreshProfileStatus();
     } catch {
@@ -294,7 +337,13 @@ export default function OnboardingScreen() {
             <BasicDetailsStep draft={draft} errors={errors} patch={patch} />
           ) : null}
           {step === 3 ? (
-            <LocationStep draft={draft} errors={errors} locating={locating} />
+            <LocationStep
+              draft={draft}
+              errors={errors}
+              locating={locating}
+              onUseLocation={() => void askForLocation()}
+              onChooseCity={() => setCityPicker(true)}
+            />
           ) : null}
           {step === 4 ? (
             <ReviewStep
@@ -308,6 +357,39 @@ export default function OnboardingScreen() {
               onRetryLegal={() => void legalStatusQuery.refetch()}
             />
           ) : null}
+
+          <PermissionExplainer
+            visible={locationExplainer}
+            eyebrow={t('permission.location.eyebrow')}
+            title={t('permission.location.title')}
+            body={t('permission.location.body')}
+            points={[
+              t('permission.location.p1'),
+              t('permission.location.p2'),
+              t('permission.location.p3'),
+            ]}
+            reassurance={t('permission.location.reassurance')}
+            continueLabel={t('permission.continue')}
+            cancelLabel={t('onboarding.chooseCityInstead')}
+            onContinue={() => {
+              setLocationExplainer(false);
+              void locateMe();
+            }}
+            onCancel={() => {
+              setLocationExplainer(false);
+              setCityPicker(true);
+            }}
+          />
+          <PickerSheet
+            visible={cityPicker}
+            groups={CITY_GROUPS}
+            selected={[]}
+            onChange={(next) => chooseCity(next[0])}
+            onClose={() => setCityPicker(false)}
+            title={t('onboarding.chooseCityTitle')}
+            eyebrow={t('permission.location.eyebrow')}
+            searchLabel={t('onboarding.chooseCitySearch')}
+          />
 
           {submitError ? (
             <View
@@ -482,8 +564,19 @@ function BasicDetailsStep({ draft, errors, patch }: StepProps) {
   );
 }
 
-function LocationStep({ draft, errors, locating }: Pick<StepProps, 'draft' | 'errors'> & { locating: boolean }) {
+function LocationStep({
+  draft,
+  errors,
+  locating,
+  onUseLocation,
+  onChooseCity,
+}: Pick<StepProps, 'draft' | 'errors'> & {
+  locating: boolean;
+  onUseLocation: () => void;
+  onChooseCity: () => void;
+}) {
   const { t } = useI18n();
+  const chosen = Boolean(draft.city && draft.country);
   return (
     <View>
       <StepHeading
@@ -492,9 +585,26 @@ function LocationStep({ draft, errors, locating }: Pick<StepProps, 'draft' | 'er
       />
       <View style={styles.form}>
         <View style={styles.locationPanel}>
-          <Text variant="label">{draft.city && draft.country ? `${draft.city}, ${draft.country}` : locating ? t('onboarding.locationFinding') : t('onboarding.locationPermissionBody')}</Text>
+          <Text variant="label">
+            {chosen
+              ? `${draft.city}, ${draft.country}`
+              : locating
+                ? t('onboarding.locationFinding')
+                : t('onboarding.locationPermissionBody')}
+          </Text>
           {errors.city ? <InlineError message={errors.city} /> : null}
         </View>
+        <Button
+          label={chosen ? t('onboarding.useLocationAgain') : t('onboarding.useLocation')}
+          loading={locating}
+          onPress={onUseLocation}
+        />
+        <Button
+          label={chosen ? t('onboarding.chooseDifferentCity') : t('onboarding.chooseCity')}
+          variant="secondary"
+          disabled={locating}
+          onPress={onChooseCity}
+        />
       </View>
     </View>
   );

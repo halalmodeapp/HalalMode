@@ -1,3 +1,6 @@
+// Relative, not '@/': the tests load this file directly and do not resolve aliases.
+import { nearestPlace } from '../data/cities';
+
 export interface DeviceCoordinates {
   latitude: number;
   longitude: number;
@@ -17,7 +20,9 @@ export interface DeviceLocationUpdate extends DeviceCoordinates {
 
 /**
  * Converts the OS reverse-geocode result into the only location payload the
- * profile API accepts. No typed place name is accepted by this boundary.
+ * profile API accepts. A place name always arrives with the coordinates it
+ * belongs to — from the device here, or as a pair from the city list — so a
+ * member can never claim one city while standing in another.
  */
 export function deviceLocationFromReverseGeocode(
   place: ReverseGeocodedPlace | undefined,
@@ -37,4 +42,23 @@ export function deviceLocationFromReverseGeocode(
   }
 
   return { city, country, ...coordinates };
+}
+
+/**
+ * The device's answer, or the nearest listed city when the device cannot name
+ * the place.
+ *
+ * A browser gives coordinates but has no geocoder — Expo removed it — so on the
+ * web the first answer is always empty and every member used to fail the
+ * location step. The coordinates are still the member's own; only the name is
+ * borrowed from the closest city on the list.
+ */
+export function placeFromDevice(
+  place: ReverseGeocodedPlace | undefined,
+  coordinates: DeviceCoordinates,
+): DeviceLocationUpdate | null {
+  return (
+    deviceLocationFromReverseGeocode(place, coordinates) ??
+    nearestPlace(coordinates.latitude, coordinates.longitude)
+  );
 }

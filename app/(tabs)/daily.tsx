@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
-import { router, type Href } from 'expo-router';
+import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
@@ -59,6 +59,7 @@ const NARROWING_CRITERION_KEYS: Record<NarrowingCriterion, TranslationKey> = {
 
 export default function DailyScreen() {
   const { t, isRTL } = useI18n();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const readinessQuery = useQuery({
     queryKey: queryKeys.profileReadiness,
@@ -159,11 +160,17 @@ export default function DailyScreen() {
     );
   }, [popMode, popPulse, reducedMotion]);
 
+  // Tell the gate to look again; do not navigate. AuthGate owns where a member
+  // belongs. When this screen navigated too, a brand-new member was caught
+  // between them: the round fetched before they existed said "consent needed",
+  // so this screen sent them to agree, and the gate — which knew they just had —
+  // sent them straight back, forever, until React stopped the loop and their
+  // first sight of the app was an error screen.
   useEffect(() => {
     if (emptyReason === 'legal_consent_required') {
-      router.replace('/legal-consent' as Href);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.legalConsent });
     }
-  }, [emptyReason]);
+  }, [emptyReason, queryClient]);
 
   // Under "resets at Fajr in London": yes, but when. Re-reads once a minute
   // until the last minute, so the phone is not woken every second for a number

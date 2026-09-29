@@ -35,7 +35,8 @@ import { queryKeys } from '@/lib/queryClient';
 import { testIds } from '@/lib/testIds';
 import { PRACTICE_LABELS, TIMELINE_LABELS } from '@/data/preferences';
 import { getProfileReadiness, type ProfileReadinessIssue } from '@/lib/profileReadiness';
-import { deviceLocationFromReverseGeocode } from '@/lib/deviceLocation';
+import { placeFromDevice } from '@/lib/deviceLocation';
+import { CITY_GROUPS, placeForCity } from '@/data/cities';
 import { useI18n, type Translate } from '@/i18n';
 import type { TranslationKey } from '@/i18n/catalog';
 import { PermissionExplainer } from '@/components/ui/PermissionExplainer';
@@ -104,6 +105,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
   const [updatingLocation, setUpdatingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locationExplainer, setLocationExplainer] = useState(false);
+  const [cityPicker, setCityPicker] = useState(false);
   const loadedProfileId = useRef<string | null>(null);
   const finishingRecording = useRef(false);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
@@ -316,8 +318,8 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
       const position = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
-      const [place] = await Location.reverseGeocodeAsync(position.coords);
-      const resolved = deviceLocationFromReverseGeocode(place, position.coords);
+      const places = await Location.reverseGeocodeAsync(position.coords).catch(() => []);
+      const resolved = placeFromDevice(places[0], position.coords);
       if (!resolved) {
         setLocationError(t('profile.locationUnavailable'));
         return;
@@ -335,6 +337,25 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
       setUpdatingLocation(false);
     }
   }, [queryClient, t, updatingLocation]);
+
+  const chooseCity = async (id: string | undefined) => {
+    const place = id ? placeForCity(id) : null;
+    if (!place || updatingLocation) return;
+    setUpdatingLocation(true);
+    setLocationError(null);
+    try {
+      await updateMyLocation(place);
+      queryClient.setQueryData<Profile>(queryKeys.profile('me'), (current) =>
+        current ? { ...current, city: place.city, country: place.country } : current
+      );
+      void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.round });
+    } catch {
+      setLocationError(t('profile.locationUpdateError'));
+    } finally {
+      setUpdatingLocation(false);
+    }
+  };
 
   /**
    * Explain first, but only while there is still something to explain.
@@ -766,6 +787,22 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
             loading={updatingLocation}
             onPress={() => void askForLocation()}
           />
+          <Button
+            label={t('onboarding.chooseDifferentCity')}
+            variant="quiet"
+            disabled={updatingLocation}
+            onPress={() => setCityPicker(true)}
+          />
+          <PickerSheet
+            visible={cityPicker}
+            groups={CITY_GROUPS}
+            selected={[]}
+            onChange={(next) => void chooseCity(next[0])}
+            onClose={() => setCityPicker(false)}
+            title={t('onboarding.chooseCityTitle')}
+            eyebrow={t('permission.location.eyebrow')}
+            searchLabel={t('onboarding.chooseCitySearch')}
+          />
           <PermissionExplainer
             visible={locationExplainer}
             eyebrow={t('permission.location.eyebrow')}
@@ -778,12 +815,15 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
             ]}
             reassurance={t('permission.location.reassurance')}
             continueLabel={t('permission.continue')}
-            cancelLabel={t('permission.notNow')}
+            cancelLabel={t('onboarding.chooseCityInstead')}
             onContinue={() => {
               setLocationExplainer(false);
               void refreshDeviceLocation();
             }}
-            onCancel={() => setLocationExplainer(false)}
+            onCancel={() => {
+              setLocationExplainer(false);
+              setCityPicker(true);
+            }}
             testID={testIds.you.locationExplainer}
           />
           {locationError ? (
