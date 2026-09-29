@@ -8,6 +8,9 @@ export const dailyRoundStatuses = [
   // Fajr, so between being built and being seen there is a real, ordinary wait
   // that is not any kind of problem — unlike every other status here.
   'next_set_scheduled',
+  // Today's set has been chosen. Kept on the server so a reload cannot turn
+  // "you chose" into "we found nobody".
+  'set_complete',
   'at_match_capacity',
   'filters_too_narrow',
   'legal_consent_required',

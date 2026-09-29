@@ -374,6 +374,11 @@ export default function DailyScreen() {
     );
   }
 
+  // The same screen as the moment after choosing, so a reload looks the same.
+  if (emptyReason === 'set_complete' && (!round || round.introductions.length === 0)) {
+    return <SetCompleteState onReset={reset} waitingForConnection={false} />;
+  }
+
   if (!round || round.introductions.length === 0) {
     const matchingInputsUnavailable = emptyReason === 'matching_inputs_unavailable';
     const awaitingTurn = emptyReason === 'awaiting_turn';
