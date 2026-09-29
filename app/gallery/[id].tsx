@@ -10,7 +10,16 @@ import {
   useWindowDimensions,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
+  Platform,
 } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from '@/components/ui/Text';
@@ -24,7 +33,7 @@ import {
 import { getGalleryState, safeGalleryIndex } from '@/lib/galleryState';
 import { testIds } from '@/lib/testIds';
 import { useRound } from '@/state/round';
-import { color, font, radius } from '@/theme/tokens';
+import { color, font, layout, radius } from '@/theme/tokens';
 
 export default function GalleryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -33,7 +42,14 @@ export default function GalleryScreen() {
   const { round, refresh, profileOpened, profileClosed } = useRound();
   const listRef = useRef<FlatList<string>>(null);
   const [index, setIndex] = useState(0);
-  const { width } = useWindowDimensions();
+  // The app is held to a phone's width on a desktop, so the window is the
+  // wrong ruler: sizing each page to it made every photo 1345px wide inside a
+  // 560px screen, and only its left edge was ever seen.
+  const window = useWindowDimensions();
+  const width = Platform.OS === 'web' ? Math.min(window.width, layout.maxContentWidth) : window.width;
+  const [stageHeight, setStageHeight] = useState(0);
+  const [zoomed, setZoomed] = useState(false);
+  const frame = photoFrame(width, stageHeight || window.height - 200);
   const introduction = round?.introductions.find((item) => item.id === id);
   const photos = introduction?.profile.photos ?? [];
   const galleryState = getGalleryState(!!introduction, photos.length);
@@ -63,6 +79,11 @@ export default function GalleryScreen() {
     listRef.current?.scrollToIndex({ index: next, animated: true });
     setIndex(next);
   }, []);
+  const swipeTo = (distance: number, velocity: number) => {
+    const current = safeGalleryIndex(index, photos.length);
+    if (distance < -40 || velocity < -500) goTo(Math.min(photos.length - 1, current + 1));
+    else if (distance > 40 || velocity > 500) goTo(Math.max(0, current - 1));
+  };
 
   if (!introduction || galleryState !== 'ready') {
     return (
@@ -82,7 +103,7 @@ export default function GalleryScreen() {
           testID={testIds.gallery.close}
           accessibilityRole="button"
           accessibilityLabel={t('gallery.close')}
-          onPress={() => router.back()}
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/daily'))}
           style={styles.close}
           hitSlop={12}
         >
@@ -104,25 +125,45 @@ export default function GalleryScreen() {
         </View>
       </View>
 
+      <View style={styles.stage} onLayout={(event) => setStageHeight(event.nativeEvent.layout.height)}>
       <FlatList
         key={`gallery-${width}`}
+        style={styles.stage}
         ref={listRef}
         data={photos}
         keyExtractor={(item) => item}
         horizontal
         pagingEnabled
+        scrollEnabled={!zoomed}
+        // A list only redraws its pages when told something changed. Without
+        // this, zooming never reached the page, so it could not be dragged
+        // around, and a new stage size never re-fitted the frame.
+        extraData={`${zoomed}-${safeIndex}-${stageHeight}-${width}`}
         initialScrollIndex={safeIndex}
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={onScroll}
         getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
         {...galleryListPerformancePolicy}
         renderItem={({ item, index: photoIndex }) => (
-          <GallerySlide photo={item} index={photoIndex} width={width} />
+          <GallerySlide
+            photo={item}
+            index={photoIndex}
+            width={width}
+            frame={frame}
+            stageHeight={stageHeight}
+            zoomed={zoomed && photoIndex === safeIndex}
+            onZoomChange={setZoomed}
+            onSwipe={swipeTo}
+          />
         )}
       />
+      </View>
 
       <ScrollView
         horizontal
+        // Only as tall as the thumbnails. A scroll view grows by default on the
+        // web, and this one was taking half the screen from the photo.
+        style={styles.thumbStrip}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={[styles.thumbs, { paddingBottom: insets.bottom + 20 }]}
       >
@@ -177,24 +218,165 @@ function GalleryRecovery({
   );
 }
 
-function GallerySlide({ photo, index, width }: { photo: string; index: number; width: number }) {
+/**
+ * The largest 3:4 frame that fits the space, with a margin all round.
+ *
+ * Fitted both ways rather than to the width alone, so a short laptop screen
+ * shows the whole photo instead of the top two thirds of it.
+ */
+function photoFrame(width: number, height: number): { width: number; height: number } {
+  const margin = 10;
+  const availableWidth = Math.max(0, width - margin * 2);
+  const availableHeight = Math.max(0, height - margin * 2);
+  const frameWidth = Math.min(availableWidth, availableHeight * (3 / 4));
+  return { width: frameWidth, height: frameWidth * (4 / 3) };
+}
+
+function GallerySlide({
+  photo,
+  index,
+  width,
+  frame,
+  stageHeight,
+  zoomed,
+  onZoomChange,
+  onSwipe,
+}: {
+  photo: string;
+  index: number;
+  width: number;
+  frame: { width: number; height: number };
+  stageHeight: number;
+  zoomed: boolean;
+  onZoomChange: (zoomed: boolean) => void;
+  onSwipe: (distance: number, velocity: number) => void;
+}) {
   const { t } = useI18n();
   const [attempt, setAttempt] = useState(0);
   const [failed, setFailed] = useState(false);
 
+  // Pinch to zoom, drag to look around, double tap (or double click) to jump
+  // in and back out. Zoom is clamped to 1-4x and the photo is never dragged
+  // past its own edges, so there is no way to lose it off the frame.
+  const scale = useSharedValue(1);
+  const savedScale = useSharedValue(1);
+  const offsetX = useSharedValue(0);
+  const offsetY = useSharedValue(0);
+  const savedX = useSharedValue(0);
+  const savedY = useSharedValue(0);
+  const rotation = useSharedValue(0);
+
+  const clampOffsets = () => {
+    'worklet';
+    const maxX = (frame.width * (scale.value - 1)) / 2;
+    const maxY = (frame.height * (scale.value - 1)) / 2;
+    offsetX.value = Math.min(maxX, Math.max(-maxX, offsetX.value));
+    offsetY.value = Math.min(maxY, Math.max(-maxY, offsetY.value));
+  };
+
+  const reset = () => {
+    'worklet';
+    scale.value = withTiming(1, { duration: 200 });
+    savedScale.value = 1;
+    offsetX.value = withTiming(0, { duration: 200 });
+    offsetY.value = withTiming(0, { duration: 200 });
+    savedX.value = 0;
+    savedY.value = 0;
+    runOnJS(onZoomChange)(false);
+  };
+
+  // Turns with two fingers while pinching, and springs back upright on
+  // release, so a photo is never left crooked.
+  const rotate = Gesture.Rotation()
+    .onUpdate((event) => {
+      rotation.value = event.rotation;
+    })
+    .onEnd(() => {
+      rotation.value = withSpring(0, { damping: 14, stiffness: 180 });
+    });
+
+  const pinch = Gesture.Pinch()
+    .onUpdate((event) => {
+      scale.value = Math.min(4, Math.max(1, savedScale.value * event.scale));
+      clampOffsets();
+    })
+    .onEnd(() => {
+      if (scale.value < 1.05) {
+        reset();
+        return;
+      }
+      savedScale.value = scale.value;
+      runOnJS(onZoomChange)(true);
+    });
+
+  // One drag, two meanings, decided by the live zoom level. Zoomed in, it
+  // moves the photo around. Zoomed out on the web, it turns the page — a mouse
+  // cannot flick a paging list. On a phone the list pages natively, so the drag
+  // is only switched on once the photo is zoomed.
+  const drag = Gesture.Pan()
+    .enabled(Platform.OS === 'web' || zoomed)
+    .activeOffsetX([-8, 8])
+    .onUpdate((event) => {
+      if (scale.value <= 1.01) return;
+      offsetX.value = savedX.value + event.translationX;
+      offsetY.value = savedY.value + event.translationY;
+      clampOffsets();
+    })
+    .onEnd((event) => {
+      if (scale.value > 1.01) {
+        savedX.value = offsetX.value;
+        savedY.value = offsetY.value;
+        return;
+      }
+      runOnJS(onSwipe)(event.translationX, event.velocityX);
+    });
+
+  // Any real movement means this is not a tap, so the drag is released at
+  // once instead of waiting to see whether a second tap is coming.
+  const doubleTap = Gesture.Tap()
+    .numberOfTaps(2)
+    .maxDistance(10)
+    .onEnd(() => {
+      if (scale.value > 1) {
+        reset();
+        return;
+      }
+      scale.value = withTiming(2.5, { duration: 200 });
+      savedScale.value = 2.5;
+      runOnJS(onZoomChange)(true);
+    });
+
+  const zoomStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: offsetX.value },
+      { translateY: offsetY.value },
+      { scale: scale.value },
+      { rotate: `${rotation.value}rad` },
+    ],
+  }));
+
   return (
-    <View style={[styles.slide, { width }]}>
-      <Image
-        key={galleryRetryKey(photo, attempt)}
-        testID={`gallery-photo-${index + 1}`}
-        source={photo}
-        style={styles.photo}
-        contentFit="cover"
-        transition={200}
-        {...galleryImagePerformancePolicy}
-        accessibilityIgnoresInvertColors
-        onError={() => setFailed(true)}
-      />
+    <View style={[styles.slide, { width, height: stageHeight || frame.height + 20 }]}>
+      <GestureDetector gesture={Gesture.Exclusive(doubleTap, Gesture.Simultaneous(pinch, rotate, drag))}>
+        <View style={frame}>
+        {/* The card itself grows, rounded corners and all, past its resting size
+            — not just the picture inside a fixed frame. */}
+        <Animated.View style={[StyleSheet.absoluteFill, styles.photo, zoomStyle]}>
+            <Image
+              key={galleryRetryKey(photo, attempt)}
+              testID={`gallery-photo-${index + 1}`}
+              source={photo}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              contentPosition="center"
+              transition={200}
+              {...galleryImagePerformancePolicy}
+              accessibilityIgnoresInvertColors
+              onError={() => setFailed(true)}
+            />
+        </Animated.View>
+        </View>
+      </GestureDetector>
       {failed ? (
         <View style={styles.errorOverlay} accessibilityRole="alert">
           <Text variant="bodySmall" center style={styles.errorText}>{t('gallery.photoUnavailable')}</Text>
@@ -250,11 +432,12 @@ const styles = StyleSheet.create({
   },
   closeGlyph: { fontFamily: font.body, fontSize: 15, color: color.white },
 
-  slide: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 14 },
+  stage: { flex: 1 },
+  slide: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   photo: {
-    width: '100%',
-    aspectRatio: 3 / 4,
-    borderRadius: radius.md,
+    overflow: 'hidden',
+    borderRadius: radius.lg,
+    backgroundColor: 'rgba(255,255,255,0.04)',
   },
   errorOverlay: {
     ...StyleSheet.absoluteFill,
@@ -276,6 +459,7 @@ const styles = StyleSheet.create({
   },
   retryLabel: { color: color.ink, fontFamily: font.bodyBold, fontSize: 11 },
 
+  thumbStrip: { flexGrow: 0, flexShrink: 0 },
   thumbs: {
     alignItems: 'center',
     gap: 8,
