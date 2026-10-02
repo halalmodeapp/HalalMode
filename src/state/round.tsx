@@ -13,15 +13,14 @@ import { AppState } from 'react-native';
 
 import {
   fetchCurrentRoundState,
-  passIntroduction,
-  releaseIntroduction,
   softSelectIntroduction,
   submitKeeps,
+  type OwedAnswers,
 } from '@/api/introductions';
-import { DwellLedger, inferPassCandidate, inferSoftSelect } from '@/lib/dwell';
+import { DwellLedger, inferSoftSelect } from '@/lib/dwell';
 import type { DailyRoundEmptyReason, NarrowingCriterion } from '@/lib/dailyRoundState';
 import { queryKeys } from '@/lib/queryClient';
-import { getRoundInteractionState, resolveActiveId } from '@/lib/roundInvariants';
+import { resolveActiveId } from '@/lib/roundInvariants';
 import { useAuth } from '@/state/auth';
 import { useSession } from '@/state/session';
 import { TIER_LIMITS, type Introduction, type IntroductionRound } from '@/types';
@@ -33,61 +32,45 @@ interface RoundValue {
   narrowingCriterion: NarrowingCriterion | null;
   /** Set only while a built set waits to open, to name whose dawn it is. */
   nextSetCity: string | null;
+  /** Whose questions the member must answer before seeing a set. */
+  owed: OwedAnswers | null;
   isLoading: boolean;
   error: Error | null;
   refresh: () => void;
 
-  /** Introductions still in play — released ones are filtered out. */
+  /** Everyone in the set. Nobody is ever turned down one by one. */
   live: Introduction[];
   activeId: string | null;
   active: Introduction | null;
-
-  /** How many the member may keep at their tier. */
-  keepLimit: number;
-  /** True once `live.length` has come down to the keep limit. */
-  inChosenZone: boolean;
-  /** How many still need releasing before the set is decided. */
-  remaining: number;
-
-  /**
-    * Always false once the set has narrowed to the keepable few — see the
-    * provider. The screen can use this directly without re-guarding it.
-    */
-  popMode: boolean;
-  togglePopMode: () => void;
-  /** False in the chosen zone, so the toggle can be hidden rather than dead. */
-  canPop: boolean;
-
   setActive: (id: string) => void;
-  release: (id: string) => void;
-  releaseError: string | null;
-  retryRelease: () => void;
-  clearReleaseError: () => void;
 
+  /** How many the member may send interest to at once at their tier. */
+  keepLimit: number;
+  /** Introduction ids with interest shown, oldest first. The order is the rank. */
+  selected: string[];
   /**
-   * How long each profile was read. Kept on the device and never sent — it
-   * exists only to decide whether a single question is worth asking before the
-   * round is submitted.
+   * Shows or withdraws interest. Returns false, changing nothing, when the
+   * member is already at their limit — the screen then asks who to swap out.
    */
+  toggleSelect: (id: string) => boolean;
+  /** Swaps one selection for another, keeping the rest in order. */
+  switchSelection: (removeId: string, addId: string) => void;
+  /** Premium: everyone in the set at once. */
+  selectAll: () => void;
+
+  /** How long each profile was read. Kept on the device and never sent. */
   profileOpened: (introductionId: string) => void;
   profileClosed: (introductionId: string) => void;
   /**
-   * At most one introduction worth asking about, and null far more often than
-   * not. Nothing acts on this without the member saying so.
-   */
-  passCandidate: () => string | null;
-  /** Turns a release into a deliberate pass, once the member has confirmed. */
-  confirmPass: (introductionId: string) => Promise<void>;
-  /**
-   * Notes whoever was read longest but not kept, before the round is submitted.
-   * Not confirmed: it costs the member nothing and is never shown to anyone.
+   * Notes whoever was read longest but not chosen, before the set is sent.
+   * Never shown to anyone.
    */
   recordSoftSelect: () => Promise<void>;
 
   submitting: boolean;
-  /** Commits the surviving introductions. Resolves with the mutual matches. */
+  /** Sends interest to the selection. Resolves with the mutual matches. */
   submit: (keptIntroductionIds?: string[]) => Promise<string[]>;
-  /** True once keeps are submitted — drives the "Nothing more today" state. */
+  /** True once interest is sent — drives the "Nothing more today" state. */
   submitted: boolean;
   /** A mutual is held only until both members have an open conversation slot. */
   waitingForConnection: boolean;
@@ -102,8 +85,7 @@ const RoundContext = createContext<RoundValue | null>(null);
  * Owns the interaction state for the current round.
  *
  * Lives above the tab navigator so a trip into a profile and back does not
- * reset which faces have been let go — the reference lost that state on every
- * screen change, which made the set feel undecided.
+ * forget who has been chosen.
  */
 export function RoundProvider({ children }: { children: ReactNode }) {
   const { tier } = useSession();
@@ -111,13 +93,10 @@ export function RoundProvider({ children }: { children: ReactNode }) {
   const memberId = user?.id;
   const queryClient = useQueryClient();
 
-  const [released, setReleased] = useState<Record<string, true>>({});
+  const [selected, setSelected] = useState<string[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [popMode, setPopMode] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [waitingForConnection, setWaitingForConnection] = useState(false);
-  const [releasing, setReleasing] = useState<Record<string, true>>({});
-  const [releaseFailure, setReleaseFailure] = useState<{ id: string; message: string } | null>(null);
 
   const {
     data: roundState,
@@ -136,15 +115,12 @@ export function RoundProvider({ children }: { children: ReactNode }) {
 
   const narrowingCriterion = roundState?.narrowingCriterion ?? null;
   const nextSetCity = roundState?.city ?? null;
+  const owed = roundState?.owed ?? null;
 
   const keepLimit = TIER_LIMITS[tier].keeps;
 
-  const live = useMemo(
-    () => (round?.introductions ?? []).filter((item) => !released[item.id]),
-    [round, released]
-  );
+  const live = useMemo(() => round?.introductions ?? [], [round]);
 
-  // Falls back to the first survivor whenever the active card is released.
   const resolvedActiveId = useMemo(
     () => resolveActiveId(live, activeId),
     [activeId, live]
@@ -155,63 +131,50 @@ export function RoundProvider({ children }: { children: ReactNode }) {
     [live, resolvedActiveId]
   );
 
-  const { inChosenZone, remaining, canPop } = getRoundInteractionState(
-    live.length,
-    keepLimit
-  );
-
-  // Reaching the keepable few ends the current popping gesture, but does not
-  // lock the final set: members may still narrow it further if they choose.
+  // Read from a ref so a toggle can answer at once, before the next render.
+  const selectedRef = useRef(selected);
   useEffect(() => {
-    if (inChosenZone) setPopMode(false);
-  }, [inChosenZone]);
+    selectedRef.current = selected;
+  }, [selected]);
 
-  const releaseMutation = useMutation({ mutationFn: releaseIntroduction });
-
-  const release = useCallback(
+  const toggleSelect = useCallback(
     (id: string) => {
-      if (released[id] || releasing[id]) return;
-      setReleasing((current) => ({ ...current, [id]: true }));
-      setReleaseFailure(null);
-      setReleased((current) => ({ ...current, [id]: true }));
-      releaseMutation.mutate(id, {
-        onError: (failure) => {
-          setReleased((current) => {
-            const next = { ...current };
-            delete next[id];
-            return next;
-          });
-          setReleaseFailure({
-            id,
-            message: failure instanceof Error
-              ? failure.message
-              : 'We could not save that choice. Nothing was changed.',
-          });
-        },
-        onSettled: () => {
-          setReleasing((current) => {
-            const next = { ...current };
-            delete next[id];
-            return next;
-          });
-        },
-      });
+      const current = selectedRef.current;
+      if (current.includes(id)) {
+        selectedRef.current = current.filter((item) => item !== id);
+      } else if (current.length >= keepLimit) {
+        return false;
+      } else {
+        selectedRef.current = [...current, id];
+      }
+      setSelected(selectedRef.current);
+      return true;
     },
-    [released, releaseMutation, releasing]
+    [keepLimit]
   );
 
-  const retryRelease = useCallback(() => {
-    if (releaseFailure) release(releaseFailure.id);
-  }, [release, releaseFailure]);
+  const switchSelection = useCallback((removeId: string, addId: string) => {
+    selectedRef.current = [
+      ...selectedRef.current.filter((item) => item !== removeId && item !== addId),
+      addId,
+    ];
+    setSelected(selectedRef.current);
+  }, []);
 
-  // A ref, not state: reading a profile must never re-render the round, and the
-  // timings are consulted once, at submission.
+  const selectAll = useCallback(() => {
+    const current = selectedRef.current;
+    selectedRef.current = [
+      ...current,
+      ...live.map((item) => item.id).filter((id) => !current.includes(id)),
+    ].slice(0, keepLimit);
+    setSelected(selectedRef.current);
+  }, [keepLimit, live]);
+
+  // A ref, not state: reading a profile must never re-render the round.
   const ledger = useRef(new DwellLedger()).current;
 
-  // Backgrounding is not navigation, so nothing else stops the clock on an open
-  // profile. Without this a member who takes a call mid-profile banks the whole
-  // call against whoever was on screen, which moves somebody else to the bottom
-  // of the set and asks about the wrong person.
+  // Backgrounding is not navigation, so nothing else stops the clock on an
+  // open profile.
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (next) => {
       if (next === 'active') ledger.resume();
@@ -221,43 +184,20 @@ export function RoundProvider({ children }: { children: ReactNode }) {
   }, [ledger]);
   const profileOpened = useCallback((id: string) => ledger.opened(id), [ledger]);
   const profileClosed = useCallback((id: string) => ledger.closed(id), [ledger]);
-  // The whole set, not just the survivors: the rule is about how the member
-  // worked through everyone they were given, so the ones they let go still
-  // count as having been read.
-  const passCandidate = useCallback(
-    () => inferPassCandidate(
-      ledger.records(),
-      (round?.introductions ?? []).map((item) => item.id),
-      Object.keys(released)
-    ),
-    [ledger, released, round]
-  );
 
   const softSelectMutation = useMutation({ mutationFn: softSelectIntroduction });
   const recordSoftSelect = useCallback(async () => {
-    const candidate = inferSoftSelect(ledger.records(), Object.keys(released));
+    const notChosen = live
+      .map((item) => item.id)
+      .filter((id) => !selectedRef.current.includes(id));
+    const candidate = inferSoftSelect(ledger.records(), notChosen);
     if (!candidate) return;
     try {
       await softSelectMutation.mutateAsync(candidate);
     } catch {
       // A courtesy signal. Losing it must never cost the member their round.
     }
-  }, [ledger, released, softSelectMutation]);
-
-  const passMutation = useMutation({ mutationFn: passIntroduction });
-  const confirmPass = useCallback(
-    async (id: string) => {
-      // Deliberately not fatal. The member has answered a question they were
-      // asked as a courtesy; failing their submission over it would be a poor
-      // trade, and the release is already recorded either way.
-      try {
-        await passMutation.mutateAsync(id);
-      } catch {
-        // Left as a plain release.
-      }
-    },
-    [passMutation]
-  );
+  }, [ledger, live, softSelectMutation]);
 
   const submitMutation = useMutation({
     mutationFn: async (keptIntroductionIds: string[]) => {
@@ -268,41 +208,38 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       setSubmitted(true);
       setWaitingForConnection((result.waitingMutualProfileIds?.length ?? 0) > 0);
       void queryClient.invalidateQueries({ queryKey: queryKeys.connections });
+      // A mutual may already be waiting on this member's questions.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.round });
     },
   });
 
   const submit = useCallback(
-    async (keptIntroductionIds = live.map((item) => item.id)) => {
-      const result = await submitMutation.mutateAsync(keptIntroductionIds);
+    async (keptIntroductionIds?: string[]) => {
+      const result = await submitMutation.mutateAsync(keptIntroductionIds ?? selectedRef.current);
       return result.mutualProfileIds;
     },
-    [live, submitMutation]
+    [submitMutation]
   );
 
-  const reset = useCallback(() => {
+  const clearLocal = useCallback(() => {
     ledger.clear();
-    setReleased({});
-    setReleasing({});
-    setReleaseFailure(null);
+    selectedRef.current = [];
+    setSelected([]);
     setActiveId(null);
-    setPopMode(false);
     setSubmitted(false);
     setWaitingForConnection(false);
-    void queryClient.invalidateQueries({ queryKey: queryKeys.round });
-  }, [ledger, queryClient]);
+  }, [ledger]);
 
+  const reset = useCallback(() => {
+    clearLocal();
+    void queryClient.invalidateQueries({ queryKey: queryKeys.round });
+  }, [clearLocal, queryClient]);
+
+  // Choices belong to one member and one set.
+  const roundId = round?.id;
   useEffect(() => {
-    // Query data is cleared at the auth boundary. These are interaction-local
-    // values, so reset them separately before a different member sees a round.
-    ledger.clear();
-    setReleased({});
-    setReleasing({});
-    setReleaseFailure(null);
-    setActiveId(null);
-    setPopMode(false);
-    setSubmitted(false);
-    setWaitingForConnection(false);
-  }, [ledger, memberId]);
+    clearLocal();
+  }, [clearLocal, memberId, roundId]);
 
   const value = useMemo<RoundValue>(
     () => ({
@@ -310,32 +247,21 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       emptyReason,
       narrowingCriterion,
       nextSetCity,
+      owed,
       isLoading,
       error: (error as Error) ?? null,
       refresh: () => void refetch(),
       live,
       activeId: resolvedActiveId,
       active,
-      keepLimit,
-      inChosenZone,
-      remaining,
-      // Hard guard, not a UI condition: once these are the ones being kept,
-      // there is no state in which a tap should release them by accident.
-      popMode,
-      canPop,
-      togglePopMode: () => {
-        if (live.length <= 1) return;
-        setPopMode((on) => !on);
-      },
       setActive: setActiveId,
-      release,
-      releaseError: releaseFailure?.message ?? null,
-      retryRelease,
-      clearReleaseError: () => setReleaseFailure(null),
+      keepLimit,
+      selected,
+      toggleSelect,
+      switchSelection,
+      selectAll,
       profileOpened,
       profileClosed,
-      passCandidate,
-      confirmPass,
       recordSoftSelect,
       submitting: submitMutation.isPending,
       submit,
@@ -349,6 +275,7 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       emptyReason,
       narrowingCriterion,
       nextSetCity,
+      owed,
       isLoading,
       error,
       refetch,
@@ -356,17 +283,12 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       resolvedActiveId,
       active,
       keepLimit,
-      inChosenZone,
-      remaining,
-      canPop,
-      popMode,
-      release,
-      releaseFailure,
-      retryRelease,
+      selected,
+      toggleSelect,
+      switchSelection,
+      selectAll,
       profileOpened,
       profileClosed,
-      passCandidate,
-      confirmPass,
       recordSoftSelect,
       submitMutation.isPending,
       submit,

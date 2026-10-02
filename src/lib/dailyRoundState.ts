@@ -14,6 +14,9 @@ export const dailyRoundStatuses = [
   'at_match_capacity',
   'filters_too_narrow',
   'legal_consent_required',
+  // Someone chose or answered questions for this member, who has not done theirs.
+  // No set is shown until they have.
+  'answers_owed',
 ] as const;
 
 export type DailyRoundStatus = (typeof dailyRoundStatuses)[number];

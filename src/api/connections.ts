@@ -99,6 +99,27 @@ export async function submitAnswer(
   return data as QuestionAnswer;
 }
 
+/** Answers the member chose to keep, by question id. Private to them. */
+const mockSavedAnswers: Record<string, string> = {};
+
+export async function fetchSavedAnswers(): Promise<Record<string, string>> {
+  if (USE_MOCKS) return { ...mockSavedAnswers };
+  const client = requireSupabase();
+  const { data, error } = await client.rpc('get_my_saved_answers');
+  if (error) throw error;
+  return (data ?? {}) as Record<string, string>;
+}
+
+export async function saveAnswer(questionId: string, body: string): Promise<void> {
+  if (USE_MOCKS) {
+    mockSavedAnswers[questionId] = body;
+    return;
+  }
+  const client = requireSupabase();
+  const { error } = await client.rpc('save_my_answer', { p_question_id: questionId, p_body: body });
+  if (error) throw error;
+}
+
 export async function fetchMessages(
   connectionId: string
 ): Promise<ChatMessage[]> {

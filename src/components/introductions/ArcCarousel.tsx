@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -8,8 +8,6 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { ChosenSparkles } from '@/components/introductions/ChosenSparkles';
-import { PinBadge } from '@/components/introductions/PinBadge';
-import { PopBurst } from '@/components/introductions/PopBurst';
 import { ShineWipe } from '@/components/introductions/ShineWipe';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useI18n } from '@/i18n';
@@ -50,25 +48,18 @@ export function computeArcLayout(
 export interface ArcCarouselProps {
   live: Introduction[];
   activeId: string;
-  /** Pop mode is on — tapping a face releases it instead of centring it. */
-  popMode: boolean;
-  /** True once the set is down to the keepable few; adds the gold glow. */
-  chosenZone: boolean;
+  /** Introductions the member has shown interest in; these wear the gold ring. */
+  selectedIds: string[];
   onSelect: (id: string) => void;
   onOpen: (id: string) => void;
-  onSendInterest: (id: string) => void;
-  onRelease: (id: string) => void;
 }
 
 export function ArcCarousel({
   live,
   activeId,
-  popMode,
-  chosenZone,
+  selectedIds,
   onSelect,
   onOpen,
-  onSendInterest,
-  onRelease,
 }: ArcCarouselProps) {
   const reducedMotion = useReducedMotion();
   const { slots, isGrid, stripHeight } = useMemo(
@@ -79,57 +70,17 @@ export function ArcCarousel({
   const baseTop = isGrid ? slots[0]?.size ?? ARC_BUTTON : ARC_BUTTON * 0.62;
   const top = baseTop + (isGrid ? 30 : 9);
 
-  // Each burst is keyed so rapid pops queue up as separate fields rather than
-  // restarting one shared animation.
-  const [bursts, setBursts] = useState<
-    { key: number; x: number; y: number }[]
-  >([]);
-
-  const handleRelease = useCallback(
-    (id: string) => {
-      // The slot's own geometry is the burst origin — no measurement needed,
-      // and it stays correct even though the face is about to be removed.
-      const slot = slots.find((item) => item.introduction.id === id);
-      if (slot) {
-        setBursts((current) => [
-          ...current,
-          { key: Date.now(), x: slot.x, y: top + slot.y },
-        ]);
-      }
-      onRelease(id);
-    },
-    [slots, top, onRelease]
-  );
-
-  const clearBurst = useCallback((key: number) => {
-    setBursts((current) => current.filter((burst) => burst.key !== key));
-  }, []);
-
   return (
     <View style={[styles.strip, { height: stripHeight }]}>
-      {slots.map((slot, index) => (
+      {slots.map((slot) => (
         <ArcFace
           key={slot.introduction.id}
           slot={slot}
           top={top}
-          popMode={popMode}
-          chosenZone={chosenZone}
-          canRelease={live.length > 1}
-          pinAmbientDelayMs={(index * 620 + slot.introduction.id.length * 80) % 2400}
+          chosen={selectedIds.includes(slot.introduction.id)}
           reducedMotion={reducedMotion}
           onSelect={onSelect}
           onOpen={onOpen}
-          onSendInterest={onSendInterest}
-          onRelease={handleRelease}
-        />
-      ))}
-
-      {bursts.map((burst) => (
-        <PopBurst
-          key={burst.key}
-          origin={{ x: burst.x, y: burst.y }}
-          reducedMotion={reducedMotion}
-          onComplete={() => clearBurst(burst.key)}
         />
       ))}
     </View>
@@ -139,29 +90,19 @@ export function ArcCarousel({
 interface ArcFaceProps {
   slot: ArcSlot;
   top: number;
-  popMode: boolean;
-  chosenZone: boolean;
-  canRelease: boolean;
-  pinAmbientDelayMs: number;
+  chosen: boolean;
   reducedMotion: boolean;
   onSelect: (id: string) => void;
   onOpen: (id: string) => void;
-  onSendInterest: (id: string) => void;
-  onRelease: (id: string) => void;
 }
 
 const ArcFace = memo(function ArcFace({
   slot,
   top,
-  popMode,
-  chosenZone,
-  canRelease,
-  pinAmbientDelayMs,
+  chosen,
   reducedMotion,
   onSelect,
   onOpen,
-  onSendInterest,
-  onRelease,
 }: ArcFaceProps) {
   const { t } = useI18n();
   const { introduction, isActive, size } = slot;
@@ -199,14 +140,6 @@ const ArcFace = memo(function ArcFace({
   }));
 
   const handlePress = () => {
-    if (popMode && canRelease) {
-      onRelease(introduction.id);
-      return;
-    }
-    if (chosenZone) {
-      onSendInterest(introduction.id);
-      return;
-    }
     if (isActive) onOpen(introduction.id);
     else onSelect(introduction.id);
   };
@@ -229,7 +162,7 @@ const ArcFace = memo(function ArcFace({
       pointerEvents={slot.opacity < 0.2 ? 'none' : 'auto'}
     >
       <Animated.View style={[styles.frameWrap, frameStyle]}>
-        {chosenZone ? (
+        {chosen ? (
           <ChosenSparkles
             size={size}
             seed={introduction.id}
@@ -248,7 +181,7 @@ const ArcFace = memo(function ArcFace({
           style={[
             styles.frame,
             isActive ? styles.frameActive : styles.frameIdle,
-            chosenZone && styles.frameChosen,
+            chosen && styles.frameChosen,
           ]}
         >
           <Image
@@ -262,19 +195,11 @@ const ArcFace = memo(function ArcFace({
           {!isActive ? <View style={styles.desaturate} /> : null}
 
           {/* Inside the frame, so the band clips to the circle. */}
-          {chosenZone ? (
+          {chosen ? (
             <ShineWipe size={size} reducedMotion={reducedMotion} />
           ) : null}
         </Pressable>
 
-        {popMode && canRelease ? (
-          <PinBadge
-            onPress={() => onRelease(introduction.id)}
-            size={size}
-            ambientDelayMs={pinAmbientDelayMs}
-            reducedMotion={reducedMotion}
-          />
-        ) : null}
       </Animated.View>
     </Animated.View>
   );

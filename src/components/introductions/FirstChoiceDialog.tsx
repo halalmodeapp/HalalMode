@@ -16,6 +16,11 @@ export interface FirstChoiceDialogProps {
   onSelect: (introductionId: string) => void;
   onConfirm: () => void;
   onCancel: () => void;
+  /** Overrides, so the same picker can ask who to deselect. */
+  title?: string;
+  body?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
 }
 
 /**
@@ -38,6 +43,10 @@ export function FirstChoiceDialog({
   onSelect,
   onConfirm,
   onCancel,
+  title,
+  body,
+  confirmLabel,
+  cancelLabel,
 }: FirstChoiceDialogProps) {
   const { t, isRTL } = useI18n();
 
@@ -51,10 +60,10 @@ export function FirstChoiceDialog({
         />
         <Animated.View entering={FadeInUp.duration(200)} style={styles.card}>
           <Text variant="displaySmall" center>
-            {t('daily.firstChoiceTitle')}
+            {title ?? t('daily.firstChoiceTitle')}
           </Text>
           <Text variant="bodySmall" center style={styles.body}>
-            {t('daily.firstChoiceBody')}
+            {body ?? t('daily.firstChoiceBody')}
           </Text>
 
           <View style={styles.options}>
@@ -91,13 +100,13 @@ export function FirstChoiceDialog({
 
           <View style={styles.actions}>
             <Button
-              label={t('daily.notYet')}
+              label={cancelLabel ?? t('daily.notYet')}
               variant="secondary"
               onPress={onCancel}
               style={styles.action}
             />
             <Button
-              label={t('daily.yesSend')}
+              label={confirmLabel ?? t('daily.yesSend')}
               variant="gold"
               disabled={selectedId === null}
               onPress={onConfirm}

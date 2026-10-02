@@ -73,8 +73,8 @@ export const TIER_LIMITS: Record<
   MembershipTier,
   { introductions: number; keeps: number; openConnections: number }
 > = {
-  free: { introductions: 5, keeps: 1, openConnections: 5 },
-  premium: { introductions: 10, keeps: 3, openConnections: 10 },
+  free: { introductions: 5, keeps: 3, openConnections: 5 },
+  premium: { introductions: 10, keeps: 10, openConnections: 10 },
 };
 
 /**

@@ -496,7 +496,7 @@ function IdentityStep({
           value={draft.firstName}
           onChangeText={(value) => patch('firstName', value)}
           autoCapitalize="words"
-          autoComplete="name-given"
+          autoComplete="nickname"
           error={errors.firstName}
         />
         <Field
@@ -817,7 +817,7 @@ function validateStep(step: number, draft: OnboardingDraft, t: Translate): Valid
     if (draft.firstName.trim().length < 2) {
       errors.firstName = t('onboarding.error.firstName');
     }
-    if (draft.fullName.trim().length < 3 || !draft.fullName.trim().includes(' ')) {
+    if (draft.fullName.trim().length < 2) {
       errors.fullName = t('onboarding.error.fullName');
     }
     return errors;

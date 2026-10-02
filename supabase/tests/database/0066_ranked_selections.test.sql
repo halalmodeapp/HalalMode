@@ -35,11 +35,11 @@ select is(
 select col_is_null('public', 'introduction_selections', 'rank',
   'released, passed and expired rows carry no rank');
 
--- One first choice per member. A second rank 1 is a contradiction, not a tie.
+-- Ranks are per set (0151): a member's earlier sets must not block a new one.
 select ok(
   (select count(*) from pg_indexes
-   where schemaname = 'public' and indexname = 'introduction_selections_rank_idx') = 1,
-  'a member cannot hold two selections at the same rank'
+   where schemaname = 'public' and indexname = 'introduction_selections_rank_idx') = 0,
+  'a rank from an earlier set does not block sending interest from a new one'
 );
 
 -- Mutual first choice is stricter than a mutual match: both must have said one.

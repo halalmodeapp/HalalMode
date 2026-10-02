@@ -1,10 +1,11 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BlurView } from 'expo-blur';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -12,7 +13,7 @@ import {
 } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
-import { fetchConnection, submitAnswer } from '@/api/connections';
+import { fetchConnection, fetchSavedAnswers, saveAnswer, submitAnswer } from '@/api/connections';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { SafetyControl } from '@/components/safety/SafetyControl';
 import { ErrorState, InlineNotice, LoadingState } from '@/components/ui/AsyncState';
@@ -39,6 +40,14 @@ export default function AnswersScreen() {
   const [index, setIndex] = useState(0);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [revealed, setRevealed] = useState<Record<string, QuestionAnswer>>({});
+  // Whether to keep this answer for the next time the question comes up.
+  const [keep, setKeep] = useState<Record<string, boolean>>({});
+  const queryClient = useQueryClient();
+  const savedQuery = useQuery({
+    queryKey: queryKeys.savedAnswers,
+    queryFn: fetchSavedAnswers,
+  });
+  const saved = savedQuery.data ?? {};
 
   const connectionQuery = useQuery({
     queryKey: queryKeys.connection(id),
@@ -56,8 +65,14 @@ export default function AnswersScreen() {
 
   const mutation = useMutation({
     mutationFn: (text: string) => submitAnswer(id, current!.questionId, text),
-    onSuccess: (result) => {
+    onSuccess: (result, text) => {
       setRevealed((state) => ({ ...state, [result.questionId]: result }));
+      if (keep[result.questionId] && saved[result.questionId] !== text) {
+        // A convenience. Failing to keep a copy never costs the answer itself.
+        void saveAnswer(result.questionId, text)
+          .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.savedAnswers }))
+          .catch(() => undefined);
+      }
     },
   });
 
@@ -95,7 +110,12 @@ export default function AnswersScreen() {
   }
 
   const firstName = connection.profile.firstName;
-  const draft = drafts[current.questionId] ?? '';
+  // A saved answer is only ever a starting point: it fills the box, and the
+  // member still reads it and presses send themselves.
+  const savedAnswer = saved[current.questionId];
+  const draft = drafts[current.questionId] ?? savedAnswer ?? '';
+  const usingSaved = !!savedAnswer && draft === savedAnswer;
+  const keepThis = !!keep[current.questionId];
   const reveal = revealed[current.questionId];
   const committed = !!reveal;
   const isLast = index === answers.length - 1;
@@ -169,6 +189,27 @@ export default function AnswersScreen() {
             />
           </View>
 
+          {!committed && !usingSaved && draft.trim().length > 0 ? (
+            <Pressable
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: keepThis }}
+              onPress={() => setKeep((state) => ({ ...state, [current.questionId]: !keepThis }))}
+              style={[styles.keepRow, isRTL && styles.rowReverse]}
+            >
+              <View style={[styles.keepBox, keepThis && styles.keepBoxOn]}>
+                {keepThis ? <Text style={styles.keepTick}>✓</Text> : null}
+              </View>
+              <Text variant="bodySmall">
+                {savedAnswer ? t('answers.replaceSaved') : t('answers.saveForNext')}
+              </Text>
+            </Pressable>
+          ) : null}
+          {!committed && usingSaved ? (
+            <Text variant="caption" tone="whisper" style={styles.savedNote}>
+              {t('answers.fromSaved')}
+            </Text>
+          ) : null}
+
           {committed && reveal.theirAnswer ? (
             <Animated.View
               entering={FadeInUp.duration(350)}
@@ -237,6 +278,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(10,10,10,0.08)',
   },
   progressTickFilled: { backgroundColor: color.ink },
+  rowReverse: { flexDirection: 'row-reverse' },
+  keepRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12 },
+  keepBox: {
+    width: 20,
+    height: 20,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: alpha.lineStrong,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  keepBoxOn: { backgroundColor: color.ink, borderColor: color.ink },
+  keepTick: { color: color.white, fontSize: 12, lineHeight: 14 },
+  savedNote: { marginTop: 10 },
 
   body: { paddingHorizontal: space.gutterWide, paddingTop: 20, paddingBottom: 20 },
   question: { marginTop: 10, fontSize: 24, lineHeight: 31 },

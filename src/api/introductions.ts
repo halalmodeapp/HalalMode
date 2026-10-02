@@ -22,6 +22,14 @@ export interface CurrentRoundState {
    * names whose dawn they are waiting for, and there is no round to carry it.
    */
   city?: string | null;
+  /** Set only with `answers_owed`: whose questions to go back to. */
+  owed?: OwedAnswers | null;
+}
+
+export interface OwedAnswers {
+  connectionId: string;
+  name: string;
+  step: 'questions' | 'answers';
 }
 
 /**
@@ -65,7 +73,7 @@ export async function fetchCurrentRoundState(
   }
 
   const payload = data && typeof data === 'object'
-    ? data as { status?: unknown; round?: IntroductionRound | null; criterion?: unknown; city?: unknown }
+    ? data as { status?: unknown; round?: IntroductionRound | null; criterion?: unknown; city?: unknown; owed?: OwedAnswers | null }
     : {};
   const round = payload.round ?? undefined;
   const status = normalizeDailyRoundStatus(payload.status);
@@ -79,6 +87,7 @@ export async function fetchCurrentRoundState(
       // Only meaningful while waiting for a set to open, which is the one state
       // with no round to carry it.
       city: typeof payload.city === 'string' ? payload.city : null,
+      owed: payload.owed && typeof payload.owed.connectionId === 'string' ? payload.owed : null,
     };
   }
   return {

@@ -3,18 +3,11 @@ import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, {
-  Easing,
-  FadeIn,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { ArcCarousel } from '@/components/introductions/ArcCarousel';
 import { ConductAcknowledgement } from '@/components/introductions/ConductAcknowledgement';
+import { FanReveal } from '@/components/introductions/FanReveal';
 import { FirstChoiceDialog } from '@/components/introductions/FirstChoiceDialog';
 import { HeroCard } from '@/components/introductions/HeroCard';
 import { BrandHeader } from '@/components/navigation/BrandHeader';
@@ -24,7 +17,6 @@ import { EmptyState, ErrorState, InlineNotice, LoadingState } from '@/components
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
-import { useCameraShake } from '@/hooks/useCameraShake';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useI18n } from '@/i18n';
 import type { TranslationKey } from '@/i18n/catalog';
@@ -34,12 +26,13 @@ import { trackProductEvent } from '@/lib/analytics';
 import { queryKeys } from '@/lib/queryClient';
 import { acceptConduct, hasAcceptedConduct } from '@/lib/conductAcknowledgement';
 import { countdownTo, countdownTick } from '@/lib/countdown';
-import { playPop, startShimmer, stopShimmer } from '@/lib/sound';
+import { hasSeenReveal, markRevealSeen } from '@/lib/revealSeen';
 import { USE_MOCKS } from '@/lib/supabase';
 import { testIds } from '@/lib/testIds';
 import { useRound } from '@/state/round';
 import { useAuth } from '@/state/auth';
-import { alpha, color, font, radius, space } from '@/theme/tokens';
+import { useSession } from '@/state/session';
+import { alpha, color, font, space } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
 
 /**
@@ -61,6 +54,7 @@ export default function DailyScreen() {
   const { t, isRTL } = useI18n();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { tier } = useSession();
   const readinessQuery = useQuery({
     queryKey: queryKeys.profileReadiness,
     queryFn: fetchMyProfileReadiness,
@@ -71,6 +65,7 @@ export default function DailyScreen() {
     emptyReason,
     narrowingCriterion,
     nextSetCity,
+    owed,
     isLoading,
     error,
     refresh,
@@ -78,42 +73,28 @@ export default function DailyScreen() {
     activeId,
     active,
     keepLimit,
-    inChosenZone,
-    remaining,
-    popMode,
-    canPop,
-    togglePopMode,
+    selected,
+    toggleSelect,
+    switchSelection,
+    selectAll,
     setActive,
-    release,
-    releaseError,
-    retryRelease,
-    clearReleaseError,
     submit,
     submitting,
     submitted,
     waitingForConnection,
     submitError,
     reset,
-    passCandidate,
-    confirmPass,
     recordSoftSelect,
   } = useRound();
 
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmLetGo, setConfirmLetGo] = useState(false);
-  const [interestTargetId, setInterestTargetId] = useState<string | null>(null);
-  // Premium keeps up to three, so which one comes first has to be asked. Free
-  // members keep exactly one, which is their first choice by definition.
-  const [firstChoiceOpen, setFirstChoiceOpen] = useState(false);
-  const [firstChoiceId, setFirstChoiceId] = useState<string | null>(null);
+  // Someone the member tried to choose while already at their limit, and who
+  // they are thinking of swapping out for them.
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [swapOutId, setSwapOutId] = useState<string | null>(null);
   const [conductVisible, setConductVisible] = useState(false);
-  // Which introduction to ask about before submitting, and whether the single
-  // question this round allows has already been put.
-  const [passAskId, setPassAskId] = useState<string | null>(null);
-  const [passAsked, setPassAsked] = useState(false);
-  const { shake, style: shakeStyle } = useCameraShake();
+  const [revealing, setRevealing] = useState(false);
   const reducedMotion = useReducedMotion();
-  const popPulse = useSharedValue(0);
   const roundId = round?.id;
   const introductionCount = round?.introductions.length;
   const conductMemberId = user?.id ?? 'mock-member';
@@ -139,26 +120,21 @@ export default function DailyScreen() {
     trackProductEvent('daily_round_viewed', { introduction_count: introductionCount });
   }, [roundId, introductionCount]);
 
-  // One question per round, so a new round earns a fresh one.
+  // The fanned reveal, once per set. Waits for the conduct sheet so it is not
+  // played behind it, unseen.
   useEffect(() => {
-    setPassAsked(false);
-    setPassAskId(null);
+    if (!roundId || reducedMotion || conductVisible || (introductionCount ?? 0) < 2) return;
+    let cancelled = false;
+    void hasSeenReveal(roundId).then((seen) => {
+      if (!cancelled && !seen) setRevealing(true);
+    });
+    return () => { cancelled = true; };
+  }, [conductVisible, introductionCount, reducedMotion, roundId]);
+
+  const finishReveal = useCallback(() => {
+    setRevealing(false);
+    if (roundId) void markRevealSeen(roundId);
   }, [roundId]);
-
-  useEffect(() => {
-    if (!popMode || reducedMotion) {
-      popPulse.value = 0;
-      return;
-    }
-
-    popPulse.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: 1050, easing: Easing.out(Easing.quad) }),
-        withTiming(0, { duration: 1050, easing: Easing.in(Easing.quad) })
-      ),
-      -1
-    );
-  }, [popMode, popPulse, reducedMotion]);
 
   // Tell the gate to look again; do not navigate. AuthGate owns where a member
   // belongs. When this screen navigated too, a brand-new member was caught
@@ -196,106 +172,43 @@ export default function DailyScreen() {
           ? t('daily.newSetInMinutes', { minutes: countdown.minutes })
           : t('daily.newSetInSeconds');
 
-  const popPulseStyle = useAnimatedStyle(() => ({
-    opacity: popPulse.value * 0.7,
-    transform: [{ scale: 1 + popPulse.value * 0.1 }],
-  }));
-
-  // The shimmer runs for as long as the set sits at its final size, and stops
-  // the moment interest is sent or the screen goes away.
-  useEffect(() => {
-    if (inChosenZone && !submitted) startShimmer();
-    else stopShimmer();
-    return stopShimmer;
-  }, [inChosenZone, submitted]);
-
-  const handleRelease = useCallback(
+  /**
+   * Show Interest on one person. At the limit, nothing changes yet: the
+   * member is asked who to swap out, so a choice is never dropped silently.
+   */
+  const handleToggle = useCallback(
     (id: string) => {
-      playPop();
-      if (!reducedMotion) shake();
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      // The burst itself is owned by ArcCarousel, which knows where each face
-      // sits and can fire the particles from exactly that point.
-      release(id);
+      const wasSelected = selected.includes(id);
+      if (toggleSelect(id)) {
+        if (!wasSelected) void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        return;
+      }
+      setPendingId(id);
+      setSwapOutId(selected[0] ?? null);
     },
-    [reducedMotion, release, shake]
+    [selected, toggleSelect]
   );
 
-  // Letting the last one go ends the round with nothing kept — irreversible,
-  // hence its own confirmation.
-  const handleLetGoFinal = useCallback(async () => {
-    setConfirmLetGo(false);
-    try {
-      await submit([]);
-    } catch {
-      // The provider exposes the recoverable error without losing the round.
-    }
-  }, [submit]);
+  const confirmSwitch = useCallback(() => {
+    if (pendingId && swapOutId) switchSelection(swapOutId, pendingId);
+    setPendingId(null);
+    setSwapOutId(null);
+  }, [pendingId, swapOutId, switchSelection]);
 
-  const performSubmit = useCallback(async () => {
-    // Before the keeps land, so the reading that produced it is still what the
-    // round looked like. Swallows its own failures; it must never cost a submit.
+  const handleSubmit = useCallback(async () => {
+    setConfirmOpen(false);
+    // Before the choices land, so the reading that produced it is still what
+    // the round looked like. Swallows its own failures.
     await recordSoftSelect();
     try {
-      // The array order is the rank, so the named first choice leads.
-      const ordered = interestTargetId
-        ? [interestTargetId]
-        : firstChoiceId
-          ? [firstChoiceId, ...live.map((item) => item.id).filter((id) => id !== firstChoiceId)]
-          : undefined;
-      const mutual = await submit(ordered);
+      const mutual = await submit(selected);
       if (mutual.length > 0 && mutual[0]) {
         router.push(`/match/${mutual[0]}`);
       }
     } catch {
       // The provider keeps the round open and exposes an actionable error.
     }
-  }, [firstChoiceId, interestTargetId, live, recordSoftSelect, submit]);
-
-  const handleSubmit = useCallback(async () => {
-    setConfirmOpen(false);
-    setFirstChoiceOpen(false);
-    // Asked at most once per round, and only when one profile was read markedly
-    // less than the rest. Most rounds never reach the dialog at all.
-    if (!passAsked) {
-      setPassAsked(true);
-      const candidate = passCandidate();
-      if (candidate) {
-        setPassAskId(candidate);
-        return;
-      }
-    }
-    await performSubmit();
-  }, [passAsked, passCandidate, performSubmit]);
-
-  const passAskName =
-    round?.introductions.find((item) => item.id === passAskId)?.profile.firstName
-    ?? t('safety.thisPerson');
-
-  // Either answer submits the round. Saying no is a real answer, not a dismissal
-  // — it says the quick look was not a judgement, and that is worth recording as
-  // much as the other way.
-  const answerPass = useCallback(
-    async (deliberate: boolean) => {
-      const id = passAskId;
-      setPassAskId(null);
-      if (deliberate && id) await confirmPass(id);
-      await performSubmit();
-    },
-    [confirmPass, passAskId, performSubmit]
-  );
-
-  const openInterestConfirmation = useCallback((id?: string) => {
-    setInterestTargetId(id ?? null);
-    // Sending to a whole set of more than one means we still do not know which
-    // of them comes first, so ask before confirming.
-    if (!id && live.length > 1) {
-      setFirstChoiceId(null);
-      setFirstChoiceOpen(true);
-      return;
-    }
-    setConfirmOpen(true);
-  }, [live.length]);
+  }, [recordSoftSelect, selected, submit]);
 
   /**
    * The card deck reports the exact profile it selected rather than only a
@@ -337,6 +250,26 @@ export default function DailyScreen() {
           message={t('daily.loadErrorBody')}
           onRetry={refresh}
         />
+      </Screen>
+    );
+  }
+
+  // Someone is waiting on this member. No set until they have caught up.
+  if (emptyReason === 'answers_owed' && owed) {
+    const picks = owed.step === 'questions';
+    return (
+      <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
+        <BrandHeader />
+        <View style={styles.readinessEmpty}>
+          <EmptyState
+            title={t(picks ? 'daily.owedPicksTitle' : 'daily.owedTitle', { name: owed.name })}
+            message={t(picks ? 'daily.owedPicksBody' : 'daily.owedBody')}
+          />
+          <Button
+            label={t(picks ? 'daily.owedPicksAction' : 'daily.owedAction', { name: owed.name })}
+            onPress={() => router.push(`/connection/${owed.connectionId}/${owed.step}`)}
+          />
+        </View>
       </Screen>
     );
   }
@@ -451,11 +384,14 @@ export default function DailyScreen() {
     return <SetCompleteState onReset={reset} waitingForConnection={waitingForConnection} />;
   }
 
-  // The last introduction standing gets a named release instead of a toggle.
-  // Pop mode itself is already off for the whole chosen zone — see RoundProvider —
-  // so Premium members with three survivors keep their button but lose their pins.
-  const isFinal = live.length === 1;
-  const finalName = live[0]?.profile.firstName ?? '';
+  const activeChosen = !!active && selected.includes(active.id);
+  const nameOf = (id: string | null) =>
+    live.find((item) => item.id === id)?.profile.firstName ?? '';
+  const selectedIntroductions = selected
+    .map((id) => live.find((item) => item.id === id))
+    .filter((item): item is NonNullable<typeof item> => !!item);
+  const canSelectAll = tier === 'premium' && live.length > 1 && selected.length < Math.min(keepLimit, live.length);
+  const activeIndex = Math.max(0, live.findIndex((item) => item.id === activeId));
 
   return (
     <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
@@ -463,9 +399,7 @@ export default function DailyScreen() {
 
       <View style={[styles.headline, isRTL && styles.rowReverse]}>
         <View style={styles.headlineText}>
-          {/* What this is, first; when it changes, underneath and quieter. It
-              used to be two small lines of timing above the title, which put
-              the least important thing first. */}
+          {/* What this is, first; when it changes, underneath and quieter. */}
           <Text variant="display" style={styles.title}>
             {t(
               round.introductions.length === 1
@@ -496,177 +430,117 @@ export default function DailyScreen() {
         ) : null}
       </View>
 
-      {releaseError ? (
-        <InlineNotice
-          message={t('daily.releaseError')}
-          actionLabel={t('common.tryAgain')}
-          onAction={retryRelease}
-          onDismiss={clearReleaseError}
-        />
-      ) : null}
       {submitError ? (
         <InlineNotice message={t('daily.submitError')} />
       ) : null}
 
-      <Animated.View style={[styles.stage, shakeStyle]}>
-        {active ? (
-          <HeroCard
-            profiles={live.map((item) => item.profile)}
-            activeId={active.profile.id}
-            popMode={popMode}
-            chosen={inChosenZone}
-            onPress={openIntroductionByProfileId}
-            onSwipe={selectActiveIntroductionByProfileId}
-          />
-        ) : null}
-
-        {active ? (
-          <View style={[styles.safetyOverlay, isRTL && styles.safetyOverlayRTL]}>
-            <SafetyControl
-              scope={{ kind: 'introduction', id: active.id }}
-              memberName={active.profile.firstName}
-              tone="dark"
-              onBlocked={() => void refresh()}
+      <View style={styles.stage}>
+        <Animated.View style={[styles.stageFill, revealing && styles.hidden]}>
+          {active ? (
+            <HeroCard
+              profiles={live.map((item) => item.profile)}
+              activeId={active.profile.id}
+              popMode={false}
+              chosen={activeChosen}
+              onPress={openIntroductionByProfileId}
+              onSwipe={selectActiveIntroductionByProfileId}
             />
-          </View>
-        ) : null}
+          ) : null}
 
-        {activeId ? (
-          <ArcCarousel
-            live={live}
-            activeId={activeId}
-            popMode={popMode}
-            chosenZone={inChosenZone}
-            onSelect={setActive}
-            onOpen={(id) => router.push(`/introduction/${id}`)}
-            onSendInterest={(id) => openInterestConfirmation(id)}
-            onRelease={handleRelease}
+          {active ? (
+            <View style={[styles.safetyOverlay, isRTL && styles.safetyOverlayRTL]}>
+              <SafetyControl
+                scope={{ kind: 'introduction', id: active.id }}
+                memberName={active.profile.firstName}
+                tone="dark"
+                onBlocked={() => void refresh()}
+              />
+            </View>
+          ) : null}
+
+          {activeId ? (
+            <ArcCarousel
+              live={live}
+              activeId={activeId}
+              selectedIds={selected}
+              onSelect={setActive}
+              onOpen={(id) => router.push(`/introduction/${id}`)}
+            />
+          ) : null}
+        </Animated.View>
+
+        {revealing ? (
+          <FanReveal
+            profiles={live.map((item) => item.profile)}
+            activeIndex={activeIndex}
+            onDone={finishReveal}
           />
         ) : null}
-      </Animated.View>
+      </View>
 
       <View style={styles.footer}>
-        <Text variant="caption" center tone="whisper">
-          {isFinal
-            ? t('daily.oneLeft')
-            : inChosenZone
-              ? t('daily.kept', { count: live.length, limit: keepLimit })
-              : t('daily.letGoMore', { count: remaining })}
-        </Text>
+        <View style={[styles.captionRow, isRTL && styles.rowReverse]}>
+          <Text variant="caption" tone="whisper" style={styles.captionText}>
+            {selected.length > 0
+              ? t('daily.chosenOf', { count: selected.length, limit: Math.min(keepLimit, live.length) })
+              : t('daily.chooseUpTo', { limit: Math.min(keepLimit, live.length) })}
+          </Text>
+          {canSelectAll ? (
+            <Pressable accessibilityRole="button" onPress={selectAll} hitSlop={8}>
+              <Text variant="caption" style={styles.selectAll}>{t('daily.showInterestAll')}</Text>
+            </Pressable>
+          ) : null}
+        </View>
 
         <View style={[styles.actions, isRTL && styles.rowReverse]}>
-          {isFinal ? (
-            <Button
-              label={t('daily.letGoName', { name: finalName })}
-              variant="secondary"
-              dotColor="#CB4242"
-              onPress={() => setConfirmLetGo(true)}
-              style={styles.letGoAction}
-            />
-          ) : (
-            <Pressable
-              testID={testIds.daily.pop}
-              accessibilityRole="switch"
-              accessibilityState={{ checked: popMode, disabled: !canPop }}
-              accessibilityLabel={t('daily.popLabel')}
-              accessibilityHint={
-                canPop
-                  ? undefined
-                  : t('daily.popUnavailable')
-              }
-              disabled={!canPop}
-              onPress={togglePopMode}
-              style={[
-                styles.popToggle,
-                popMode && styles.popToggleOn,
-                !canPop && styles.popToggleDisabled,
-              ]}
-            >
-              <Animated.View
-                pointerEvents="none"
-                style={[styles.popPulse, popPulseStyle]}
-              />
-              <Text style={[styles.popLabel, popMode && styles.popLabelOn]}>
-                {popMode ? t('daily.done') : t('daily.pop')}
-              </Text>
-            </Pressable>
-          )}
-
+          <Button
+            testID={testIds.daily.pop}
+            label={activeChosen ? `✓ ${t('daily.interested')}` : t('daily.showInterest')}
+            variant={activeChosen ? 'gold' : 'secondary'}
+            disabled={!active}
+            onPress={() => active && handleToggle(active.id)}
+            style={styles.interestAction}
+          />
           <Button
             testID={testIds.daily.primary}
-            label={
-              inChosenZone
-                ? t('daily.sendInterest')
-                : active
-                  ? t('daily.readProfile', { name: active.profile.firstName })
-                  : t('daily.readProfileFallback')
-            }
-            // Gold marks the one moment a choice is being sealed.
-            variant={inChosenZone ? 'gold' : popMode ? 'secondary' : 'primary'}
+            label={selected.length > 0 ? t('daily.sendCount', { count: selected.length }) : t('daily.sendInterest')}
+            variant="primary"
+            disabled={selected.length === 0}
             loading={submitting}
-            onPress={() => {
-              if (inChosenZone) openInterestConfirmation();
-              else if (active) router.push(`/introduction/${active.id}`);
-            }}
+            onPress={() => setConfirmOpen(true)}
             style={styles.primaryAction}
           />
         </View>
       </View>
 
       <FirstChoiceDialog
-        visible={firstChoiceOpen}
-        introductions={live}
-        selectedId={firstChoiceId}
-        onSelect={setFirstChoiceId}
-        onConfirm={() => void handleSubmit()}
+        visible={pendingId !== null}
+        introductions={selectedIntroductions}
+        selectedId={swapOutId}
+        onSelect={setSwapOutId}
+        title={t('daily.limitTitle', { limit: keepLimit })}
+        body={t('daily.limitBody', { name: nameOf(pendingId) })}
+        confirmLabel={t('daily.switchSelection')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={confirmSwitch}
         onCancel={() => {
-          setFirstChoiceOpen(false);
-          setFirstChoiceId(null);
+          setPendingId(null);
+          setSwapOutId(null);
         }}
       />
 
       <ConfirmDialog
         visible={confirmOpen}
         title={
-          interestTargetId
-            ? (() => {
-                const name = live.find((item) => item.id === interestTargetId)?.profile.firstName;
-                return name ? t('daily.sendToName', { name }) : t('daily.sendToPerson');
-              })()
-            : live.length === 1 && live[0]
-            ? t('daily.sendToName', { name: live[0].profile.firstName })
-            : t('daily.sendToSet')
+          selected.length === 1
+            ? t('daily.sendToName', { name: nameOf(selected[0] ?? null) })
+            : t('daily.sendToCount', { count: selected.length })
         }
         body={t('daily.mutualOnly')}
         confirmLabel={t('daily.yesSend')}
         cancelLabel={t('daily.notYet')}
         onConfirm={() => void handleSubmit()}
-        onCancel={() => {
-          setConfirmOpen(false);
-          setInterestTargetId(null);
-        }}
-      />
-
-      <ConfirmDialog
-        visible={confirmLetGo}
-        title={t('daily.letGoQuestion', { name: finalName })}
-        body={t('daily.letGoFinalBody')}
-        confirmLabel={t('daily.letGo')}
-        cancelLabel={t('daily.keepName', { name: finalName })}
-        onConfirm={() => void handleLetGoFinal()}
-        onCancel={() => setConfirmLetGo(false)}
-      />
-      {/* Asked about someone already let go, so the name comes from the whole
-          round rather than from the survivors. */}
-      <ConfirmDialog
-        visible={passAskId !== null}
-        title={t('daily.passTitle', { name: passAskName })}
-        body={t('daily.passBody', { name: passAskName })}
-        confirmLabel={t('daily.passConfirm')}
-        cancelLabel={t('daily.passCancel')}
-        testID={testIds.daily.confirmPass}
-        onConfirm={() => void answerPass(true)}
-        onCancel={() => void answerPass(false)}
+        onCancel={() => setConfirmOpen(false)}
       />
 
       <ConductAcknowledgement visible={conductVisible} onAccept={acknowledgeConduct} />
@@ -734,6 +608,8 @@ const styles = StyleSheet.create({
   resetGlyph: { fontFamily: font.body, fontSize: 14, color: color.muted },
 
   stage: { flex: 1, marginTop: 14, minHeight: 0 },
+  stageFill: { flex: 1, minHeight: 0 },
+  hidden: { opacity: 0 },
   safetyOverlay: { position: 'absolute', top: 12, right: 42, zIndex: 200 },
   safetyOverlayRTL: { right: undefined, left: 42 },
 
@@ -743,39 +619,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  popToggle: {
-    position: 'relative',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 86,
-    borderWidth: 1,
-    borderColor: '#CB4242',
-    borderRadius: radius.pill,
-    paddingVertical: 14,
-    backgroundColor: '#CB4242',
-  },
-  popToggleOn: { backgroundColor: color.ink, borderColor: color.ink },
-  /**
-   * Kept on screen but inert once these are the introductions being kept. The
-   * pins are what get pressed by accident, so those go; removing the button too
-   * would shift the whole row at the tensest moment of the round.
-   */
-  popToggleDisabled: { opacity: 0.4 },
-  popPulse: {
-    position: 'absolute',
-    top: -3,
-    right: -3,
-    bottom: -3,
-    left: -3,
-    borderRadius: radius.pill,
-    borderWidth: 1.5,
-    borderColor: '#CB4242',
-  },
-  popLabel: { fontFamily: font.bodyBold, fontSize: 11.5, color: color.white },
-  popLabelOn: { color: color.white },
-  letGoAction: { flex: 0.8, paddingHorizontal: 10 },
-  primaryAction: { flex: 1.35, paddingHorizontal: 10 },
+  captionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  captionText: { flex: 1 },
+  selectAll: { color: color.ink, textDecorationLine: 'underline' },
+  interestAction: { flex: 1, paddingHorizontal: 10 },
+  primaryAction: { flex: 1.2, paddingHorizontal: 10 },
 
   complete: {
     flex: 1,

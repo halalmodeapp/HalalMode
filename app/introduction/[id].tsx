@@ -22,9 +22,9 @@ import { occupationLabel } from '@/data/occupations';
 export default function IntroductionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { localeTag, isRTL, language, t } = useI18n();
-  const { round, live, release, refresh, keepLimit, submit, profileOpened, profileClosed } =
+  const { round, refresh, selected, toggleSelect, keepLimit, profileOpened, profileClosed } =
     useRound();
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [limitOpen, setLimitOpen] = useState(false);
 
   // Before the early return below, because hooks cannot be conditional. Reading
   // a profile is timed on the device so that at most one question can be asked
@@ -52,23 +52,10 @@ export default function IntroductionDetailScreen() {
   }
 
   const { profile, agreements } = introduction;
+  const chosen = selected.includes(introduction.id);
   const position = (round?.introductions.indexOf(introduction) ?? 0) + 1;
   const total = round?.introductions.length ?? 0;
   const number = (value: number) => new Intl.NumberFormat(localeTag).format(value);
-
-  const handleSendInterest = async () => {
-    setConfirmOpen(false);
-    // With one keep left this is the final commit; otherwise it just marks a
-    // keep and returns to the arc so the rest of the set can be resolved.
-    if (live.length <= keepLimit) {
-      const mutual = await submit();
-      if (mutual[0]) {
-        router.replace(`/match/${mutual[0]}`);
-        return;
-      }
-    }
-    router.back();
-  };
 
   return (
     <Screen style={isRTL ? styles.rtl : undefined}>
@@ -156,31 +143,35 @@ export default function IntroductionDetailScreen() {
         </View>
 
         <View style={[styles.actions, isRTL && styles.rowRTL]}>
+          {/* Choosing happens here as on the deck; sending happens back on the
+              deck, where the whole selection can be seen at once. */}
           <Button
-            label={t('daily.letGo')}
-            variant="secondary"
+            label={chosen ? `✓ ${t('daily.interested')}` : t('daily.showInterest')}
+            variant={chosen ? 'gold' : 'primary'}
             onPress={() => {
-              release(introduction.id);
-              router.back();
+              if (toggleSelect(introduction.id)) {
+                if (!chosen) router.back();
+              } else {
+                setLimitOpen(true);
+              }
             }}
-            style={styles.letGo}
-          />
-          <Button
-            label={t('daily.sendInterest')}
-            onPress={() => setConfirmOpen(true)}
             style={styles.sendInterest}
           />
         </View>
       </ScrollView>
 
       <ConfirmDialog
-        visible={confirmOpen}
-        title={t('daily.sendToName', { name: profile.firstName })}
-        body={t('daily.mutualOnly')}
-        confirmLabel={t('daily.yesSend')}
-        cancelLabel={t('daily.notYet')}
-        onConfirm={() => void handleSendInterest()}
-        onCancel={() => setConfirmOpen(false)}
+        visible={limitOpen}
+        title={t('daily.limitTitle', { limit: keepLimit })}
+        body={t('daily.limitBody', { name: profile.firstName })}
+        confirmLabel={t('daily.switchSelection')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={() => {
+          // The picker of who to swap out lives on the deck.
+          setLimitOpen(false);
+          router.back();
+        }}
+        onCancel={() => setLimitOpen(false)}
       />
     </Screen>
   );

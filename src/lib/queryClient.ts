@@ -26,5 +26,6 @@ export const queryKeys = {
   round: ['round'] as const,
   connections: ['connections'] as const,
   connection: (id: string) => ['connection', id] as const,
+  savedAnswers: ['saved-answers'] as const,
   messages: (connectionId: string) => ['messages', connectionId] as const,
 };
