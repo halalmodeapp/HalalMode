@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -9,7 +10,6 @@ import {
   Modal,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   TextInput,
   View,
@@ -28,6 +28,7 @@ import { SafetyControl } from '@/components/safety/SafetyControl';
 import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
+import { shuffledOpeners } from '@/data/openers';
 import { useI18n } from '@/i18n';
 import { queryKeys } from '@/lib/queryClient';
 import { trackProductEvent } from '@/lib/analytics';
@@ -387,6 +388,7 @@ export default function ChatScreen() {
               </Pressable>
             ) : null
           }
+          ListEmptyComponent={messagesQuery.isPending ? null : <OpenerHint />}
           renderItem={({ item }) =>
             item.kind === 'day' ? (
               <DayMarker date={item.date} />
@@ -419,24 +421,6 @@ export default function ChatScreen() {
           </Text>
         ) : null}
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.starters}
-        >
-          {(['chat.starter.relocation', 'chat.starter.family', 'chat.starter.call'] as const).map((key) => {
-            const starter = t(key);
-            return (
-            <Pressable
-              key={key}
-              accessibilityRole="button"
-              onPress={() => setDraft(starter)}
-              style={styles.starter}
-            >
-              <Text style={styles.starterLabel}>{starter}</Text>
-            </Pressable>
-          );})}
-        </ScrollView>
 
         <View style={styles.composer}>
           <TextInput
@@ -749,7 +733,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   callGlyph: { fontFamily: font.body, fontSize: 16, color: color.inkSoft },
-  messages: { paddingHorizontal: space.xl, paddingVertical: 16, gap: 10 },
+  messages: { flexGrow: 1, paddingHorizontal: space.xl, paddingVertical: 16, gap: 10 },
   loadEarlier: { alignSelf: 'center', paddingHorizontal: space.md, paddingVertical: space.sm },
   loadEarlierLabel: { color: color.ink, textDecorationLine: 'underline' },
   pendingNotice: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm, marginHorizontal: space.xl, marginBottom: space.xs, padding: space.sm, borderRadius: radius.md, backgroundColor: color.sand },
@@ -793,16 +777,8 @@ const styles = StyleSheet.create({
   tick: { fontFamily: font.bodyBold, fontSize: 12, letterSpacing: -2, color: 'rgba(252,252,251,0.48)' },
   tickRead: { color: color.goldOnDark },
 
-  starters: { paddingHorizontal: space.xl, gap: 7, paddingBottom: 4 },
-  starter: {
-    minHeight: 44,
-    borderWidth: 1,
-    borderColor: alpha.lineStrong,
-    borderRadius: radius.pill,
-    paddingVertical: 10,
-    paddingHorizontal: 13,
-  },
-  starterLabel: { fontFamily: font.body, fontSize: 13, color: color.inkSoft },
+  openerWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 36 },
+  opener: { fontFamily: font.body, fontSize: 15, lineHeight: 22, color: color.whisper, textAlign: 'center' },
 
   composer: {
     flexDirection: 'row',
@@ -899,3 +875,26 @@ const styles = StyleSheet.create({
   endCallGlyph: { fontFamily: font.body, fontSize: 24, color: color.white, transform: [{ rotate: '135deg' }] },
   callNote: { position: 'absolute', bottom: 15, left: 40, right: 40, color: 'rgba(252,252,251,0.44)' },
 });
+
+/**
+ * A faint suggestion in an empty conversation, changing every few seconds.
+ * Not a button: it is there to take the pressure off the first message.
+ */
+function OpenerHint() {
+  const { language } = useI18n();
+  const [openers] = useState(shuffledOpeners);
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setIndex((i) => (i + 1) % openers.length), 6000);
+    return () => clearInterval(timer);
+  }, [openers.length]);
+  const opener = openers[index];
+  if (!opener) return null;
+  return (
+    <View style={styles.openerWrap} pointerEvents="none">
+      <Animated.Text key={index} entering={FadeIn.duration(500)} style={styles.opener}>
+        {language === 'ar' ? opener.ar : opener.en}
+      </Animated.Text>
+    </View>
+  );
+}

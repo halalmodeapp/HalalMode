@@ -99,6 +99,20 @@ export async function submitAnswer(
   return data as QuestionAnswer;
 }
 
+/**
+ * The written comparison of both members' answers, or null when it is not
+ * available (not finished yet, or no AI key set on the server).
+ */
+export async function fetchConnectionSummary(connectionId: string, language: 'en' | 'ar'): Promise<string | null> {
+  if (USE_MOCKS) return null;
+  const client = requireSupabase();
+  const { data, error } = await client.functions.invoke('connection-summary', {
+    body: { connectionId, language },
+  });
+  if (error) return null;
+  return typeof data?.summary === 'string' ? data.summary : null;
+}
+
 /** Answers the member chose to keep, by question id. Private to them. */
 const mockSavedAnswers: Record<string, string> = {};
 

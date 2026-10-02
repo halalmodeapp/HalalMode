@@ -3,7 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { fetchConnection, openConnection } from '@/api/connections';
+import { fetchConnection, fetchConnectionSummary, openConnection } from '@/api/connections';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { SafetyControl } from '@/components/safety/SafetyControl';
 import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
@@ -15,15 +15,16 @@ import { queryKeys } from '@/lib/queryClient';
 import { trackProductEvent } from '@/lib/analytics';
 import { testIds } from '@/lib/testIds';
 import { sanitizeCompatibilityBreakdown } from '@/lib/compatibilityBreakdown';
+import { questionText, QUESTION_LIBRARY } from '@/data/questions';
 import { useI18n } from '@/i18n';
 import type { TranslationKey } from '@/i18n/catalog';
 import { alpha, color, radius, space } from '@/theme/tokens';
-import type { CompatibilityBreakdownItem, CompatibilityTopic, RecapItem } from '@/types';
+import type { CompatibilityBreakdownItem, CompatibilityTopic, QuestionAnswer } from '@/types';
 import { RTL_LAYOUT } from '@/lib/rtl';
 
 export default function RecapScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { isRTL, t } = useI18n();
+  const { isRTL, t, language } = useI18n();
   const queryClient = useQueryClient();
 
   const connectionQuery = useQuery({
@@ -43,6 +44,13 @@ export default function RecapScreen() {
       topic_count: compatibilityBreakdown.length,
     });
   }, [connectionId, alignedCount, compatibilityBreakdown.length]);
+  const summaryQuery = useQuery({
+    queryKey: ['connection-summary', id, language],
+    queryFn: () => fetchConnectionSummary(id, language === 'ar' ? 'ar' : 'en'),
+    enabled: !!connectionId,
+    staleTime: Infinity,
+  });
+
   const openMutation = useMutation({
     mutationFn: () => openConnection(id),
     onSuccess: async () => {
@@ -77,18 +85,31 @@ export default function RecapScreen() {
         <View style={styles.header}>
           <Text variant="micro">{t('recap.step')}</Text>
           <Text variant="display" style={styles.title}>
-            {t('recap.title', { count: alignedCount, total: recap.length })}
+            {t('recap.title')}
           </Text>
           <Text variant="bodySmall" style={styles.subtitle}>
             {t('recap.body')}
           </Text>
         </View>
 
-        <View style={styles.list}>
-          {recap.map((item) => (
-            <RecapCard key={item.questionId} item={item} />
-          ))}
-        </View>
+        <Card style={styles.summary}>
+          <Text variant="micro">{t('recap.summaryTitle')}</Text>
+          <Text style={styles.summaryText}>
+            {summaryQuery.isPending
+              ? t('recap.summaryWriting')
+              : summaryQuery.data ?? builtInSummary(compatibilityBreakdown, t)}
+          </Text>
+        </Card>
+
+
+        {connection.questions.some((item) => item.theirAnswer) ? (
+          <View style={styles.answersSection}>
+            <Text variant="label" style={styles.compatibilityTitle}>{t('recap.answersTitle')}</Text>
+            {connection.questions.map((item) => (
+              <AnswerPair key={item.questionId} item={item} theirName={connection.profile.firstName} />
+            ))}
+          </View>
+        ) : null}
 
         {compatibilityBreakdown.length > 0 ? (
           <View testID={testIds.recap.compatibility} style={styles.compatibilitySection}>
@@ -159,24 +180,46 @@ function CompatibilityCard({ item }: { item: CompatibilityBreakdownItem }) {
   );
 }
 
-function RecapCard({ item }: { item: RecapItem }) {
-  const aligned = item.verdict === 'aligned';
-  const { t } = useI18n();
+/**
+ * Used when no written summary is available: a sentence or two from the
+ * profile comparison (practice, timing, location, family plans).
+ */
+function builtInSummary(items: CompatibilityBreakdownItem[], t: ReturnType<typeof useI18n>['t']): string {
+  const name = (item: CompatibilityBreakdownItem) => t(topicKey[item.topic]).toLowerCase();
+  // "a, b and c", not "a and b and c".
+  const join = (list: CompatibilityBreakdownItem[]) => {
+    const names = list.map(name);
+    return names.length < 2
+      ? names.join('')
+      : `${names.slice(0, -1).join(', ')}${t('recap.and')}${names[names.length - 1]}`;
+  };
+  const aligned = items.filter((item) => item.verdict === 'aligned');
+  const discuss = items.filter((item) => item.verdict !== 'aligned');
+  if (!discuss.length) return t('recap.summaryAllAligned');
+  const parts = [];
+  if (aligned.length) parts.push(t('recap.summaryAligned', { topics: join(aligned) }));
+  const first = join(discuss);
+  parts.push(t('recap.summaryDiscuss', { topics: first.charAt(0).toUpperCase() + first.slice(1) }));
+  return parts.join(' ');
+}
 
+/** One question, with both answers beneath it. */
+function AnswerPair({ item, theirName }: { item: QuestionAnswer; theirName: string }) {
+  const { t, language } = useI18n();
+  const question = QUESTION_LIBRARY.find((entry) => entry.id === item.questionId);
   return (
-    <View style={styles.card}>
-      <Text variant="label" style={styles.cardHeading}>
-        {item.heading}
+    <View style={styles.pair}>
+      <Text variant="label" style={styles.pairQuestion}>
+        {question ? questionText(question, language) : item.questionId}
       </Text>
-      <View style={[styles.tag, aligned ? styles.tagAligned : styles.tagDiscuss]}>
-        <Text style={[styles.tagLabel, aligned ? styles.tagLabelAligned : styles.tagLabelDiscuss]}>
-          {aligned ? t('recap.aligned') : t('recap.discuss')}
-        </Text>
-      </View>
-      <Text variant="bodySmall">{item.note}</Text>
+      <Text variant="micro" style={styles.pairWho}>{t('recap.you')}</Text>
+      <Text variant="bodySmall">{item.myAnswer}</Text>
+      <Text variant="micro" style={styles.pairWho}>{theirName}</Text>
+      <Text variant="bodySmall">{item.theirAnswer ?? ''}</Text>
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   rtl: RTL_LAYOUT,
@@ -184,6 +227,20 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: space.gutterWide, paddingTop: 8 },
   title: { marginTop: 8 },
   subtitle: { marginTop: 10 },
+
+  summary: { marginHorizontal: space.gutterWide, marginTop: 18, gap: 10 },
+  summaryText: { fontFamily: 'Beiruti_400Regular', fontSize: 15, lineHeight: 23, color: color.ink },
+  answersSection: { paddingHorizontal: space.gutterWide, marginTop: 28, gap: 10 },
+  pair: {
+    borderWidth: 1,
+    borderColor: alpha.line,
+    borderRadius: radius.xl,
+    paddingVertical: 15,
+    paddingHorizontal: 16,
+    gap: 6,
+  },
+  pairQuestion: { fontSize: 13.5, lineHeight: 19, marginBottom: 4 },
+  pairWho: { marginTop: 6 },
 
   list: { paddingHorizontal: space.gutterWide, marginTop: 18, gap: 9 },
   card: {

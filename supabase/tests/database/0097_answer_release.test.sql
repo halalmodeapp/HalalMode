@@ -46,6 +46,10 @@ insert into question_picks (connection_id, user_id, question_id) values
   ('00000000-0000-0000-0000-00000000800c', '00000000-0000-0000-0000-000000008001', 'q2'),
   ('00000000-0000-0000-0000-00000000800c', '00000000-0000-0000-0000-000000008002', 'q2');
 
+insert into connection_questions (connection_id, question_id, catalog_version, picked_by_a, picked_by_b) values
+  ('00000000-0000-0000-0000-00000000800c', 'q1', 1, true, true),
+  ('00000000-0000-0000-0000-00000000800c', 'q2', 1, true, true);
+
 insert into question_answers (connection_id, user_id, question_id, body) values
   ('00000000-0000-0000-0000-00000000800c', '00000000-0000-0000-0000-000000008001', 'q1', 'one on q1'),
   ('00000000-0000-0000-0000-00000000800c', '00000000-0000-0000-0000-000000008001', 'q2', 'one on q2');
@@ -98,8 +102,8 @@ select is(
      halal_mode_private.get_connection_after_legal_consent(
        '00000000-0000-0000-0000-00000000800c') -> 'questions') q
    where q ->> 'questionId' = 'q1'),
-  'one on q1',
-  'the second answerer keeps the reveal across a refetch'
+  null,
+  'the second member sees nothing until they have answered every question (0153)'
 );
 
 select is(

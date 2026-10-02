@@ -136,8 +136,8 @@ do $$ begin
 end $$;
 select is(
   submit_answer('00000000-0000-0000-0000-000000002001', 'q1', 'The private answer from member A now committed.')->>'theirAnswer',
-  'The first private answer from member B.',
-  'the other answer is revealed only after the caller commits'
+  null,
+  'the other answer stays sealed while the caller still has questions to answer (0153)'
 );
 select is(
   submit_answer('00000000-0000-0000-0000-000000002001', 'q1', 'A replacement that must never overwrite the first.')->>'myAnswer',
