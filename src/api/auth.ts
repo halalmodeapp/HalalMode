@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 
 import { requireSupabase } from '@/lib/supabase';
@@ -16,6 +17,16 @@ export type AuthProvider = 'google' | 'apple';
 
 export const REDIRECT_TO = 'halalmode://auth';
 
+/**
+ * Where sign-in returns to: the app's own address on the web (which lives under
+ * /app on halalmo.de, beside the landing page), the app's link scheme on phones.
+ */
+export function authReturnAddress(): string {
+  if (Platform.OS !== 'web') return REDIRECT_TO;
+  const base = (Constants.expoConfig?.experiments?.baseUrl ?? '').replace(/\/$/, '');
+  return `${window.location.origin}${base}`;
+}
+
 export async function signInWithProvider(provider: AuthProvider): Promise<void> {
   const client = requireSupabase();
 
@@ -24,7 +35,7 @@ export async function signInWithProvider(provider: AuthProvider): Promise<void> 
   if (Platform.OS === 'web') {
     const { error } = await client.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: authReturnAddress() },
     });
     if (error) throw error;
     return;

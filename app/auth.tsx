@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
-import { signInWithProvider, type AuthProvider } from '@/api/auth';
+import { authReturnAddress, signInWithProvider, type AuthProvider } from '@/api/auth';
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
@@ -56,7 +56,7 @@ export default function AuthScreen() {
     try {
       const { error } = await requireSupabase().auth.signInWithOtp({
         email: cleanEmail,
-        options: { emailRedirectTo: 'halalmode://auth' },
+        options: { emailRedirectTo: authReturnAddress() },
       });
       if (error) throw error;
       // Supabase remains the authority for rate limits. This short local pause
