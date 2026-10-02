@@ -18,10 +18,13 @@ test('both providers come back to the address the deep-link listener watches', (
   const redirect = api.match(/REDIRECT_TO = '([^']+)'/u)?.[1];
   assert.equal(redirect, 'halalmode://auth');
 
+  // One return address for both, chosen in one place: the app's link scheme
+  // on phones, the app's own page (under /app) on the web.
+  assert.match(api, /redirectTo: authReturnAddress\(\)/u);
   const screen = read('app/auth.tsx');
   assert.match(
     screen,
-    /emailRedirectTo: 'halalmode:\/\/auth'/u,
+    /emailRedirectTo: authReturnAddress\(\)/u,
     'the email link and the provider flow must land on the same route'
   );
 });
