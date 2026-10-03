@@ -4,11 +4,11 @@ import type { CatalogGroup, CatalogOption } from './catalogOption';
 type Names = { en: string; ar: string; t: CatalogOption['t'] };
 
 /**
- * Sect, with the commonly named schools and traditions under it.
+ * Sect, with its major schools of law (madhhabs) under it.
  *
- * Choosing the group itself ("Sunni") is a full answer; the entries beneath it
- * are optional detail. Kept to what most Muslims would recognise as mainstream
- * practice — no attempt to list every movement. The ids must match
+ * Choosing the group itself ("Sunni") is a full answer; the madhhab beneath it
+ * is optional detail. Only the large schools are listed — madhhabs, not
+ * movements, so no Salafi, Sufi, Deobandi and the like. The ids must match
  * `public.sect_of_detail` (migration 0156).
  */
 const N = (en: string, ar: string, t: NonNullable<CatalogOption['t']>): Names => ({ en, ar, t });
@@ -23,19 +23,11 @@ const DETAILS: Record<Exclude<Sect, 'prefer_not_to_say'>, [string, Names][]> = {
     ['maliki', N('Maliki', 'مالكي', { ur: 'مالکی', fa: 'مالکی', hi: 'मालिकी', id: 'Maliki', ms: 'Maliki', bn: 'মালিকি', fr: 'Malikite', tr: 'Maliki', ha: 'Maliki', am: 'ማሊኪ', so: 'Maaliki', es: 'Malikí', ru: 'Маликит', 'zh-Hans': '马立克派' })],
     ['shafii', N('Shafi‘i', 'شافعي', { ur: 'شافعی', fa: 'شافعی', hi: 'शाफ़ई', id: 'Syafi’i', ms: 'Syafie', bn: 'শাফেয়ি', fr: 'Chaféite', tr: 'Şafii', ha: 'Shafi’i', am: 'ሻፊዒ', so: 'Shaafici', es: 'Shafií', ru: 'Шафиит', 'zh-Hans': '沙斐仪派' })],
     ['hanbali', N('Hanbali', 'حنبلي', { ur: 'حنبلی', fa: 'حنبلی', hi: 'हंबली', id: 'Hanbali', ms: 'Hanbali', bn: 'হাম্বলি', fr: 'Hanbalite', tr: 'Hanbeli', ha: 'Hanbali', am: 'ሐንበሊ', so: 'Xanbali', es: 'Hanbalí', ru: 'Ханбалит', 'zh-Hans': '罕百里派' })],
-    ['salafi', N('Salafi', 'سلفي', { ur: 'سلفی', fa: 'سلفی', hi: 'सलफ़ी', id: 'Salafi', ms: 'Salafi', bn: 'সালাফি', fr: 'Salafi', tr: 'Selefi', ha: 'Salafi', am: 'ሰለፊ', so: 'Salafi', es: 'Salafí', ru: 'Салафит', 'zh-Hans': '萨拉菲' })],
-    ['sufi', N('Sufi', 'صوفي', { ur: 'صوفی', fa: 'صوفی', hi: 'सूफ़ी', id: 'Sufi', ms: 'Sufi', bn: 'সুফি', fr: 'Soufi', tr: 'Sufi', ha: 'Sufi', am: 'ሱፊ', so: 'Suufi', es: 'Sufí', ru: 'Суфий', 'zh-Hans': '苏菲' })],
-    ['deobandi', N('Deobandi', 'ديوبندي', { ur: 'دیوبندی', fa: 'دیوبندی', hi: 'देवबंदी', id: 'Deobandi', ms: 'Deobandi', bn: 'দেওবন্দি', fr: 'Deobandi', tr: 'Diyobendi', ha: 'Deobandi', am: 'ዴኦባንዲ', so: 'Deobandi', es: 'Deobandi', ru: 'Деобанди', 'zh-Hans': '迪奥班迪' })],
-    ['barelvi', N('Barelvi', 'بريلوي', { ur: 'بریلوی', fa: 'بریلوی', hi: 'बरेलवी', id: 'Barelvi', ms: 'Barelvi', bn: 'বেরেলভি', fr: 'Barelvi', tr: 'Barelvi', ha: 'Barelvi', am: 'ባሬልቪ', so: 'Barelvi', es: 'Barelvi', ru: 'Барелви', 'zh-Hans': '巴雷尔维' })],
   ],
   shia: [
-    ['twelver', N('Twelver (Ja‘fari)', 'اثنا عشري (جعفري)', { ur: 'اثنا عشری (جعفری)', fa: 'اثنی‌عشری (جعفری)', hi: 'इसना अशरी (जाफ़री)', id: 'Dua Belas Imam (Ja’fari)', ms: 'Dua Belas Imam (Ja’fari)', bn: 'ইসনা আশারি (জাফরি)', fr: 'Duodécimain (jafarite)', tr: 'İsna Aşeriyye (Caferi)', ha: 'Imamai Goma Sha Biyu (Ja’fari)', am: 'ኢስና ዐሸሪ (ጃዕፈሪ)', so: 'Laba-iyo-tobanle (Jacfari)', es: 'Duodecimano (yafarí)', ru: 'Двунадесятник (джафарит)', 'zh-Hans': '十二伊玛目派（贾法里）' })],
-    ['zaydi', N('Zaydi', 'زيدي', { ur: 'زیدی', fa: 'زیدی', hi: 'ज़ैदी', id: 'Zaidi', ms: 'Zaidi', bn: 'জায়েদি', fr: 'Zaydite', tr: 'Zeydi', ha: 'Zaidi', am: 'ዘይዲ', so: 'Zaydi', es: 'Zaidí', ru: 'Зейдит', 'zh-Hans': '宰德派' })],
+    ['twelver', N('Ja‘fari', 'جعفري', { ur: 'جعفری', fa: 'جعفری', hi: 'जाफ़री', id: 'Ja’fari', ms: 'Ja’fari', bn: 'জাফরি', fr: 'Jafarite', tr: 'Caferi', ha: 'Ja’fari', am: 'ጃዕፈሪ', so: 'Jacfari', es: 'Yafarí', ru: 'Джафарит', 'zh-Hans': '贾法里派' })],
   ],
-  other: [
-    ['just_muslim', N('Just Muslim', 'مسلم فقط', { ur: 'صرف مسلمان', fa: 'فقط مسلمان', hi: 'बस मुसलमान', id: 'Muslim saja', ms: 'Muslim sahaja', bn: 'শুধু মুসলিম', fr: 'Simplement musulman', tr: 'Sadece Müslüman', ha: 'Musulmi kawai', am: 'ሙስሊም ብቻ', so: 'Muslim kaliya', es: 'Solo musulmán', ru: 'Просто мусульманин', 'zh-Hans': '只是穆斯林' })],
-    ['ibadi', N('Ibadi', 'إباضي', { ur: 'اباضی', fa: 'اباضی', hi: 'इबादी', id: 'Ibadi', ms: 'Ibadi', bn: 'ইবাদি', fr: 'Ibadite', tr: 'İbadi', ha: 'Ibadi', am: 'ኢባዲ', so: 'Ibaadi', es: 'Ibadí', ru: 'Ибадит', 'zh-Hans': '伊巴德派' })],
-  ],
+  other: [],
 };
 
 const GROUP_NAMES = { sunni: SUNNI, shia: SHIA, other: OTHER } as const;
