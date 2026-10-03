@@ -622,3 +622,15 @@ export function nearestPlace(
   if (!best || best.km > withinKm) return null;
   return { city: best.city.en, country: best.country, latitude, longitude };
 }
+
+/** Rough coordinates for a stored city name, when the device cannot say where it is. */
+export function coordsForCityName(name: string | null | undefined): { latitude: number; longitude: number } | null {
+  if (!name) return null;
+  const needle = name.trim().toLowerCase();
+  for (const { city } of BY_ID.values()) {
+    if (city.en.toLowerCase() === needle || city.ar === name.trim()) {
+      return { latitude: city.lat, longitude: city.lng };
+    }
+  }
+  return null;
+}

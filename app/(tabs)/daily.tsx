@@ -23,7 +23,7 @@ import { useI18n } from '@/i18n';
 import type { TranslationKey } from '@/i18n/catalog';
 import type { NarrowingCriterion } from '@/lib/dailyRoundState';
 import { fetchMySampleMembers } from '@/api/account';
-import { fetchMyProfileReadiness } from '@/api/profile';
+import { fetchMyProfile, fetchMyProfileReadiness } from '@/api/profile';
 import { trackProductEvent } from '@/lib/analytics';
 import { queryKeys } from '@/lib/queryClient';
 import { acceptConduct, hasAcceptedConduct } from '@/lib/conductAcknowledgement';
@@ -559,7 +559,9 @@ export default function DailyScreen() {
 function SetCompleteState({ onReset, waitingForConnection }: { onReset: () => void; waitingForConnection: boolean }) {
   const { t, isRTL } = useI18n();
   // Counts down to this member's own next Fajr, from where they are now.
-  const nextFajr = useNextFajr();
+  // The member's own city is the fallback when the device will not say.
+  const profileQuery = useQuery({ queryKey: queryKeys.profile('me'), queryFn: fetchMyProfile });
+  const nextFajr = useNextFajr(profileQuery.data?.city);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 30_000);
@@ -634,7 +636,9 @@ const styles = StyleSheet.create({
   },
   resetGlyph: { fontFamily: font.body, fontSize: 14, color: color.muted },
 
-  stage: { flex: 1, marginTop: 14, minHeight: 0 },
+  // Cards may reach the window's edge but never past it: without this the
+  // neighbours made the whole page scroll sideways on a narrow screen.
+  stage: { flex: 1, marginTop: 14, minHeight: 0, overflow: 'hidden' },
   stageFill: { flex: 1, minHeight: 0 },
   hidden: { opacity: 0 },
 
