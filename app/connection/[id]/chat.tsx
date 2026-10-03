@@ -778,7 +778,20 @@ const styles = StyleSheet.create({
   tickRead: { color: color.goldOnDark },
 
   openerWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 36 },
-  opener: { fontFamily: font.body, fontSize: 15, lineHeight: 22, color: color.whisper, textAlign: 'center' },
+  botCard: {
+    maxWidth: 340,
+    gap: 6,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: 'rgba(138,106,52,0.45)',
+    backgroundColor: 'rgba(197,160,84,0.08)',
+  },
+  botName: { fontFamily: font.bodyBold, fontSize: 10, letterSpacing: 1.4, textTransform: 'uppercase', color: color.gold },
+  botLead: { fontFamily: font.body, fontSize: 13, lineHeight: 19, color: color.muted },
+  opener: { fontFamily: font.display, fontStyle: 'italic', fontSize: 16, lineHeight: 23, color: color.ink },
 
   composer: {
     flexDirection: 'row',
@@ -877,24 +890,22 @@ const styles = StyleSheet.create({
 });
 
 /**
- * A faint suggestion in an empty conversation, changing every few seconds.
- * Not a button: it is there to take the pressure off the first message.
+ * One ice-breaker in an empty conversation, picked at random and left alone.
+ *
+ * It is set apart as the app speaking, in its own card with its own name, so
+ * nobody mistakes it for a message from the other person.
  */
 function OpenerHint() {
-  const { language } = useI18n();
-  const [openers] = useState(() => shuffledOpeners(language));
-  const [index, setIndex] = useState(0);
-  useEffect(() => {
-    const timer = setInterval(() => setIndex((i) => (i + 1) % openers.length), 6000);
-    return () => clearInterval(timer);
-  }, [openers.length]);
-  const opener = openers[index];
+  const { language, t } = useI18n();
+  const [opener] = useState(() => shuffledOpeners(language)[0]);
   if (!opener) return null;
   return (
     <View style={styles.openerWrap} pointerEvents="none">
-      <Animated.Text key={index} entering={FadeIn.duration(500)} style={styles.opener}>
-        {opener}
-      </Animated.Text>
+      <Animated.View entering={FadeIn.duration(500)} style={styles.botCard}>
+        <Text style={styles.botName}>✦ {t('chat.botName')}</Text>
+        <Text style={styles.botLead}>{t('chat.botSuggest')}</Text>
+        <Text style={styles.opener}>“{opener}”</Text>
+      </Animated.View>
     </View>
   );
 }

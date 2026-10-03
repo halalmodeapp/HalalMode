@@ -97,8 +97,8 @@ export const QUESTION_LIBRARY: CompatibilityQuestion[] = [
   },
 ];
 
-/** How many questions each side picks. The overlap becomes the shared five. */
-export const QUESTIONS_TO_PICK = 5;
+/** How many questions each side picks: three each, so a pair answers three to six. */
+export const QUESTIONS_TO_PICK = 3;
 
 /**
  * One rendering boundary for question copy. New locales can provide a

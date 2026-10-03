@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BlurView } from 'expo-blur';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -28,7 +28,7 @@ import type { QuestionAnswer } from '@/types';
 import { RTL_LAYOUT } from '@/lib/rtl';
 
 /**
- * Step 2 of 3 — answer, then reveal.
+ * Step 2 of 3 — answer each question in turn; theirs wait for the recap.
  *
  * The rule the whole screen enforces: their words stay sealed until yours are
  * committed, and yours cannot be edited afterwards. That asymmetry is what
@@ -39,6 +39,7 @@ export default function AnswersScreen() {
   const { language, isRTL, t } = useI18n();
   const [index, setIndex] = useState(0);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const advanceRef = useRef<() => void>(() => undefined);
   const [revealed, setRevealed] = useState<Record<string, QuestionAnswer>>({});
   // Whether to keep this answer for the next time the question comes up.
   const [keep, setKeep] = useState<Record<string, boolean>>({});
@@ -73,6 +74,9 @@ export default function AnswersScreen() {
           .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.savedAnswers }))
           .catch(() => undefined);
       }
+      // No pause to "reveal": an answer goes straight on to the next question,
+      // and the other person's answers wait for the side-by-side recap.
+      advanceRef.current();
     },
   });
 
@@ -119,6 +123,11 @@ export default function AnswersScreen() {
   const reveal = revealed[current.questionId];
   const committed = !!reveal;
   const isLast = index === answers.length - 1;
+
+  advanceRef.current = () => {
+    if (isLast) router.replace(`/connection/${id}/recap`);
+    else setIndex((i) => i + 1);
+  };
 
   const onPrimary = () => {
     if (!committed) {
@@ -249,11 +258,7 @@ export default function AnswersScreen() {
           />
           <Button
             label={
-              committed
-                ? isLast
-                  ? t('answers.recap')
-                  : t('answers.next')
-                : t('answers.submit')
+              isLast ? t('answers.submit') : t('answers.next')
             }
             disabled={!committed && draft.trim().length < 10}
             loading={mutation.isPending}

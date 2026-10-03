@@ -60,7 +60,7 @@ do $$ begin
 end $$;
 
 select throws_ok(
-  $$ select submit_question_picks('00000000-0000-0000-0000-000000002001', array['q1','q2','q3','q4','forged']) $$,
+  $$ select submit_question_picks('00000000-0000-0000-0000-000000002001', array['q1','q2','forged']) $$,
   '22023', 'One or more questions are unavailable',
   'an unknown question ID is rejected'
 );
@@ -70,30 +70,30 @@ select is(
   'unknown-ID rejection leaves no partial picks'
 );
 select throws_ok(
-  $$ select submit_question_picks('00000000-0000-0000-0000-000000002001', array['q1','q1','q2','q3','q4']) $$,
-  '22023', 'Choose exactly five different questions',
+  $$ select submit_question_picks('00000000-0000-0000-0000-000000002001', array['q1','q1','q2']) $$,
+  '22023', 'Choose exactly three different questions',
   'duplicate question IDs are rejected explicitly'
 );
 select throws_ok(
-  $$ select submit_question_picks('00000000-0000-0000-0000-000000002001', array['q1','q2','q3','q4',null]) $$,
-  '22023', 'Choose exactly five different questions',
+  $$ select submit_question_picks('00000000-0000-0000-0000-000000002001', array['q1','q2',null]) $$,
+  '22023', 'Choose exactly three different questions',
   'null question IDs are rejected explicitly'
 );
 select lives_ok(
-  $$ select submit_question_picks('00000000-0000-0000-0000-000000002001', array['q1','q2','q3','q4','q5']) $$,
-  'five distinct active catalog IDs are accepted'
+  $$ select submit_question_picks('00000000-0000-0000-0000-000000002001', array['q1','q2','q3']) $$,
+  'three distinct active catalog IDs are accepted'
 );
 select is(
   (select count(*)::int from question_picks where connection_id = '00000000-0000-0000-0000-000000002001' and user_id = '00000000-0000-0000-0000-000000000201'),
-  5,
-  'valid submission writes exactly five picks'
+  3,
+  'valid submission writes exactly three picks'
 );
 select lives_ok(
-  $$ select submit_question_picks('00000000-0000-0000-0000-000000002001', array['q5','q4','q3','q2','q1']) $$,
+  $$ select submit_question_picks('00000000-0000-0000-0000-000000002001', array['q3','q2','q1']) $$,
   'an exact reordered retry is idempotent'
 );
 select throws_ok(
-  $$ select submit_question_picks('00000000-0000-0000-0000-000000002001', array['q1','q2','q3','q4','q6']) $$,
+  $$ select submit_question_picks('00000000-0000-0000-0000-000000002001', array['q1','q2','q6']) $$,
   '22023', 'Question choices were already submitted',
   'a submitted choice set cannot be rewritten'
 );
@@ -102,7 +102,7 @@ do $$ begin
   perform set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000202","role":"authenticated"}', true);
 end $$;
 select lives_ok(
-  $$ select submit_question_picks('00000000-0000-0000-0000-000000002001', array['q4','q5','q6','q7','q8']) $$,
+  $$ select submit_question_picks('00000000-0000-0000-0000-000000002001', array['q3','q4','q5']) $$,
   'the other member can submit a valid set'
 );
 select is(
@@ -112,12 +112,12 @@ select is(
 );
 select is(
   (select count(*)::int from connection_questions where connection_id = '00000000-0000-0000-0000-000000002001'),
-  8,
+  5,
   'the immutable agreed set contains the distinct union of both choices'
 );
 select ok(
   (select picked_by_a and picked_by_b from connection_questions
-   where connection_id = '00000000-0000-0000-0000-000000002001' and question_id = 'q4'),
+   where connection_id = '00000000-0000-0000-0000-000000002001' and question_id = 'q3'),
   'the snapshot preserves questions chosen by both members'
 );
 select throws_ok(
@@ -156,7 +156,7 @@ do $$ begin
   perform set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000203","role":"authenticated"}', true);
 end $$;
 select throws_ok(
-  $$ select submit_question_picks('00000000-0000-0000-0000-000000002002', array['q6','q7','q8','q9','q10']) $$,
+  $$ select submit_question_picks('00000000-0000-0000-0000-000000002002', array['q7','q8','q9']) $$,
   '22023', 'One or more questions are unavailable',
   'retired questions cannot be selected for a new connection'
 );

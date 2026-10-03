@@ -17,6 +17,7 @@ import { EmptyState, ErrorState, InlineNotice, LoadingState } from '@/components
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
+import { useNextFajr } from '@/hooks/useNextFajr';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useI18n } from '@/i18n';
 import type { TranslationKey } from '@/i18n/catalog';
@@ -557,6 +558,23 @@ export default function DailyScreen() {
  */
 function SetCompleteState({ onReset, waitingForConnection }: { onReset: () => void; waitingForConnection: boolean }) {
   const { t, isRTL } = useI18n();
+  // Counts down to this member's own next Fajr, from where they are now.
+  const nextFajr = useNextFajr();
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(timer);
+  }, []);
+  const left = countdownTo(nextFajr?.toISOString(), now);
+  const nextLabel = !left
+    ? null
+    : left.done
+      ? t('daily.newSetArriving')
+      : left.hours > 0
+        ? t('daily.newSetInHours', { hours: left.hours, minutes: left.minutes })
+        : left.minutes > 0
+          ? t('daily.newSetInMinutes', { minutes: left.minutes })
+          : t('daily.newSetInSeconds');
   return (
     <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
       <BrandHeader />
@@ -568,6 +586,11 @@ function SetCompleteState({ onReset, waitingForConnection }: { onReset: () => vo
         <Text variant="bodySmall" center style={styles.completeBody}>
           {t('daily.completeBody')}
         </Text>
+        {nextLabel ? (
+          <Text variant="micro" center style={styles.completeCountdown}>
+            {nextLabel}
+          </Text>
+        ) : null}
         {waitingForConnection ? <InlineNotice message={t('daily.waitingConnection')} /> : null}
         {USE_MOCKS ? (
           <Button
@@ -635,6 +658,7 @@ const styles = StyleSheet.create({
     gap: space.lg,
     paddingHorizontal: 40,
   },
+  completeCountdown: { color: color.gold, marginTop: 6 },
   completeTitle: { marginTop: 4 },
   completeBody: { maxWidth: 250 },
   completeReset: { marginTop: space.sm },
