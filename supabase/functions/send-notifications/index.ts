@@ -143,6 +143,8 @@ Deno.serve(async (request) => {
   const rows = (claimed.data ?? []) as Claimed[];
   if (rows.length === 0) return Response.json({ claimed: 0, sent: 0, failed: 0 });
 
+  // One message per device. A notification counts as delivered if it reached
+  // any of the member's phones; it is retried only if it reached none.
   const messages = rows.map((row) => {
     const { title, body } = wording(row.kind, row.locale ?? 'en');
     return {
@@ -156,46 +158,55 @@ Deno.serve(async (request) => {
     };
   });
 
-  const sent: number[] = [];
-  const failed: { id: number; error: string }[] = [];
+  const delivered = new Set<number>();
+  const lastError = new Map<number, string>();
+  const deadTokens: string[] = [];
 
-  // Expo takes up to 100 per request and answers with one ticket per message,
-  // in order.
-  try {
-    const response = await fetch('https://exp.host/--/api/v2/push/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify(messages),
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      for (const row of rows) failed.push({ id: row.id, error: `push ${response.status}: ${text.slice(0, 120)}` });
-    } else {
+  // Expo accepts at most 100 messages per request and answers with one ticket
+  // per message, in order.
+  for (let start = 0; start < messages.length; start += 100) {
+    const batch = messages.slice(start, start + 100);
+    const batchRows = rows.slice(start, start + 100);
+    try {
+      const response = await fetch('https://exp.host/--/api/v2/push/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(batch),
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        for (const row of batchRows) lastError.set(row.id, `push ${response.status}: ${text.slice(0, 120)}`);
+        continue;
+      }
       const payload = await response.json() as { data?: { status: string; message?: string; details?: { error?: string } }[] };
       const tickets = payload.data ?? [];
-      rows.forEach((row, index) => {
+      batchRows.forEach((row, index) => {
         const ticket = tickets[index];
-        if (!ticket) {
-          failed.push({ id: row.id, error: 'no ticket returned' });
-        } else if (ticket.status === 'ok') {
-          sent.push(row.id);
-        } else {
-          // `DeviceNotRegistered` is read on the database side and clears the
-          // token, so an uninstalled app stops being retried.
-          failed.push({ id: row.id, error: ticket.details?.error ?? ticket.message ?? 'unknown' });
+        if (ticket?.status === 'ok') {
+          delivered.add(row.id);
+          return;
         }
+        const error = ticket ? (ticket.details?.error ?? ticket.message ?? 'unknown') : 'no ticket returned';
+        lastError.set(row.id, error);
+        // Only this phone is retired; the member's others keep receiving.
+        if (error === 'DeviceNotRegistered') deadTokens.push(row.push_token);
       });
-    }
-  } catch (error) {
-    for (const row of rows) {
-      failed.push({ id: row.id, error: error instanceof Error ? error.message : 'transport failed' });
+    } catch (error) {
+      for (const row of batchRows) {
+        lastError.set(row.id, error instanceof Error ? error.message : 'transport failed');
+      }
     }
   }
+
+  const sent = [...new Set(rows.map((row) => row.id))].filter((id) => delivered.has(id));
+  const failed = [...new Set(rows.map((row) => row.id))]
+    .filter((id) => !delivered.has(id))
+    .map((id) => ({ id, error: lastError.get(id) ?? 'unknown' }));
 
   const settled = await client.rpc('settle_notifications_service', {
     p_sent: sent,
     p_failed: failed,
+    p_dead_tokens: deadTokens,
   });
   if (settled.error) {
     return Response.json({ error: settled.error.message, sent: sent.length }, { status: 500 });

@@ -11,7 +11,7 @@
  * that is what members' acceptance is recorded against.
  */
 
-export const LEGAL_VERSION = '2026-07-29';
+export const LEGAL_VERSION = '2026-10-04';
 
 export interface LegalSection {
   heading: string;
@@ -44,7 +44,7 @@ export const TERMS: LegalDocument = {
     {
       heading: 'How introductions work',
       body: [
-        'Each day you are shown a small set of people. Free members see five and may keep one; Premium members see ten and may keep three.',
+        'Each day you are shown a small set of people. Free members may show interest in up to three of them; Premium members see up to ten and may show interest in up to ten.',
         'Introductions are mutual. If someone appears in your set, you appear in theirs. Nobody is browsed without appearing themselves.',
         'Interest is private. If you choose someone and they do not choose you, they are never told. You will never be told that someone chose you unless you chose them back.',
         'We do not guarantee that you will be matched, or how many introductions you will receive on any given day. That depends on how many suitable people are available.',
@@ -63,7 +63,8 @@ export const TERMS: LegalDocument = {
     {
       heading: 'Safety',
       body: [
-        'You can block or report anyone you have been introduced to. Blocking is immediate and the other person is not told.',
+        'You can block or report anyone you have been introduced to, at any time — even before accepting updated terms. Blocking is immediate and the other person is not told.',
+        'If you choose not to see someone again, you are hidden from them too.',
         'We may suspend or remove an account that breaks these terms or puts other members at risk. Where we can, we will tell you why.',
         'Halal Mode is an introduction service. We do not verify identity, background, or intentions, and we cannot guarantee anyone’s honesty. Take the same care you would take meeting anyone new. Meet in public, tell someone where you are going, and involve your family as you see fit.',
       ],
@@ -72,7 +73,7 @@ export const TERMS: LegalDocument = {
       heading: 'Your account',
       body: [
         'You can pause your profile or close your account at any time, from Settings.',
-        'Closing your account removes your profile, photos, preferences, and messages. Some records are kept where the law requires it, or where they are needed to keep other members safe — for example a record that a report was made.',
+        'Closing your account hides your profile at once. After a short recovery period your profile, photos, preferences, and messages are removed. Some records are kept where the law requires it, or where they are needed to keep other members safe — for example a report made by or about you.',
       ],
     },
     {
@@ -110,7 +111,7 @@ export const PRIVACY: LegalDocument = {
         'Your profile: name, date of birth, city and country, what you do, what you have written about yourself, your photographs, and an optional voice introduction.',
         'Your preferences: the age, distance, and other qualities you are looking for, and which of them are must-haves.',
         'Your activity: which introductions you were shown, which you kept, your answers to the questions, and your messages.',
-        'Rough coordinates for your city, used only to work out how far apart two people are.',
+        'Your location, rounded to about one kilometre, with the nearest city and country. It comes from your device, is used only to work out how far apart two people are, and is never shown to anyone.',
       ],
     },
     {
@@ -125,9 +126,9 @@ export const PRIVACY: LegalDocument = {
       heading: 'What nobody sees',
       body: [
         'We keep a private score used to decide who to introduce to whom. It is never shown to anyone — including you. It is not a rating of you as a person, and it is not shared.',
-        'Your answers to a question are released to the other person only once they have answered the same question themselves. Until then, they cannot see it.',
-        'Blocks and reports are private. The person you blocked or reported is not told.',
-        'Your exact location is never stored. Only a rough position for your city, and only to measure distance.',
+        'Your answers are shown to the other person only once they have answered all of their own questions, and theirs to you only once you have answered all of yours.',
+        'Blocks, reports and hides are private. The person is not told. If you hide someone, you are hidden from them too.',
+        'Your exact location is never kept. It is rounded to about a kilometre before it is stored, and used only to measure distance.',
       ],
     },
     {
@@ -141,14 +142,23 @@ export const PRIVACY: LegalDocument = {
     {
       heading: 'Your photographs',
       body: [
-        'Photographs and voice recordings are stored privately. They are never publicly accessible, and are served only to people you have been introduced to, through links that expire.',
+        'Photographs and voice recordings are stored privately. They are never publicly accessible, and are served only to people you are currently introduced to or connected with, through links that expire within minutes.',
+        'Once someone has seen a photograph, no app can stop them taking a screenshot. Share only photographs you are comfortable with someone keeping.',
+      ],
+    },
+    {
+      heading: 'Halal Mode Bot summary',
+      body: [
+        'Once you have both answered your questions, Halal Mode Bot may write a short summary of where your answers agree and where they are worth talking about.',
+        'To write it, your answers are processed by an AI service provider acting on our behalf. It does not receive your email, photographs or location, and may not keep your answers or use them for anything else, including training.',
+        'The summary is a starting point for conversation, not a judgement about compatibility or suitability.',
       ],
     },
     {
       heading: 'Who we share with',
       body: [
         'We do not sell your data. We never have and we will not.',
-        'We use suppliers to run the service — hosting, database, email delivery, and app store payments. They process data on our instructions and may not use it for anything else.',
+        'We use suppliers to run the service — hosting, database, email delivery, push notifications, an AI service for Halal Mode Bot summaries, and app store payments. They process data on our instructions and may not use it for anything else.',
         'We will share information if the law requires it, or to protect someone from serious harm.',
       ],
     },
@@ -157,7 +167,7 @@ export const PRIVACY: LegalDocument = {
       body: [
         'You can change or delete anything on your profile at any time.',
         'You can pause your profile, which stops new introductions without deleting anything.',
-        'You can close your account, which removes your profile, photographs, preferences, and messages.',
+        'You can close your account. Your profile is hidden at once, and your profile, photographs, preferences, and messages are removed after a short recovery period.',
         'You can ask for a copy of your data, or ask us to correct it. Write to hello@halalmo.de.',
       ],
     },
@@ -165,7 +175,7 @@ export const PRIVACY: LegalDocument = {
       heading: 'How long we keep things',
       body: [
         'While your account is open, we keep your profile and messages so the service works.',
-        'When you close your account, we remove them. We keep a minimal record where the law requires it, or where it is needed to keep other members safe.',
+        'When you close your account, we remove them after a short recovery period. We keep a minimal record where the law requires it, or where it is needed to keep other members safe — such as a safety report.',
       ],
     },
     {

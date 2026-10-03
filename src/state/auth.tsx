@@ -23,6 +23,7 @@ import { clearOnboardingDraft } from '@/lib/onboardingDraftStorage';
 import { clearPrivateMediaCache } from '@/lib/privateMediaCache';
 import { shouldClearPrivateMediaCache } from '@/lib/privateMediaCachePolicy';
 import { queryClient, queryKeys } from '@/lib/queryClient';
+import { forgetThisDevice } from '@/api/notifications';
 import { requireSupabase, supabase, USE_MOCKS } from '@/lib/supabase';
 
 interface AuthValue {
@@ -189,14 +190,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    void refreshProfileStatus().catch(() => {
-      setOnboardingComplete(false);
-      setProfileStatusReady(true);
-    });
+    // A failed lookup is "not known yet", never "setup not finished": treating
+    // an outage as an incomplete profile sent returning members back through
+    // onboarding as if their account had gone. Keep the loading screen and
+    // retry with growing gaps until the server answers.
+    let cancelled = false;
+    let attempt = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const tryLoad = () => {
+      void refreshProfileStatus().catch(() => {
+        if (cancelled) return;
+        attempt += 1;
+        timer = setTimeout(tryLoad, Math.min(15_000, 1_000 * 2 ** attempt));
+      });
+    };
+    tryLoad();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
   }, [ready, refreshProfileStatus, user]);
 
   const signOut = useCallback(async () => {
     if (!USE_MOCKS) {
+      // Before the session ends, while the server still knows who this is.
+      await forgetThisDevice();
       const { error } = await requireSupabase().auth.signOut({
         scope: MEMBER_SIGN_OUT_SCOPE,
       });

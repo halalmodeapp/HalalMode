@@ -38,7 +38,9 @@ const PHOTO_LIMIT_BYTES = 10 * 1024 * 1024;
 const VOICE_LIMIT_BYTES = 15 * 1024 * 1024;
 // Long enough for an uninterrupted foreground session. Returning to the app
 // also refetches stale queries, which rotates these URLs before reuse.
-const SIGNED_URL_SECONDS = 60 * 60;
+// Short-lived: a link copied out of the app stops working soon after. Screens
+// refetch well inside this window, so members never see one expire.
+const SIGNED_URL_SECONDS = 20 * 60;
 const PHOTO_STORAGE_PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|heic|heif)$/;
 const VOICE_STORAGE_PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(m4a|aac|mp3|webm)$/;
 
@@ -232,7 +234,10 @@ async function compressProfilePhoto(uri: string): Promise<string> {
     });
     return saved.uri;
   } catch {
-    return uri;
+    // Fail closed. Uploading the untouched original would skip the re-encode
+    // that strips camera metadata (including where the photo was taken), and
+    // would label whatever bytes it holds as a JPEG.
+    throw new Error('This photo could not be processed. Please choose another.');
   }
 }
 

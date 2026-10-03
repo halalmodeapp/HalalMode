@@ -254,7 +254,11 @@ export default function AnswersScreen() {
         </ScrollView>
 
         {mutation.isError ? (
-          <InlineNotice message={t('answers.saveError')} />
+          <InlineNotice
+            message={/contact details/i.test(String((mutation.error as { message?: string } | null)?.message ?? ''))
+              ? t('answers.noContact')
+              : t('answers.saveError')}
+          />
         ) : null}
 
         <View style={styles.footer}>

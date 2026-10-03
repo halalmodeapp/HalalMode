@@ -54,3 +54,25 @@ export async function disableMyNotifications(): Promise<void> {
   const { error } = await requireSupabase().rpc('disable_my_notifications');
   if (error) throw error;
 }
+
+/**
+ * On sign-out: this phone stops receiving this account's notifications.
+ *
+ * Only ever reads a token that already exists (never asks for permission), and
+ * never fails the sign-out it belongs to.
+ */
+export async function forgetThisDevice(): Promise<void> {
+  if (USE_MOCKS || !Device.isDevice) return;
+  if (!supportsRemotePushRuntime(Platform.OS, Constants.executionEnvironment)) return;
+  try {
+    const Notifications = await import('expo-notifications');
+    const permission = await Notifications.getPermissionsAsync();
+    if (permission.status !== 'granted') return;
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId as string | undefined;
+    if (!projectId) return;
+    const token = await Notifications.getExpoPushTokenAsync({ projectId });
+    await requireSupabase().rpc('forget_my_notification_device', { p_token: token.data });
+  } catch {
+    // Signing out still proceeds; the next registration on this phone moves it anyway.
+  }
+}

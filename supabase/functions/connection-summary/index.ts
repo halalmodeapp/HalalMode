@@ -17,6 +17,9 @@ import questions from './questions.json' with { type: 'json' };
 const MODEL = 'claude-haiku-4-5-20251001';
 const QUESTIONS = questions as Record<string, { en: string; ar: string }>;
 
+/** Marks a summary being written, so a second request does not start another. */
+const PENDING = '…';
+
 /** The app's languages, named the way the model should write them. */
 const LANGUAGES: Record<string, string> = {
   en: 'English', ar: 'Arabic', ur: 'Urdu', fa: 'Persian (Farsi)', hi: 'Hindi',
@@ -60,23 +63,40 @@ Deno.serve(async (request) => {
 
   const { data: cached } = await admin
     .from('connection_summaries')
-    .select('body')
+    .select('body, created_at')
     .eq('connection_id', connectionId)
     .eq('language', language)
     .maybeSingle();
-  if (cached?.body) return reply({ summary: cached.body });
+  if (cached?.body && cached.body !== PENDING) return reply({ summary: cached.body });
 
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
   if (!apiKey) return reply({ summary: null });
+
+  // One generation per connection and language. The first request claims the
+  // row; others get "not yet" and the app shows its own summary meanwhile. A
+  // claim older than two minutes is treated as abandoned.
+  if (cached?.body === PENDING) {
+    if (Date.now() - Date.parse(cached.created_at) < 120_000) return reply({ summary: null });
+    await admin.from('connection_summaries').delete()
+      .eq('connection_id', connectionId).eq('language', language).eq('body', PENDING);
+  }
+  const claim = await admin.from('connection_summaries')
+    .insert({ connection_id: connectionId, language, body: PENDING });
+  if (claim.error) return reply({ summary: null });
+  const release = () => admin.from('connection_summaries').delete()
+    .eq('connection_id', connectionId).eq('language', language).eq('body', PENDING);
 
   const [{ data: picked }, { data: answers }, { data: people }] = await Promise.all([
     admin.from('connection_questions').select('question_id').eq('connection_id', connectionId),
     admin.from('question_answers').select('user_id, question_id, body').eq('connection_id', connectionId),
     admin.from('profiles').select('id, first_name').in('id', [connection.user_a, connection.user_b]),
   ]);
-  const nameOf = (id: string) => people?.find((p) => p.id === id)?.first_name ?? 'They';
+  // The provider sees "Person A" and "Person B", never names; the names go
+  // back in here, after the text comes back.
+  const realName = (id: string) => people?.find((p) => p.id === id)?.first_name ?? '';
   const a = connection.user_a;
   const b = connection.user_b;
+  const nameOf = (id: string) => (id === a ? 'Person A' : 'Person B');
 
   const transcript = (picked ?? [])
     .map(({ question_id }) => {
@@ -92,6 +112,7 @@ Deno.serve(async (request) => {
     'First say, warmly and specifically, where their answers already sound alike. Then name the one or two things most worth talking through together, as gentle prompts rather than problems.',
     'Never give a score, a percentage or a verdict on whether they suit each other. Never give religious rulings. Do not invent anything that is not in their answers. Do not quote them at length.',
     `Write in ${LANGUAGES[language]}.`,
+    'Refer to them only as Person A and Person B, exactly as written.',
     'Return only the paragraphs, with no heading.',
   ].join(' ');
 
@@ -105,7 +126,10 @@ Deno.serve(async (request) => {
       messages: [{ role: 'user', content: transcript }],
     }),
   });
-  if (!response.ok) return reply({ summary: null });
+  if (!response.ok) {
+    await release();
+    return reply({ summary: null });
+  }
   const result = await response.json();
   const summary = (result.content ?? [])
     .filter((part: { type: string }) => part.type === 'text')
@@ -113,8 +137,16 @@ Deno.serve(async (request) => {
     .join('\n')
     .trim()
     .slice(0, 4000);
-  if (!summary) return reply({ summary: null });
+  if (!summary) {
+    await release();
+    return reply({ summary: null });
+  }
+  const named = summary
+    .replaceAll('Person A', realName(a) || 'Person A')
+    .replaceAll('Person B', realName(b) || 'Person B');
 
-  await admin.from('connection_summaries').insert({ connection_id: connectionId, language, body: summary });
-  return reply({ summary });
+  await admin.from('connection_summaries')
+    .update({ body: named })
+    .eq('connection_id', connectionId).eq('language', language);
+  return reply({ summary: named });
 });

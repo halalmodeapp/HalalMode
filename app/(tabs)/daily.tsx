@@ -92,6 +92,9 @@ export default function DailyScreen() {
   } = useRound();
 
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [firstChoiceOpen, setFirstChoiceOpen] = useState(false);
+  const [firstChoiceId, setFirstChoiceId] = useState<string | null>(null);
+  const [nobodyOpen, setNobodyOpen] = useState(false);
   // Someone the member tried to choose while already at their limit, and who
   // they are thinking of swapping out for them.
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -199,20 +202,34 @@ export default function DailyScreen() {
     setSwapOutId(null);
   }, [pendingId, swapOutId, switchSelection]);
 
-  const handleSubmit = useCallback(async () => {
+  /**
+   * Sends the choices in the order given: the first is this member's first
+   * choice. With more than one, they are asked which comes first rather than
+   * the order they happened to tap being taken as a ranking.
+   */
+  const handleSubmit = useCallback(async (ordered: string[] = selected) => {
     setConfirmOpen(false);
+    setFirstChoiceOpen(false);
+    setNobodyOpen(false);
     // Before the choices land, so the reading that produced it is still what
     // the round looked like. Swallows its own failures.
     await recordSoftSelect();
     try {
-      const mutual = await submit(selected);
+      const mutual = await submit(ordered);
       if (mutual.length > 0 && mutual[0]) {
         router.push(`/match/${mutual[0]}`);
       }
     } catch {
-      // The provider keeps the round open and exposes an actionable error.
+      // A lost response may still have been committed: reload the set's real
+      // state, so a send that went through shows as done rather than failed.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.round });
     }
-  }, [recordSoftSelect, selected, submit]);
+  }, [queryClient, recordSoftSelect, selected, submit]);
+
+  const sendWithFirstChoice = useCallback(() => {
+    if (!firstChoiceId) return;
+    void handleSubmit([firstChoiceId, ...selected.filter((id) => id !== firstChoiceId)]);
+  }, [firstChoiceId, handleSubmit, selected]);
 
   /**
    * The card deck reports the exact profile it selected rather than only a
@@ -487,6 +504,12 @@ export default function DailyScreen() {
               ? t('daily.chosenOf', { count: selected.length, limit: Math.min(keepLimit, live.length) })
               : t('daily.chooseUpTo', { limit: Math.min(keepLimit, live.length) })}
           </Text>
+          {selected.length === 0 ? (
+            // Choosing nobody is a real answer, not something to be pushed past.
+            <Pressable accessibilityRole="button" onPress={() => setNobodyOpen(true)} hitSlop={8}>
+              <Text variant="caption" style={styles.selectAll}>{t('daily.nobodyToday')}</Text>
+            </Pressable>
+          ) : null}
           {canSelectAll ? (
             <Pressable accessibilityRole="button" onPress={selectAll} hitSlop={8}>
               <Text variant="caption" style={styles.selectAll}>{t('daily.showInterestAll')}</Text>
@@ -511,7 +534,14 @@ export default function DailyScreen() {
             variant="primary"
             disabled={selected.length === 0}
             loading={submitting}
-            onPress={() => setConfirmOpen(true)}
+            onPress={() => {
+              if (selected.length > 1) {
+                setFirstChoiceId(null);
+                setFirstChoiceOpen(true);
+              } else {
+                setConfirmOpen(true);
+              }
+            }}
             style={styles.primaryAction}
           />
         </View>
@@ -545,6 +575,27 @@ export default function DailyScreen() {
         cancelLabel={t('daily.notYet')}
         onConfirm={() => void handleSubmit()}
         onCancel={() => setConfirmOpen(false)}
+      />
+
+      <FirstChoiceDialog
+        visible={firstChoiceOpen}
+        introductions={selectedIntroductions}
+        selectedId={firstChoiceId}
+        onSelect={setFirstChoiceId}
+        body={t('daily.firstChoicePick')}
+        cancelLabel={t('daily.notYet')}
+        onConfirm={sendWithFirstChoice}
+        onCancel={() => setFirstChoiceOpen(false)}
+      />
+
+      <ConfirmDialog
+        visible={nobodyOpen}
+        title={t('daily.nobodyTodayTitle')}
+        body={t('daily.nobodyTodayBody')}
+        confirmLabel={t('daily.nobodyToday')}
+        cancelLabel={t('daily.notYet')}
+        onConfirm={() => void handleSubmit([])}
+        onCancel={() => setNobodyOpen(false)}
       />
 
       <ConductAcknowledgement visible={conductVisible} onAccept={acknowledgeConduct} />
