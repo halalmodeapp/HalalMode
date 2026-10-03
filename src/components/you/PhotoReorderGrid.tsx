@@ -231,8 +231,8 @@ export function PhotoReorderGrid({
             return (
               <View
                 pointerEvents="none"
-                // The + sits in the top quarter, clear of the photo passing over it.
-                style={[styles.cell, styles.landing, { width: cellWidth, height: cellHeight, left: at.x, top: at.y, paddingTop: cellHeight * 0.1 }]}
+                // The + sits in the top tenth, clear of the photo passing over it.
+                style={[styles.cell, styles.landing, { width: cellWidth, height: cellHeight, left: at.x, top: at.y, paddingTop: cellHeight * 0.02 }]}
               >
                 <Text style={styles.landingPlus}>+</Text>
               </View>
@@ -541,7 +541,7 @@ const styles = StyleSheet.create({
     borderColor: color.gold,
     backgroundColor: 'rgba(197,160,84,0.16)',
   },
-  landingPlus: { fontFamily: font.body, fontSize: 48, lineHeight: 52, color: color.gold },
+  landingPlus: { fontFamily: font.body, fontSize: 30, lineHeight: 32, color: color.gold },
 
   mainBadge: {
     position: 'absolute',

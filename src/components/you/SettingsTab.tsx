@@ -24,6 +24,7 @@ import { queryKeys } from '@/lib/queryClient';
 import { alpha, color, font, radius, space } from '@/theme/tokens';
 import { TIER_LIMITS, type Profile } from '@/types';
 import { RTL_LAYOUT } from '@/lib/rtl';
+import { useToast } from '@/state/toast';
 
 export function SettingsTab({
   liveCount,
@@ -40,6 +41,7 @@ export function SettingsTab({
   const { signOut } = useAuth();
   const { pushNotifications } = useFeatureFlags();
   const queryClient = useQueryClient();
+  const toast = useToast();
   const [paused, setPaused] = useState(profilePaused);
   const [pauseConfirm, setPauseConfirm] = useState(false);
   const [premiumConfirm, setPremiumConfirm] = useState(false);
@@ -53,6 +55,7 @@ export function SettingsTab({
     mutationFn: setMySampleMembers,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['sample-members'] });
+      toast.show(`✓ ${t('filters.saved')}`);
       void queryClient.invalidateQueries({ queryKey: queryKeys.round });
     },
   });
@@ -69,7 +72,10 @@ export function SettingsTab({
       if (enabled) await enableMyNotifications(localeTag);
       else await disableMyNotifications();
     },
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['notification-consent'] }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['notification-consent'] });
+      toast.show(`✓ ${t('filters.saved')}`);
+    },
     onError: (error) => {
       const code = error instanceof Error ? error.message : '';
       const key = code === 'permission_denied'
@@ -89,7 +95,10 @@ export function SettingsTab({
   });
   const readReceipts = useMutation({
     mutationFn: setMyReadReceipts,
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['read-receipts'] }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['read-receipts'] });
+      toast.show(`✓ ${t('filters.saved')}`);
+    },
     onError: () => Alert.alert(t('settings.activityErrorTitle'), t('settings.activityErrorBody')),
   });
   const premiumFeatures = [
@@ -106,6 +115,7 @@ export function SettingsTab({
     try {
       await setProfilePaused(next);
       setPaused(next);
+      toast.show(`✓ ${t('filters.saved')}`);
       queryClient.setQueryData<Profile>(queryKeys.profile('me'), (current) =>
         current ? { ...current, isPaused: next } : current
       );

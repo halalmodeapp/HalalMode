@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { setMyPreferredSects, updateMyPreferences } from '@/api/profile';
 import { Button } from '@/components/ui/Button';
@@ -10,7 +10,6 @@ import { Chip } from '@/components/ui/Chip';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { RangeSlider } from '@/components/ui/RangeSlider';
 import { PickerSheet } from '@/components/ui/PickerSheet';
-import { Segmented } from '@/components/ui/Segmented';
 import { SelectField } from '@/components/ui/SelectField';
 import { Slider } from '@/components/ui/Slider';
 import { Text } from '@/components/ui/Text';
@@ -43,8 +42,8 @@ import type {
   Sect,
 } from '@/types';
 import { RTL_LAYOUT } from '@/lib/rtl';
+import { useToast } from '@/state/toast';
 
-type SubTab = 'them' | 'you';
 
 /**
  * The private preference editor.
@@ -56,15 +55,11 @@ type SubTab = 'them' | 'you';
 export function PrivateTab({ preferences }: { preferences: PrivatePreferences }) {
   const { t, isRTL, language } = useI18n();
   const [picking, setPicking] = useState<'builds' | 'sects' | null>(null);
-  /** Set by a save attempt on your own details; cleared field by field as they are filled. */
-  const [ownChecked, setOwnChecked] = useState(false);
-  const [tab, setTab] = useState<SubTab>('them');
   const [draft, setDraft] = useState(preferences);
-  const heightMissing = !(draft.ownHeightCm >= 140 && draft.ownHeightCm <= 210);
-  const buildMissing = !draft.ownBuild;
   const [countrySheet, setCountrySheet] = useState(false);
   const [clearConfirm, setClearConfirm] = useState(false);
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   const save = useMutation({
     mutationFn: async () => {
@@ -74,6 +69,7 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
       void queryClient.invalidateQueries({ queryKey: queryKeys.preferences });
+      toast.show(`✓ ${t('filters.saved')}`);
     },
   });
 
@@ -123,16 +119,8 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
 
   return (
     <View style={[styles.wrap, isRTL && styles.rtl]}>
-      <Segmented
-        value={tab}
-        onChange={setTab}
-        options={[
-          { value: 'them', label: t('filters.tab.partner') },
-          { value: 'you', label: t('filters.tab.you') },
-        ]}
-      />
 
-      {tab === 'them' ? (
+      {(
         <Card style={styles.card}>
           <View>
             <Text variant="microAccent">{t('filters.partnerStep')}</Text>
@@ -392,86 +380,6 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
           />
           {save.isError ? <InlineNotice message={t('filters.saveError')} /> : null}
         </Card>
-      ) : (
-        <Card style={styles.card}>
-          <View>
-            <Text variant="microAccent">{t('filters.yourStep')}</Text>
-            <Text variant="displaySmall" style={styles.sectionTitle}>
-              {t('filters.yourTitle')}
-            </Text>
-            <Text variant="caption" style={styles.sectionBody}>
-              {t('filters.yourBody')}
-            </Text>
-          </View>
-
-          <Card tone="accent">
-            <Text style={styles.confidentialTitle}>{t('filters.privateTitle')}</Text>
-            <Text variant="caption" style={styles.confidentialBody}>
-              {t('filters.privateBody')}
-            </Text>
-          </Card>
-
-          <View style={[styles.metricRow, isRTL && styles.rowReverse]}>
-            <View style={styles.metric}>
-              <Text variant="micro">{`${t('filters.yourHeight')} *`}</Text>
-              <TextInput
-                accessibilityLabel={t('filters.yourHeightA11y')}
-                keyboardType="number-pad"
-                value={draft.ownHeightCm ? String(draft.ownHeightCm) : ''}
-                onChangeText={(text) =>
-                  patch('ownHeightCm', Number(text.replace(/\D/g, '')) || 0)
-                }
-                style={[styles.metricInput, isRTL && styles.inputRTL, ownChecked && heightMissing && styles.missing]}
-              />
-            </View>
-            <View style={styles.metric}>
-              <Text variant="micro">{t('filters.yourWeight')}</Text>
-              <TextInput
-                accessibilityLabel={t('filters.yourWeightA11y')}
-                keyboardType="number-pad"
-                value={draft.ownWeightKg ? String(draft.ownWeightKg) : ''}
-                onChangeText={(text) =>
-                  patch('ownWeightKg', Number(text.replace(/\D/g, '')) || 0)
-                }
-                style={[styles.metricInput, isRTL && styles.inputRTL]}
-              />
-            </View>
-          </View>
-
-          <View style={styles.section}>
-            <Text variant="micro">{`${t('filters.yourBodyType')} *`}</Text>
-            <View style={[styles.chips, ownChecked && buildMissing && styles.missingGroup]}>
-              {BUILD_OPTIONS.map((build) => (
-                <Chip
-                  key={build}
-                  label={buildLabel(build, t)}
-                  selected={draft.ownBuild === build}
-                  onPress={() => patch('ownBuild', build)}
-                />
-              ))}
-            </View>
-          </View>
-
-          <Button
-            label={save.isSuccess ? t('filters.saved') : t('filters.saveYour')}
-            loading={save.isPending}
-            onPress={() => {
-              setOwnChecked(true);
-              if (heightMissing || buildMissing) return;
-              save.mutate();
-            }}
-          />
-          {ownChecked && (heightMissing || buildMissing) ? (
-            <Text accessibilityRole="alert" variant="caption" style={styles.missingText}>
-              {t('profile.missingFields', {
-                fields: [heightMissing && t('filters.yourHeight'), buildMissing && t('filters.yourBodyType')]
-                  .filter(Boolean)
-                  .join(', '),
-              })}
-            </Text>
-          ) : null}
-          {save.isError ? <InlineNotice message={t('filters.saveError')} /> : null}
-        </Card>
       )}
 
       <CountrySheet
@@ -580,7 +488,7 @@ function sectName(id: string, language: Parameters<typeof optionLabel>[1]): stri
 }
 
 /** Body types as a one-group list; labels are already in the reader's language. */
-function buildGroups(t: Translate): CatalogGroup[] {
+export function buildGroups(t: Translate): CatalogGroup[] {
   return [{
     id: 'builds',
     en: t('filters.bodyTypes'),
@@ -601,7 +509,7 @@ const TIMELINE_KEYS: Record<MarriageTimeline, TranslationKey> = {
   '1_to_2_years': 'filters.timeline.2y',
 };
 
-function buildLabel(value: (typeof BUILD_OPTIONS)[number], t: Translate): string {
+export function buildLabel(value: (typeof BUILD_OPTIONS)[number], t: Translate): string {
   return t(BUILD_KEYS[value]);
 }
 

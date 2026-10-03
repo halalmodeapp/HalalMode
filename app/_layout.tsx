@@ -115,7 +115,8 @@ export default function RootLayout() {
                             animation: 'fade',
                           }}
                         >
-                          <Stack.Screen name="auth" />
+                          {/* Sign-in is a full-bleed picture and form, not an app column. */}
+                          <Stack.Screen name="auth" options={{ contentStyle: { backgroundColor: color.surface } }} />
                           <Stack.Screen name="onboarding" />
                           <Stack.Screen name="legal-consent" options={{ gestureEnabled: false }} />
                           <Stack.Screen name="(tabs)" />

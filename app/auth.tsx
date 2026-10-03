@@ -25,6 +25,7 @@ import { testIds } from '@/lib/testIds';
 import { useSession } from '@/state/session';
 import { useAuth } from '@/state/auth';
 import { useBreakpoint } from '@/theme/breakpoints';
+import { font as appFont } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
 
 /**
@@ -45,8 +46,10 @@ const C = {
   line: 'rgba(138,106,52,0.2)',
   err: '#9b2c2c',
 };
-const SERIF = Platform.select({ web: 'ui-serif, Georgia, "Times New Roman", serif', ios: 'Georgia', default: 'serif' });
-const SANS = Platform.select({ web: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif', default: undefined });
+// The app's own faces rather than the browser's: Playfair for the headline
+// sentences, Noto Sans for everything you read or press.
+const SERIF = appFont.display;
+const SANS = appFont.body;
 
 export default function AuthScreen() {
   const { t, isRTL } = useI18n();
@@ -110,10 +113,12 @@ export default function AuthScreen() {
     }
   };
 
-  // Arabic reads better in the sans face, as on the landing page.
-  const body = isRTL ? SANS : SERIF;
+  // Headlines in Playfair; Arabic script in Beiruti, which reads better there.
+  const body = isRTL ? appFont.arabic : SERIF;
   const align = isRTL ? styles.rtlText : undefined;
-  const heroHeight = wide ? height : Math.max(260, Math.round(height * 0.42));
+  // The picture takes about 70% of the screen: of its height on a phone held
+  // upright, of its width on anything wider. The sign-in sheet has the rest.
+  const heroHeight = wide ? height : Math.max(260, Math.round(height * 0.7));
 
   return (
     <View style={[styles.page, isRTL && styles.rtl]}>
@@ -178,13 +183,13 @@ export default function AuthScreen() {
             <Text style={[styles.h1, { fontFamily: body }, isRTL && styles.noTracking, align]}>
               {t('auth.heroTitle')}
             </Text>
-            <Text style={[styles.lede, { fontFamily: body }, align]}>
+            <Text style={[styles.lede, { fontFamily: isRTL ? appFont.arabic : SANS }, align]}>
               {t('auth.heroIntro')} <Text style={styles.ledeBold}>{t('auth.heroBold')}</Text>
             </Text>
 
             <View style={styles.card}>
               <Text style={[styles.h2, { fontFamily: body }, align]}>{t('auth.cardTitle')}</Text>
-              <Text style={[styles.sub, { fontFamily: body }, align]}>{t('auth.cardSub')}</Text>
+              <Text style={[styles.sub, { fontFamily: isRTL ? appFont.arabic : SANS }, align]}>{t('auth.cardSub')}</Text>
 
               <PillButton
                 testID={testIds.auth.google}
@@ -192,7 +197,7 @@ export default function AuthScreen() {
                 busy={busyProvider === 'google'}
                 disabled={busyProvider !== null}
                 onPress={() => void continueWith('google')}
-                font={body}
+                font={isRTL ? appFont.arabic : appFont.bodySemi}
               />
               {/* Android has no Apple accounts to speak of; a button that leads
                   somewhere nobody there can finish is worse than no button. */}
@@ -203,7 +208,7 @@ export default function AuthScreen() {
                   busy={busyProvider === 'apple'}
                   disabled={busyProvider !== null}
                   onPress={() => void continueWith('apple')}
-                  font={body}
+                  font={isRTL ? appFont.arabic : appFont.bodySemi}
                   outline
                 />
               )}
@@ -237,7 +242,7 @@ export default function AuthScreen() {
                 busy={sending}
                 disabled={secondsUntilResend > 0}
                 onPress={() => void sendLink()}
-                font={body}
+                font={isRTL ? appFont.arabic : appFont.bodySemi}
               />
               <Text style={[styles.fine, align]}>{t('auth.privacyNote')}</Text>
             </View>
@@ -299,9 +304,10 @@ const styles = StyleSheet.create({
 
   hero: { position: 'relative', overflow: 'visible' },
   split: { flexDirection: 'row', minHeight: '100%' },
-  heroWide: { flex: 1, overflow: 'hidden' },
+  heroWide: { flex: 7, overflow: 'hidden' },
   sheetWide: {
-    flex: 1,
+    flex: 3,
+    minWidth: 380,
     justifyContent: 'center',
     marginTop: 0,
     paddingVertical: 48,

@@ -27,6 +27,8 @@ export interface CatalogOption {
   t?: Partial<Record<AppLocale, string>>;
   /** Set on country entries: lets the device name the country in any language. */
   country?: string;
+  /** Shown indented under the entry before it, e.g. a madhhab under its sect. */
+  nested?: boolean;
   /** Set on language entries: an ISO 639 code the device can name. */
   language?: string;
 }

@@ -14,7 +14,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 
-import { fetchMyProfileReadiness, setMySect, updateMyLocation, updateMyProfile } from '@/api/profile';
+import { fetchMyProfileReadiness, setMySect, updateMyLocation, updateMyPreferences, updateMyProfile } from '@/api/profile';
+import { buildGroups, buildLabel } from '@/components/you/PrivateTab';
+import { BUILD_OPTIONS , PRACTICE_LABELS, TIMELINE_LABELS } from '@/data/preferences';
 import {
   createProfileMediaSignedUrl,
   deleteProfilePhoto,
@@ -34,7 +36,7 @@ import { Field } from '@/components/ui/Field';
 import { Text } from '@/components/ui/Text';
 import { queryKeys } from '@/lib/queryClient';
 import { testIds } from '@/lib/testIds';
-import { PRACTICE_LABELS, TIMELINE_LABELS } from '@/data/preferences';
+
 import { getProfileReadiness, type ProfileReadinessIssue } from '@/lib/profileReadiness';
 import { placeFromDevice } from '@/lib/deviceLocation';
 import { CITY_GROUPS, placeForCity } from '@/data/cities';
@@ -54,7 +56,7 @@ import { EDUCATION_GROUPS } from '@/data/educationLevels';
 import { OCCUPATION_GROUPS } from '@/data/occupations';
 import { USE_MOCKS } from '@/lib/supabase';
 import { alpha, color, font, radius } from '@/theme/tokens';
-import type { MarriageTimeline, Profile, ReligiousPractice } from '@/types';
+import type { MarriageTimeline, PrivatePreferences, Profile, ReligiousPractice } from '@/types';
 import { RTL_LAYOUT } from '@/lib/rtl';
 
 function profileSchema(t: Translate) {
@@ -95,7 +97,16 @@ function mediaFrom(profile: Profile): PhotoTile[] {
   });
 }
 
-export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; onOpenPreferences?: () => void }) {
+export function ProfileTab({
+  profile,
+  preferences,
+  onOpenPreferences,
+}: {
+  profile: Profile;
+  /** For the member's own height, weight and build, kept private but edited here. */
+  preferences?: PrivatePreferences;
+  onOpenPreferences?: () => void;
+}) {
   const { localeTag, isRTL, language, t } = useI18n();
   const { tier } = useSession();
   const [picking, setPicking] = useState<'occupation' | 'education' | null>(null);
@@ -122,6 +133,16 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
   const [languagePicker, setLanguagePicker] = useState(false);
   const [sectPicker, setSectPicker] = useState(false);
   const [missing, setMissing] = useState<string[]>([]);
+  // Your own figures: private, never on your profile, but they are about you,
+  // so they are filled in here rather than among the partner filters.
+  const [ownHeight, setOwnHeight] = useState(preferences?.ownHeightCm ? String(preferences.ownHeightCm) : '');
+  const [ownWeight, setOwnWeight] = useState(preferences?.ownWeightKg ? String(preferences.ownWeightKg) : '');
+  const [ownBuild, setOwnBuild] = useState<string | undefined>(preferences?.ownBuild ?? undefined);
+  const [ownDirty, setOwnDirty] = useState(false);
+  const [buildPicker, setBuildPicker] = useState(false);
+  const [ownChecked, setOwnChecked] = useState(false);
+  const heightMissing = !(Number(ownHeight) >= 140 && Number(ownHeight) <= 210);
+  const buildMissing = !ownBuild;
   const [updatingLocation, setUpdatingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locationExplainer, setLocationExplainer] = useState(false);
@@ -255,6 +276,8 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
       );
       if (uploaded.cleanupPendingPath) {
         showNotice(t('profile.voiceSaved'), t('profile.voiceCleanup'));
+      } else {
+        toast.show(`✓ ${t('filters.saved')}`);
       }
     } catch {
       showNotice(t('profile.voiceSaveError'), t('profile.connectionError'));
@@ -262,7 +285,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
       finishingRecording.current = false;
       setSavingVoice(false);
     }
-  }, [queryClient, recorder, t]);
+  }, [queryClient, recorder, t, toast]);
 
   useEffect(() => {
     if (recorderState.isRecording && recorderState.durationMillis >= 29_750) {
@@ -287,6 +310,11 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
       };
       if (USE_MOCKS && photosDirty) patch.photos = photos;
       await updateMyProfile(patch);
+      await updateMyPreferences({
+        ownHeightCm: Number(ownHeight) || 0,
+        ownWeightKg: Number(ownWeight) || 0,
+        ownBuild,
+      });
       // Sect was never in the general patch, so it silently never saved.
       await setMySect(values.sect, values.sectDetail);
     },
@@ -307,6 +335,8 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
       void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
       reset(values);
       setPhotosDirty(false);
+      setOwnDirty(false);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.preferences });
       toast.show(`✓ ${t('filters.saved')}`);
     },
   });
@@ -319,17 +349,29 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
    * filled), and the list beside the button names them, rather than refusing
    * silently as the old button did.
    */
+  const ownMissingLabels = [
+    heightMissing ? t('filters.yourHeight') : null,
+    buildMissing ? t('filters.yourBodyType') : null,
+  ].filter((label): label is string => label !== null);
   const submit = useMemo(() => handleSubmit(
     (values) => {
+      setOwnChecked(true);
+      if (ownMissingLabels.length > 0) {
+        setMissing(ownMissingLabels);
+        return;
+      }
       setMissing([]);
       save.mutate(values);
     },
-    (invalid) => setMissing(
-      (Object.keys(invalid) as (keyof FormValues)[])
-        .map((key) => t(FIELD_LABELS[key]))
-        .filter((label, index, all) => all.indexOf(label) === index),
-    ),
-  ), [handleSubmit, save, t]);
+    (invalid) => {
+      setOwnChecked(true);
+      setMissing([
+        ...(Object.keys(invalid) as (keyof FormValues)[]).map((key) => t(FIELD_LABELS[key])),
+        ...ownMissingLabels,
+      ].filter((label, index, all) => all.indexOf(label) === index));
+    },
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ), [handleSubmit, save, t, ownHeight, ownBuild]);
 
 
   const refreshDeviceLocation = useCallback(async () => {
@@ -362,6 +404,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
       }
 
       await updateMyLocation(resolved);
+      toast.show(`✓ ${t('filters.saved')}`);
       queryClient.setQueryData<Profile>(queryKeys.profile('me'), (current) =>
         current ? { ...current, city: resolved.city, country: resolved.country } : current
       );
@@ -372,7 +415,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
     } finally {
       setUpdatingLocation(false);
     }
-  }, [queryClient, t, updatingLocation]);
+  }, [queryClient, t, toast, updatingLocation]);
 
   // Premium travel mode only; see the button below.
   const chooseCity = async (id: string | undefined) => {
@@ -382,6 +425,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
     setLocationError(null);
     try {
       await updateMyLocation(place);
+      toast.show(`✓ ${t('filters.saved')}`);
       queryClient.setQueryData<Profile>(queryKeys.profile('me'), (current) =>
         current ? { ...current, city: place.city, country: place.country } : current
       );
@@ -485,6 +529,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
             : current
         );
         void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
+        toast.show(`✓ ${t('filters.saved')}`);
       } catch {
         showNotice(t('profile.uploadError'), t('profile.connectionError'));
       } finally {
@@ -544,7 +589,10 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
     if (!pending) return;
     setDeletingPhoto(pending.storagePath);
     void deleteProfilePhoto(pending.storagePath)
-      .then(pending.removeLocally)
+      .then(() => {
+        pending.removeLocally();
+        toast.show(`✓ ${t('filters.saved')}`);
+      })
       .catch(() => {
         showNotice(t('profile.removeError'), t('profile.connectionError'));
       })
@@ -587,6 +635,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
               }
             : current,
         );
+        toast.show(`✓ ${t('filters.saved')}`);
       })
       .catch(() => {
         setMedia(previous);
@@ -1085,13 +1134,50 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
             </Text>
           ) : null}
         </View>
+
+        <View style={styles.profileChoice}>
+          <Text variant="micro">{t('filters.yourTitle')}</Text>
+          <Text variant="caption" style={styles.choiceNote}>{t('filters.yourBody')}</Text>
+          <View style={[styles.formRow, isRTL && styles.rowRTL]}>
+            <Field
+              label={required(t('filters.yourHeight'))}
+              keyboardType="number-pad"
+              value={ownHeight}
+              onChangeText={(text) => { setOwnHeight(text.replace(/\D/g, '')); setOwnDirty(true); }}
+              error={ownChecked && heightMissing ? ' ' : undefined}
+            />
+            <Field
+              label={t('filters.yourWeight')}
+              keyboardType="number-pad"
+              value={ownWeight}
+              onChangeText={(text) => { setOwnWeight(text.replace(/\D/g, '')); setOwnDirty(true); }}
+            />
+          </View>
+          <SelectField
+            label={required(t('filters.yourBodyType'))}
+            value={ownBuild ? buildLabel(ownBuild as (typeof BUILD_OPTIONS)[number], t) : ''}
+            placeholder={t('filters.yourBodyType')}
+            onPress={() => setBuildPicker(true)}
+            error={ownChecked && buildMissing ? ' ' : undefined}
+          />
+          <PickerSheet
+            visible={buildPicker}
+            groups={buildGroups(t)}
+            selected={ownBuild ? [ownBuild] : []}
+            onChange={(next) => { setOwnBuild(next[0]); setOwnDirty(true); }}
+            onClose={() => setBuildPicker(false)}
+            title={t('filters.yourBodyType')}
+            eyebrow={t('filters.privateTitle')}
+            searchLabel={t('filters.bodyTypes')}
+          />
+        </View>
       </Card>
       </View>
 
       <Button
         label={t('profile.save')}
         loading={save.isPending}
-        disabled={!isDirty && !photosDirty}
+        disabled={!isDirty && !photosDirty && !ownDirty}
         onPress={() => void submit()}
       />
       {missing.length > 0 ? (

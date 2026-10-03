@@ -32,7 +32,7 @@ export interface PickerSheetProps {
 
 type Row =
   | { kind: 'header'; key: string; label: string }
-  | { kind: 'option'; key: string; id: string; label: string };
+  | { kind: 'option'; key: string; id: string; label: string; nested?: boolean };
 
 /**
  * A long list, made findable.
@@ -89,6 +89,7 @@ export function PickerSheet({
           key: `o:${option.id}`,
           id: option.id,
           label: optionLabel(option, language),
+          nested: option.nested,
         });
       }
     }
@@ -190,9 +191,9 @@ export function PickerSheet({
                   }
                   accessibilityLabel={item.label}
                   onPress={() => choose(item.id)}
-                  style={[styles.row, isRTL && styles.rowReverse, isSelected && styles.rowSelected]}
+                  style={[styles.row, isRTL && styles.rowReverse, item.nested && (isRTL ? styles.nestedRTL : styles.nested), isSelected && styles.rowSelected]}
                 >
-                  <Text style={[styles.rowLabel, isSelected && styles.rowLabelSelected]}>
+                  <Text style={[styles.rowLabel, item.nested && styles.nestedLabel, isSelected && styles.rowLabelSelected]}>
                     {item.label}
                   </Text>
                   <View style={[styles.dot, isSelected && styles.dotSelected]}>
@@ -239,6 +240,11 @@ export function PickerSheet({
 }
 
 const styles = StyleSheet.create({
+  // A choice that belongs to the one above it (a madhhab under its sect):
+  // set in and a size smaller, but chosen on its own like any other row.
+  nested: { marginLeft: 28, paddingVertical: 9 },
+  nestedRTL: { marginRight: 28, paddingVertical: 9 },
+  nestedLabel: { fontSize: 13 },
   rtl: RTL_LAYOUT,
   rowReverse: { flexDirection: 'row-reverse' },
   textRTL: { textAlign: 'right', writingDirection: 'rtl' },

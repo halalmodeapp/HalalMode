@@ -41,7 +41,7 @@ export const SECT_GROUPS: readonly CatalogGroup[] = (Object.keys(DETAILS) as (ke
   ...GROUP_NAMES[sect],
   options: [
     { id: sect, ...GROUP_NAMES[sect] },
-    ...DETAILS[sect].map(([id, names]) => ({ id, ...names })),
+    ...DETAILS[sect].map(([id, names]) => ({ id, ...names, nested: true })),
   ],
 }));
 

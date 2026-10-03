@@ -117,7 +117,7 @@ export default function YouScreen() {
           </View>
         </View>
 
-        {tab === 'profile' ? <ProfileTab profile={profile} onOpenPreferences={() => setTab('private')} /> : null}
+        {tab === 'profile' ? <ProfileTab profile={profile} preferences={preferences} onOpenPreferences={() => setTab('private')} /> : null}
         {tab === 'private' ? <PrivateTab preferences={preferences} /> : null}
         {tab === 'settings' ? (
           <SettingsTab
