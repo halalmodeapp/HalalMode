@@ -89,10 +89,11 @@ const styles = StyleSheet.create({
   },
   controlRTL: { flexDirection: 'row-reverse' },
   controlPressed: { backgroundColor: color.sandLight },
-  controlError: { borderColor: 'rgba(163,58,58,0.55)' },
+  controlError: { borderColor: '#B3261E', borderWidth: 1.5 },
   value: { fontFamily: font.body, fontSize: 16, color: color.ink, flexShrink: 1 },
   placeholder: { color: color.whisper },
   chevron: { fontFamily: font.body, fontSize: 20, color: color.faintest, lineHeight: 20 },
   chevronRTL: {},
-  error: { color: '#8B2929' },
+  // Red and bold: a missing answer should be impossible to scroll past.
+  error: { color: '#B3261E', fontFamily: font.bodyBold },
 });

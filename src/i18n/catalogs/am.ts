@@ -766,6 +766,8 @@ export const am: TranslationCatalog = {
   'profile.readinessPhoto': 'ግልጽ ፎቶ',
   'profile.readinessPreferences': 'የማዛመጃ ምርጫዎችዎ',
   'profile.openMatchingPreferences': 'የማዛመጃ ምርጫዎችን ክፈት',
+  'settings.sampleMembers': "የናሙና አባላት (ለሞካሪዎች)",
+  'settings.sampleMembersBody': "ሙሉውን ሂደት ለመሞከር በዕለታዊ ስብስብዎ ውስጥ በግልጽ የተለዩ የናሙና ሰዎችን ያሳዩ። ይህን ማብሪያ የሚያዩት እርስዎ ብቻ ነዎት።",
   'settings.security': "ደህንነት",
   'settings.securityBody': "ማገድ፣ ሪፖርት እና ደህንነት",
   'settings.manageAccount': "መለያን ያስተዳድሩ",

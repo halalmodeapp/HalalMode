@@ -65,6 +65,7 @@ const styles = StyleSheet.create({
     backgroundColor: color.surface,
   },
   multiline: { minHeight: 104, textAlignVertical: 'top', lineHeight: 21 },
-  inputError: { borderColor: 'rgba(163,58,58,0.55)' },
-  error: { color: '#8B2929' },
+  inputError: { borderColor: '#B3261E', borderWidth: 1.5 },
+  // Red and bold: a missing answer should be impossible to scroll past.
+  error: { color: '#B3261E', fontFamily: font.bodyBold },
 });

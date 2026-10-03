@@ -766,6 +766,8 @@ export const zhHans: TranslationCatalog = {
   'profile.readinessPhoto': '一张清晰的照片',
   'profile.readinessPreferences': '您的匹配偏好',
   'profile.openMatchingPreferences': '打开匹配偏好',
+  'settings.sampleMembers': "示例成员（测试者）",
+  'settings.sampleMembersBody': "在每日推荐中显示明确标注的示例成员，以便体验完整流程。只有你能看到此开关。",
   'settings.security': "安全",
   'settings.securityBody': "屏蔽、举报与安全",
   'settings.manageAccount': "管理账户",

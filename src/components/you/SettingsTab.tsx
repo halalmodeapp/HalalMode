@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Alert, Linking, Pressable, StyleSheet, Switch, View } from 'react-native';
 
-import { fetchMyReadReceipts, requestAccountDeletion, setMyReadReceipts, setProfilePaused } from '@/api/account';
+import { fetchMyReadReceipts, fetchMySampleMembers, requestAccountDeletion, setMyReadReceipts, setMySampleMembers, setProfilePaused } from '@/api/account';
 import { disableMyNotifications, enableMyNotifications, fetchMyNotificationConsent } from '@/api/notifications';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -51,6 +51,14 @@ export function SettingsTab({
   /** Security and account each open as their own page within Settings. */
   // Desktop: settings split into two columns instead of one long scroll.
   const wide = useBreakpoint() === 'desktop';
+  const sampleMembersQuery = useQuery({ queryKey: ['sample-members'], queryFn: fetchMySampleMembers });
+  const sampleMembers = useMutation({
+    mutationFn: setMySampleMembers,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['sample-members'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.round });
+    },
+  });
   const [page, setPage] = useState<'main' | 'security' | 'account'>('main');
   const limits = TIER_LIMITS[tier];
   const isPremium = tier === 'premium';
@@ -367,6 +375,15 @@ export function SettingsTab({
             />
           }
         />
+        {sampleMembersQuery.data?.allowed ? (
+          <SettingRow
+            title={t('settings.sampleMembers')}
+            subtitle={t('settings.sampleMembersBody')}
+            value={sampleMembers.isPending ? sampleMembers.variables : sampleMembersQuery.data.enabled}
+            disabled={sampleMembers.isPending}
+            onValueChange={(enabled) => sampleMembers.mutate(enabled)}
+          />
+        ) : null}
         <View style={styles.signOutWrap}>
           <Button label={t('settings.signOut')} variant="secondary" onPress={() => void signOut()} />
         </View>

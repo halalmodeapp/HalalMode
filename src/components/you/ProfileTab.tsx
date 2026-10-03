@@ -315,11 +315,12 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
   });
 
   /**
-   * Saves on its own, a moment after the member stops typing.
+   * One Save, at the bottom, for the whole profile.
    *
-   * A Save button at the bottom of a long form was easy to miss, and when a
-   * field was invalid it refused silently. Now each change is either saved —
-   * with a tick to say so — or the checklist at the top says what is left.
+   * A long form saves when the member means it to. If something required is
+   * still empty, every such box is outlined in red (and stays so until it is
+   * filled), and the list beside the button names them, rather than refusing
+   * silently as the old button did.
    */
   const submit = useMemo(() => handleSubmit(
     (values) => {
@@ -332,13 +333,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
         .filter((label, index, all) => all.indexOf(label) === index),
     ),
   ), [handleSubmit, save, t]);
-  const submitRef = useRef(submit);
-  submitRef.current = submit;
-  useEffect(() => {
-    if (!isDirty) return;
-    const timer = setTimeout(() => void submitRef.current(), 1200);
-    return () => clearTimeout(timer);
-  }, [draft, isDirty]);
+
 
   const refreshDeviceLocation = useCallback(async () => {
     if (updatingLocation) return;
@@ -622,11 +617,6 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
             ))}
           </View>
         )}
-        {missing.length > 0 ? (
-          <Text accessibilityRole="alert" variant="caption" style={styles.fieldError}>
-            {t('profile.missingFields', { fields: missing.join(', ') })}
-          </Text>
-        ) : null}
         {save.isPending ? (
           <Text variant="caption" style={styles.readinessBody}>{t('common.saving')}</Text>
         ) : null}
@@ -946,7 +936,10 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
               label={required(t('profile.bio'))}
               value={field.value}
               onChangeText={field.onChange}
-              error={errors.bio?.message}
+              // Shown from the start, not only after a failed save: the rule
+              // is easier to meet when it is visible while writing.
+              error={errors.bio?.message
+                ?? ((field.value?.trim().length ?? 0) < 80 ? t('profile.validation.bioShort') : undefined)}
               multiline
             />
           )}
@@ -1000,7 +993,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
             control={control}
             name="religiousPractice"
             render={({ field }) => (
-              <View style={styles.choiceChips}>
+              <View style={[styles.choiceChips, errors.religiousPractice && styles.choiceMissing]}>
                 {(Object.keys(PRACTICE_LABELS) as ReligiousPractice[]).map((value) => (
                   <Chip
                     key={value}
@@ -1077,7 +1070,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
             control={control}
             name="timeline"
             render={({ field }) => (
-              <View style={styles.choiceChips}>
+              <View style={[styles.choiceChips, errors.timeline && styles.choiceMissing]}>
                 {(Object.keys(TIMELINE_LABELS) as MarriageTimeline[]).map((value) => (
                   <Chip
                     key={value}
@@ -1097,6 +1090,18 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
         </View>
       </Card>
       </View>
+
+      <Button
+        label={t('profile.save')}
+        loading={save.isPending}
+        disabled={!isDirty && !photosDirty}
+        onPress={() => void submit()}
+      />
+      {missing.length > 0 ? (
+        <Text accessibilityRole="alert" variant="caption" style={styles.fieldError}>
+          {t('profile.missingFields', { fields: missing.join(', ') })}
+        </Text>
+      ) : null}
 
       <ConfirmDialog
         visible={pendingRemoval !== null}
@@ -1364,6 +1369,7 @@ const styles = StyleSheet.create({
   checkItem: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   checkBox: { width: 16, height: 16, borderRadius: 4, borderWidth: 1.5, borderColor: color.gold },
   checkLabel: { flex: 1 },
-  fieldError: { color: color.inkSoft, marginTop: 6 },
+  choiceMissing: { borderWidth: 1.5, borderColor: '#B3261E', borderRadius: radius.md, padding: 6 },
+  fieldError: { color: '#B3261E', fontFamily: font.bodyBold, marginTop: 6 },
   requiredNote: { color: color.inkSoft, marginBottom: 4 },
 });

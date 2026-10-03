@@ -766,6 +766,8 @@ export const so: TranslationCatalog = {
   'profile.readinessPhoto': 'sawir cad',
   'profile.readinessPreferences': 'doorbidyada isku-aadka',
   'profile.openMatchingPreferences': 'Fur doorbidyada isku-aadka',
+  'settings.sampleMembers': "Xubno tusaale ah (tijaabiyeyaal)",
+  'settings.sampleMembersBody': "Ku muuji dad tusaale ah oo si cad u calaamadsan kooxdaada maalinlaha si aad u tijaabiso socodka oo dhan. Adiga kaliya ayaa arka furahan.",
   'settings.security': "Amniga",
   'settings.securityBody': "Xannibid, warbixin iyo badbaado",
   'settings.manageAccount': "Maamul akoonka",

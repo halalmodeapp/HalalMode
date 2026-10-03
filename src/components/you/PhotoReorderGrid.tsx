@@ -238,7 +238,13 @@ export function PhotoReorderGrid({
             );
           })() : null}
 
-          {filled.map((photo, index) => (
+          {/* Drawn in a fixed order, placed by position. Rendering in the live
+              order made React move the dragged photo's element in the page on
+              every swap, and a browser cancels a drag whose element moves —
+              which is exactly the photo dropping itself mid-drag. */}
+          {stableOrder(filled).map((photo) => {
+            const index = filled.findIndex((tile) => tile.key === photo.key);
+            return (
             <PhotoCell
               key={photo.key}
               photo={photo}
@@ -259,11 +265,17 @@ export function PhotoReorderGrid({
               moveEarlierLabel={moveEarlierLabel}
               moveLaterLabel={moveLaterLabel}
             />
-          ))}
+            );
+          })}
         </>
       ) : null}
     </View>
   );
+}
+
+/** Tiles sorted by key: an order that never changes while photos are moved. */
+function stableOrder(tiles: readonly PhotoTile[]): PhotoTile[] {
+  return [...tiles].sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
 }
 
 interface PhotoCellProps {

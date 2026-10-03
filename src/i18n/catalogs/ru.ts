@@ -766,6 +766,8 @@ export const ru: TranslationCatalog = {
   'profile.readinessPhoto': 'чёткое фото',
   'profile.readinessPreferences': 'критерии подбора',
   'profile.openMatchingPreferences': 'Открыть критерии подбора',
+  'settings.sampleMembers': "Тестовые участники",
+  'settings.sampleMembersBody': "Показывать явно помеченных тестовых людей в ежедневной подборке, чтобы проверить весь путь. Этот переключатель видите только вы.",
   'settings.security': "Безопасность",
   'settings.securityBody': "Блокировка, жалобы и безопасность",
   'settings.manageAccount': "Управление аккаунтом",

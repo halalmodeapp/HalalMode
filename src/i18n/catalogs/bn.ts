@@ -766,6 +766,8 @@ export const bn: TranslationCatalog = {
   'profile.readinessPhoto': 'একটি স্পষ্ট ছবি',
   'profile.readinessPreferences': 'আপনার ম্যাচিংয়ের পছন্দ',
   'profile.openMatchingPreferences': 'ম্যাচিংয়ের পছন্দ খুলুন',
+  'settings.sampleMembers': "নমুনা সদস্য (পরীক্ষক)",
+  'settings.sampleMembersBody': "পুরো প্রক্রিয়া চেষ্টা করতে আপনার দৈনিক সেটে স্পষ্টভাবে চিহ্নিত নমুনা মানুষ দেখান। এই সুইচ শুধু আপনি দেখেন।",
   'settings.security': "নিরাপত্তা",
   'settings.securityBody': "ব্লক, রিপোর্ট ও সুরক্ষা",
   'settings.manageAccount': "অ্যাকাউন্ট পরিচালনা",

@@ -766,6 +766,8 @@ export const tr: TranslationCatalog = {
   'profile.readinessPhoto': 'net bir fotoğraf',
   'profile.readinessPreferences': 'eşleşme tercihlerinizi',
   'profile.openMatchingPreferences': 'Eşleşme tercihlerini aç',
+  'settings.sampleMembers': "Örnek üyeler (test)",
+  'settings.sampleMembersBody': "Tüm akışı deneyebilmeniz için günlük setinizde açıkça işaretli örnek kişiler gösterin. Bu düğmeyi yalnızca siz görürsünüz.",
   'settings.security': "Güvenlik",
   'settings.securityBody': "Engelleme, bildirme ve güvenlik",
   'settings.manageAccount': "Hesabı yönet",

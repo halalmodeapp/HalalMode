@@ -766,6 +766,8 @@ export const ur: TranslationCatalog = {
   'profile.readinessPhoto': 'ایک واضح تصویر',
   'profile.readinessPreferences': 'اپنی میچنگ ترجیحات',
   'profile.openMatchingPreferences': 'میچنگ ترجیحات کھولیں',
+  'settings.sampleMembers': "نمونہ ممبرز (ٹیسٹرز)",
+  'settings.sampleMembersBody': "اپنے روزانہ سیٹ میں واضح نشان والے نمونہ لوگ دکھائیں تاکہ پورا عمل آزما سکیں۔ یہ سوئچ صرف آپ دیکھتے ہیں۔",
   'settings.security': "سیکیورٹی",
   'settings.securityBody': "بلاک، رپورٹ اور حفاظت",
   'settings.manageAccount': "اکاؤنٹ کا انتظام",

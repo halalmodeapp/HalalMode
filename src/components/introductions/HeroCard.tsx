@@ -34,10 +34,11 @@ import { Text } from '@/components/ui/Text';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useI18n } from '@/i18n';
 import { deckDirectionForAccessibilityAction } from '@/lib/roundInvariants';
+import { FRAME_WIDTH, breakpointFor } from '@/theme/breakpoints';
 import { RTL_LAYOUT } from '@/lib/rtl';
 import { occupationLabel } from '@/data/occupations';
 import { testIds } from '@/lib/testIds';
-import { color, layout, radius } from '@/theme/tokens';
+import { color, radius } from '@/theme/tokens';
 import type { Profile } from '@/types';
 
 const RAD2DEG = 180 / Math.PI;
@@ -179,13 +180,17 @@ export function HeroCard({
   // 560px screen, and the neighbours that should peek in from either side
   // were placed far off it.
   const width = Platform.OS === 'web'
-    ? Math.min(window.width, layout.maxContentWidth)
+    ? Math.min(window.width, FRAME_WIDTH[breakpointFor(window.width)])
     : window.width;
 
+  // Always a portrait card. On a phone that is the screen's width; on a
+  // landscape tablet or a desktop the width is capped by the height instead,
+  // and the spare room goes to the neighbouring cards on either side.
   const cardWidth = Math.max(
-    width - 60,
+    Math.min(width - 60, Math.max(260, (window.height - 330) * 0.72)),
     1,
   );
+  const narrowDeck = cardWidth < width - 60;
 
   const foundActiveIndex = profiles.findIndex(
     (profile) => profile.id === activeId,
@@ -778,7 +783,7 @@ export function HeroCard({
     <GestureDetector gesture={deckGesture}>
       <View
         collapsable={false}
-        style={styles.deck}
+        style={[styles.deck, narrowDeck && { width: cardWidth, alignSelf: 'center', marginHorizontal: 0 }]}
         testID={
           activeProfile
             ? testIds.daily.deck

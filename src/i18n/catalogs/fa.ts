@@ -766,6 +766,8 @@ export const fa: TranslationCatalog = {
   'profile.readinessPhoto': 'یک عکس واضح',
   'profile.readinessPreferences': 'ترجیحات تطبیق',
   'profile.openMatchingPreferences': 'باز کردن ترجیحات تطبیق',
+  'settings.sampleMembers': "اعضای نمونه (آزمایشگران)",
+  'settings.sampleMembersBody': "افراد نمونهٔ مشخص‌شده را در مجموعهٔ روزانه نشان دهید تا کل مسیر را امتحان کنید. فقط شما این کلید را می‌بینید.",
   'settings.security': "امنیت",
   'settings.securityBody': "مسدودسازی، گزارش و ایمنی",
   'settings.manageAccount': "مدیریت حساب",

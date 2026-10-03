@@ -16,7 +16,7 @@ import {
 } from '@expo-google-fonts/playfair-display';
 import { focusManager, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -76,7 +76,10 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) return null;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: color.surface }}>
+    {/* Navigation paints its own grey behind every screen; on a wide window
+        that grey showed either side of the app. Same surface everywhere. */}
+    <ThemeProvider value={{ ...DefaultTheme, colors: { ...DefaultTheme.colors, background: color.surface } }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
@@ -140,6 +143,7 @@ export default function RootLayout() {
           </AuthProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
+    </ThemeProvider>
     </GestureHandlerRootView>
   );
 }

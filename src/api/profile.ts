@@ -135,7 +135,24 @@ export async function updateMyPreferences(
   if (error) throw error;
 }
 
-function profileFromRow(row: Record<string, unknown>): Profile {
+function profileFromRow(raw: Record<string, unknown>): Profile {
+  // get_my_profile answers in camelCase (it shares safe_member_profile with
+  // what other members see), while older reads were snake_case. Reading only
+  // one spelling silently turned practice, languages and sect into blanks
+  // after every reload, so a saved change looked as if it had never happened.
+  const row: Record<string, unknown> = {
+    ...raw,
+    first_name: raw.first_name ?? raw.firstName,
+    birth_date: raw.birth_date ?? raw.birthDate,
+    religious_practice: raw.religious_practice ?? raw.religiousPractice,
+    family_goals: raw.family_goals ?? raw.familyGoals,
+    languages_spoken: raw.languages_spoken ?? raw.languagesSpoken,
+    is_verified: raw.is_verified ?? raw.isVerified,
+    is_paused: raw.is_paused ?? raw.isPaused,
+    audio_greeting_url: raw.audio_greeting_url ?? raw.audioGreetingUrl,
+    audio_duration_seconds: raw.audio_duration_seconds ?? raw.audioDurationSeconds,
+    sect_detail: raw.sect_detail ?? raw.sectDetail,
+  };
   return {
     id: String(row.id),
     // `String(null)` is the word "null" and `String(undefined)` is the word
@@ -144,7 +161,7 @@ function profileFromRow(row: Record<string, unknown>): Profile {
     // be saved as somebody's name the moment they pressed the button.
     name: String(row.name ?? ''),
     firstName: String(row.first_name ?? ''),
-    age: ageFromDate(String(row.birth_date)),
+    age: typeof row.age === 'number' ? row.age : ageFromDate(String(row.birth_date)),
     gender: row.gender as Profile['gender'],
     occupation: String(row.occupation ?? ''),
     education: row.education as string | undefined,

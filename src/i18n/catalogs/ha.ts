@@ -766,6 +766,8 @@ export const ha: TranslationCatalog = {
   'profile.readinessPhoto': 'hoto bayyananne',
   'profile.readinessPreferences': 'zaɓuɓɓukan haɗawa',
   'profile.openMatchingPreferences': 'Buɗe zaɓuɓɓukan haɗawa',
+  'settings.sampleMembers': "Mambobin gwaji (masu gwaji)",
+  'settings.sampleMembersBody': "Nuna mutanen gwaji masu alama a saitinku na yau don gwada dukkan tsarin. Ku kaɗai kuke ganin wannan maɓalli.",
   'settings.security': "Tsaro",
   'settings.securityBody': "Toshewa, rahoto da tsaro",
   'settings.manageAccount': "Sarrafa asusu",

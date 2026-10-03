@@ -766,6 +766,8 @@ export const hi: TranslationCatalog = {
   'profile.readinessPhoto': 'एक साफ़ फ़ोटो',
   'profile.readinessPreferences': 'अपनी मैचिंग पसंद',
   'profile.openMatchingPreferences': 'मैचिंग पसंद खोलें',
+  'settings.sampleMembers': "नमूना सदस्य (परीक्षक)",
+  'settings.sampleMembersBody': "पूरा अनुभव आज़माने के लिए अपने दैनिक सेट में साफ़ चिह्नित नमूना लोग दिखाएँ। यह स्विच सिर्फ़ आपको दिखता है।",
   'settings.security': "सुरक्षा",
   'settings.securityBody': "ब्लॉक, रिपोर्ट और सुरक्षा",
   'settings.manageAccount': "खाता प्रबंधन",

@@ -766,6 +766,8 @@ export const ms: TranslationCatalog = {
   'profile.readinessPhoto': 'foto yang jelas',
   'profile.readinessPreferences': 'pilihan padanan anda',
   'profile.openMatchingPreferences': 'Buka pilihan padanan',
+  'settings.sampleMembers': "Ahli contoh (penguji)",
+  'settings.sampleMembersBody': "Tunjukkan orang contoh bertanda jelas dalam set harian anda untuk mencuba keseluruhan aliran. Hanya anda melihat suis ini.",
   'settings.security': "Keselamatan",
   'settings.securityBody': "Sekat, lapor dan keselamatan",
   'settings.manageAccount': "Urus akaun",

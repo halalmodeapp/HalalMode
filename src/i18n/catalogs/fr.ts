@@ -766,6 +766,8 @@ export const fr: TranslationCatalog = {
   'profile.readinessPhoto': 'une photo claire',
   'profile.readinessPreferences': 'vos critères',
   'profile.openMatchingPreferences': 'Ouvrir les critères',
+  'settings.sampleMembers': "Membres fictifs (testeurs)",
+  'settings.sampleMembersBody': "Affiche des personnes fictives clairement signalées dans votre sélection pour tester tout le parcours. Vous seul voyez ce bouton.",
   'settings.security': "Sécurité",
   'settings.securityBody': "Blocage, signalement et sécurité",
   'settings.manageAccount': "Gérer le compte",

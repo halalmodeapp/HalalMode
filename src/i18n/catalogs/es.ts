@@ -766,6 +766,8 @@ export const es: TranslationCatalog = {
   'profile.readinessPhoto': 'una foto clara',
   'profile.readinessPreferences': 'tus preferencias',
   'profile.openMatchingPreferences': 'Abrir preferencias',
+  'settings.sampleMembers': "Miembros de prueba (testers)",
+  'settings.sampleMembersBody': "Muestra personas de prueba bien señaladas en tu selección diaria para probar todo el recorrido. Solo tú ves este interruptor.",
   'settings.security': "Seguridad",
   'settings.securityBody': "Bloqueo, denuncias y seguridad",
   'settings.manageAccount': "Gestionar cuenta",

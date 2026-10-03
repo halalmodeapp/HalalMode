@@ -766,6 +766,8 @@ export const id: TranslationCatalog = {
   'profile.readinessPhoto': 'foto yang jelas',
   'profile.readinessPreferences': 'preferensi pencocokan Anda',
   'profile.openMatchingPreferences': 'Buka preferensi pencocokan',
+  'settings.sampleMembers': "Anggota contoh (penguji)",
+  'settings.sampleMembersBody': "Tampilkan orang contoh bertanda jelas di set harian Anda untuk mencoba seluruh alur. Hanya Anda yang melihat tombol ini.",
   'settings.security': "Keamanan",
   'settings.securityBody': "Blokir, laporan, dan keselamatan",
   'settings.manageAccount': "Kelola akun",

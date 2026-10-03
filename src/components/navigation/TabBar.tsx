@@ -1,6 +1,7 @@
 // Expo Router 57 vendors the matching navigation types.
 // Importing this from a separately installed navigation package can create
 // incompatible duplicate types.
+import { useBreakpoint } from '@/theme/breakpoints';
 import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
 
 import * as Haptics from 'expo-haptics';
@@ -625,6 +626,7 @@ export function TabBar({
 }: BottomTabBarProps) {
   const { t, isRTL } = useI18n();
   const insets = useSafeAreaInsets();
+  const island = useBreakpoint() !== 'phone';
 
   const [layoutWidth, setLayoutWidth] = useState(0);
   const barArea = useRef<View | null>(null);
@@ -833,6 +835,7 @@ export function TabBar({
         ref={barArea}
         style={[
           styles.barArea,
+          island && styles.island,
           isRTL && styles.rowReverse,
         ]}
         onLayout={(event) => {
@@ -1093,6 +1096,20 @@ const styles = StyleSheet.create({
     elevation: 1000,
     backgroundColor: 'transparent',
     overflow: 'visible',
+  },
+
+  // Wider than a phone: the bar floats as a centred island instead of
+  // stretching its three tabs across the whole window.
+  island: {
+    width: 420,
+    alignSelf: 'center',
+    marginHorizontal: 0,
+    marginBottom: 14,
+    borderRadius: 999,
+    backgroundColor: 'rgba(252,252,251,0.96)',
+    borderWidth: 1,
+    borderColor: 'rgba(10,10,10,0.08)',
+    boxShadow: '0 14px 34px -14px rgba(42,48,56,0.28)',
   },
 
   barArea: {
