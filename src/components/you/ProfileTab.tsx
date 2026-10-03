@@ -49,6 +49,8 @@ import { optionLabel, storedLabel, type CatalogGroup } from '@/data/catalogOptio
 import { SECT_GROUPS, sectOf } from '@/data/sects';
 import { LANGUAGE_GROUPS, languageCodeFor, languageName } from '@/data/spokenLanguages';
 import { showNotice } from '@/lib/notice';
+import { useToast } from '@/state/toast';
+import { useBreakpoint } from '@/theme/breakpoints';
 import { EDUCATION_GROUPS } from '@/data/educationLevels';
 import { OCCUPATION_GROUPS } from '@/data/occupations';
 import { USE_MOCKS } from '@/lib/supabase';
@@ -100,6 +102,9 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
   const [picking, setPicking] = useState<'occupation' | 'education' | null>(null);
   const schema = useMemo(() => profileSchema(t), [t]);
   const queryClient = useQueryClient();
+  const toast = useToast();
+  // Desktop: photos and voice on one side, the written profile on the other.
+  const wide = useBreakpoint() === 'desktop';
   // One list, holding both what a photo looks like and where it lives. They
   // used to be two arrays lined up by index, which a reorder would have pulled
   // apart the first time somebody dragged anything.
@@ -305,8 +310,35 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
       void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
       reset(values);
       setPhotosDirty(false);
+      toast.show(`✓ ${t('filters.saved')}`);
     },
   });
+
+  /**
+   * Saves on its own, a moment after the member stops typing.
+   *
+   * A Save button at the bottom of a long form was easy to miss, and when a
+   * field was invalid it refused silently. Now each change is either saved —
+   * with a tick to say so — or the checklist at the top says what is left.
+   */
+  const submit = useMemo(() => handleSubmit(
+    (values) => {
+      setMissing([]);
+      save.mutate(values);
+    },
+    (invalid) => setMissing(
+      (Object.keys(invalid) as (keyof FormValues)[])
+        .map((key) => t(FIELD_LABELS[key]))
+        .filter((label, index, all) => all.indexOf(label) === index),
+    ),
+  ), [handleSubmit, save, t]);
+  const submitRef = useRef(submit);
+  submitRef.current = submit;
+  useEffect(() => {
+    if (!isDirty) return;
+    const timer = setTimeout(() => void submitRef.current(), 1200);
+    return () => clearTimeout(timer);
+  }, [draft, isDirty]);
 
   const refreshDeviceLocation = useCallback(async () => {
     if (updatingLocation) return;
@@ -571,14 +603,33 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
   };
 
   return (
-    <View style={[styles.wrap, isRTL && styles.rtl]}>
+    <View style={[styles.wrap, isRTL && styles.rtl, wide && (isRTL ? styles.splitRTL : styles.split)]}>
+      <View style={wide ? styles.column : styles.stack}>
       <Card tone="filled" style={styles.readinessCard}>
         <Text variant="label">{readiness.ready ? t('profile.readinessReadyTitle') : t('profile.readinessTitle')}</Text>
-        <Text variant="caption" style={styles.readinessBody}>
-          {readiness.ready
-            ? t('profile.readinessReadyBody')
-            : t('profile.readinessBody', { items: readiness.missing.map((item) => t(readinessKey[item])).join(', ') })}
-        </Text>
+        {readiness.ready ? (
+          <Text variant="caption" style={styles.readinessBody}>
+            {t('profile.readinessReadyBody')}
+          </Text>
+        ) : (
+          // One line per thing still needed, rather than a sentence to decode.
+          <View style={styles.checklist}>
+            {readiness.missing.map((item) => (
+              <View key={item} style={[styles.checkItem, isRTL && styles.rowRTL]}>
+                <View style={styles.checkBox} />
+                <Text variant="label" style={styles.checkLabel}>{t(readinessKey[item])}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+        {missing.length > 0 ? (
+          <Text accessibilityRole="alert" variant="caption" style={styles.fieldError}>
+            {t('profile.missingFields', { fields: missing.join(', ') })}
+          </Text>
+        ) : null}
+        {save.isPending ? (
+          <Text variant="caption" style={styles.readinessBody}>{t('common.saving')}</Text>
+        ) : null}
         {!readiness.ready && readiness.missing.includes('preferences') && onOpenPreferences ? (
           <Button
             label={t('profile.openMatchingPreferences')}
@@ -742,6 +793,8 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
         </Text>
       </Card>
 
+      </View>
+      <View style={wide ? styles.column : undefined}>
       <Card style={styles.formCard}>
         <Text variant="caption" style={styles.requiredNote}>
           {t('profile.requiredNote')}
@@ -1043,30 +1096,8 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
           ) : null}
         </View>
       </Card>
+      </View>
 
-      <Button
-        label={save.isSuccess && !isDirty && !photosDirty ? t('filters.saved') : t('profile.save')}
-        loading={save.isPending}
-        disabled={!isDirty && !photosDirty}
-        onPress={handleSubmit(
-          (values) => {
-            setMissing([]);
-            save.mutate(values);
-          },
-          // Say what is left, in one place by the button, instead of leaving
-          // the member to scroll for a red line under some field.
-          (invalid) => setMissing(
-            (Object.keys(invalid) as (keyof FormValues)[])
-              .map((key) => t(FIELD_LABELS[key]))
-              .filter((label, index, all) => all.indexOf(label) === index),
-          ),
-        )}
-      />
-      {missing.length > 0 ? (
-        <Text accessibilityRole="alert" variant="caption" style={styles.fieldError}>
-          {t('profile.missingFields', { fields: missing.join(', ') })}
-        </Text>
-      ) : null}
       <ConfirmDialog
         visible={pendingRemoval !== null}
         title={t('profile.removeTitle')}
@@ -1325,6 +1356,14 @@ const styles = StyleSheet.create({
   choiceChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
   formRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
   saveError: { color: color.inkSoft, textAlign: 'center' },
+  split: { flexDirection: 'row', alignItems: 'flex-start' },
+  splitRTL: { flexDirection: 'row-reverse', alignItems: 'flex-start' },
+  column: { flex: 1, gap: 14 },
+  stack: { gap: 14 },
+  checklist: { gap: 8, marginTop: 10 },
+  checkItem: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  checkBox: { width: 16, height: 16, borderRadius: 4, borderWidth: 1.5, borderColor: color.gold },
+  checkLabel: { flex: 1 },
   fieldError: { color: color.inkSoft, marginTop: 6 },
   requiredNote: { color: color.inkSoft, marginBottom: 4 },
 });

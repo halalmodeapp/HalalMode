@@ -5,6 +5,12 @@ import {
   Beiruti_700Bold,
 } from '@expo-google-fonts/beiruti';
 import {
+  NotoSans_400Regular,
+  NotoSans_500Medium,
+  NotoSans_600SemiBold,
+  NotoSans_700Bold,
+} from '@expo-google-fonts/noto-sans';
+import {
   PlayfairDisplay_400Regular,
   PlayfairDisplay_400Regular_Italic,
 } from '@expo-google-fonts/playfair-display';
@@ -26,12 +32,14 @@ import { RoundProvider } from '@/state/round';
 import { ToastProvider } from '@/state/toast';
 import { SessionProvider } from '@/state/session';
 import { FeatureFlagsProvider } from '@/state/featureFlags';
-import { color, layout } from '@/theme/tokens';
+import { color } from '@/theme/tokens';
+import { FRAME_WIDTH, useBreakpoint } from '@/theme/breakpoints';
 import { AppRecoveryBoundary } from '@/components/ui/AppRecoveryBoundary';
 
 void SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const breakpoint = useBreakpoint();
   const [fontsLoaded, fontError] = useFonts({
     PlayfairDisplay_400Regular,
     PlayfairDisplay_400Regular_Italic,
@@ -39,6 +47,10 @@ export default function RootLayout() {
     Beiruti_500Medium,
     Beiruti_600SemiBold,
     Beiruti_700Bold,
+    NotoSans_400Regular,
+    NotoSans_500Medium,
+    NotoSans_600SemiBold,
+    NotoSans_700Bold,
   });
 
   // Before anything else can break. A crash on the very first screen is the
@@ -91,7 +103,7 @@ export default function RootLayout() {
                               // the centre. Native ignores this entirely.
                               ...(Platform.OS === 'web'
                                 ? {
-                                    maxWidth: layout.maxContentWidth,
+                                    maxWidth: FRAME_WIDTH[breakpoint],
                                     width: '100%',
                                     alignSelf: 'center',
                                   }

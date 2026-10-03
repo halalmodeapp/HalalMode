@@ -118,14 +118,24 @@ export function PhotoReorderGrid({
     setOrder(next);
   }, []);
 
+  /** The order before the drag, to go back to if the photo is let go elsewhere. */
+  const orderAtPickUp = useRef(order);
+
   const pickUp = useCallback((key: string) => {
     draggingRef.current = true;
+    orderAtPickUp.current = orderRef.current;
     setDraggingKey(key);
   }, []);
 
-  const drop = useCallback(() => {
+  const drop = useCallback((outside = false) => {
     draggingRef.current = false;
     setDraggingKey(null);
+    if (outside) {
+      // Let go away from the gallery: nothing moves, everything goes home.
+      orderRef.current = orderAtPickUp.current;
+      setOrder(orderAtPickUp.current);
+      return;
+    }
     const final = orderRef.current;
     const saved = latest.current.photos.slice(0, MAX_PHOTOS);
     const unchanged =
@@ -265,7 +275,7 @@ interface PhotoCellProps {
   isRTL: boolean;
   onMove: (from: number, to: number) => void;
   onPickUp: (key: string) => void;
-  onDrop: () => void;
+  onDrop: (outside?: boolean) => void;
   onStep: (from: number, to: number) => void;
   onRemove: () => void;
   removeDisabled: boolean;
@@ -315,6 +325,9 @@ function PhotoCell({
   const grabbedAtY = useSharedValue(0);
   /** The slot this tile has already been moved into during the current drag. */
   const slot = useSharedValue(index);
+  /** Where the photo's centre is now, relative to the grid. */
+  const centreNowX = useSharedValue(0);
+  const centreNowY = useSharedValue(0);
   /** Its slot as of the last render, read by the gesture instead of `index`. */
   const currentIndex = useSharedValue(index);
   useEffect(() => {
@@ -360,6 +373,8 @@ function PhotoCell({
     .onStart(() => {
       dragging.value = true;
       slot.value = currentIndex.value;
+      centreNowX.value = homeX.value + cellWidth / 2;
+      centreNowY.value = homeY.value + cellHeight / 2;
       grabbedAtX.value = homeX.value;
       grabbedAtY.value = homeY.value;
       lift.value = withSpring(1, LIFT);
@@ -374,6 +389,8 @@ function PhotoCell({
 
       const centreX = grabbedAtX.value + event.translationX + cellWidth / 2;
       const centreY = grabbedAtY.value + event.translationY + cellHeight / 2;
+      centreNowX.value = centreX;
+      centreNowY.value = centreY;
       const next = slotFromPosition({
         centreX,
         centreY,
@@ -391,11 +408,18 @@ function PhotoCell({
       }
     })
     .onFinalize(() => {
+      // More than half a photo beyond the gallery's edge counts as "not here".
+      const gridWidth = cellWidth * COLUMNS + GAP * (COLUMNS - 1);
+      const gridHeight = cellHeight * Math.ceil(MAX_PHOTOS / COLUMNS) + GAP;
+      const outside = centreNowX.value < -cellWidth / 2
+        || centreNowX.value > gridWidth + cellWidth / 2
+        || centreNowY.value < -cellHeight / 2
+        || centreNowY.value > gridHeight + cellHeight / 2;
       dragging.value = false;
       offsetX.value = withSpring(0, SETTLE);
       offsetY.value = withSpring(0, SETTLE);
       lift.value = withSpring(0, SETTLE);
-      runOnJS(onDrop)();
+      runOnJS(onDrop)(outside);
     }),
   // Shared values are stable; listing them keeps the linter honest.
   // eslint-disable-next-line react-hooks/exhaustive-deps

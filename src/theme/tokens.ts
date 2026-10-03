@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 /**
  * Design tokens transcribed from `Halal Mode 2030.dc.html`.
  *
@@ -101,15 +103,32 @@ export const space = {
   xxl: 26,
 } as const;
 
+/**
+ * On the web the browser picks a font per character, so each face is followed
+ * by what it lacks: Beiruti for Arabic script, then the system's own faces for
+ * Devanagari, Bengali, Ethiopic and Chinese. On a phone the OS does the same
+ * fallback itself, so the bare family name is enough.
+ */
+const webStack = (face: string) =>
+  Platform.OS === 'web'
+    ? `${face}, Beiruti_500Medium, "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`
+    : face;
+
 export const font = {
   /** Playfair Display — the human sentences. Never for mechanics. */
   display: 'PlayfairDisplay_400Regular',
   displayItalic: 'PlayfairDisplay_400Regular_Italic',
-  /** Beiruti — mechanics, labels, body. Carries Arabic too. */
-  body: 'Beiruti_400Regular',
-  bodyMedium: 'Beiruti_500Medium',
-  bodySemi: 'Beiruti_600SemiBold',
-  bodyBold: 'Beiruti_700Bold',
+  /**
+   * Noto Sans — mechanics, labels, body. Chosen because it was drawn to cover
+   * nearly every script in one consistent design, so the app reads as itself
+   * in Hindi or Russian rather than in whatever the device happened to have.
+   */
+  body: webStack('NotoSans_400Regular'),
+  bodyMedium: webStack('NotoSans_500Medium'),
+  bodySemi: webStack('NotoSans_600SemiBold'),
+  bodyBold: webStack('NotoSans_700Bold'),
+  /** Beiruti, for Arabic, Urdu and Persian, where it reads better than Noto. */
+  arabic: 'Beiruti_400Regular',
 } as const;
 
 /**

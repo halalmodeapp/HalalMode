@@ -72,7 +72,7 @@ export function SelectField({
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 6, flex: 1, minWidth: 130 },
+  wrap: { gap: 6, flexGrow: 1, flexShrink: 0, flexBasis: 'auto', minWidth: 130 },
   label: { letterSpacing: 2 },
   control: {
     flexDirection: 'row',

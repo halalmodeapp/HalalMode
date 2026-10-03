@@ -24,6 +24,7 @@ import { queryKeys } from '@/lib/queryClient';
 import { alpha, color, font, radius, space } from '@/theme/tokens';
 import { TIER_LIMITS, type Profile } from '@/types';
 import { RTL_LAYOUT } from '@/lib/rtl';
+import { useBreakpoint } from '@/theme/breakpoints';
 
 export function SettingsTab({
   liveCount,
@@ -48,6 +49,8 @@ export function SettingsTab({
   const [notificationsExplainer, setNotificationsExplainer] = useState(false);
   const [moderationOpen, setModerationOpen] = useState(false);
   /** Security and account each open as their own page within Settings. */
+  // Desktop: settings split into two columns instead of one long scroll.
+  const wide = useBreakpoint() === 'desktop';
   const [page, setPage] = useState<'main' | 'security' | 'account'>('main');
   const limits = TIER_LIMITS[tier];
   const isPremium = tier === 'premium';
@@ -120,7 +123,8 @@ export function SettingsTab({
   return (
     <View style={[styles.wrap, isRTL && styles.rtl]}>
       {page === 'main' ? (
-        <>
+        <View style={wide ? (isRTL ? styles.splitRTL : styles.split) : styles.stack}>
+        <View style={wide ? styles.column : styles.stack}>
       <Section
         eyebrow={t('settings.privacy')}
         title={t('settings.privacyTitle')}
@@ -217,6 +221,8 @@ export function SettingsTab({
         ) : null}
       </Section>
 
+      </View>
+      <View style={wide ? styles.column : styles.stack}>
       {/* One Premium card: what it is, what it adds, and what it never does. */}
       <Card tone="dark" style={styles.premiumCard}>
         <View style={[styles.premiumDetailsHead, isRTL && styles.rowReverse]}>
@@ -267,7 +273,8 @@ export function SettingsTab({
         />
       </Section>
 
-        </>
+        </View>
+        </View>
       ) : null}
 
       {page === 'security' ? (
@@ -528,6 +535,10 @@ const styles = StyleSheet.create({
   rtl: RTL_LAYOUT,
   rowReverse: { flexDirection: 'row-reverse' },
   wrap: { gap: 22, paddingBottom: 30 },
+  split: { flexDirection: 'row', alignItems: 'flex-start', gap: 22 },
+  splitRTL: { flexDirection: 'row-reverse', alignItems: 'flex-start', gap: 22 },
+  column: { flex: 1, gap: 22 },
+  stack: { gap: 22 },
   section: { gap: 10 },
   sectionHead: { gap: 5, paddingHorizontal: 2 },
   sectionTitle: { fontSize: 21, lineHeight: 27 },

@@ -59,7 +59,7 @@ export function Text({
 
 const styles = StyleSheet.create({
   rtl: {
-    fontFamily: font.body,
+    fontFamily: font.arabic,
     letterSpacing: 0,
     textTransform: 'none',
     writingDirection: 'rtl',

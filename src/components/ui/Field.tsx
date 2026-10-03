@@ -48,7 +48,9 @@ export function Field({
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 6, flex: 1, minWidth: 130 },
+  // Grows to share a row, but never shrinks below its own content: `flex: 1`
+  // let a stacked multiline field collapse under the label after it.
+  wrap: { gap: 6, flexGrow: 1, flexShrink: 0, flexBasis: 'auto', minWidth: 130 },
   label: { letterSpacing: 2 },
   input: {
     borderWidth: 1,

@@ -24,6 +24,7 @@ import { requireSupabase } from '@/lib/supabase';
 import { testIds } from '@/lib/testIds';
 import { useSession } from '@/state/session';
 import { useAuth } from '@/state/auth';
+import { useBreakpoint } from '@/theme/breakpoints';
 import { RTL_LAYOUT } from '@/lib/rtl';
 
 /**
@@ -53,6 +54,9 @@ export default function AuthScreen() {
   const { authError, clearAuthError } = useAuth();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
+  // From tablet width up the picture and the form sit side by side, the way
+  // the landing page does, instead of a phone layout stretched sideways.
+  const wide = useBreakpoint() !== 'phone';
   const [email, setEmail] = useState('');
   const [sending, setSending] = useState(false);
   const [secondsUntilResend, setSecondsUntilResend] = useState(0);
@@ -109,17 +113,20 @@ export default function AuthScreen() {
   // Arabic reads better in the sans face, as on the landing page.
   const body = isRTL ? SANS : SERIF;
   const align = isRTL ? styles.rtlText : undefined;
-  const heroHeight = Math.max(260, Math.round(height * 0.42));
+  const heroHeight = wide ? height : Math.max(260, Math.round(height * 0.42));
 
   return (
     <View style={[styles.page, isRTL && styles.rtl]}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
-          contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
+          contentContainerStyle={[
+            { paddingBottom: wide ? 0 : insets.bottom + 40 },
+            wide && styles.split,
+          ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={[styles.hero, { height: heroHeight }]}>
+          <View style={[styles.hero, { height: heroHeight }, wide && styles.heroWide]}>
             <HalftoneHero />
             <View pointerEvents="box-none" style={[styles.header, { paddingTop: insets.top + 18 }]}>
               <Image
@@ -167,7 +174,7 @@ export default function AuthScreen() {
             ) : null}
           </View>
 
-          <View style={styles.sheet}>
+          <View style={[styles.sheet, wide && styles.sheetWide]}>
             <Text style={[styles.h1, { fontFamily: body }, isRTL && styles.noTracking, align]}>
               {t('auth.heroTitle')}
             </Text>
@@ -291,6 +298,18 @@ const styles = StyleSheet.create({
   noTracking: { letterSpacing: 0 },
 
   hero: { position: 'relative', overflow: 'visible' },
+  split: { flexDirection: 'row', minHeight: '100%' },
+  heroWide: { flex: 1, overflow: 'hidden' },
+  sheetWide: {
+    flex: 1,
+    justifyContent: 'center',
+    marginTop: 0,
+    paddingVertical: 48,
+    paddingHorizontal: 40,
+    borderTopWidth: 0,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
