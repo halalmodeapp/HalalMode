@@ -47,6 +47,8 @@ export function SettingsTab({
   const [blockedOpen, setBlockedOpen] = useState(false);
   const [notificationsExplainer, setNotificationsExplainer] = useState(false);
   const [moderationOpen, setModerationOpen] = useState(false);
+  /** Security and account each open as their own page within Settings. */
+  const [page, setPage] = useState<'main' | 'security' | 'account'>('main');
   const limits = TIER_LIMITS[tier];
   const isPremium = tier === 'premium';
   const notificationsQuery = useQuery({
@@ -117,6 +119,8 @@ export function SettingsTab({
 
   return (
     <View style={[styles.wrap, isRTL && styles.rtl]}>
+      {page === 'main' ? (
+        <>
       <Section
         eyebrow={t('settings.privacy')}
         title={t('settings.privacyTitle')}
@@ -148,48 +152,9 @@ export function SettingsTab({
         />
       </Section>
 
-      <Section eyebrow={t('settings.safety')} title={t('settings.safetyTitle')}>
-        <SettingRow
-          title={t('settings.contacts')}
-          subtitle={t('settings.contactsBody')}
-          badge={t('settings.comingLater')}
-        />
-        <SettingRow
-          title={t('settings.blocked')}
-          subtitle={t('settings.blockedBody')}
-          trailing={
-            <Pressable
-              testID={testIds.settings.blocked}
-              accessibilityRole="button"
-              accessibilityLabel={t('settings.blocked')}
-              onPress={() => setBlockedOpen(true)}
-              style={styles.disclosure}
-            >
-              <Text style={styles.arrow}>{isRTL ? '←' : '→'}</Text>
-            </Pressable>
-          }
-        />
-        <SettingRow
-          title={t('settings.reporting')}
-          subtitle={t('settings.reportingBody')}
-          trailing={
-            <Pressable
-              testID={testIds.settings.moderation}
-              accessibilityRole="button"
-              accessibilityLabel={t('settings.reporting')}
-              onPress={() => setModerationOpen(true)}
-              style={styles.disclosure}
-            >
-              <Text style={styles.arrow}>{isRTL ? '←' : '→'}</Text>
-            </Pressable>
-          }
-        />
-        <ModerationSheet visible={moderationOpen} onClose={() => setModerationOpen(false)} />
-      </Section>
-
       <Section eyebrow={t('settings.preferences')} title={t('settings.preferencesTitle')}>
         <SettingRow
-          title={t('settings.language')}
+          title={`🌐  ${t('settings.language')}`}
           subtitle={localeName(language)}
           trailing={
             <Pressable
@@ -198,7 +163,7 @@ export function SettingsTab({
               onPress={() => setLanguageOpen(true)}
               style={styles.languagePill}
             >
-              <Text style={styles.languagePillLabel}>{t('settings.change')}</Text>
+              <Text style={styles.languagePillLabel}>🌐 {t('settings.change')}</Text>
             </Pressable>
           }
         />
@@ -291,6 +256,70 @@ export function SettingsTab({
 
       <Section eyebrow={t('settings.account')} title={t('settings.accountTitle')}>
         <SettingRow
+          title={t('settings.manageAccount')}
+          subtitle={t('settings.manageAccountBody')}
+          trailing={<Disclosure label={t('settings.manageAccount')} onPress={() => setPage('account')} />}
+        />
+        <SettingRow
+          title={t('settings.security')}
+          subtitle={t('settings.securityBody')}
+          trailing={<Disclosure label={t('settings.security')} onPress={() => setPage('security')} />}
+        />
+      </Section>
+
+        </>
+      ) : null}
+
+      {page === 'security' ? (
+        <>
+          <BackRow onPress={() => setPage('main')} />
+      <Section eyebrow={t('settings.safety')} title={t('settings.safetyTitle')}>
+        <SettingRow
+          title={t('settings.contacts')}
+          subtitle={t('settings.contactsBody')}
+          badge={t('settings.comingLater')}
+        />
+        <SettingRow
+          title={t('settings.blocked')}
+          subtitle={t('settings.blockedBody')}
+          trailing={
+            <Pressable
+              testID={testIds.settings.blocked}
+              accessibilityRole="button"
+              accessibilityLabel={t('settings.blocked')}
+              onPress={() => setBlockedOpen(true)}
+              style={styles.disclosure}
+            >
+              <Text style={styles.arrow}>{isRTL ? '←' : '→'}</Text>
+            </Pressable>
+          }
+        />
+        <SettingRow
+          title={t('settings.reporting')}
+          subtitle={t('settings.reportingBody')}
+          trailing={
+            <Pressable
+              testID={testIds.settings.moderation}
+              accessibilityRole="button"
+              accessibilityLabel={t('settings.reporting')}
+              onPress={() => setModerationOpen(true)}
+              style={styles.disclosure}
+            >
+              <Text style={styles.arrow}>{isRTL ? '←' : '→'}</Text>
+            </Pressable>
+          }
+        />
+        <ModerationSheet visible={moderationOpen} onClose={() => setModerationOpen(false)} />
+      </Section>
+
+        </>
+      ) : null}
+
+      {page === 'account' ? (
+        <>
+          <BackRow onPress={() => setPage('main')} />
+      <Section eyebrow={t('settings.account')} title={t('settings.accountTitle')}>
+        <SettingRow
           title={paused ? t('settings.paused') : t('settings.pause')}
           subtitle={
             paused
@@ -331,6 +360,12 @@ export function SettingsTab({
             />
           }
         />
+        <View style={styles.signOutWrap}>
+          <Button label={t('settings.signOut')} variant="secondary" onPress={() => void signOut()} />
+        </View>
+      </Section>
+
+      <Section eyebrow={t('settings.account')} title={t('settings.dangerZone')}>
         <SettingRow
           title={t('settings.delete')}
           subtitle={t('settings.deleteBody')}
@@ -345,6 +380,9 @@ export function SettingsTab({
           }
         />
       </Section>
+
+        </>
+      ) : null}
 
       <Text variant="caption" center style={styles.version}>
         {t('settings.version')}
@@ -394,6 +432,24 @@ export function SettingsTab({
   );
 }
 
+
+function Disclosure({ label, onPress }: { label: string; onPress: () => void }) {
+  const { isRTL } = useI18n();
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={styles.disclosure}>
+      <Text style={styles.arrow}>{isRTL ? '←' : '→'}</Text>
+    </Pressable>
+  );
+}
+
+function BackRow({ onPress }: { onPress: () => void }) {
+  const { t, isRTL } = useI18n();
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} onPress={onPress} style={styles.backRow}>
+      <Text style={styles.backLabel}>{isRTL ? '→' : '←'} {t('common.back')}</Text>
+    </Pressable>
+  );
+}
 
 function Section({
   eyebrow,
@@ -515,6 +571,9 @@ const styles = StyleSheet.create({
   },
   languagePillLabel: { fontFamily: font.bodyBold, fontSize: 10, letterSpacing: 1, color: color.ink },
   restartNotice: { color: color.gold, marginTop: 8 },
+  backRow: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
+  backLabel: { fontFamily: font.bodyBold, fontSize: 12, letterSpacing: 0.6, color: color.ink },
+  signOutWrap: { paddingVertical: 16 },
 
   premiumCard: { gap: 14, borderRadius: radius.panel },
   premiumLabel: {
