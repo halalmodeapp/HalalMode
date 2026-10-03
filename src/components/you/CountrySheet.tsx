@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
 import { Text } from '@/components/ui/Text';
+import { countryName } from '@/data/countryCodes';
 import { COUNTRIES } from '@/data/preferences';
 import { useI18n } from '@/i18n';
 import { testIds } from '@/lib/testIds';
@@ -51,7 +52,7 @@ export function CountrySheet({
   applyLabel,
   testID = testIds.you.countrySheet,
 }: CountrySheetProps) {
-  const { t, isRTL } = useI18n();
+  const { t, isRTL, language } = useI18n();
   const insets = useSafeAreaInsets();
   const [search, setSearch] = useState('');
   const [pending, setPending] = useState(selected);
@@ -67,8 +68,10 @@ export function CountrySheet({
   const results = useMemo(() => {
     const query = normalise(search.trim());
     if (!query) return COUNTRIES as readonly string[];
-    return COUNTRIES.filter((country) => normalise(country).includes(query));
-  }, [search]);
+    // The stored value stays English; either name finds it.
+    return COUNTRIES.filter((country) =>
+      normalise(country).includes(query) || normalise(countryName(country, language)).includes(query));
+  }, [language, search]);
 
   const toggle = (country: string) => {
     setPending((current) => toggleCountrySelection(current, country, selectionMode));
@@ -162,12 +165,12 @@ export function CountrySheet({
                 <Pressable
                   accessibilityRole={isSingle ? 'radio' : 'checkbox'}
                   accessibilityState={isSingle ? { selected: isSelected } : { checked: isSelected }}
-                  accessibilityLabel={country}
+                  accessibilityLabel={countryName(country, language)}
                   onPress={() => toggle(country)}
                   style={[styles.row, isRTL && styles.rowReverse, isSelected && styles.rowSelected]}
                 >
                   <Text style={[styles.rowLabel, isSelected && styles.rowLabelSelected]}>
-                    {country}
+                    {countryName(country, language)}
                   </Text>
                   <View style={[styles.dot, isSelected && styles.dotSelected]}>
                     {isSelected ? <Text style={styles.tick}>✓</Text> : null}

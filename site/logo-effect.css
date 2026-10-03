@@ -1,0 +1,6 @@
+.logo-link{position:relative;display:inline-block;line-height:0;isolation:isolate}
+.logo-effect{position:absolute;inset:0;pointer-events:none;opacity:0;overflow:hidden;transition:opacity .7s ease;-webkit-mask:url('/logo.svg') center/100% 100% no-repeat;mask:url('/logo.svg') center/100% 100% no-repeat}
+.logo-link.is-ready.is-active .logo-effect{opacity:1;transition-duration:.1s}
+.logo-shader{position:absolute;inset:-15.8% -15.8%}
+.logo-shader canvas{z-index:0!important}
+@media(prefers-reduced-motion:reduce){.logo-effect{display:none}}

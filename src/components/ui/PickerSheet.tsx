@@ -72,7 +72,7 @@ export function PickerSheet({
   }, [selected, visible]);
 
   const rows = useMemo<Row[]>(() => {
-    const filtered = searchGroups(groups, search);
+    const filtered = searchGroups(groups, search, language);
     const flat: Row[] = [];
     for (const group of filtered) {
       flat.push({

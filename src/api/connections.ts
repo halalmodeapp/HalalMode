@@ -103,7 +103,7 @@ export async function submitAnswer(
  * The written comparison of both members' answers, or null when it is not
  * available (not finished yet, or no AI key set on the server).
  */
-export async function fetchConnectionSummary(connectionId: string, language: 'en' | 'ar'): Promise<string | null> {
+export async function fetchConnectionSummary(connectionId: string, language: string): Promise<string | null> {
   if (USE_MOCKS) return null;
   const client = requireSupabase();
   const { data, error } = await client.functions.invoke('connection-summary', {

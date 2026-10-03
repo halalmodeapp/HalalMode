@@ -1,4 +1,5 @@
-import type { CatalogGroup } from '@/data/catalogOption';
+import type { CatalogGroup } from './catalogOption';
+import { attachListTranslations } from './translations';
 
 /**
  * Where a member can say they live without handing over their location.
@@ -564,8 +565,10 @@ export const CITY_GROUPS: readonly CatalogGroup[] = CITY_COUNTRIES.map((entry) =
   id: entry.country,
   en: entry.country,
   ar: entry.ar,
+  country: entry.country,
   options: entry.cities.map(({ id, en, ar }) => ({ id, en, ar })),
 }));
+attachListTranslations(CITY_GROUPS, 'cities');
 
 export interface ResolvedPlace {
   city: string;

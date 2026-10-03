@@ -882,7 +882,7 @@ const styles = StyleSheet.create({
  */
 function OpenerHint() {
   const { language } = useI18n();
-  const [openers] = useState(shuffledOpeners);
+  const [openers] = useState(() => shuffledOpeners(language));
   const [index, setIndex] = useState(0);
   useEffect(() => {
     const timer = setInterval(() => setIndex((i) => (i + 1) % openers.length), 6000);
@@ -893,7 +893,7 @@ function OpenerHint() {
   return (
     <View style={styles.openerWrap} pointerEvents="none">
       <Animated.Text key={index} entering={FadeIn.duration(500)} style={styles.opener}>
-        {language === 'ar' ? opener.ar : opener.en}
+        {opener}
       </Animated.Text>
     </View>
   );

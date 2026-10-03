@@ -19,7 +19,7 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { authReturnAddress, signInWithProvider, type AuthProvider } from '@/api/auth';
 import { HalftoneHero } from '@/components/auth/HalftoneHero';
 import { useI18n } from '@/i18n';
-import { supportedLocales, type AppLocale } from '@/i18n/locales';
+import { localeName, supportedLocales } from '@/i18n/locales';
 import { requireSupabase } from '@/lib/supabase';
 import { testIds } from '@/lib/testIds';
 import { useSession } from '@/state/session';
@@ -46,8 +46,6 @@ const C = {
 };
 const SERIF = Platform.select({ web: 'ui-serif, Georgia, "Times New Roman", serif', ios: 'Georgia', default: 'serif' });
 const SANS = Platform.select({ web: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif', default: undefined });
-
-const LANGUAGE_NAMES: Record<AppLocale, string> = { en: 'English', ar: 'العربية' };
 
 export default function AuthScreen() {
   const { t, isRTL } = useI18n();
@@ -123,7 +121,7 @@ export default function AuthScreen() {
         >
           <View style={[styles.hero, { height: heroHeight }]}>
             <HalftoneHero />
-            <View style={[styles.header, { paddingTop: insets.top + 18 }]}>
+            <View pointerEvents="box-none" style={[styles.header, { paddingTop: insets.top + 18 }]}>
               <Image
                 source={require('../assets/branding/logo.svg')}
                 style={styles.logo}
@@ -155,9 +153,13 @@ export default function AuthScreen() {
                       setLanguage(code);
                       setLanguageOpen(false);
                     }}
-                    style={[styles.languageOption, code === language && styles.languageOptionOn]}
+                    style={[
+                      styles.languageOption,
+                      ['en', 'ar', 'ur', 'fa'].includes(code) ? styles.languageWide : styles.languageHalf,
+                      code === language && styles.languageOptionOn,
+                    ]}
                   >
-                    <Text style={styles.languageName}>{LANGUAGE_NAMES[code]}</Text>
+                    <Text style={styles.languageName} numberOfLines={1}>{localeName(code)}</Text>
                     {code === language ? <Text style={styles.tick}>✓</Text> : null}
                   </Pressable>
                 ))}
@@ -309,9 +311,12 @@ const styles = StyleSheet.create({
   globeOpen: { borderColor: 'rgba(138,106,52,0.55)' },
   languageMenu: {
     position: 'absolute',
-    width: 200,
+    width: 300,
+    maxWidth: '86%',
     padding: 8,
-    gap: 3,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    rowGap: 3,
     borderWidth: 1,
     borderColor: C.line,
     borderRadius: 18,
@@ -334,7 +339,9 @@ const styles = StyleSheet.create({
     borderRadius: 11,
   },
   languageOptionOn: { backgroundColor: '#F5F1E9' },
-  languageName: { fontFamily: SANS, fontSize: 14, fontWeight: '500', color: C.soft },
+  languageWide: { width: '100%' },
+  languageHalf: { width: '50%' },
+  languageName: { flexShrink: 1, fontFamily: SANS, fontSize: 14, fontWeight: '500', color: C.soft },
   tick: { color: C.gold, fontSize: 14 },
 
   sheet: {

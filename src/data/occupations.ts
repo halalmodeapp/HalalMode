@@ -1,6 +1,7 @@
 import type { AppLocale } from '@/i18n/locales';
 // Relative: the tests load this file directly and do not resolve '@/'.
 import { storedLabel, type CatalogGroup } from './catalogOption';
+import { attachListTranslations } from './translations';
 
 /**
  * What a member does, chosen rather than typed.
@@ -316,6 +317,8 @@ export const OCCUPATION_GROUPS: readonly CatalogGroup[] = [
     ],
   },
 ];
+
+attachListTranslations(OCCUPATION_GROUPS, 'occupations');
 
 /**
  * A profession as a reader should see it: the label, in their language.

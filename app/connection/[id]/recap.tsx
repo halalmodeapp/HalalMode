@@ -46,7 +46,7 @@ export default function RecapScreen() {
   }, [connectionId, alignedCount, compatibilityBreakdown.length]);
   const summaryQuery = useQuery({
     queryKey: ['connection-summary', id, language],
-    queryFn: () => fetchConnectionSummary(id, language === 'ar' ? 'ar' : 'en'),
+    queryFn: () => fetchConnectionSummary(id, language),
     enabled: !!connectionId,
     staleTime: Infinity,
   });

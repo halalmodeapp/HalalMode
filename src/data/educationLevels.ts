@@ -1,4 +1,5 @@
-import type { CatalogGroup } from '@/data/catalogOption';
+import type { CatalogGroup } from './catalogOption';
+import { attachListTranslations } from './translations';
 
 /**
  * How far a member took their education, and in what.
@@ -72,3 +73,5 @@ export const EDUCATION_GROUPS: readonly CatalogGroup[] = [
     ],
   },
 ];
+
+attachListTranslations(EDUCATION_GROUPS, 'education');

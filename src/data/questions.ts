@@ -1,6 +1,9 @@
 import type { AppLocale } from '@/i18n/locales';
 import type { CompatibilityQuestion, QuestionCategory } from '@/types';
 
+// Relative: the tests load this file directly and do not resolve '@/'.
+import { questionTranslation } from './translations';
+
 export const CATEGORY_LABELS: Record<QuestionCategory, string> = {
   faith: 'Faith',
   family: 'Family',
@@ -104,5 +107,6 @@ export const QUESTIONS_TO_PICK = 5;
 export function questionText(question: CompatibilityQuestion, locale: AppLocale): string {
   return question.translations?.[locale]
     ?? (locale === 'ar' ? question.textAr : undefined)
+    ?? questionTranslation(question.id, locale)
     ?? question.text;
 }

@@ -1,3 +1,7 @@
+import type { AppLocale } from '@/i18n/locales';
+
+import { openersFor } from './translations';
+
 /**
  * Gentle first lines, shown faintly in an empty conversation so nobody stares
  * at a blank screen. They are suggestions only: nothing is sent or filled in.
@@ -25,9 +29,14 @@ export const CONVERSATION_OPENERS: { en: string; ar: string }[] = [
   { en: 'Would you be open to a short call with a family member present, when we are both ready?', ar: 'هل تقبل مكالمة قصيرة بحضور أحد أفراد العائلة عندما نكون مستعدين؟' },
 ];
 
-/** The openers in a random order, so each conversation starts somewhere new. */
-export function shuffledOpeners(): { en: string; ar: string }[] {
-  const list = [...CONVERSATION_OPENERS];
+/**
+ * The openers in the given language, in a random order, so each conversation
+ * starts somewhere new.
+ */
+export function shuffledOpeners(locale: AppLocale): string[] {
+  const own = openersFor(locale);
+  const list = CONVERSATION_OPENERS.map((opener, index) =>
+    locale === 'ar' ? opener.ar : own?.[index] ?? opener.en);
   for (let i = list.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [list[i], list[j]] = [list[j]!, list[i]!];

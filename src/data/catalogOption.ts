@@ -1,4 +1,6 @@
 import type { AppLocale } from '@/i18n/locales';
+// Relative: the tests load this file directly and do not resolve '@/'.
+import { countryName } from './countryCodes';
 
 /**
  * A choice a member picks from a fixed list.
@@ -20,17 +22,20 @@ export interface CatalogOption {
   id: string;
   en: string;
   ar: string;
+  /** Every other language, attached when the list loads (src/data/translations). */
+  t?: Partial<Record<AppLocale, string>>;
+  /** Set on country entries: lets the device name the country in any language. */
+  country?: string;
 }
 
-export interface CatalogGroup {
-  id: string;
-  en: string;
-  ar: string;
+export interface CatalogGroup extends CatalogOption {
   options: readonly CatalogOption[];
 }
 
 export function optionLabel(option: CatalogOption, language: AppLocale): string {
-  return language === 'ar' ? option.ar : option.en;
+  if (language === 'en') return option.en;
+  if (language === 'ar') return option.ar;
+  return option.t?.[language] ?? (option.country ? countryName(option.country, language) : option.en);
 }
 
 /** Every option across every group, flattened once for lookups. */
@@ -80,12 +85,13 @@ export function normaliseForSearch(value: string): string {
 /**
  * Groups filtered to the options matching a query, dropping groups left empty.
  *
- * Both languages are searched whichever one is on screen, because a member
- * reading Arabic may well know their field by its English name.
+ * English, Arabic and the language on screen are all searched, because a member
+ * reading another language may well know their field by its English name.
  */
 export function searchGroups(
   groups: readonly CatalogGroup[],
   query: string,
+  language: AppLocale = 'en',
 ): readonly CatalogGroup[] {
   const needle = normaliseForSearch(query);
   if (!needle) return groups;
@@ -94,17 +100,15 @@ export function searchGroups(
   for (const group of groups) {
     // A group whose own name matches keeps all of its options: searching
     // "healthcare" should show what is in healthcare, not nothing.
-    const groupMatches =
-      normaliseForSearch(group.en).includes(needle) ||
-      normaliseForSearch(group.ar).includes(needle);
+    const matchesNeedle = (entry: CatalogOption) =>
+      normaliseForSearch(entry.en).includes(needle) ||
+      normaliseForSearch(entry.ar).includes(needle) ||
+      normaliseForSearch(optionLabel(entry, language)).includes(needle);
+    const groupMatches = matchesNeedle(group);
 
     const options = groupMatches
       ? group.options
-      : group.options.filter(
-          (option) =>
-            normaliseForSearch(option.en).includes(needle) ||
-            normaliseForSearch(option.ar).includes(needle),
-        );
+      : group.options.filter(matchesNeedle);
 
     if (options.length > 0) matches.push({ ...group, options });
   }

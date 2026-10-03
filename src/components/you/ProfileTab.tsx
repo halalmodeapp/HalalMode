@@ -38,6 +38,7 @@ import { getProfileReadiness, type ProfileReadinessIssue } from '@/lib/profileRe
 import { placeFromDevice } from '@/lib/deviceLocation';
 import { CITY_GROUPS, placeForCity } from '@/data/cities';
 import { useI18n, type Translate } from '@/i18n';
+import { useSession } from '@/state/session';
 import type { TranslationKey } from '@/i18n/catalog';
 import { PermissionExplainer } from '@/components/ui/PermissionExplainer';
 import { PickerSheet } from '@/components/ui/PickerSheet';
@@ -85,6 +86,7 @@ function mediaFrom(profile: Profile): PhotoTile[] {
 
 export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; onOpenPreferences?: () => void }) {
   const { localeTag, isRTL, language, t } = useI18n();
+  const { tier } = useSession();
   const [picking, setPicking] = useState<'occupation' | 'education' | null>(null);
   const schema = useMemo(() => profileSchema(t), [t]);
   const queryClient = useQueryClient();
@@ -338,6 +340,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
     }
   }, [queryClient, t, updatingLocation]);
 
+  // Premium travel mode only; see the button below.
   const chooseCity = async (id: string | undefined) => {
     const place = id ? placeForCity(id) : null;
     if (!place || updatingLocation) return;
@@ -787,11 +790,17 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
             loading={updatingLocation}
             onPress={() => void askForLocation()}
           />
+          {/* Travel mode (Premium): appear in another city before a move or a
+              long visit. Everyone else is placed by their device, so nobody
+              can claim to live somewhere they do not. */}
           <Button
-            label={t('onboarding.chooseDifferentCity')}
+            label={tier === 'premium' ? t('profile.travelMode') : `${t('profile.travelMode')} · Premium`}
             variant="quiet"
             disabled={updatingLocation}
-            onPress={() => setCityPicker(true)}
+            onPress={() => {
+              if (tier === 'premium') setCityPicker(true);
+              else Alert.alert(t('profile.travelPremiumTitle'), t('profile.travelPremiumBody'));
+            }}
           />
           <PickerSheet
             visible={cityPicker}
@@ -799,8 +808,8 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
             selected={[]}
             onChange={(next) => void chooseCity(next[0])}
             onClose={() => setCityPicker(false)}
-            title={t('onboarding.chooseCityTitle')}
-            eyebrow={t('permission.location.eyebrow')}
+            title={t('profile.travelPickerTitle')}
+            eyebrow={t('profile.travelMode')}
             searchLabel={t('onboarding.chooseCitySearch')}
           />
           <PermissionExplainer
@@ -815,15 +824,12 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
             ]}
             reassurance={t('permission.location.reassurance')}
             continueLabel={t('permission.continue')}
-            cancelLabel={t('onboarding.chooseCityInstead')}
+            cancelLabel={t('permission.notNow')}
             onContinue={() => {
               setLocationExplainer(false);
               void refreshDeviceLocation();
             }}
-            onCancel={() => {
-              setLocationExplainer(false);
-              setCityPicker(true);
-            }}
+            onCancel={() => setLocationExplainer(false)}
             testID={testIds.you.locationExplainer}
           />
           {locationError ? (

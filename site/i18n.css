@@ -1,0 +1,32 @@
+header{direction:ltr}
+.header-actions{display:flex;align-items:center;gap:12px;min-width:0;direction:ltr}
+.header-actions .nav{direction:auto;text-align:center;white-space:normal;min-width:0}
+header .logo-link{flex:none}
+.language-picker{position:relative;flex:none;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.language-trigger{display:grid;place-items:center;width:38px;height:38px;padding:0;border:1px solid rgba(138,106,52,.24);border-radius:50%;background:rgba(252,252,251,.88);color:#3B3934;cursor:pointer;box-shadow:0 4px 18px rgba(10,10,10,.05);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.language-trigger:hover,.language-trigger[aria-expanded=true]{color:#8A6A34;border-color:rgba(138,106,52,.55)}
+.language-trigger svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.language-trigger:focus-visible,.language-option:focus-visible{outline:2px solid #8A6A34;outline-offset:2px}
+.language-menu{position:absolute;z-index:20;top:calc(100% + 10px);right:0;width:min(360px,calc(100vw - 44px));max-height:min(490px,70vh);overflow:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px;padding:10px;border:1px solid rgba(138,106,52,.2);border-radius:18px;background:rgba(252,252,251,.98);box-shadow:0 18px 48px rgba(10,10,10,.16);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);direction:ltr}
+.language-menu[hidden]{display:none}
+.language-option{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0;width:100%;padding:11px 10px;border:0;border-radius:11px;background:transparent;color:#3B3934;box-shadow:none;text-align:start;font:500 14px/1.3 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:0;text-transform:none;cursor:pointer}
+.language-option:hover,.language-option[aria-pressed=true]{background:#F5F1E9;color:#0A0A0A}
+.language-option[aria-pressed=true]::after{content:'✓';color:#8A6A34;font-size:14px;flex:none}
+.language-option[data-language=en],.language-option[data-language=ar],.language-option[data-language=ur],.language-option[data-language=fa]{grid-column:1/-1}
+html[lang=ar] body,html[lang=ur] body,html[lang=fa] body,html[lang=hi] body,html[lang=bn] body,html[lang=zh-Hans] body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.65}
+html[lang=am] body{font-family:"Ebrima",ui-sans-serif,system-ui,sans-serif;line-height:1.7}
+html[lang=am] h1{font-weight:500;font-size:clamp(38px,4.8vw,72px)}
+html[lang=am] .lede{font-size:clamp(18px,1.4vw,21px)}
+html[lang=am] .nav{letter-spacing:0;font-size:13px}
+html[dir=rtl] h1,html[dir=rtl] h2{letter-spacing:0}
+html[dir=rtl] .hero{direction:ltr}
+html[dir=rtl] .hero>div{direction:rtl}
+html[dir=rtl] .stores{direction:ltr}
+html[dir=rtl] .store,html[dir=rtl] .card input[type=email]{direction:ltr}
+html[dir=rtl] #city,html[dir=rtl] #age{direction:rtl}
+html[dir=rtl] .card label,html[dir=rtl] .card h2,html[dir=rtl] .card p{text-align:right}
+html[dir=rtl] .card input:not([type=email]),html[dir=rtl] .card select{text-align:right}
+html[dir=rtl] .hero>div,html[dir=rtl] .feature,html[dir=rtl] footer{text-align:right}
+main h1,main h2,.cta{overflow-wrap:break-word}
+.cta{max-width:100%}
+@media(max-width:480px){.header-actions{gap:7px}.header-actions .nav{font-size:11px;letter-spacing:.06em}.language-trigger{width:36px;height:36px}.language-menu{width:min(340px,calc(100vw - 36px));padding:7px}.language-option{font-size:13px;padding:10px 8px}}

@@ -13,7 +13,8 @@ import { Text } from '@/components/ui/Text';
 import { ModerationSheet } from '@/components/safety/ModerationSheet';
 import { BlockedMembersSheet } from '@/components/you/BlockedMembersSheet';
 import { useI18n } from '@/i18n';
-import { nextSupportedLocale } from '@/i18n/locales';
+import { LanguageSheet } from '@/components/ui/LanguageSheet';
+import { localeName } from '@/i18n/locales';
 import { useSession } from '@/state/session';
 import { useAuth } from '@/state/auth';
 import { useFeatureFlags } from '@/state/featureFlags';
@@ -34,7 +35,8 @@ export function SettingsTab({
   profilePaused: boolean;
 }) {
   const { t, isRTL, localeTag, nativeRestartRequired } = useI18n();
-  const { tier, setTier, language, setLanguage } = useSession();
+  const { tier, setTier, language } = useSession();
+  const [languageOpen, setLanguageOpen] = useState(false);
   const { signOut } = useAuth();
   const { pushNotifications } = useFeatureFlags();
   const queryClient = useQueryClient();
@@ -187,18 +189,19 @@ export function SettingsTab({
       <Section eyebrow={t('settings.preferences')} title={t('settings.preferencesTitle')}>
         <SettingRow
           title={t('settings.language')}
-          subtitle={language === 'en' ? t('auth.switchEnglish') : t('auth.switchArabic')}
+          subtitle={localeName(language)}
           trailing={
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('settings.switchLanguage')}
-              onPress={() => setLanguage(nextSupportedLocale(language))}
+              onPress={() => setLanguageOpen(true)}
               style={styles.languagePill}
             >
-              <Text style={styles.languagePillLabel}>{language.toUpperCase()}</Text>
+              <Text style={styles.languagePillLabel}>{t('settings.change')}</Text>
             </Pressable>
           }
         />
+        <LanguageSheet visible={languageOpen} onClose={() => setLanguageOpen(false)} />
         {nativeRestartRequired ? (
           <Text accessibilityRole="alert" variant="caption" style={styles.restartNotice}>
             {t('settings.restartRequired')}

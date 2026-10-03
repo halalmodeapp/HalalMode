@@ -23,8 +23,6 @@ import { fetchMyLegalConsentStatus } from '@/api/legalConsent';
 import { documentFromStatus, type LegalConsentStatus } from '@/lib/legalConsent';
 import { queryKeys } from '@/lib/queryClient';
 import { PermissionExplainer } from '@/components/ui/PermissionExplainer';
-import { PickerSheet } from '@/components/ui/PickerSheet';
-import { CITY_GROUPS, placeForCity } from '@/data/cities';
 import { placeFromDevice } from '@/lib/deviceLocation';
 import { namesFromIdentity } from '@/lib/identityNames';
 import {
@@ -94,7 +92,8 @@ export default function OnboardingScreen() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
   const [locationExplainer, setLocationExplainer] = useState(false);
-  const [cityPicker, setCityPicker] = useState(false);
+  // Location was refused; offer the way back to it.
+  const [locationBlocked, setLocationBlocked] = useState(false);
   const [ageConfirmationOpen, setAgeConfirmationOpen] = useState(false);
   const [legalAccepted, setLegalAccepted] = useState(false);
   const legalStatusQuery = useQuery({
@@ -166,9 +165,11 @@ export default function OnboardingScreen() {
    *
    * Continue used to fire the system prompt with nothing but a caption as the
    * reason, and if the answer was no — or, on the web, where the browser cannot
-   * name a place at all — there was no way past this step. The member was
-   * locked out of the app. Now the reason comes first, and choosing a city
-   * from the list is always there as the other road.
+   * name a place at all — there was no way past this step. Now the reason
+   * comes first. Location is required (2026-10-03): a typed or picked city
+   * would let anyone claim to live anywhere, and appearing elsewhere is the
+   * Premium travel mode instead. A member who said no is shown how to turn it
+   * back on.
    */
   const locateMe = async () => {
     setLocating(true);
@@ -176,19 +177,21 @@ export default function OnboardingScreen() {
     try {
       const permission = await Location.requestForegroundPermissionsAsync();
       if (permission.status !== 'granted') {
-        setErrors({ city: t('onboarding.locationDeniedChooseCity') });
+        setLocationBlocked(true);
+        setErrors({ city: t(Platform.OS === 'web' ? 'onboarding.locationDeniedWeb' : 'onboarding.locationDenied') });
         return;
       }
+      setLocationBlocked(false);
       const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       const places = await Location.reverseGeocodeAsync(position.coords).catch(() => []);
       const resolved = placeFromDevice(places[0], position.coords);
       if (!resolved) {
-        setErrors({ city: t('onboarding.locationUnknownChooseCity') });
+        setErrors({ city: t('onboarding.locationFailed') });
         return;
       }
       setDraft((current) => ({ ...current, ...resolved }));
     } catch {
-      setErrors({ city: t('onboarding.locationUnknownChooseCity') });
+      setErrors({ city: t('onboarding.locationFailed') });
     } finally {
       setLocating(false);
     }
@@ -203,13 +206,6 @@ export default function OnboardingScreen() {
       return;
     }
     setLocationExplainer(true);
-  };
-
-  const chooseCity = (id: string | undefined) => {
-    const place = id ? placeForCity(id) : null;
-    if (!place) return;
-    setDraft((current) => ({ ...current, ...place }));
-    setErrors({});
   };
 
   const goNext = async () => {
@@ -356,7 +352,7 @@ export default function OnboardingScreen() {
               errors={errors}
               locating={locating}
               onUseLocation={() => void askForLocation()}
-              onChooseCity={() => setCityPicker(true)}
+              blocked={locationBlocked}
             />
           ) : null}
           {step === 4 ? (
@@ -384,25 +380,12 @@ export default function OnboardingScreen() {
             ]}
             reassurance={t('permission.location.reassurance')}
             continueLabel={t('permission.continue')}
-            cancelLabel={t('onboarding.chooseCityInstead')}
+            cancelLabel={t('permission.notNow')}
             onContinue={() => {
               setLocationExplainer(false);
               void locateMe();
             }}
-            onCancel={() => {
-              setLocationExplainer(false);
-              setCityPicker(true);
-            }}
-          />
-          <PickerSheet
-            visible={cityPicker}
-            groups={CITY_GROUPS}
-            selected={[]}
-            onChange={(next) => chooseCity(next[0])}
-            onClose={() => setCityPicker(false)}
-            title={t('onboarding.chooseCityTitle')}
-            eyebrow={t('permission.location.eyebrow')}
-            searchLabel={t('onboarding.chooseCitySearch')}
+            onCancel={() => setLocationExplainer(false)}
           />
 
           {submitError ? (
@@ -597,11 +580,11 @@ function LocationStep({
   errors,
   locating,
   onUseLocation,
-  onChooseCity,
+  blocked,
 }: Pick<StepProps, 'draft' | 'errors'> & {
   locating: boolean;
   onUseLocation: () => void;
-  onChooseCity: () => void;
+  blocked: boolean;
 }) {
   const { t } = useI18n();
   const chosen = Boolean(draft.city && draft.country);
@@ -627,12 +610,13 @@ function LocationStep({
           loading={locating}
           onPress={onUseLocation}
         />
-        <Button
-          label={chosen ? t('onboarding.chooseDifferentCity') : t('onboarding.chooseCity')}
-          variant="secondary"
-          disabled={locating}
-          onPress={onChooseCity}
-        />
+        {blocked && Platform.OS !== 'web' ? (
+          <Button
+            label={t('common.openSettings')}
+            variant="secondary"
+            onPress={() => void Linking.openSettings().catch(() => undefined)}
+          />
+        ) : null}
       </View>
     </View>
   );

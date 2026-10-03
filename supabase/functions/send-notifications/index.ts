@@ -23,6 +23,91 @@ interface Claimed {
   locale: string;
 }
 
+type Wording = Record<Claimed['kind'], { title: string; body: string }>;
+
+const WORDING: Record<string, Wording> = {
+  en: {
+    round_ready: { title: 'Your set is ready', body: 'Today’s introductions are waiting.' },
+    mutual_match: { title: 'You matched', body: 'Someone you chose chose you back.' },
+    new_message: { title: 'New message', body: 'You have a message waiting.' },
+  },
+  ar: {
+    round_ready: { title: 'مجموعتك جاهزة', body: 'تعارفات اليوم بانتظارك.' },
+    mutual_match: { title: 'تعارف متبادل', body: 'شخص اخترته اختارك أيضًا.' },
+    new_message: { title: 'رسالة جديدة', body: 'لديك رسالة في إحدى محادثاتك.' },
+  },
+  ur: {
+    round_ready: { title: 'آپ کا سیٹ تیار ہے', body: 'آج کے تعارف آپ کے منتظر ہیں۔' },
+    mutual_match: { title: 'باہمی میچ', body: 'جسے آپ نے چنا، اس نے بھی آپ کو چنا۔' },
+    new_message: { title: 'نیا پیغام', body: 'آپ کا ایک پیغام منتظر ہے۔' },
+  },
+  fa: {
+    round_ready: { title: 'مجموعهٔ شما آماده است', body: 'معرفی‌های امروز منتظر شماست.' },
+    mutual_match: { title: 'انتخاب دوطرفه', body: 'کسی که انتخاب کردید، شما را هم انتخاب کرد.' },
+    new_message: { title: 'پیام تازه', body: 'یک پیام منتظر شماست.' },
+  },
+  hi: {
+    round_ready: { title: 'आपका सेट तैयार है', body: 'आज के परिचय आपका इंतज़ार कर रहे हैं।' },
+    mutual_match: { title: 'आपसी मैच', body: 'जिसे आपने चुना, उसने भी आपको चुना।' },
+    new_message: { title: 'नया संदेश', body: 'आपका एक संदेश इंतज़ार कर रहा है।' },
+  },
+  id: {
+    round_ready: { title: 'Set Anda siap', body: 'Perkenalan hari ini sudah menunggu.' },
+    mutual_match: { title: 'Saling memilih', body: 'Seseorang yang Anda pilih juga memilih Anda.' },
+    new_message: { title: 'Pesan baru', body: 'Ada pesan yang menunggu Anda.' },
+  },
+  ms: {
+    round_ready: { title: 'Set anda sedia', body: 'Perkenalan hari ini sedang menunggu.' },
+    mutual_match: { title: 'Saling memilih', body: 'Seseorang yang anda pilih turut memilih anda.' },
+    new_message: { title: 'Mesej baharu', body: 'Ada mesej yang menunggu anda.' },
+  },
+  bn: {
+    round_ready: { title: 'আপনার সেট প্রস্তুত', body: 'আজকের পরিচয় আপনার অপেক্ষায়।' },
+    mutual_match: { title: 'পারস্পরিক ম্যাচ', body: 'যাঁকে বেছেছেন তিনিও আপনাকে বেছেছেন।' },
+    new_message: { title: 'নতুন বার্তা', body: 'আপনার একটি বার্তা অপেক্ষা করছে।' },
+  },
+  fr: {
+    round_ready: { title: 'Votre sélection est prête', body: 'Les présentations du jour vous attendent.' },
+    mutual_match: { title: 'Choix réciproque', body: 'Une personne que vous avez choisie vous a choisi aussi.' },
+    new_message: { title: 'Nouveau message', body: 'Un message vous attend.' },
+  },
+  tr: {
+    round_ready: { title: 'Setiniz hazır', body: 'Bugünün tanıştırmaları sizi bekliyor.' },
+    mutual_match: { title: 'Karşılıklı eşleşme', body: 'Seçtiğiniz biri de sizi seçti.' },
+    new_message: { title: 'Yeni mesaj', body: 'Sizi bekleyen bir mesaj var.' },
+  },
+  ha: {
+    round_ready: { title: 'Saitinku ya shirya', body: 'Gabatarwar yau tana jiran ku.' },
+    mutual_match: { title: 'Haɗi daga ɓangarorin biyu', body: 'Wanda kuka zaɓa ya zaɓe ku ma.' },
+    new_message: { title: 'Sabon saƙo', body: 'Akwai saƙo da ke jiran ku.' },
+  },
+  am: {
+    round_ready: { title: 'ስብስብዎ ዝግጁ ነው', body: 'የዛሬው መተዋወቂያዎች እየጠበቁዎት ነው።' },
+    mutual_match: { title: 'የጋራ ተዛማጅ', body: 'የመረጡት ሰው እርስዎንም መርጧል።' },
+    new_message: { title: 'አዲስ መልእክት', body: 'የሚጠብቅዎት መልእክት አለ።' },
+  },
+  so: {
+    round_ready: { title: 'Kooxdaadu waa diyaar', body: 'Isbarashada maanta ayaa ku sugaysa.' },
+    mutual_match: { title: 'Isku-aad labada dhinac ah', body: 'Qof aad doorattay ayaa adigana ku doortay.' },
+    new_message: { title: 'Fariin cusub', body: 'Fariin ayaa ku sugaysa.' },
+  },
+  es: {
+    round_ready: { title: 'Tu selección está lista', body: 'Las presentaciones de hoy te esperan.' },
+    mutual_match: { title: 'Elección mutua', body: 'Alguien a quien elegiste también te eligió.' },
+    new_message: { title: 'Nuevo mensaje', body: 'Tienes un mensaje esperando.' },
+  },
+  ru: {
+    round_ready: { title: 'Ваша подборка готова', body: 'Сегодняшние знакомства ждут вас.' },
+    mutual_match: { title: 'Взаимный выбор', body: 'Человек, которого вы выбрали, тоже выбрал вас.' },
+    new_message: { title: 'Новое сообщение', body: 'Вас ждёт сообщение.' },
+  },
+  zh: {
+    round_ready: { title: '你的推荐已就绪', body: '今天的介绍正在等你。' },
+    mutual_match: { title: '双向选择', body: '你选择的人也选择了你。' },
+    new_message: { title: '新消息', body: '你有一条消息等待查看。' },
+  },
+};
+
 /**
  * What a member reads on their lock screen.
  *
@@ -31,21 +116,8 @@ interface Claimed {
  * is governed by the same rules as every other screen.
  */
 function wording(kind: Claimed['kind'], locale: string): { title: string; body: string } {
-  const arabic = locale.startsWith('ar');
-  switch (kind) {
-    case 'round_ready':
-      return arabic
-        ? { title: 'مجموعتك جاهزة', body: 'تعارفات اليوم بانتظارك.' }
-        : { title: 'Your set is ready', body: 'Today’s introductions are waiting.' };
-    case 'mutual_match':
-      return arabic
-        ? { title: 'تعارف متبادل', body: 'شخص اخترته اختارك أيضًا.' }
-        : { title: 'You matched', body: 'Someone you chose chose you back.' };
-    case 'new_message':
-      return arabic
-        ? { title: 'رسالة جديدة', body: 'لديك رسالة في إحدى محادثاتك.' }
-        : { title: 'New message', body: 'You have a message waiting.' };
-  }
+  const language = locale.toLowerCase().split('-')[0];
+  return (WORDING[language] ?? WORDING.en)[kind];
 }
 
 Deno.serve(async (request) => {

@@ -17,6 +17,14 @@ import questions from './questions.json' with { type: 'json' };
 const MODEL = 'claude-haiku-4-5-20251001';
 const QUESTIONS = questions as Record<string, { en: string; ar: string }>;
 
+/** The app's languages, named the way the model should write them. */
+const LANGUAGES: Record<string, string> = {
+  en: 'English', ar: 'Arabic', ur: 'Urdu', fa: 'Persian (Farsi)', hi: 'Hindi',
+  id: 'Indonesian', ms: 'Malay', bn: 'Bengali', fr: 'French', tr: 'Turkish',
+  ha: 'Hausa', am: 'Amharic', so: 'Somali', es: 'Spanish', ru: 'Russian',
+  'zh-Hans': 'Simplified Chinese',
+};
+
 const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -34,7 +42,7 @@ Deno.serve(async (request) => {
   if (!me) return reply({ error: 'Sign in first' }, 401);
 
   const { connectionId, language: requested } = await request.json().catch(() => ({}));
-  const language = requested === 'ar' ? 'ar' : 'en';
+  const language = typeof requested === 'string' && requested in LANGUAGES ? requested : 'en';
   if (typeof connectionId !== 'string') return reply({ error: 'Missing connection' }, 400);
 
   const { data: connection } = await admin
@@ -83,7 +91,7 @@ Deno.serve(async (request) => {
     'They each answered the same questions privately. Write one or two short paragraphs (at most 130 words in total), addressed to both of them.',
     'First say, warmly and specifically, where their answers already sound alike. Then name the one or two things most worth talking through together, as gentle prompts rather than problems.',
     'Never give a score, a percentage or a verdict on whether they suit each other. Never give religious rulings. Do not invent anything that is not in their answers. Do not quote them at length.',
-    language === 'ar' ? 'Write in Arabic.' : 'Write in English.',
+    `Write in ${LANGUAGES[language]}.`,
     'Return only the paragraphs, with no heading.',
   ].join(' ');
 

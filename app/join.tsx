@@ -15,7 +15,8 @@ import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
-import { nextSupportedLocale } from '@/i18n/locales';
+import { LanguageSheet } from '@/components/ui/LanguageSheet';
+import { localeName } from '@/i18n/locales';
 import { testIds } from '@/lib/testIds';
 import { useSession } from '@/state/session';
 import { alpha, color, radius, space } from '@/theme/tokens';
@@ -34,7 +35,8 @@ import { RTL_LAYOUT } from '@/lib/rtl';
  */
 export default function JoinScreen() {
   const { t, isRTL, localeTag } = useI18n();
-  const { language, setLanguage } = useSession();
+  const { language } = useSession();
+  const [languageOpen, setLanguageOpen] = useState(false);
 
   const [email, setEmail] = useState('');
   const [city, setCity] = useState('');
@@ -87,12 +89,12 @@ export default function JoinScreen() {
         <ScrollView contentContainerStyle={[styles.content, isRTL && styles.rtl]}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={t('auth.switchLanguageLabel')}
-            onPress={() => setLanguage(nextSupportedLocale(language))}
+            accessibilityLabel={t('auth.languageLabel')}
+            onPress={() => setLanguageOpen(true)}
             style={[styles.language, isRTL && styles.languageRTL]}
           >
             <Text style={styles.languageLabel}>
-              {language === 'en' ? t('auth.switchArabic') : t('auth.switchEnglish')}
+              {localeName(language)}
             </Text>
           </Pressable>
 
@@ -185,6 +187,7 @@ export default function JoinScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <LanguageSheet visible={languageOpen} onClose={() => setLanguageOpen(false)} />
     </Screen>
   );
 }
