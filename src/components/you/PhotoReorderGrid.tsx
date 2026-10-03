@@ -99,6 +99,8 @@ export function PhotoReorderGrid({
   const [order, setOrder] = useState(() => photos.slice(0, MAX_PHOTOS));
   const orderRef = useRef(order);
   const draggingRef = useRef(false);
+  /** The photo in the air, so its landing spot can be marked. */
+  const [draggingKey, setDraggingKey] = useState<string | null>(null);
   const latest = useRef({ photos, onReorder });
   latest.current = { photos, onReorder };
 
@@ -116,12 +118,14 @@ export function PhotoReorderGrid({
     setOrder(next);
   }, []);
 
-  const pickUp = useCallback(() => {
+  const pickUp = useCallback((key: string) => {
     draggingRef.current = true;
+    setDraggingKey(key);
   }, []);
 
   const drop = useCallback(() => {
     draggingRef.current = false;
+    setDraggingKey(null);
     const final = orderRef.current;
     const saved = latest.current.photos.slice(0, MAX_PHOTOS);
     const unchanged =
@@ -207,6 +211,23 @@ export function PhotoReorderGrid({
             );
           })}
 
+          {/* Where the photo will land if let go now: the others have already
+              slid aside, and this marks the gap they left. */}
+          {draggingKey !== null && filled.findIndex((photo) => photo.key === draggingKey) >= 0 ? (() => {
+            const at = slotPosition({
+              index: filled.findIndex((photo) => photo.key === draggingKey),
+              cellWidth, cellHeight, gap: GAP, columns: COLUMNS, isRTL,
+            });
+            return (
+              <View
+                pointerEvents="none"
+                style={[styles.cell, styles.landing, { width: cellWidth, height: cellHeight, left: at.x, top: at.y }]}
+              >
+                <Text style={styles.landingPlus}>+</Text>
+              </View>
+            );
+          })() : null}
+
           {filled.map((photo, index) => (
             <PhotoCell
               key={photo.key}
@@ -243,7 +264,7 @@ interface PhotoCellProps {
   cellHeight: number;
   isRTL: boolean;
   onMove: (from: number, to: number) => void;
-  onPickUp: () => void;
+  onPickUp: (key: string) => void;
   onDrop: () => void;
   onStep: (from: number, to: number) => void;
   onRemove: () => void;
@@ -294,6 +315,11 @@ function PhotoCell({
   const grabbedAtY = useSharedValue(0);
   /** The slot this tile has already been moved into during the current drag. */
   const slot = useSharedValue(index);
+  /** Its slot as of the last render, read by the gesture instead of `index`. */
+  const currentIndex = useSharedValue(index);
+  useEffect(() => {
+    currentIndex.value = index;
+  }, [currentIndex, index]);
 
   /**
    * Slide, rather than jump, when another tile displaces this one.
@@ -321,17 +347,23 @@ function PhotoCell({
   // A mouse is different: everybody clicks and drags at once, and a long-press
   // gesture fails the instant it moves before its timer — so on the web a few
   // pixels of movement is the whole signal. A scroll wheel never competes.
-  const pan = (Platform.OS === 'web'
+  //
+  // The gesture is built once per drag-relevant setting, never per render. Each
+  // swap re-renders this tile with a new index, and handing GestureDetector a
+  // fresh gesture mid-drag made the browser end the drag on the spot: the photo
+  // dropped before the mouse was let go.
+  const key = photo.key;
+  const pan = useMemo(() => (Platform.OS === 'web'
     ? Gesture.Pan().minDistance(4)
     : Gesture.Pan().activateAfterLongPress(220))
     .enabled(count > 1)
     .onStart(() => {
       dragging.value = true;
-      slot.value = index;
+      slot.value = currentIndex.value;
       grabbedAtX.value = homeX.value;
       grabbedAtY.value = homeY.value;
       lift.value = withSpring(1, LIFT);
-      runOnJS(onPickUp)();
+      runOnJS(onPickUp)(key);
     })
     .onUpdate((event) => {
       // Measured from where the finger landed, not from wherever this tile has
@@ -364,7 +396,10 @@ function PhotoCell({
       offsetY.value = withSpring(0, SETTLE);
       lift.value = withSpring(0, SETTLE);
       runOnJS(onDrop)();
-    });
+    }),
+  // Shared values are stable; listing them keeps the linter honest.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  [count, cellWidth, cellHeight, isRTL, key, onMove, onPickUp, onDrop]);
 
   const animated = useAnimatedStyle(() => ({
     transform: [
@@ -459,6 +494,17 @@ const styles = StyleSheet.create({
   emptyPressed: { backgroundColor: color.sand },
   emptyPlus: { fontFamily: font.body, fontSize: 22, color: color.faintest, lineHeight: 24 },
   emptyLabel: { color: color.faintest, paddingHorizontal: 6 },
+
+  landing: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.lg,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: color.gold,
+    backgroundColor: 'rgba(197,160,84,0.16)',
+  },
+  landingPlus: { fontFamily: font.body, fontSize: 48, lineHeight: 52, color: color.gold },
 
   mainBadge: {
     position: 'absolute',
