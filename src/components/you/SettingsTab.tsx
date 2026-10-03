@@ -86,6 +86,7 @@ export function SettingsTab({
     t('settings.premium.f1'),
     t('settings.premium.f2'),
     t('settings.premium.f4'),
+    t('profile.travelMode'),
   ];
 
   useEffect(() => setPaused(profilePaused), [profilePaused]);
@@ -251,10 +252,18 @@ export function SettingsTab({
         ) : null}
       </Section>
 
+      {/* One Premium card: what it is, what it adds, and what it never does. */}
       <Card tone="dark" style={styles.premiumCard}>
-        <View>
-          <Text style={styles.premiumLabel}>{t('settings.membership')}</Text>
-          <Text style={styles.premiumTitle}>{t('settings.premium')}</Text>
+        <View style={[styles.premiumDetailsHead, isRTL && styles.rowReverse]}>
+          <View>
+            <Text style={styles.premiumLabel}>{t('settings.membership')}</Text>
+            <Text style={styles.premiumTitle}>{t('settings.premium')}</Text>
+          </View>
+          <View style={[styles.planBadge, isPremium && styles.planBadgeActive]}>
+            <Text style={[styles.planBadgeLabel, isPremium && styles.planBadgeLabelActive]}>
+              {isPremium ? t('settings.active') : t('settings.preview')}
+            </Text>
+          </View>
         </View>
         <View style={styles.featureList}>
           {premiumFeatures.map((feature) => (
@@ -264,6 +273,9 @@ export function SettingsTab({
             </View>
           ))}
         </View>
+        <Text variant="caption" style={styles.premiumUnavailable}>
+          {t('settings.premiumPrivacy')}
+        </Text>
         {USE_MOCKS ? (
           <Button
             label={isPremium ? t('settings.managePremium') : t('settings.explorePremium')}
@@ -275,47 +287,6 @@ export function SettingsTab({
             {t('settings.purchaseUnavailable')}
           </Text>
         )}
-      </Card>
-
-      <Card tone="filled" style={styles.premiumDetails}>
-        <View style={[styles.premiumDetailsHead, isRTL && styles.rowReverse]}>
-          <View>
-            <Text variant="microAccent">{t('settings.premium')}</Text>
-            <Text variant="displaySmall" style={styles.premiumDetailsTitle}>
-              {t('settings.premiumTitle')}
-            </Text>
-          </View>
-          <View style={[styles.planBadge, isPremium && styles.planBadgeActive]}>
-            <Text style={[styles.planBadgeLabel, isPremium && styles.planBadgeLabelActive]}>
-              {isPremium ? t('settings.active') : t('settings.preview')}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.benefitGrid}>
-          <PremiumBenefit
-            mark="10"
-            title={t('settings.fullerRound')}
-            detail={t('settings.fullerRoundBody')}
-          />
-          <PremiumBenefit
-            mark="3"
-            title={t('settings.moreKeeps')}
-            detail={t('settings.moreKeepsBody')}
-          />
-          <PremiumBenefit
-            mark="10"
-            title={t('settings.moreChats')}
-            detail={t('settings.moreChatsBody')}
-          />
-        </View>
-
-        <View style={[styles.premiumRule, isRTL && styles.rowReverse]}>
-          <Text style={styles.premiumRuleMark}>◌</Text>
-          <Text variant="caption" style={styles.premiumRuleText}>
-            {t('settings.premiumPrivacy')}
-          </Text>
-        </View>
       </Card>
 
       <Section eyebrow={t('settings.account')} title={t('settings.accountTitle')}>
@@ -423,30 +394,6 @@ export function SettingsTab({
   );
 }
 
-function PremiumBenefit({
-  mark,
-  title,
-  detail,
-}: {
-  mark: string;
-  title: string;
-  detail: string;
-}) {
-  const { isRTL } = useI18n();
-  return (
-    <View style={[styles.benefit, isRTL && styles.rowReverse]}>
-      <View style={styles.benefitMark}>
-        <Text style={styles.benefitMarkLabel}>{mark}</Text>
-      </View>
-      <View style={styles.benefitText}>
-        <Text style={styles.benefitTitle}>{title}</Text>
-        <Text variant="caption" style={styles.benefitDetail}>
-          {detail}
-        </Text>
-      </View>
-    </View>
-  );
-}
 
 function Section({
   eyebrow,
@@ -594,14 +541,15 @@ const styles = StyleSheet.create({
   premiumDetailsTitle: { marginTop: 6, fontSize: 20, lineHeight: 26, flexShrink: 1 },
   planBadge: {
     borderWidth: 1,
-    borderColor: 'rgba(138,106,52,0.28)',
+    borderColor: 'rgba(214,180,110,0.4)',
     borderRadius: radius.pill,
     paddingVertical: 6,
     paddingHorizontal: 9,
   },
-  planBadgeActive: { backgroundColor: color.ink, borderColor: color.ink },
+  // The badge now sits on the dark Premium card.
+  planBadgeActive: { borderColor: color.goldOnDark },
   planBadgeLabel: {
-    color: color.gold,
+    color: color.goldOnDark,
     fontFamily: font.bodyBold,
     fontSize: 8.5,
     letterSpacing: 1,

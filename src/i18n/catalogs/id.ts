@@ -766,4 +766,10 @@ export const id: TranslationCatalog = {
   'profile.readinessPhoto': 'foto yang jelas',
   'profile.readinessPreferences': 'preferensi pencocokan Anda',
   'profile.openMatchingPreferences': 'Buka preferensi pencocokan',
+  'profile.requiredNote': "* Wajib",
+  'profile.missingFields': "Isi ini sebelum menyimpan: {{fields}}",
+  'profile.sectPlaceholder': "Pilih mazhab Anda",
+  'profile.languagesSearch': "Cari bahasa",
+  'filters.bodyTypesPlaceholder': "Pilih hingga 3",
+  'filters.sectPlaceholder': "Mazhab apa saja",
 };

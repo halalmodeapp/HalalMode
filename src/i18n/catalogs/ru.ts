@@ -766,4 +766,10 @@ export const ru: TranslationCatalog = {
   'profile.readinessPhoto': 'чёткое фото',
   'profile.readinessPreferences': 'критерии подбора',
   'profile.openMatchingPreferences': 'Открыть критерии подбора',
+  'profile.requiredNote': "* Обязательно",
+  'profile.missingFields': "Заполните перед сохранением: {{fields}}",
+  'profile.sectPlaceholder': "Выберите своё направление",
+  'profile.languagesSearch': "Поиск языков",
+  'filters.bodyTypesPlaceholder': "Выберите до 3",
+  'filters.sectPlaceholder': "Любое направление",
 };

@@ -60,6 +60,35 @@ export async function updateMyProfile(patch: Partial<Profile>): Promise<void> {
   if (error) throw error;
 }
 
+/** Sect and its tradition are saved together so they can never disagree. */
+export async function setMySect(sect: Profile['sect'], detail: string | undefined): Promise<void> {
+  if (USE_MOCKS) {
+    Object.assign(MOCK_SELF, { sect, sectDetail: detail });
+    return;
+  }
+  const { error } = await requireSupabase().rpc('set_my_sect', {
+    p_sect: sect,
+    p_detail: detail ?? null,
+  });
+  if (error) throw error;
+}
+
+/** Traditions must sit under a chosen sect; the server checks that too. */
+export async function setMyPreferredSects(
+  sects: PrivatePreferences['preferredSects'],
+  details: string[],
+): Promise<void> {
+  if (USE_MOCKS) {
+    Object.assign(MOCK_PREFERENCES, { preferredSects: sects, preferredSectDetails: details });
+    return;
+  }
+  const { error } = await requireSupabase().rpc('set_my_preferred_sects', {
+    p_sects: sects,
+    p_details: details,
+  });
+  if (error) throw error;
+}
+
 /** Location changes are accepted only from the explicit device-location flow. */
 export async function updateMyLocation(location: DeviceLocationUpdate): Promise<void> {
   if (USE_MOCKS) {
@@ -131,6 +160,7 @@ function profileFromRow(row: Record<string, unknown>): Profile {
     // Defaults to unstated rather than a sect, so a row written before this
     // column existed never reads as a declaration nobody made.
     sect: (row.sect as Profile['sect'] | null) ?? 'prefer_not_to_say',
+    sectDetail: (row.sect_detail as string | null) ?? undefined,
     languagesSpoken: (row.languages_spoken as string[] | null) ?? [],
     isVerified: Boolean(row.is_verified),
     isPaused: Boolean(row.is_paused),
@@ -153,6 +183,7 @@ function preferencesFromRow(row: Record<string, unknown>): PrivatePreferences {
     desiredFamilyGoals:
       (row.desired_family_goals as PrivatePreferences['desiredFamilyGoals'] | null) ?? [],
     preferredSects: (row.preferred_sects as PrivatePreferences['preferredSects'] | null) ?? [],
+    preferredSectDetails: (row.preferred_sect_details as string[] | null) ?? [],
     // Absent means nothing is absolute, which is the safe default: an unreadable
     // or missing map must never silently narrow somebody's pool.
     mustHave:

@@ -1,6 +1,7 @@
 import type { AppLocale } from '@/i18n/locales';
 // Relative: the tests load this file directly and do not resolve '@/'.
 import { countryName } from './countryCodes';
+import { languageName } from './spokenLanguages';
 
 /**
  * A choice a member picks from a fixed list.
@@ -26,6 +27,8 @@ export interface CatalogOption {
   t?: Partial<Record<AppLocale, string>>;
   /** Set on country entries: lets the device name the country in any language. */
   country?: string;
+  /** Set on language entries: an ISO 639 code the device can name. */
+  language?: string;
 }
 
 export interface CatalogGroup extends CatalogOption {
@@ -33,6 +36,7 @@ export interface CatalogGroup extends CatalogOption {
 }
 
 export function optionLabel(option: CatalogOption, language: AppLocale): string {
+  if (option.language) return languageName(option.language, language);
   if (language === 'en') return option.en;
   if (language === 'ar') return option.ar;
   return option.t?.[language] ?? (option.country ? countryName(option.country, language) : option.en);

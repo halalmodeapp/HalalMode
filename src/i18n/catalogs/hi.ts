@@ -766,4 +766,10 @@ export const hi: TranslationCatalog = {
   'profile.readinessPhoto': 'एक साफ़ फ़ोटो',
   'profile.readinessPreferences': 'अपनी मैचिंग पसंद',
   'profile.openMatchingPreferences': 'मैचिंग पसंद खोलें',
+  'profile.requiredNote': "* ज़रूरी",
+  'profile.missingFields': "सेव करने से पहले ये भरें: {{fields}}",
+  'profile.sectPlaceholder': "अपना मसलक चुनें",
+  'profile.languagesSearch': "भाषाएँ खोजें",
+  'filters.bodyTypesPlaceholder': "अधिकतम 3 चुनें",
+  'filters.sectPlaceholder': "कोई भी मसलक",
 };

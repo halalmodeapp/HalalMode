@@ -766,4 +766,10 @@ export const bn: TranslationCatalog = {
   'profile.readinessPhoto': 'একটি স্পষ্ট ছবি',
   'profile.readinessPreferences': 'আপনার ম্যাচিংয়ের পছন্দ',
   'profile.openMatchingPreferences': 'ম্যাচিংয়ের পছন্দ খুলুন',
+  'profile.requiredNote': "* আবশ্যক",
+  'profile.missingFields': "সংরক্ষণের আগে এগুলো পূরণ করুন: {{fields}}",
+  'profile.sectPlaceholder': "আপনার মাজহাব বেছে নিন",
+  'profile.languagesSearch': "ভাষা খুঁজুন",
+  'filters.bodyTypesPlaceholder': "সর্বোচ্চ ৩টি বাছুন",
+  'filters.sectPlaceholder': "যেকোনো মাজহাব",
 };

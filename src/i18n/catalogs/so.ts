@@ -766,4 +766,10 @@ export const so: TranslationCatalog = {
   'profile.readinessPhoto': 'sawir cad',
   'profile.readinessPreferences': 'doorbidyada isku-aadka',
   'profile.openMatchingPreferences': 'Fur doorbidyada isku-aadka',
+  'profile.requiredNote': "* Waa qasab",
+  'profile.missingFields': "Buuxi kuwan ka hor keydinta: {{fields}}",
+  'profile.sectPlaceholder': "Dooro madhabkaaga",
+  'profile.languagesSearch': "Raadi luqado",
+  'filters.bodyTypesPlaceholder': "Dooro ilaa 3",
+  'filters.sectPlaceholder': "Madhab kasta",
 };

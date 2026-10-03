@@ -11,10 +11,10 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Linking, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 
-import { fetchMyProfileReadiness, updateMyLocation, updateMyProfile } from '@/api/profile';
+import { fetchMyProfileReadiness, setMySect, updateMyLocation, updateMyProfile } from '@/api/profile';
 import {
   createProfileMediaSignedUrl,
   deleteProfilePhoto,
@@ -29,6 +29,7 @@ import { AudioGreeting } from '@/components/introductions/AudioGreeting';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Field } from '@/components/ui/Field';
 import { Text } from '@/components/ui/Text';
 import { queryKeys } from '@/lib/queryClient';
@@ -44,26 +45,35 @@ import { PermissionExplainer } from '@/components/ui/PermissionExplainer';
 import { PickerSheet } from '@/components/ui/PickerSheet';
 import { PhotoReorderGrid } from '@/components/you/PhotoReorderGrid';
 import { SelectField } from '@/components/ui/SelectField';
-import { storedLabel } from '@/data/catalogOption';
+import { optionLabel, storedLabel, type CatalogGroup } from '@/data/catalogOption';
+import { SECT_GROUPS, sectOf } from '@/data/sects';
+import { LANGUAGE_GROUPS, languageCodeFor, languageName } from '@/data/spokenLanguages';
+import { showNotice } from '@/lib/notice';
 import { EDUCATION_GROUPS } from '@/data/educationLevels';
 import { OCCUPATION_GROUPS } from '@/data/occupations';
 import { USE_MOCKS } from '@/lib/supabase';
 import { alpha, color, font, radius } from '@/theme/tokens';
-import type { MarriageTimeline, Profile, ReligiousPractice, Sect } from '@/types';
+import type { MarriageTimeline, Profile, ReligiousPractice } from '@/types';
 import { RTL_LAYOUT } from '@/lib/rtl';
 
 function profileSchema(t: Translate) {
   return z.object({
-    name: z.string().min(2, t('profile.validation.name')),
-    firstName: z.string().min(1, t('profile.validation.firstName')),
+    name: z.string().trim().min(2, t('profile.validation.name')),
     occupation: z.string().min(2, t('profile.validation.occupation')),
     education: z.string().max(120, t('profile.validation.education')),
     bio: z.string().min(80, t('profile.validation.bioShort')).max(600, t('profile.validation.bioLong')),
     values: z.string().max(180, t('profile.validation.values')),
-    languages: z.string().max(120, t('profile.validation.languages')),
-    religiousPractice: z.enum(['very_practicing', 'practicing', 'moderate', 'learning']),
-    sect: z.enum(['sunni', 'shia', 'other', 'prefer_not_to_say']),
-    timeline: z.enum(['within_3_months', 'within_6_months', 'within_1_year', '1_to_2_years']),
+    languages: z.array(z.string()).max(12),
+    // A new account has none of these yet. Without a message here the form
+    // refused to save and never said why.
+    religiousPractice: z.enum(['very_practicing', 'practicing', 'moderate', 'learning'], {
+      message: t('profile.practice'),
+    }),
+    sect: z.enum(['sunni', 'shia', 'other', 'prefer_not_to_say'], { message: t('profile.sect') }),
+    sectDetail: z.string().optional(),
+    timeline: z.enum(['within_3_months', 'within_6_months', 'within_1_year', '1_to_2_years'], {
+      message: t('profile.timing'),
+    }),
   });
 }
 
@@ -104,6 +114,12 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
   const [photosDirty, setPhotosDirty] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [deletingPhoto, setDeletingPhoto] = useState<string | null>(null);
+  const [pendingRemoval, setPendingRemoval] = useState<
+    { storagePath: string; removeLocally: () => void } | null
+  >(null);
+  const [languagePicker, setLanguagePicker] = useState(false);
+  const [sectPicker, setSectPicker] = useState(false);
+  const [missing, setMissing] = useState<string[]>([]);
   const [updatingLocation, setUpdatingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locationExplainer, setLocationExplainer] = useState(false);
@@ -124,27 +140,27 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
     resolver: zodResolver(schema),
     defaultValues: {
       name: profile.name,
-      firstName: profile.firstName,
       occupation: profile.occupation,
       education: profile.education ?? '',
       bio: profile.bio,
       values: profile.chips.join(', '),
-      languages: profile.languagesSpoken.join(', '),
+      languages: languageCodes(profile.languagesSpoken),
       religiousPractice: profile.religiousPractice,
       sect: profile.sect,
+      sectDetail: profile.sectDetail,
       timeline: profile.timeline,
     },
   });
   const draft = useWatch({ control });
   const draftReadiness = useMemo(
     () => getProfileReadiness({
-      firstName: draft.firstName,
+      firstName: draft.name,
       city: profile.city,
       country: profile.country,
       bio: draft.bio,
       photoCount: photos.length,
     }),
-    [draft.bio, draft.firstName, photos.length, profile.city, profile.country]
+    [draft.bio, draft.name, photos.length, profile.city, profile.country]
   );
   const serverReadinessQuery = useQuery({
     queryKey: queryKeys.profileReadiness,
@@ -166,14 +182,14 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
     loadedProfileId.current = profile.id;
     reset({
       name: profile.name,
-      firstName: profile.firstName,
       occupation: profile.occupation,
       education: profile.education ?? '',
       bio: profile.bio,
       values: profile.chips.join(', '),
-      languages: profile.languagesSpoken.join(', '),
+      languages: languageCodes(profile.languagesSpoken),
       religiousPractice: profile.religiousPractice,
       sect: profile.sect,
+      sectDetail: profile.sectDetail,
       timeline: profile.timeline,
     });
   }, [profile, reset]);
@@ -194,10 +210,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
       await recorder.prepareToRecordAsync();
       recorder.record();
     } catch {
-      Alert.alert(
-        t('profile.recordStartError'),
-        t('profile.connectionError')
-      );
+      showNotice(t('profile.recordStartError'), t('profile.connectionError'));
       await setAudioModeAsync({ allowsRecording: false });
     }
   }, [recorder, t]);
@@ -239,16 +252,10 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
           : current
       );
       if (uploaded.cleanupPendingPath) {
-        Alert.alert(
-          t('profile.voiceSaved'),
-          t('profile.voiceCleanup')
-        );
+        showNotice(t('profile.voiceSaved'), t('profile.voiceCleanup'));
       }
     } catch {
-      Alert.alert(
-        t('profile.voiceSaveError'),
-        t('profile.connectionError')
-      );
+      showNotice(t('profile.voiceSaveError'), t('profile.connectionError'));
     } finally {
       finishingRecording.current = false;
       setSavingVoice(false);
@@ -262,31 +269,34 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
   }, [finishVoiceRecording, recorderState.durationMillis, recorderState.isRecording]);
 
   const save = useMutation({
-    mutationFn: (values: FormValues) => {
+    mutationFn: async (values: FormValues) => {
       const patch: Partial<Profile> = {
         name: values.name.trim(),
-        firstName: values.firstName.trim(),
+        // One name now. The column stays because introductions read it.
+        firstName: values.name.trim().slice(0, 60),
         occupation: values.occupation.trim(),
         // The server converts an empty string to NULL, so members can clear it.
         education: values.education.trim(),
         bio: values.bio.trim(),
         chips: splitProfileList(values.values),
-        languagesSpoken: splitProfileList(values.languages),
+        languagesSpoken: values.languages,
         religiousPractice: values.religiousPractice,
-        sect: values.sect,
         timeline: values.timeline,
       };
       if (USE_MOCKS && photosDirty) patch.photos = photos;
-      return updateMyProfile(patch);
+      await updateMyProfile(patch);
+      // Sect was never in the general patch, so it silently never saved.
+      await setMySect(values.sect, values.sectDetail);
     },
     onSuccess: (_data, values) => {
       const saved: Profile = {
         ...profile,
         ...values,
+        firstName: values.name.trim().slice(0, 60),
         education: values.education.trim() || undefined,
         photos,
         chips: splitProfileList(values.values),
-        languagesSpoken: splitProfileList(values.languages),
+        languagesSpoken: values.languages,
         religiousPractice: values.religiousPractice,
         sect: values.sect,
         timeline: values.timeline,
@@ -379,7 +389,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
 
   const addPhoto = async (source: 'camera' | 'library') => {
     if (photos.length >= 6) {
-      Alert.alert(t('profile.photoLimitTitle'), t('profile.photoLimitBody'));
+      showNotice(t('profile.photoLimitTitle'), t('profile.photoLimitBody'));
       return;
     }
     const permission =
@@ -422,10 +432,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
       ];
       const mimeType = supportedTypes.find((type) => type === asset.mimeType);
       if (!mimeType) {
-        Alert.alert(
-          t('profile.formatTitle'),
-          t('profile.formatBody')
-        );
+        showNotice(t('profile.formatTitle'), t('profile.formatBody'));
         return;
       }
 
@@ -455,10 +462,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
         );
         void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
       } catch {
-        Alert.alert(
-          t('profile.uploadError'),
-          t('profile.connectionError')
-        );
+        showNotice(t('profile.uploadError'), t('profile.connectionError'));
       } finally {
         setUploadingPhoto(false);
       }
@@ -467,7 +471,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
 
   const removePhoto = (index: number) => {
     if (photos.length <= 1) {
-      Alert.alert(t('profile.keepOneTitle'), t('profile.keepOneBody'));
+      showNotice(t('profile.keepOneTitle'), t('profile.keepOneBody'));
       return;
     }
 
@@ -501,32 +505,26 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
     // two disagree about which photo index 2 is.
     const storagePath = media[index]?.storagePath;
     if (!storagePath) {
-      Alert.alert(
-        t('profile.removeLegacyTitle'),
-        t('profile.removeLegacyBody')
-      );
+      showNotice(t('profile.removeLegacyTitle'), t('profile.removeLegacyBody'));
       return;
     }
 
-    Alert.alert(t('profile.removeTitle'), t('profile.removeBody'), [
-      { text: t('profile.keepPhoto'), style: 'cancel' },
-      {
-        text: t('profile.removePhoto'),
-        style: 'destructive',
-        onPress: () => {
-          setDeletingPhoto(storagePath);
-          void deleteProfilePhoto(storagePath)
-            .then(removeLocally)
-            .catch(() => {
-              Alert.alert(
-                t('profile.removeError'),
-                t('profile.connectionError')
-              );
-            })
-            .finally(() => setDeletingPhoto(null));
-        },
-      },
-    ]);
+    // A modal of our own, not Alert: Alert.alert does nothing on the web, so
+    // the X looked broken there.
+    setPendingRemoval({ storagePath, removeLocally });
+  };
+
+  const confirmRemoval = () => {
+    const pending = pendingRemoval;
+    setPendingRemoval(null);
+    if (!pending) return;
+    setDeletingPhoto(pending.storagePath);
+    void deleteProfilePhoto(pending.storagePath)
+      .then(pending.removeLocally)
+      .catch(() => {
+        showNotice(t('profile.removeError'), t('profile.connectionError'));
+      })
+      .finally(() => setDeletingPhoto(null));
   };
 
   /**
@@ -629,7 +627,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
       ) : null}
       <Card>
         <View style={[styles.cardHead, isRTL && styles.rowRTL]}>
-          <Text variant="micro">{t('profile.gallery')}</Text>
+          <Text variant="micro">{required(t('profile.gallery'))}</Text>
           <View style={styles.tagPill}>
             <Text style={styles.tagPillLabel}>{t('profile.noFilters')}</Text>
           </View>
@@ -745,35 +743,26 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
       </Card>
 
       <Card style={styles.formCard}>
+        <Text variant="caption" style={styles.requiredNote}>
+          {t('profile.requiredNote')}
+        </Text>
         <View style={styles.formRow}>
           <Controller
             control={control}
             name="name"
             render={({ field }) => (
               <Field
-                label={t('profile.displayName')}
+                label={required(t('profile.displayName'))}
                 value={field.value}
                 onChangeText={field.onChange}
                 error={errors.name?.message}
               />
             )}
           />
-          <Controller
-            control={control}
-            name="firstName"
-            render={({ field }) => (
-              <Field
-                label={t('profile.firstName')}
-                value={field.value}
-                onChangeText={field.onChange}
-                error={errors.firstName?.message}
-              />
-            )}
-          />
         </View>
 
         <View style={styles.locationBlock}>
-          <Text variant="micro">{t('profile.locationCurrent')}</Text>
+          <Text variant="micro">{required(t('profile.locationCurrent'))}</Text>
           <Text
             accessibilityLabel={`${t('profile.locationCurrent')}: ${currentLocation}`}
             variant="label"
@@ -799,7 +788,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
             disabled={updatingLocation}
             onPress={() => {
               if (tier === 'premium') setCityPicker(true);
-              else Alert.alert(t('profile.travelPremiumTitle'), t('profile.travelPremiumBody'));
+              else showNotice(t('profile.travelPremiumTitle'), t('profile.travelPremiumBody'));
             }}
           />
           <PickerSheet
@@ -845,7 +834,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
           render={({ field }) => (
             <>
               <SelectField
-                label={t('profile.profession')}
+                label={required(t('profile.profession'))}
                 value={storedLabel(OCCUPATION_GROUPS, field.value, language)}
                 placeholder={t('profile.professionPlaceholder')}
                 onPress={() => setPicking('occupation')}
@@ -901,7 +890,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
           name="bio"
           render={({ field }) => (
             <Field
-              label={t('profile.bio')}
+              label={required(t('profile.bio'))}
               value={field.value}
               onChangeText={field.onChange}
               error={errors.bio?.message}
@@ -928,18 +917,32 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
           control={control}
           name="languages"
           render={({ field }) => (
-            <Field
-              label={t('profile.languages')}
-              placeholder={t('profile.languagesPlaceholder')}
-              value={field.value}
-              onChangeText={field.onChange}
-              error={errors.languages?.message}
-            />
+            <>
+              <SelectField
+                label={t('profile.languages')}
+                value={field.value.map((code) => languageName(code, language)).join(', ')}
+                placeholder={t('profile.languagesPlaceholder')}
+                onPress={() => setLanguagePicker(true)}
+                error={errors.languages?.message}
+              />
+              <PickerSheet
+                visible={languagePicker}
+                groups={LANGUAGE_GROUPS}
+                selected={field.value}
+                selectionMode="multiple"
+                maxSelected={12}
+                onChange={(next) => field.onChange(next)}
+                onClose={() => setLanguagePicker(false)}
+                title={t('profile.languages')}
+                eyebrow={t('profile.languagesSearch')}
+                searchLabel={t('profile.languagesSearch')}
+              />
+            </>
           )}
         />
 
         <View style={styles.profileChoice}>
-          <Text variant="micro">{t('profile.practice')}</Text>
+          <Text variant="micro">{required(t('profile.practice'))}</Text>
           <Controller
             control={control}
             name="religiousPractice"
@@ -956,33 +959,67 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
               </View>
             )}
           />
+          {errors.religiousPractice ? (
+            <Text accessibilityRole="alert" variant="caption" style={styles.fieldError}>
+              {t('profile.missingFields', { fields: t('profile.practice') })}
+            </Text>
+          ) : null}
         </View>
 
         <View style={styles.profileChoice}>
-          <Text variant="micro">{t('profile.sect')}</Text>
+          <Controller
+            control={control}
+            name="sectDetail"
+            render={({ field: detail }) => (
+              <Controller
+                control={control}
+                name="sect"
+                render={({ field }) => {
+                  const chosen = detail.value ?? field.value;
+                  return (
+                    <>
+                      <SelectField
+                        label={required(t('profile.sect'))}
+                        value={chosen ? sectChoiceLabel(chosen, language, t) : ''}
+                        placeholder={t('profile.sectPlaceholder')}
+                        onPress={() => setSectPicker(true)}
+                        error={errors.sect?.message}
+                      />
+                      <PickerSheet
+                        visible={sectPicker}
+                        groups={profileSectGroups(t)}
+                        selected={chosen ? [chosen] : []}
+                        onChange={(next) => {
+                          const id = next[0];
+                          if (!id) return;
+                          if (id === 'prefer_not_to_say') {
+                            field.onChange('prefer_not_to_say');
+                            detail.onChange(undefined);
+                            return;
+                          }
+                          const sect = sectOf(id);
+                          if (!sect) return;
+                          field.onChange(sect);
+                          detail.onChange(id === sect ? undefined : id);
+                        }}
+                        onClose={() => setSectPicker(false)}
+                        title={t('profile.sect')}
+                        eyebrow={t('profile.sectPlaceholder')}
+                        searchLabel={t('profile.sect')}
+                      />
+                    </>
+                  );
+                }}
+              />
+            )}
+          />
           <Text variant="caption" style={styles.choiceNote}>
             {t('profile.sectBody')}
           </Text>
-          <Controller
-            control={control}
-            name="sect"
-            render={({ field }) => (
-              <View style={styles.choiceChips}>
-                {PROFILE_SECTS.map((value) => (
-                  <Chip
-                    key={value}
-                    label={sectLabel(value, t)}
-                    selected={field.value === value}
-                    onPress={() => field.onChange(value)}
-                  />
-                ))}
-              </View>
-            )}
-          />
         </View>
 
         <View style={styles.profileChoice}>
-          <Text variant="micro">{t('profile.timing')}</Text>
+          <Text variant="micro">{required(t('profile.timing'))}</Text>
           <Controller
             control={control}
             name="timeline"
@@ -999,6 +1036,11 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
               </View>
             )}
           />
+          {errors.timeline ? (
+            <Text accessibilityRole="alert" variant="caption" style={styles.fieldError}>
+              {t('profile.missingFields', { fields: t('profile.timing') })}
+            </Text>
+          ) : null}
         </View>
       </Card>
 
@@ -1006,7 +1048,33 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
         label={save.isSuccess && !isDirty && !photosDirty ? t('filters.saved') : t('profile.save')}
         loading={save.isPending}
         disabled={!isDirty && !photosDirty}
-        onPress={handleSubmit((values) => save.mutate(values))}
+        onPress={handleSubmit(
+          (values) => {
+            setMissing([]);
+            save.mutate(values);
+          },
+          // Say what is left, in one place by the button, instead of leaving
+          // the member to scroll for a red line under some field.
+          (invalid) => setMissing(
+            (Object.keys(invalid) as (keyof FormValues)[])
+              .map((key) => t(FIELD_LABELS[key]))
+              .filter((label, index, all) => all.indexOf(label) === index),
+          ),
+        )}
+      />
+      {missing.length > 0 ? (
+        <Text accessibilityRole="alert" variant="caption" style={styles.fieldError}>
+          {t('profile.missingFields', { fields: missing.join(', ') })}
+        </Text>
+      ) : null}
+      <ConfirmDialog
+        visible={pendingRemoval !== null}
+        title={t('profile.removeTitle')}
+        body={t('profile.removeBody')}
+        confirmLabel={t('profile.removePhoto')}
+        cancelLabel={t('profile.keepPhoto')}
+        onConfirm={confirmRemoval}
+        onCancel={() => setPendingRemoval(null)}
       />
       {save.isError ? (
         <Text accessibilityRole="alert" variant="caption" style={styles.saveError}>
@@ -1021,19 +1089,52 @@ function splitProfileList(value: string): string[] {
   return [...new Set(value.split(',').map((item) => item.trim()).filter(Boolean))].slice(0, 8);
 }
 
-/** Includes 'prefer_not_to_say', because here it is a real answer. */
-const PROFILE_SECTS: Sect[] = ['sunni', 'shia', 'other', 'prefer_not_to_say'];
-
-const SECT_KEYS: Record<Sect, TranslationKey> = {
-  sunni: 'filters.sect.sunni',
-  shia: 'filters.sect.shia',
-  other: 'filters.sect.other',
-  prefer_not_to_say: 'filters.sect.unstated',
+const FIELD_LABELS: Record<keyof FormValues, TranslationKey> = {
+  name: 'profile.displayName',
+  occupation: 'profile.profession',
+  education: 'profile.education',
+  bio: 'profile.bio',
+  values: 'profile.values',
+  languages: 'profile.languages',
+  religiousPractice: 'profile.practice',
+  sect: 'profile.sect',
+  sectDetail: 'profile.sect',
+  timeline: 'profile.timing',
 };
 
-function sectLabel(value: Sect, t: Translate): string {
-  return t(SECT_KEYS[value]);
+/** Marks a label as one the member must fill in. */
+function required(label: string): string {
+  return `${label} *`;
 }
+
+/** Older profiles stored typed names ("Arabic, Urdu"); keep what maps to a code. */
+function languageCodes(stored: string[]): string[] {
+  return [...new Set(stored.map((value) => languageCodeFor(value)).filter((code): code is string => Boolean(code)))];
+}
+
+/** The sect groups, plus "prefer not to say", which on a profile is a real answer. */
+function profileSectGroups(t: Translate): CatalogGroup[] {
+  const unstated = t('filters.sect.unstated');
+  return [
+    ...SECT_GROUPS,
+    {
+      id: 'group:unstated',
+      en: unstated,
+      ar: unstated,
+      t: {},
+      options: [{ id: 'prefer_not_to_say', en: unstated, ar: unstated, t: {} }],
+    },
+  ];
+}
+
+function sectChoiceLabel(id: string, language: Parameters<typeof optionLabel>[1], t: Translate): string {
+  for (const group of profileSectGroups(t)) {
+    const option = group.options.find((entry) => entry.id === id);
+    if (option) return optionLabel(option, language);
+  }
+  return id;
+}
+
 
 function practiceLabel(value: ReligiousPractice, t: Translate): string {
   const keys: Record<ReligiousPractice, 'filters.practice.very' | 'filters.practice.practicing' | 'filters.practice.moderate' | 'filters.practice.learning'> = {
@@ -1069,8 +1170,8 @@ function showPermissionRecovery(
   title: string,
   body: string
 ) {
-  if (canAskAgain) {
-    Alert.alert(title, body);
+  if (canAskAgain || Platform.OS === 'web') {
+    showNotice(title, body);
     return;
   }
   Alert.alert(title, body, [
@@ -1224,4 +1325,6 @@ const styles = StyleSheet.create({
   choiceChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
   formRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
   saveError: { color: color.inkSoft, textAlign: 'center' },
+  fieldError: { color: color.inkSoft, marginTop: 6 },
+  requiredNote: { color: color.inkSoft, marginBottom: 4 },
 });

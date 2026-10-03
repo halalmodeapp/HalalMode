@@ -766,4 +766,10 @@ export const zhHans: TranslationCatalog = {
   'profile.readinessPhoto': '一张清晰的照片',
   'profile.readinessPreferences': '您的匹配偏好',
   'profile.openMatchingPreferences': '打开匹配偏好',
+  'profile.requiredNote': "* 必填",
+  'profile.missingFields': "保存前请填写：{{fields}}",
+  'profile.sectPlaceholder': "选择你的教派",
+  'profile.languagesSearch': "搜索语言",
+  'filters.bodyTypesPlaceholder': "最多选择 3 项",
+  'filters.sectPlaceholder': "任何教派",
 };

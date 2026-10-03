@@ -766,4 +766,10 @@ export const es: TranslationCatalog = {
   'profile.readinessPhoto': 'una foto clara',
   'profile.readinessPreferences': 'tus preferencias',
   'profile.openMatchingPreferences': 'Abrir preferencias',
+  'profile.requiredNote': "* Obligatorio",
+  'profile.missingFields': "Completa esto antes de guardar: {{fields}}",
+  'profile.sectPlaceholder': "Elige tu corriente",
+  'profile.languagesSearch': "Buscar idiomas",
+  'filters.bodyTypesPlaceholder': "Elige hasta 3",
+  'filters.sectPlaceholder': "Cualquier corriente",
 };

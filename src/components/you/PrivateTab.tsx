@@ -2,14 +2,16 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
-import { updateMyPreferences } from '@/api/profile';
+import { setMyPreferredSects, updateMyPreferences } from '@/api/profile';
 import { Button } from '@/components/ui/Button';
 import { InlineNotice } from '@/components/ui/AsyncState';
 import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { RangeSlider } from '@/components/ui/RangeSlider';
+import { PickerSheet } from '@/components/ui/PickerSheet';
 import { Segmented } from '@/components/ui/Segmented';
+import { SelectField } from '@/components/ui/SelectField';
 import { Slider } from '@/components/ui/Slider';
 import { Text } from '@/components/ui/Text';
 import { MustHaveToggle } from '@/components/you/MustHaveToggle';
@@ -27,6 +29,9 @@ import {
   TIMELINE_LABELS,
   formatHeightImperial,
 } from '@/data/preferences';
+import type { CatalogGroup } from '@/data/catalogOption';
+import { optionLabel } from '@/data/catalogOption';
+import { SECT_GROUPS, isSectDetail, sectOf } from '@/data/sects';
 import { alpha, color, font, radius } from '@/theme/tokens';
 import { queryKeys } from '@/lib/queryClient';
 import type {
@@ -49,7 +54,8 @@ type SubTab = 'them' | 'you';
  * because this is the part of the product that most needs to be trusted.
  */
 export function PrivateTab({ preferences }: { preferences: PrivatePreferences }) {
-  const { t, isRTL } = useI18n();
+  const { t, isRTL, language } = useI18n();
+  const [picking, setPicking] = useState<'builds' | 'sects' | null>(null);
   const [tab, setTab] = useState<SubTab>('them');
   const [draft, setDraft] = useState(preferences);
   const [countrySheet, setCountrySheet] = useState(false);
@@ -57,7 +63,10 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
   const queryClient = useQueryClient();
 
   const save = useMutation({
-    mutationFn: () => updateMyPreferences(draft),
+    mutationFn: async () => {
+      await updateMyPreferences(draft);
+      await setMyPreferredSects(draft.preferredSects ?? [], draft.preferredSectDetails ?? []);
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
       void queryClient.invalidateQueries({ queryKey: queryKeys.preferences });
@@ -83,14 +92,6 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
     value: PrivatePreferences[K]
   ) => setDraft((current) => ({ ...current, [key]: value }));
 
-  const toggleBuild = (build: string) => {
-    patch(
-      'preferredBuilds',
-      draft.preferredBuilds.includes(build)
-        ? draft.preferredBuilds.filter((item) => item !== build)
-        : [...draft.preferredBuilds, build]
-    );
-  };
 
   const toggleListValue = <T extends string>(
     key: 'preferredPractice' | 'desiredTimeline' | 'desiredFamilyGoals' | 'preferredSects',
@@ -185,23 +186,26 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
           </View>
 
           <View style={styles.section}>
-            <View style={[styles.sectionHead, isRTL && styles.rowReverse]}>
-              <Text variant="micro">{t('filters.bodyTypes')}</Text>
-              <Text variant="caption">
-                {t('filters.selected', { count: draft.preferredBuilds.length })}
-              </Text>
-            </View>
-            <View style={styles.chips}>
-              {BUILD_OPTIONS.map((build) => (
-                <Chip
-                  key={build}
-                  label={buildLabel(build, t)}
-                  selected={draft.preferredBuilds.includes(build)}
-                  onPress={() => toggleBuild(build)}
-                  showMark
-                />
-              ))}
-            </View>
+            <SelectField
+              label={t('filters.bodyTypes')}
+              value={draft.preferredBuilds
+                .map((build) => buildLabel(build as (typeof BUILD_OPTIONS)[number], t))
+                .join(', ')}
+              placeholder={t('filters.bodyTypesPlaceholder')}
+              onPress={() => setPicking('builds')}
+            />
+            <PickerSheet
+              visible={picking === 'builds'}
+              groups={buildGroups(t)}
+              selected={draft.preferredBuilds}
+              selectionMode="multiple"
+              maxSelected={3}
+              onChange={(next) => patch('preferredBuilds', next)}
+              onClose={() => setPicking(null)}
+              title={t('filters.bodyTypes')}
+              eyebrow={t('filters.bodyTypesPlaceholder')}
+              searchLabel={t('filters.bodyTypes')}
+            />
             {mustHaveFor('build')}
           </View>
 
@@ -342,20 +346,32 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
           </View>
 
           <View style={styles.section}>
-            <Text variant="micro">{t('filters.sect')}</Text>
+            <SelectField
+              label={t('filters.sect')}
+              value={sectSelection(draft).map((id) => sectName(id, language)).join(', ')}
+              placeholder={t('filters.sectPlaceholder')}
+              onPress={() => setPicking('sects')}
+            />
+            <PickerSheet
+              visible={picking === 'sects'}
+              groups={SECT_GROUPS}
+              selected={sectSelection(draft)}
+              selectionMode="multiple"
+              onChange={(next) =>
+                setDraft((current) => ({
+                  ...current,
+                  preferredSects: [...new Set(next.map(sectOf).filter((sect): sect is Exclude<Sect, 'prefer_not_to_say'> => Boolean(sect)))],
+                  preferredSectDetails: next.filter(isSectDetail),
+                }))
+              }
+              onClose={() => setPicking(null)}
+              title={t('filters.sect')}
+              eyebrow={t('filters.sectPlaceholder')}
+              searchLabel={t('filters.sect')}
+            />
             <Text variant="caption" style={styles.filterNote}>
               {t('filters.sectBody')}
             </Text>
-            <View style={styles.checkList}>
-              {SELECTABLE_SECTS.map((value) => (
-                <FilterCheck
-                  key={value}
-                  label={sectLabel(value, t)}
-                  checked={(draft.preferredSects ?? []).includes(value)}
-                  onPress={() => toggleListValue('preferredSects', value)}
-                />
-              ))}
-            </View>
             {mustHaveFor('sect')}
           </View>
 
@@ -526,14 +542,40 @@ const FAMILY_GOAL_KEYS: Record<FamilyGoals, TranslationKey> = {
  * about themselves, not something anyone can require of a partner. In matching
  * it is compatible with every preference.
  */
-const SELECTABLE_SECTS: Sect[] = ['sunni', 'shia', 'other'];
+/**
+ * What the sect picker shows as chosen: each tradition, plus any sect chosen
+ * on its own (one with no tradition picked under it).
+ */
+function sectSelection(preferences: PrivatePreferences): string[] {
+  const details = preferences.preferredSectDetails ?? [];
+  const broad = (preferences.preferredSects ?? []).filter(
+    (sect) => !details.some((detail) => sectOf(detail) === sect),
+  );
+  return [...broad, ...details];
+}
 
-const SECT_KEYS: Record<Sect, TranslationKey> = {
-  sunni: 'filters.sect.sunni',
-  shia: 'filters.sect.shia',
-  other: 'filters.sect.other',
-  prefer_not_to_say: 'filters.sect.unstated',
-};
+function sectName(id: string, language: Parameters<typeof optionLabel>[1]): string {
+  for (const group of SECT_GROUPS) {
+    const option = group.options.find((entry) => entry.id === id);
+    if (option) return optionLabel(option, language);
+  }
+  return id;
+}
+
+/** Body types as a one-group list; labels are already in the reader's language. */
+function buildGroups(t: Translate): CatalogGroup[] {
+  return [{
+    id: 'builds',
+    en: t('filters.bodyTypes'),
+    ar: t('filters.bodyTypes'),
+    t: {},
+    options: BUILD_OPTIONS.map((build) => {
+      const label = buildLabel(build, t);
+      return { id: build, en: label, ar: label, t: {} };
+    }),
+  }];
+}
+
 
 const TIMELINE_KEYS: Record<MarriageTimeline, TranslationKey> = {
   within_3_months: 'filters.timeline.3m',
@@ -554,9 +596,6 @@ function familyGoalLabel(value: FamilyGoals, t: Translate): string {
   return t(FAMILY_GOAL_KEYS[value]);
 }
 
-function sectLabel(value: Sect, t: Translate): string {
-  return t(SECT_KEYS[value]);
-}
 
 function timelineLabel(value: MarriageTimeline, t: Translate): string {
   return t(TIMELINE_KEYS[value]);

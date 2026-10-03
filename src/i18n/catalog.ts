@@ -777,6 +777,12 @@ export const en = {
   'profile.readinessPhoto': 'a clear photo',
   'profile.readinessPreferences': 'your matching preferences',
   'profile.openMatchingPreferences': 'Open matching preferences',
+  'profile.requiredNote': "* Required",
+  'profile.missingFields': "Fill these in before saving: {{fields}}",
+  'profile.sectPlaceholder': "Choose your sect",
+  'profile.languagesSearch': "Search languages",
+  'filters.bodyTypesPlaceholder': "Choose up to 3",
+  'filters.sectPlaceholder': "Any sect",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -1548,4 +1554,10 @@ export const ar: TranslationCatalog = {
   'profile.readinessPhoto': 'صورة واضحة',
   'profile.readinessPreferences': 'تفضيلات المطابقة',
   'profile.openMatchingPreferences': 'فتح تفضيلات المطابقة',
+  'profile.requiredNote': "* مطلوب",
+  'profile.missingFields': "أكمل هذه الحقول قبل الحفظ: {{fields}}",
+  'profile.sectPlaceholder': "اختر مذهبك",
+  'profile.languagesSearch': "ابحث عن لغة",
+  'filters.bodyTypesPlaceholder': "اختر حتى 3",
+  'filters.sectPlaceholder': "أي مذهب",
 };

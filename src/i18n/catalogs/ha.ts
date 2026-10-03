@@ -766,4 +766,10 @@ export const ha: TranslationCatalog = {
   'profile.readinessPhoto': 'hoto bayyananne',
   'profile.readinessPreferences': 'zaɓuɓɓukan haɗawa',
   'profile.openMatchingPreferences': 'Buɗe zaɓuɓɓukan haɗawa',
+  'profile.requiredNote': "* Dole",
+  'profile.missingFields': "Cike waɗannan kafin ajiyewa: {{fields}}",
+  'profile.sectPlaceholder': "Zaɓi mazhabarku",
+  'profile.languagesSearch': "Nemi harsuna",
+  'filters.bodyTypesPlaceholder': "Zaɓi har 3",
+  'filters.sectPlaceholder': "Kowace mazhaba",
 };

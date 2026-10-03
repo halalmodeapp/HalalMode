@@ -766,4 +766,10 @@ export const ur: TranslationCatalog = {
   'profile.readinessPhoto': 'ایک واضح تصویر',
   'profile.readinessPreferences': 'اپنی میچنگ ترجیحات',
   'profile.openMatchingPreferences': 'میچنگ ترجیحات کھولیں',
+  'profile.requiredNote': "* لازمی",
+  'profile.missingFields': "محفوظ کرنے سے پہلے یہ پُر کریں: {{fields}}",
+  'profile.sectPlaceholder': "اپنا مسلک منتخب کریں",
+  'profile.languagesSearch': "زبانیں تلاش کریں",
+  'filters.bodyTypesPlaceholder': "زیادہ سے زیادہ 3 منتخب کریں",
+  'filters.sectPlaceholder': "کوئی بھی مسلک",
 };

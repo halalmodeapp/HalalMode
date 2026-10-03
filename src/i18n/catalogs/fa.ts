@@ -766,4 +766,10 @@ export const fa: TranslationCatalog = {
   'profile.readinessPhoto': 'یک عکس واضح',
   'profile.readinessPreferences': 'ترجیحات تطبیق',
   'profile.openMatchingPreferences': 'باز کردن ترجیحات تطبیق',
+  'profile.requiredNote': "* الزامی",
+  'profile.missingFields': "پیش از ذخیره این‌ها را پر کنید: {{fields}}",
+  'profile.sectPlaceholder': "مذهب خود را انتخاب کنید",
+  'profile.languagesSearch': "جست‌وجوی زبان‌ها",
+  'filters.bodyTypesPlaceholder': "تا ۳ مورد انتخاب کنید",
+  'filters.sectPlaceholder': "هر مذهبی",
 };

@@ -766,4 +766,10 @@ export const tr: TranslationCatalog = {
   'profile.readinessPhoto': 'net bir fotoğraf',
   'profile.readinessPreferences': 'eşleşme tercihlerinizi',
   'profile.openMatchingPreferences': 'Eşleşme tercihlerini aç',
+  'profile.requiredNote': "* Zorunlu",
+  'profile.missingFields': "Kaydetmeden önce bunları doldurun: {{fields}}",
+  'profile.sectPlaceholder': "Mezhebinizi seçin",
+  'profile.languagesSearch': "Dil ara",
+  'filters.bodyTypesPlaceholder': "En fazla 3 seçin",
+  'filters.sectPlaceholder': "Herhangi bir mezhep",
 };

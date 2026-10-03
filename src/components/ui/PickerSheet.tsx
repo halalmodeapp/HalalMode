@@ -19,6 +19,8 @@ export interface PickerSheetProps {
   onChange: (next: string[]) => void;
   onClose: () => void;
   selectionMode?: 'single' | 'multiple';
+  /** Multiple mode only: further taps are ignored once this many are chosen. */
+  maxSelected?: number;
   title: string;
   eyebrow: string;
   searchLabel: string;
@@ -51,6 +53,7 @@ export function PickerSheet({
   onChange,
   onClose,
   selectionMode = 'single',
+  maxSelected,
   title,
   eyebrow,
   searchLabel,
@@ -100,9 +103,11 @@ export function PickerSheet({
       onClose();
       return;
     }
-    setPending((current) =>
-      current.includes(id) ? current.filter((value) => value !== id) : [...current, id],
-    );
+    setPending((current) => {
+      if (current.includes(id)) return current.filter((value) => value !== id);
+      if (maxSelected !== undefined && current.length >= maxSelected) return current;
+      return [...current, id];
+    });
   };
 
   return (

@@ -766,4 +766,10 @@ export const am: TranslationCatalog = {
   'profile.readinessPhoto': 'ግልጽ ፎቶ',
   'profile.readinessPreferences': 'የማዛመጃ ምርጫዎችዎ',
   'profile.openMatchingPreferences': 'የማዛመጃ ምርጫዎችን ክፈት',
+  'profile.requiredNote': "* ግዴታ",
+  'profile.missingFields': "ከማስቀመጥዎ በፊት እነዚህን ይሙሉ፦ {{fields}}",
+  'profile.sectPlaceholder': "መዝሀብዎን ይምረጡ",
+  'profile.languagesSearch': "ቋንቋዎችን ፈልግ",
+  'filters.bodyTypesPlaceholder': "እስከ 3 ይምረጡ",
+  'filters.sectPlaceholder': "ማንኛውም መዝሀብ",
 };

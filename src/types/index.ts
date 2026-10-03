@@ -103,6 +103,8 @@ export interface Profile {
   relocation: RelocationPreference;
   familyGoals: FamilyGoals;
   sect: Sect;
+  /** Optional tradition under `sect`, e.g. 'hanafi' (see src/data/sects.ts). */
+  sectDetail?: string;
   languagesSpoken: string[];
   isVerified: boolean;
   /** Present for the owner profile only; matching eligibility stays server-authoritative. */
@@ -130,6 +132,8 @@ export interface PrivatePreferences {
   desiredFamilyGoals: FamilyGoals[];
   /** Empty means no sect preference. */
   preferredSects: Sect[];
+  /** Optional traditions under preferredSects. Matching reads preferredSects. */
+  preferredSectDetails?: string[];
   /**
    * Criteria this member treats as absolute. Absent or false means the
    * criterion is weighted rather than filtered — the only hard filters in
