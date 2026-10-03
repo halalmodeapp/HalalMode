@@ -235,6 +235,12 @@ function preferencesPatchToRow(
   for (const [property, column] of fields) {
     if (patch[property] !== undefined) row[column] = patch[property];
   }
+  // A height or weight nobody entered is read as 0, and the server rightly
+  // refuses a 0 cm member: every preferences save failed until one was typed.
+  // Unentered is sent as unentered.
+  for (const column of ['own_height_cm', 'own_weight_kg']) {
+    if (column in row && !(Number(row[column]) > 0)) row[column] = null;
+  }
   return row;
 }
 

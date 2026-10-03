@@ -50,7 +50,6 @@ import { SECT_GROUPS, sectOf } from '@/data/sects';
 import { LANGUAGE_GROUPS, languageCodeFor, languageName } from '@/data/spokenLanguages';
 import { showNotice } from '@/lib/notice';
 import { useToast } from '@/state/toast';
-import { useBreakpoint } from '@/theme/breakpoints';
 import { EDUCATION_GROUPS } from '@/data/educationLevels';
 import { OCCUPATION_GROUPS } from '@/data/occupations';
 import { USE_MOCKS } from '@/lib/supabase';
@@ -103,8 +102,6 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
   const schema = useMemo(() => profileSchema(t), [t]);
   const queryClient = useQueryClient();
   const toast = useToast();
-  // Desktop: photos and voice on one side, the written profile on the other.
-  const wide = useBreakpoint() === 'desktop';
   // One list, holding both what a photo looks like and where it lives. They
   // used to be two arrays lined up by index, which a reorder would have pulled
   // apart the first time somebody dragged anything.
@@ -598,8 +595,8 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
   };
 
   return (
-    <View style={[styles.wrap, isRTL && styles.rtl, wide && (isRTL ? styles.splitRTL : styles.split)]}>
-      <View style={wide ? styles.column : styles.stack}>
+    <View style={[styles.wrap, isRTL && styles.rtl]}>
+      <View style={styles.stack}>
       <Card tone="filled" style={styles.readinessCard}>
         <Text variant="label">{readiness.ready ? t('profile.readinessReadyTitle') : t('profile.readinessTitle')}</Text>
         {readiness.ready ? (
@@ -784,7 +781,7 @@ export function ProfileTab({ profile, onOpenPreferences }: { profile: Profile; o
       </Card>
 
       </View>
-      <View style={wide ? styles.column : undefined}>
+      <View style={styles.stack}>
       <Card style={styles.formCard}>
         <Text variant="caption" style={styles.requiredNote}>
           {t('profile.requiredNote')}

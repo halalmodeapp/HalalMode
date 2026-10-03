@@ -134,8 +134,10 @@ export default function YouScreen() {
 const styles = StyleSheet.create({
   rtl: RTL_LAYOUT,
   rowReverse: { flexDirection: 'row-reverse' },
-  tabsRow: { paddingHorizontal: space.xl, paddingTop: 4 },
-  content: { paddingHorizontal: space.xl, paddingTop: 20 },
+  // One column, a readable width, centred: on a wide screen the forms sit in
+  // the middle with white space either side rather than splitting into panes.
+  tabsRow: { paddingHorizontal: space.xl, paddingTop: 4, width: '100%', maxWidth: 720, alignSelf: 'center' },
+  content: { paddingHorizontal: space.xl, paddingTop: 20, width: '100%', maxWidth: 720, alignSelf: 'center' },
 
   identity: {
     flexDirection: 'row',

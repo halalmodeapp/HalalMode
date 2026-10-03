@@ -24,7 +24,6 @@ import { queryKeys } from '@/lib/queryClient';
 import { alpha, color, font, radius, space } from '@/theme/tokens';
 import { TIER_LIMITS, type Profile } from '@/types';
 import { RTL_LAYOUT } from '@/lib/rtl';
-import { useBreakpoint } from '@/theme/breakpoints';
 
 export function SettingsTab({
   liveCount,
@@ -49,8 +48,6 @@ export function SettingsTab({
   const [notificationsExplainer, setNotificationsExplainer] = useState(false);
   const [moderationOpen, setModerationOpen] = useState(false);
   /** Security and account each open as their own page within Settings. */
-  // Desktop: settings split into two columns instead of one long scroll.
-  const wide = useBreakpoint() === 'desktop';
   const sampleMembersQuery = useQuery({ queryKey: ['sample-members'], queryFn: fetchMySampleMembers });
   const sampleMembers = useMutation({
     mutationFn: setMySampleMembers,
@@ -131,8 +128,8 @@ export function SettingsTab({
   return (
     <View style={[styles.wrap, isRTL && styles.rtl]}>
       {page === 'main' ? (
-        <View style={wide ? (isRTL ? styles.splitRTL : styles.split) : styles.stack}>
-        <View style={wide ? styles.column : styles.stack}>
+        <View style={styles.stack}>
+        <View style={styles.stack}>
       <Section
         eyebrow={t('settings.privacy')}
         title={t('settings.privacyTitle')}
@@ -230,7 +227,7 @@ export function SettingsTab({
       </Section>
 
       </View>
-      <View style={wide ? styles.column : styles.stack}>
+      <View style={styles.stack}>
       {/* One Premium card: what it is, what it adds, and what it never does. */}
       <Card tone="dark" style={styles.premiumCard}>
         <View style={[styles.premiumDetailsHead, isRTL && styles.rowReverse]}>

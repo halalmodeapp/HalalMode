@@ -286,11 +286,11 @@ export default function DailyScreen() {
         <BrandHeader />
         <View style={styles.readinessEmpty}>
           <EmptyState
-            title={t('daily.readinessTitle')}
-            message={t('daily.readinessBody')}
+            title={onlyPreferencesMissing ? t('daily.readinessPrefsTitle') : t('daily.readinessTitle')}
+            message={onlyPreferencesMissing ? t('daily.readinessPrefsBody') : t('daily.readinessBody')}
           />
           <Button
-            label={t('daily.finishProfile')}
+            label={onlyPreferencesMissing ? t('daily.finishPreferences') : t('daily.finishProfile')}
             onPress={() => router.push({ pathname: '/(tabs)/you', params: { tab: onlyPreferencesMissing ? 'private' : 'profile' } })}
           />
         </View>

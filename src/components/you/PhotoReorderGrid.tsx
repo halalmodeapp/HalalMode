@@ -231,7 +231,8 @@ export function PhotoReorderGrid({
             return (
               <View
                 pointerEvents="none"
-                style={[styles.cell, styles.landing, { width: cellWidth, height: cellHeight, left: at.x, top: at.y }]}
+                // The + sits in the top quarter, clear of the photo passing over it.
+                style={[styles.cell, styles.landing, { width: cellWidth, height: cellHeight, left: at.x, top: at.y, paddingTop: cellHeight * 0.1 }]}
               >
                 <Text style={styles.landingPlus}>+</Text>
               </View>
@@ -533,7 +534,7 @@ const styles = StyleSheet.create({
 
   landing: {
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     borderRadius: radius.lg,
     borderWidth: 2,
     borderStyle: 'dashed',

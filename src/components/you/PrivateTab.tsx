@@ -56,8 +56,12 @@ type SubTab = 'them' | 'you';
 export function PrivateTab({ preferences }: { preferences: PrivatePreferences }) {
   const { t, isRTL, language } = useI18n();
   const [picking, setPicking] = useState<'builds' | 'sects' | null>(null);
+  /** Set by a save attempt on your own details; cleared field by field as they are filled. */
+  const [ownChecked, setOwnChecked] = useState(false);
   const [tab, setTab] = useState<SubTab>('them');
   const [draft, setDraft] = useState(preferences);
+  const heightMissing = !(draft.ownHeightCm >= 140 && draft.ownHeightCm <= 210);
+  const buildMissing = !draft.ownBuild;
   const [countrySheet, setCountrySheet] = useState(false);
   const [clearConfirm, setClearConfirm] = useState(false);
   const queryClient = useQueryClient();
@@ -409,15 +413,15 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
 
           <View style={[styles.metricRow, isRTL && styles.rowReverse]}>
             <View style={styles.metric}>
-              <Text variant="micro">{t('filters.yourHeight')}</Text>
+              <Text variant="micro">{`${t('filters.yourHeight')} *`}</Text>
               <TextInput
                 accessibilityLabel={t('filters.yourHeightA11y')}
                 keyboardType="number-pad"
-                value={String(draft.ownHeightCm)}
+                value={draft.ownHeightCm ? String(draft.ownHeightCm) : ''}
                 onChangeText={(text) =>
                   patch('ownHeightCm', Number(text.replace(/\D/g, '')) || 0)
                 }
-                style={[styles.metricInput, isRTL && styles.inputRTL]}
+                style={[styles.metricInput, isRTL && styles.inputRTL, ownChecked && heightMissing && styles.missing]}
               />
             </View>
             <View style={styles.metric}>
@@ -425,7 +429,7 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
               <TextInput
                 accessibilityLabel={t('filters.yourWeightA11y')}
                 keyboardType="number-pad"
-                value={String(draft.ownWeightKg ?? '')}
+                value={draft.ownWeightKg ? String(draft.ownWeightKg) : ''}
                 onChangeText={(text) =>
                   patch('ownWeightKg', Number(text.replace(/\D/g, '')) || 0)
                 }
@@ -435,8 +439,8 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
           </View>
 
           <View style={styles.section}>
-            <Text variant="micro">{t('filters.yourBodyType')}</Text>
-            <View style={styles.chips}>
+            <Text variant="micro">{`${t('filters.yourBodyType')} *`}</Text>
+            <View style={[styles.chips, ownChecked && buildMissing && styles.missingGroup]}>
               {BUILD_OPTIONS.map((build) => (
                 <Chip
                   key={build}
@@ -451,8 +455,21 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
           <Button
             label={save.isSuccess ? t('filters.saved') : t('filters.saveYour')}
             loading={save.isPending}
-            onPress={() => save.mutate()}
+            onPress={() => {
+              setOwnChecked(true);
+              if (heightMissing || buildMissing) return;
+              save.mutate();
+            }}
           />
+          {ownChecked && (heightMissing || buildMissing) ? (
+            <Text accessibilityRole="alert" variant="caption" style={styles.missingText}>
+              {t('profile.missingFields', {
+                fields: [heightMissing && t('filters.yourHeight'), buildMissing && t('filters.yourBodyType')]
+                  .filter(Boolean)
+                  .join(', '),
+              })}
+            </Text>
+          ) : null}
           {save.isError ? <InlineNotice message={t('filters.saveError')} /> : null}
         </Card>
       )}
@@ -696,6 +713,9 @@ const styles = StyleSheet.create({
 
   metricRow: { flexDirection: 'row', gap: 10 },
   metric: { flex: 1, gap: 6 },
+  missing: { borderColor: '#B3261E', borderWidth: 1.5 },
+  missingGroup: { borderWidth: 1.5, borderColor: '#B3261E', borderRadius: radius.md, padding: 6 },
+  missingText: { color: '#B3261E', fontFamily: font.bodyBold },
   metricInput: {
     borderWidth: 1,
     borderColor: alpha.lineStrong,
