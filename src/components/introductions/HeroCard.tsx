@@ -766,12 +766,21 @@ export function HeroCard({
   /**
    * Opens the active profile when the touch did not become a swipe.
    */
+  // A tap on the centre card opens it; a tap on a card to either side brings
+  // that card to the centre, as you would expect from what was touched.
+  const areaWidth = useSharedValue(0);
   const tap = Gesture.Tap()
     .maxDistance(10)
     .maxDuration(450)
-    .onEnd((_event, success) => {
-      if (success && profiles.length > 0) {
+    .onEnd((event, success) => {
+      if (!success || profiles.length === 0) return;
+      // onLayout does not always arrive on the web; the row spans the window there.
+      const span = areaWidth.value > 0 ? areaWidth.value : window.width;
+      const offset = event.x - span / 2;
+      if (Math.abs(offset) <= cardWidth / 2) {
         runOnJS(openCardAtIndex)(Math.round(centerIndex.value));
+      } else {
+        runOnJS(moveForAccessibility)(offset > 0 ? 'next' : 'previous');
       }
     });
 
@@ -788,6 +797,13 @@ export function HeroCard({
 
   return (
     <GestureDetector gesture={deckGesture}>
+      {/* The touch area spans the whole row, so a drag that starts on a side
+          card swipes the deck just as one on the centre card does. */}
+      <View
+        collapsable={false}
+        style={styles.gestureArea}
+        onLayout={(event) => { areaWidth.value = event.nativeEvent.layout.width; }}
+      >
       <View
         collapsable={false}
         style={[styles.deck, narrowDeck && { width: cardWidth, alignSelf: 'center', marginHorizontal: 0 }]}
@@ -895,6 +911,7 @@ export function HeroCard({
             {corner}
           </View>
         ) : null}
+      </View>
       </View>
     </GestureDetector>
   );
@@ -1309,6 +1326,8 @@ function DeckCard({
 
 const styles = StyleSheet.create({
   rtl: RTL_LAYOUT,
+
+  gestureArea: { flex: 1, overflow: 'visible' },
 
   deck: {
     flex: 1,

@@ -1,6 +1,6 @@
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
@@ -34,7 +34,11 @@ export function AudioGreeting({
   const { localeTag, isRTL, t } = useI18n();
   const player = useAudioPlayer(url, {
     updateInterval: 250,
-    downloadFirst: true,
+    // Downloading first helps a phone start playback cleanly. On the web the
+    // library's pre-download has no error handling, so an unreachable file
+    // became an uncaught "Failed to fetch" that took down the whole screen;
+    // a browser streams the file itself anyway.
+    downloadFirst: Platform.OS !== 'web',
   });
   const status = useAudioPlayerStatus(player);
 

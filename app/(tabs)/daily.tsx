@@ -636,9 +636,9 @@ const styles = StyleSheet.create({
   },
   resetGlyph: { fontFamily: font.body, fontSize: 14, color: color.muted },
 
-  // Cards may reach the window's edge but never past it: without this the
-  // neighbours made the whole page scroll sideways on a narrow screen.
-  stage: { flex: 1, marginTop: 14, minHeight: 0, overflow: 'hidden' },
+  // Not clipped: tilted side cards sit lower than the centre one. The page
+  // itself stops sideways scrolling (see +html.tsx).
+  stage: { flex: 1, marginTop: 14, minHeight: 0 },
   stageFill: { flex: 1, minHeight: 0 },
   hidden: { opacity: 0 },
 

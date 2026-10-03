@@ -175,9 +175,17 @@ export default function AnswersScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text variant="microAccent">
-            {t(`answers.origin.${current.origin}`, { name: firstName })}
-          </Text>
+          <View style={[styles.originRow, isRTL && styles.originRowRTL]}>
+            {/* A tick when you both picked it: the overlap is worth noticing. */}
+            {current.origin === 'both' ? (
+              <View style={styles.originTick}>
+                <Text style={styles.originTickGlyph}>✓</Text>
+              </View>
+            ) : null}
+            <Text variant="microAccent">
+              {t(`answers.origin.${current.origin}`, { name: firstName })}
+            </Text>
+          </View>
           <Text variant="display" style={styles.question}>
             {questionText(question, language)}
           </Text>
@@ -273,6 +281,17 @@ export default function AnswersScreen() {
 
 const styles = StyleSheet.create({
   rtl: RTL_LAYOUT,
+  originRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  originRowRTL: { flexDirection: 'row-reverse' },
+  originTick: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#C5A054',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  originTickGlyph: { color: '#FFFFFF', fontSize: 12, lineHeight: 14, fontWeight: '700' },
   flex: { flex: 1 },
   header: { paddingHorizontal: space.gutterWide, paddingTop: 8 },
   progress: { flexDirection: 'row', gap: 5, marginTop: 12 },
