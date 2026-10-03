@@ -766,6 +766,7 @@ export const so: TranslationCatalog = {
   'profile.readinessPhoto': 'sawir cad',
   'profile.readinessPreferences': 'doorbidyada isku-aadka',
   'profile.openMatchingPreferences': 'Fur doorbidyada isku-aadka',
+  'daily.select': "Dooro",
   'daily.finishPreferences': "Dhammee doorbidyadayda",
   'daily.readinessPrefsTitle': "Keydi doorbidyada isku-aadka",
   'daily.readinessPrefsBody': "Noo sheeg cidda aad raadinayso oo keydi, si laguu sameeyo isbarasho.",

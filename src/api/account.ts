@@ -50,3 +50,10 @@ export async function setMySampleMembers(enabled: boolean): Promise<void> {
   const { error } = await requireSupabase().rpc('set_my_sample_members', { p_enabled: enabled });
   if (error) throw error;
 }
+
+/** Testers only: clears sample rounds and connections so the flow can be walked again. */
+export async function resetMySampleFlow(): Promise<void> {
+  if (USE_MOCKS) return;
+  const { error } = await requireSupabase().rpc('reset_my_sample_flow');
+  if (error) throw error;
+}

@@ -1,3 +1,5 @@
+import { USE_MOCKS } from '@/lib/supabase';
+import { resetMySampleFlow } from '@/api/account';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createContext,
@@ -231,8 +233,16 @@ export function RoundProvider({ children }: { children: ReactNode }) {
   }, [ledger]);
 
   const reset = useCallback(() => {
-    clearLocal();
-    void queryClient.invalidateQueries({ queryKey: queryKeys.round });
+    // Live, this is the testers' reset: the server clears sample rounds and
+    // connections (and refuses anyone who is not a tester) before the app
+    // forgets its local choices and asks for a fresh set.
+    void (USE_MOCKS ? Promise.resolve() : resetMySampleFlow())
+      .catch(() => undefined)
+      .then(() => {
+        clearLocal();
+        void queryClient.invalidateQueries({ queryKey: queryKeys.round });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.connections });
+      });
   }, [clearLocal, queryClient]);
 
   // Choices belong to one member and one set.

@@ -766,6 +766,7 @@ export const tr: TranslationCatalog = {
   'profile.readinessPhoto': 'net bir fotoğraf',
   'profile.readinessPreferences': 'eşleşme tercihlerinizi',
   'profile.openMatchingPreferences': 'Eşleşme tercihlerini aç',
+  'daily.select': "Seç",
   'daily.finishPreferences': "Tercihlerimi tamamla",
   'daily.readinessPrefsTitle': "Eşleşme tercihlerinizi kaydedin",
   'daily.readinessPrefsBody': "Kimi aradığınızı söyleyip kaydedin ki sizin için tanıştırmalar yapılabilsin.",

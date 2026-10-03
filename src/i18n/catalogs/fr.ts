@@ -766,6 +766,7 @@ export const fr: TranslationCatalog = {
   'profile.readinessPhoto': 'une photo claire',
   'profile.readinessPreferences': 'vos critères',
   'profile.openMatchingPreferences': 'Ouvrir les critères',
+  'daily.select': "Choisir",
   'daily.finishPreferences': "Compléter mes critères",
   'daily.readinessPrefsTitle': "Enregistrez vos critères",
   'daily.readinessPrefsBody': "Dites-nous qui vous cherchez et enregistrez, pour que des présentations puissent vous être faites.",

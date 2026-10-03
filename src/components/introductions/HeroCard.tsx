@@ -34,7 +34,6 @@ import { Text } from '@/components/ui/Text';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useI18n } from '@/i18n';
 import { deckDirectionForAccessibilityAction } from '@/lib/roundInvariants';
-import { FRAME_WIDTH, breakpointFor } from '@/theme/breakpoints';
 import { RTL_LAYOUT } from '@/lib/rtl';
 import { occupationLabel } from '@/data/occupations';
 import { testIds } from '@/lib/testIds';
@@ -153,6 +152,12 @@ export interface HeroCardProps {
 
   chosen: boolean;
 
+  /** Every chosen profile, so each keeps its tick and gold outline wherever it sits in the deck. */
+  chosenIds?: readonly string[];
+
+  /** Pinned to the top corner of the centred card, e.g. the report button. */
+  corner?: React.ReactNode;
+
   /** Opens the exact profile physically centred in the deck. */
   onPress: (profileId: string) => void;
 
@@ -169,18 +174,20 @@ export function HeroCard({
   activeId,
   popMode,
   chosen,
+  chosenIds,
+  corner,
   onPress,
   onSwipe,
 }: HeroCardProps) {
   const reducedMotion = useReducedMotion();
-  const { t } = useI18n();
+  const { t, isRTL } = useI18n();
   const window = useWindowDimensions();
   // The app keeps a phone's width on a desktop, so the window is the wrong
   // ruler: sized to it, each card was over a thousand pixels wide inside a
   // 560px screen, and the neighbours that should peek in from either side
   // were placed far off it.
   const width = Platform.OS === 'web'
-    ? Math.min(window.width, FRAME_WIDTH[breakpointFor(window.width)])
+    ? window.width
     : window.width;
 
   // Always a portrait card. On a phone that is the screen's width; on a
@@ -878,11 +885,16 @@ export function HeroCard({
                 profile.id === activeId
               }
               popMode={popMode}
-              chosen={chosen}
+              chosen={chosenIds ? chosenIds.includes(profile.id) : profile.id === activeId && chosen}
               reducedMotion={reducedMotion}
             />
           ),
         )}
+        {corner ? (
+          <View pointerEvents="box-none" style={[styles.corner, isRTL && styles.cornerRTL]}>
+            {corner}
+          </View>
+        ) : null}
       </View>
     </GestureDetector>
   );
@@ -1192,12 +1204,16 @@ function DeckCard({
       pointerEvents="none"
       style={[
         styles.card,
-        isActive &&
-          chosen &&
+        chosen &&
           styles.cardChosen,
         cardStyle,
       ]}
     >
+      {chosen ? (
+        <View style={[styles.chosenTick, isRTL && styles.chosenTickRTL]}>
+          <Text style={styles.chosenTickGlyph}>✓</Text>
+        </View>
+      ) : null}
       <Image
         source={profile.photos[0]}
         style={StyleSheet.absoluteFill}
@@ -1316,7 +1332,26 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
 
+  corner: { position: 'absolute', top: 14, right: 14, zIndex: 300 },
+  cornerRTL: { right: undefined, left: 14 },
+  chosenTick: {
+    position: 'absolute',
+    top: 14,
+    left: 14,
+    zIndex: 5,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#C5A054',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chosenTickRTL: { left: undefined, right: 14 },
+  chosenTickGlyph: { color: '#FFFFFF', fontSize: 18, lineHeight: 20, fontWeight: '700' },
+
   cardChosen: {
+    borderWidth: 3,
+    borderColor: '#C5A054',
     shadowColor: '#C5A054',
     shadowOpacity: 0.7,
     shadowRadius: 26,

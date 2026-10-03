@@ -26,6 +26,7 @@ export function BrandHeader() {
 
 const styles = StyleSheet.create({
   header: {
+    width: '100%', maxWidth: 720, alignSelf: 'center',
     height: 34,
     paddingHorizontal: 26,
     flexDirection: 'row',

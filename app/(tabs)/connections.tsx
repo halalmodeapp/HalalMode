@@ -130,6 +130,7 @@ const styles = StyleSheet.create({
   subtitle: { marginTop: 10 },
 
   list: {
+    width: '100%', maxWidth: 720, alignSelf: 'center',
     paddingHorizontal: space.gutterWide,
     paddingTop: 18,
     paddingBottom: 24,

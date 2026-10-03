@@ -766,6 +766,7 @@ export const ms: TranslationCatalog = {
   'profile.readinessPhoto': 'foto yang jelas',
   'profile.readinessPreferences': 'pilihan padanan anda',
   'profile.openMatchingPreferences': 'Buka pilihan padanan',
+  'daily.select': "Pilih",
   'daily.finishPreferences': "Lengkapkan pilihan saya",
   'daily.readinessPrefsTitle': "Simpan pilihan padanan anda",
   'daily.readinessPrefsBody': "Beritahu siapa yang anda cari dan simpan, supaya perkenalan boleh dibuat untuk anda.",

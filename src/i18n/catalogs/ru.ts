@@ -766,6 +766,7 @@ export const ru: TranslationCatalog = {
   'profile.readinessPhoto': 'чёткое фото',
   'profile.readinessPreferences': 'критерии подбора',
   'profile.openMatchingPreferences': 'Открыть критерии подбора',
+  'daily.select': "Выбрать",
   'daily.finishPreferences': "Завершить мои предпочтения",
   'daily.readinessPrefsTitle': "Сохраните критерии подбора",
   'daily.readinessPrefsBody': "Расскажите, кого вы ищете, и сохраните — тогда мы сможем вас познакомить.",

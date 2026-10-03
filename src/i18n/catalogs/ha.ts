@@ -766,6 +766,7 @@ export const ha: TranslationCatalog = {
   'profile.readinessPhoto': 'hoto bayyananne',
   'profile.readinessPreferences': 'zaɓuɓɓukan haɗawa',
   'profile.openMatchingPreferences': 'Buɗe zaɓuɓɓukan haɗawa',
+  'daily.select': "Zaɓa",
   'daily.finishPreferences': "Kammala zaɓuɓɓukana",
   'daily.readinessPrefsTitle': "Ajiye zaɓuɓɓukan haɗawa",
   'daily.readinessPrefsBody': "Faɗa mana wanda kuke nema ku ajiye, don a iya gabatar muku da mutane.",

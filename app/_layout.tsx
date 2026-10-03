@@ -119,7 +119,9 @@ export default function RootLayout() {
                           <Stack.Screen name="auth" options={{ contentStyle: { backgroundColor: color.surface } }} />
                           <Stack.Screen name="onboarding" />
                           <Stack.Screen name="legal-consent" options={{ gestureEnabled: false }} />
-                          <Stack.Screen name="(tabs)" />
+                          {/* Full width, so the Daily deck can show whole cards either side; each
+                              tab keeps its own text and controls in a centred column. */}
+                          <Stack.Screen name="(tabs)" options={{ contentStyle: { backgroundColor: color.surface } }} />
                           <Stack.Screen
                             name="introduction/[id]"
                             options={{ animation: 'slide_from_right' }}

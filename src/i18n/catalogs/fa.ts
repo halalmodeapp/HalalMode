@@ -766,6 +766,7 @@ export const fa: TranslationCatalog = {
   'profile.readinessPhoto': 'یک عکس واضح',
   'profile.readinessPreferences': 'ترجیحات تطبیق',
   'profile.openMatchingPreferences': 'باز کردن ترجیحات تطبیق',
+  'daily.select': "انتخاب",
   'daily.finishPreferences': "تکمیل ترجیحات من",
   'daily.readinessPrefsTitle': "ترجیحات تطبیق را ذخیره کنید",
   'daily.readinessPrefsBody': "بگویید دنبال چه کسی هستید و ذخیره کنید تا معرفی‌ها برایتان ساخته شود.",

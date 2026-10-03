@@ -766,6 +766,7 @@ export const am: TranslationCatalog = {
   'profile.readinessPhoto': 'ግልጽ ፎቶ',
   'profile.readinessPreferences': 'የማዛመጃ ምርጫዎችዎ',
   'profile.openMatchingPreferences': 'የማዛመጃ ምርጫዎችን ክፈት',
+  'daily.select': "ምረጥ",
   'daily.finishPreferences': "ምርጫዎቼን አጠናቅቅ",
   'daily.readinessPrefsTitle': "የማዛመጃ ምርጫዎችዎን ያስቀምጡ",
   'daily.readinessPrefsBody': "ማንን እንደሚፈልጉ ይንገሩንና ያስቀምጡ፣ መተዋወቂያዎች እንዲዘጋጁልዎ።",

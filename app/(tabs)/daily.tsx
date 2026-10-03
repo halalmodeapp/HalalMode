@@ -21,6 +21,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useI18n } from '@/i18n';
 import type { TranslationKey } from '@/i18n/catalog';
 import type { NarrowingCriterion } from '@/lib/dailyRoundState';
+import { fetchMySampleMembers } from '@/api/account';
 import { fetchMyProfileReadiness } from '@/api/profile';
 import { trackProductEvent } from '@/lib/analytics';
 import { queryKeys } from '@/lib/queryClient';
@@ -53,6 +54,8 @@ const NARROWING_CRITERION_KEYS: Record<NarrowingCriterion, TranslationKey> = {
 export default function DailyScreen() {
   const { t, isRTL } = useI18n();
   const queryClient = useQueryClient();
+  // Testers get the reset button on the live app too, during this phase.
+  const testerQuery = useQuery({ queryKey: ['sample-members'], queryFn: fetchMySampleMembers });
   const { user } = useAuth();
   const { tier } = useSession();
   const readinessQuery = useQuery({
@@ -417,7 +420,7 @@ export default function DailyScreen() {
             ].filter(Boolean).join(' · ')}
           </Text>
         </View>
-        {USE_MOCKS ? (
+        {USE_MOCKS || testerQuery.data?.allowed ? (
           <Pressable
             testID={testIds.daily.reset}
             accessibilityRole="button"
@@ -442,20 +445,18 @@ export default function DailyScreen() {
               activeId={active.profile.id}
               popMode={false}
               chosen={activeChosen}
+              chosenIds={live.filter((item) => selected.includes(item.id)).map((item) => item.profile.id)}
+              corner={
+                <SafetyControl
+                  scope={{ kind: 'introduction', id: active.id }}
+                  memberName={active.profile.firstName}
+                  tone="dark"
+                  onBlocked={() => void refresh()}
+                />
+              }
               onPress={openIntroductionByProfileId}
               onSwipe={selectActiveIntroductionByProfileId}
             />
-          ) : null}
-
-          {active ? (
-            <View style={[styles.safetyOverlay, isRTL && styles.safetyOverlayRTL]}>
-              <SafetyControl
-                scope={{ kind: 'introduction', id: active.id }}
-                memberName={active.profile.firstName}
-                tone="dark"
-                onBlocked={() => void refresh()}
-              />
-            </View>
           ) : null}
 
           {activeId ? (
@@ -495,7 +496,9 @@ export default function DailyScreen() {
         <View style={[styles.actions, isRTL && styles.rowReverse]}>
           <Button
             testID={testIds.daily.pop}
-            label={activeChosen ? `✓ ${t('daily.interested')}` : t('daily.showInterest')}
+            label={activeChosen
+              ? `✓ ${t('daily.interested')} ${selected.length}/${Math.min(keepLimit, live.length)}`
+              : t('daily.select')}
             variant={activeChosen ? 'gold' : 'secondary'}
             disabled={!active}
             onPress={() => active && handleToggle(active.id)}
@@ -585,6 +588,7 @@ const styles = StyleSheet.create({
   centred: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
   headline: {
+    width: '100%', maxWidth: 720, alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
@@ -610,10 +614,9 @@ const styles = StyleSheet.create({
   stage: { flex: 1, marginTop: 14, minHeight: 0 },
   stageFill: { flex: 1, minHeight: 0 },
   hidden: { opacity: 0 },
-  safetyOverlay: { position: 'absolute', top: 12, right: 42, zIndex: 200 },
-  safetyOverlayRTL: { right: undefined, left: 42 },
 
   footer: {
+    width: '100%', maxWidth: 720, alignSelf: 'center',
     paddingHorizontal: 26,
     paddingTop: 6,
     gap: 8,

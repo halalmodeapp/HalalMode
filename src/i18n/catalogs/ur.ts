@@ -766,6 +766,7 @@ export const ur: TranslationCatalog = {
   'profile.readinessPhoto': 'ایک واضح تصویر',
   'profile.readinessPreferences': 'اپنی میچنگ ترجیحات',
   'profile.openMatchingPreferences': 'میچنگ ترجیحات کھولیں',
+  'daily.select': "منتخب کریں",
   'daily.finishPreferences': "میری ترجیحات مکمل کریں",
   'daily.readinessPrefsTitle': "اپنی میچنگ ترجیحات محفوظ کریں",
   'daily.readinessPrefsBody': "بتائیں آپ کس کی تلاش میں ہیں اور محفوظ کریں تاکہ آپ کے لیے تعارف بن سکیں۔",

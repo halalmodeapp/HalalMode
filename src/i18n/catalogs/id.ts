@@ -766,6 +766,7 @@ export const id: TranslationCatalog = {
   'profile.readinessPhoto': 'foto yang jelas',
   'profile.readinessPreferences': 'preferensi pencocokan Anda',
   'profile.openMatchingPreferences': 'Buka preferensi pencocokan',
+  'daily.select': "Pilih",
   'daily.finishPreferences': "Lengkapi preferensi saya",
   'daily.readinessPrefsTitle': "Simpan preferensi pencocokan Anda",
   'daily.readinessPrefsBody': "Beri tahu siapa yang Anda cari lalu simpan, agar perkenalan bisa dibuat untuk Anda.",

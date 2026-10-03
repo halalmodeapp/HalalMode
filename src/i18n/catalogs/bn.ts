@@ -766,6 +766,7 @@ export const bn: TranslationCatalog = {
   'profile.readinessPhoto': 'একটি স্পষ্ট ছবি',
   'profile.readinessPreferences': 'আপনার ম্যাচিংয়ের পছন্দ',
   'profile.openMatchingPreferences': 'ম্যাচিংয়ের পছন্দ খুলুন',
+  'daily.select': "বাছুন",
   'daily.finishPreferences': "আমার পছন্দ সম্পূর্ণ করুন",
   'daily.readinessPrefsTitle': "আপনার ম্যাচিংয়ের পছন্দ সংরক্ষণ করুন",
   'daily.readinessPrefsBody': "আপনি কাকে খুঁজছেন জানিয়ে সংরক্ষণ করুন, যাতে আপনার জন্য পরিচয় তৈরি করা যায়।",

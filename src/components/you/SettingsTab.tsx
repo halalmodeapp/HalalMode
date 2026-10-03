@@ -25,6 +25,7 @@ import { alpha, color, font, radius, space } from '@/theme/tokens';
 import { TIER_LIMITS, type Profile } from '@/types';
 import { RTL_LAYOUT } from '@/lib/rtl';
 import { useToast } from '@/state/toast';
+import { useRound } from '@/state/round';
 
 export function SettingsTab({
   liveCount,
@@ -42,6 +43,7 @@ export function SettingsTab({
   const { pushNotifications } = useFeatureFlags();
   const queryClient = useQueryClient();
   const toast = useToast();
+  const { reset: resetRound } = useRound();
   const [paused, setPaused] = useState(profilePaused);
   const [pauseConfirm, setPauseConfirm] = useState(false);
   const [premiumConfirm, setPremiumConfirm] = useState(false);
@@ -390,6 +392,18 @@ export function SettingsTab({
             disabled={sampleMembers.isPending}
             onValueChange={(enabled) => sampleMembers.mutate(enabled)}
           />
+        ) : null}
+        {sampleMembersQuery.data?.allowed ? (
+          <View style={styles.signOutWrap}>
+            <Button
+              label={`↺ ${t('daily.demoResetLabel')}`}
+              variant="quiet"
+              onPress={() => {
+                resetRound();
+                toast.show(`✓ ${t('filters.saved')}`);
+              }}
+            />
+          </View>
         ) : null}
         <View style={styles.signOutWrap}>
           <Button label={t('settings.signOut')} variant="secondary" onPress={() => void signOut()} />

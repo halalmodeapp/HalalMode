@@ -766,6 +766,7 @@ export const hi: TranslationCatalog = {
   'profile.readinessPhoto': 'एक साफ़ फ़ोटो',
   'profile.readinessPreferences': 'अपनी मैचिंग पसंद',
   'profile.openMatchingPreferences': 'मैचिंग पसंद खोलें',
+  'daily.select': "चुनें",
   'daily.finishPreferences': "मेरी पसंद पूरी करें",
   'daily.readinessPrefsTitle': "अपनी मैचिंग पसंद सेव करें",
   'daily.readinessPrefsBody': "बताएँ आप किसे ढूँढ रहे हैं और सेव करें, ताकि आपके लिए परिचय बन सकें।",

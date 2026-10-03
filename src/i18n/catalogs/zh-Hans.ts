@@ -766,6 +766,7 @@ export const zhHans: TranslationCatalog = {
   'profile.readinessPhoto': '一张清晰的照片',
   'profile.readinessPreferences': '您的匹配偏好',
   'profile.openMatchingPreferences': '打开匹配偏好',
+  'daily.select': "选择",
   'daily.finishPreferences': "完成我的偏好",
   'daily.readinessPrefsTitle': "保存你的匹配偏好",
   'daily.readinessPrefsBody': "告诉我们你在寻找怎样的人并保存，我们才能为你介绍。",
