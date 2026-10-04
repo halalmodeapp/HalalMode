@@ -2,7 +2,7 @@ import { MOCK_PREFERENCES, MOCK_SELF } from '@/data/mock';
 import { requireSupabase, USE_MOCKS } from '@/lib/supabase';
 import { hydrateProfileMedia } from '@/api/profileMedia';
 import type { PrivatePreferences, Profile } from '@/types';
-import type { ProfileReadinessIssue } from '@/lib/profileReadiness';
+import { isReadinessIssue, type ProfileReadinessIssue } from '@/lib/profileReadiness';
 import type { DeviceLocationUpdate } from '@/lib/deviceLocation';
 import { profilePatchToRow } from '@/lib/profilePatch';
 
@@ -15,16 +15,21 @@ export async function fetchMyProfileReadiness(): Promise<ProfileReadinessStatus>
   if (USE_MOCKS) {
     const profile = await fetchMyProfile();
     const { getProfileReadiness } = await import('@/lib/profileReadiness');
-    return getProfileReadiness({ ...profile, photoCount: profile.photos.length });
+    return getProfileReadiness({
+      ...profile,
+      photoCount: profile.photos.length,
+      languages: profile.languagesSpoken,
+      familyGoalsAnswered: profile.familyGoalsAnswered,
+      ownHeightCm: MOCK_PREFERENCES.ownHeightCm,
+      ownBuild: MOCK_PREFERENCES.ownBuild,
+    });
   }
   const client = requireSupabase();
   const { data, error } = await client.rpc('get_my_profile_readiness');
   if (error) throw error;
   const payload = (data ?? {}) as Record<string, unknown>;
   const missing = Array.isArray(payload.missing)
-    ? payload.missing.filter((item): item is ProfileReadinessIssue =>
-      item === 'name' || item === 'location' || item === 'bio' || item === 'photo' || item === 'preferences'
-    )
+    ? payload.missing.filter(isReadinessIssue)
     : [];
   return { ready: payload.ready === true, missing };
 }
@@ -208,6 +213,8 @@ function profileFromRow(raw: Record<string, unknown>): Profile {
     timeline: row.timeline as Profile['timeline'],
     relocation: row.relocation as Profile['relocation'],
     familyGoals: row.family_goals as Profile['familyGoals'],
+    // The column has a default, so a value alone does not mean it was chosen.
+    familyGoalsAnswered: row.family_goals_answered === true || row.familyGoalsAnswered === true,
     // Defaults to unstated rather than a sect, so a row written before this
     // column existed never reads as a declaration nobody made.
     sect: (row.sect as Profile['sect'] | null) ?? 'prefer_not_to_say',

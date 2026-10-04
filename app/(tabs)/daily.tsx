@@ -15,6 +15,7 @@ import { SafetyControl } from '@/components/safety/SafetyControl';
 import { Button } from '@/components/ui/Button';
 import { EmptyState, ErrorState, InlineNotice, LoadingState } from '@/components/ui/AsyncState';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { ReadinessChecklist } from '@/components/readiness/ReadinessChecklist';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
 import { useNextFajr } from '@/hooks/useNextFajr';
@@ -30,6 +31,7 @@ import { acceptConduct, hasAcceptedConduct } from '@/lib/conductAcknowledgement'
 import { countdownTo, countdownTick } from '@/lib/countdown';
 import { hasSeenReveal, markRevealSeen } from '@/lib/revealSeen';
 import { USE_MOCKS } from '@/lib/supabase';
+import { readinessSteps, type ReadinessStep } from '@/lib/profileReadiness';
 import { testIds } from '@/lib/testIds';
 import { useRound } from '@/state/round';
 import { useAuth } from '@/state/auth';
@@ -305,20 +307,23 @@ export default function DailyScreen() {
     (!round || round.introductions.length === 0)
     && (emptyReason === 'profile_not_ready' || (readinessQuery.data && !readinessQuery.data.ready))
   ) {
-    const missingReadinessItems = readinessQuery.data?.missing ?? [];
-    const onlyPreferencesMissing = missingReadinessItems.length === 1
-      && missingReadinessItems[0] === 'preferences';
+    // The same checklist as the profile, so a member sees exactly what is left
+    // and that introductions start the moment it is done.
+    const steps = readinessSteps(readinessQuery.data?.missing ?? []);
+    const openStep = (step: ReadinessStep) =>
+      router.push({ pathname: '/(tabs)/you', params: { tab: step === 'preferences' ? 'private' : 'profile' } });
+    const next = steps.find((step) => !step.done);
     return (
       <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
         <BrandHeader />
-        <View style={styles.readinessEmpty}>
-          <EmptyState
-            title={onlyPreferencesMissing ? t('daily.readinessPrefsTitle') : t('daily.readinessTitle')}
-            message={onlyPreferencesMissing ? t('daily.readinessPrefsBody') : t('daily.readinessBody')}
-          />
+        <View style={styles.readinessGate}>
+          <Text variant="display" style={styles.gateTitle}>{t('readiness.gateTitle')}</Text>
+          <View style={styles.gateCard}>
+            <ReadinessChecklist steps={steps} lead={t('readiness.lead')} onPressStep={openStep} />
+          </View>
           <Button
-            label={onlyPreferencesMissing ? t('daily.finishPreferences') : t('daily.finishProfile')}
-            onPress={() => router.push({ pathname: '/(tabs)/you', params: { tab: onlyPreferencesMissing ? 'private' : 'profile' } })}
+            label={next?.id === 'preferences' ? t('daily.finishPreferences') : t('daily.finishProfile')}
+            onPress={() => openStep(next?.id ?? 'photo')}
           />
         </View>
       </Screen>
@@ -726,4 +731,7 @@ const styles = StyleSheet.create({
   completeBody: { maxWidth: 250 },
   completeReset: { marginTop: space.sm },
   readinessEmpty: { flex: 1, paddingHorizontal: 26, paddingBottom: 30 },
+  readinessGate: { flex: 1, width: '100%', maxWidth: 560, alignSelf: 'center', paddingHorizontal: 26, paddingTop: 18, paddingBottom: 30, gap: 18 },
+  gateTitle: { fontSize: 30 },
+  gateCard: { padding: 18, borderRadius: 20, backgroundColor: color.sand },
 });

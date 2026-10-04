@@ -1,10 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
-import { useLocalSearchParams } from 'expo-router';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { fetchConnections } from '@/api/connections';
-import { fetchMyPreferences, fetchMyProfile } from '@/api/profile';
+import { fetchMyPreferences, fetchMyProfile, fetchMyProfileReadiness } from '@/api/profile';
+import { ReadyMoment } from '@/components/readiness/ReadyMoment';
 import { BrandHeader } from '@/components/navigation/BrandHeader';
 import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
 import { Screen } from '@/components/ui/Screen';
@@ -41,6 +42,30 @@ export default function YouScreen() {
     queryKey: queryKeys.connections,
     queryFn: fetchConnections,
   });
+
+  // The moment everything is complete — the last save of the profile or of the
+  // preferences — is worth marking, and it is where introductions begin.
+  // Only a change seen here counts, so a member who was already complete is
+  // never shown it again on opening the screen.
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const readinessQuery = useQuery({
+    queryKey: queryKeys.profileReadiness,
+    queryFn: fetchMyProfileReadiness,
+  });
+  const wasReady = useRef<boolean | null>(null);
+  const [celebrating, setCelebrating] = useState(false);
+  const ready = readinessQuery.data?.ready;
+  useEffect(() => {
+    if (ready === undefined) return;
+    if (wasReady.current === false && ready) setCelebrating(true);
+    wasReady.current = ready;
+  }, [ready]);
+  const startIntroductions = () => {
+    setCelebrating(false);
+    void queryClient.invalidateQueries({ queryKey: queryKeys.round });
+    router.navigate('/(tabs)/daily');
+  };
 
   useEffect(() => {
     if (requestedTab === 'profile' || requestedTab === 'private' || requestedTab === 'settings') {
@@ -127,6 +152,12 @@ export default function YouScreen() {
           />
         ) : null}
       </ScrollView>
+      <ReadyMoment
+        visible={celebrating}
+        name={profile.firstName || profile.name}
+        onStart={startIntroductions}
+        onLater={() => setCelebrating(false)}
+      />
     </Screen>
   );
 }

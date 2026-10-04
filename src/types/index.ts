@@ -105,6 +105,8 @@ export interface Profile {
   timeline: MarriageTimeline;
   relocation: RelocationPreference;
   familyGoals: FamilyGoals;
+  /** Whether the member chose familyGoals themselves (it has a default). */
+  familyGoalsAnswered?: boolean;
   sect: Sect;
   /** Optional tradition under `sect`, e.g. 'hanafi' (see src/data/sects.ts). */
   sectDetail?: string;

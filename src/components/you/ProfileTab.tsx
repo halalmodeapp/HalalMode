@@ -38,7 +38,8 @@ import { Text } from '@/components/ui/Text';
 import { queryKeys } from '@/lib/queryClient';
 import { testIds } from '@/lib/testIds';
 
-import { getProfileReadiness, type ProfileReadinessIssue } from '@/lib/profileReadiness';
+import { getProfileReadiness, readinessSteps } from '@/lib/profileReadiness';
+import { ReadinessChecklist } from '@/components/readiness/ReadinessChecklist';
 import { placeFromDevice } from '@/lib/deviceLocation';
 import { CITY_GROUPS, placeForCity } from '@/data/cities';
 import { useI18n, type Translate } from '@/i18n';
@@ -147,7 +148,10 @@ export function ProfileTab({
   const [religiousDress, setReligiousDress] = useState<string | undefined>(profile.religiousDress);
   const [ethnicity, setEthnicity] = useState<string | undefined>(profile.ethnicity);
   const [detailPicker, setDetailPicker] = useState<'dress' | 'ethnicity' | null>(null);
-  const [familyGoals, setFamilyGoals] = useState<Profile['familyGoals'] | undefined>(profile.familyGoals);
+  // The column has a default, so only an answer the member chose counts.
+  const [familyGoals, setFamilyGoals] = useState<Profile['familyGoals'] | undefined>(
+    profile.familyGoalsAnswered ? profile.familyGoals : undefined
+  );
   const [ownChecked, setOwnChecked] = useState(false);
   const heightMissing = !(Number(ownHeight) >= 140 && Number(ownHeight) <= 210);
   const buildMissing = !ownBuild;
@@ -183,8 +187,7 @@ export function ProfileTab({
     },
   });
   const draft = useWatch({ control });
-  // Everything Save asks for about you, named the same way in the checklist at
-  // the top and beside Save, so the two never disagree.
+  // Everything Save asks for about you, named one by one beside Save.
   const ownMissingLabels = [
     heightMissing ? t('profile.todo.height') : null,
     buildMissing ? t('profile.todo.bodyType') : null,
@@ -195,28 +198,35 @@ export function ProfileTab({
     !(draft.education ?? '').trim() ? t('filters.education') : null,
     (draft.languages ?? []).length === 0 ? t('profile.languages') : null,
   ].filter((label): label is string => label !== null);
-  const ownIncomplete = ownMissingLabels.length > 0;
-  const draftReadiness = useMemo(
-    () => getProfileReadiness({
-      firstName: draft.name,
-      city: profile.city,
-      country: profile.country,
-      bio: draft.bio,
-      photoCount: photos.length,
-    }),
-    [draft.bio, draft.name, photos.length, profile.city, profile.country]
-  );
   const serverReadinessQuery = useQuery({
     queryKey: queryKeys.profileReadiness,
     queryFn: fetchMyProfileReadiness,
     enabled: !USE_MOCKS,
   });
-  // Drafts should react immediately. Once saved, the server contract is the
-  // source of truth so an older app cannot show a conflicting status.
-  const readiness = (!isDirty && !photosDirty && serverReadinessQuery.data)
-    ? serverReadinessQuery.data
-    : draftReadiness;
-  const readyToShow = readiness.ready && !ownIncomplete;
+  // The checklist ticks as the member types; the server decides when
+  // introductions start, so "complete" waits for a save it agrees with.
+  const liveReadiness = getProfileReadiness({
+    firstName: draft.name,
+    city: profile.city,
+    country: profile.country,
+    bio: draft.bio,
+    photoCount: photos.length,
+    languages: draft.languages as string[] | undefined,
+    education: draft.education,
+    hasChildren,
+    familyGoalsAnswered: Boolean(familyGoals),
+    religiousDress,
+    ethnicity,
+    ownHeightCm: Number(ownHeight),
+    ownBuild,
+    preferencesSaved: serverReadinessQuery.data
+      ? !serverReadinessQuery.data.missing.includes('preferences')
+      : undefined,
+  });
+  const unsaved = isDirty || photosDirty || ownDirty;
+  const readyToShow = !unsaved && liveReadiness.ready
+    && (USE_MOCKS || serverReadinessQuery.data?.ready === true);
+  const steps = readinessSteps(liveReadiness.missing);
 
   useEffect(() => {
     setMedia(mediaFrom(profile));
@@ -359,6 +369,7 @@ export function ProfileTab({
         religiousDress,
         ethnicity,
         familyGoals: familyGoals ?? profile.familyGoals,
+        familyGoalsAnswered: Boolean(familyGoals) || profile.familyGoalsAnswered,
       };
       queryClient.setQueryData(queryKeys.profile('me'), saved);
       void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
@@ -668,56 +679,27 @@ export function ProfileTab({
       });
   };
 
-  const checklist = (labels: string[]) => (
-    <View style={styles.checklist}>
-      {labels.map((label) => (
-        <View key={label} style={[styles.checkItem, isRTL && styles.rowRTL]}>
-          <View style={styles.checkBox} />
-          <Text variant="label" style={styles.checkLabel}>{label}</Text>
-        </View>
-      ))}
-    </View>
-  );
-
   return (
     <View style={[styles.wrap, isRTL && styles.rtl]}>
       <View style={styles.stack}>
       <Card tone="filled" style={styles.readinessCard}>
-        <Text variant="label">{readyToShow ? t('profile.readinessReadyTitle') : t('profile.readinessTitle')}</Text>
         {readyToShow ? (
-          <Text variant="caption" style={styles.readinessBody}>
-            {t('profile.readinessReadyBody')}
-          </Text>
-        ) : (
-          // One line per thing still needed, rather than a sentence to decode.
-          // What stops introductions comes first and says so; the rest is
-          // needed to complete the profile but does not hold introductions.
           <>
-            {!readiness.ready ? (
-              <>
-                <Text variant="caption" style={styles.readinessBody}>{t('profile.introsBlocked')}</Text>
-                {checklist(readiness.missing.map((item) => sentenceCase(t(readinessKey[item]), language)))}
-              </>
-            ) : null}
-            {ownIncomplete ? (
-              <>
-                <Text variant="caption" style={[styles.readinessBody, !readiness.ready && styles.checklistGap]}>
-                  {readiness.ready ? t('profile.introsOnStillNeeded') : t('profile.alsoNeeded')}
-                </Text>
-                {checklist(ownMissingLabels)}
-              </>
-            ) : null}
+            <Text variant="label">{t('profile.readinessReadyTitle')}</Text>
+            <Text variant="caption" style={styles.readinessBody}>
+              {t('profile.readinessReadyBody')}
+            </Text>
           </>
+        ) : (
+          <ReadinessChecklist
+            steps={steps}
+            lead={liveReadiness.ready ? t('readiness.saveToFinish') : t('readiness.lead')}
+            isPressable={(step) => step === 'preferences' && Boolean(onOpenPreferences)}
+            onPressStep={() => onOpenPreferences?.()}
+          />
         )}
         {save.isPending ? (
           <Text variant="caption" style={styles.readinessBody}>{t('common.saving')}</Text>
-        ) : null}
-        {!readiness.ready && readiness.missing.includes('preferences') && onOpenPreferences ? (
-          <Button
-            label={t('profile.openMatchingPreferences')}
-            variant="quiet"
-            onPress={onOpenPreferences}
-          />
         ) : null}
       </Card>
       {photos.length === 0 ? (
@@ -1400,19 +1382,6 @@ function timelineLabel(value: MarriageTimeline, t: Translate): string {
   return t(keys[value]);
 }
 
-/** The readiness labels are written to sit mid-sentence; a list item starts a line. */
-function sentenceCase(text: string, language: string): string {
-  return text.charAt(0).toLocaleUpperCase(language) + text.slice(1);
-}
-
-const readinessKey: Record<ProfileReadinessIssue, 'profile.readinessName' | 'profile.readinessLocation' | 'profile.readinessBio' | 'profile.readinessPhoto' | 'profile.readinessPreferences'> = {
-  name: 'profile.readinessName',
-  location: 'profile.readinessLocation',
-  bio: 'profile.readinessBio',
-  photo: 'profile.readinessPhoto',
-  preferences: 'profile.readinessPreferences',
-};
-
 function showPermissionRecovery(
   canAskAgain: boolean,
   t: Translate,
@@ -1579,7 +1548,6 @@ const styles = StyleSheet.create({
   column: { flex: 1, gap: 14 },
   stack: { gap: 14 },
   checklist: { gap: 8, marginTop: 10 },
-  checklistGap: { marginTop: 14 },
   checkItem: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   checkBox: { width: 16, height: 16, borderRadius: 4, borderWidth: 1.5, borderColor: color.gold },
   checkLabel: { flex: 1 },

@@ -26,8 +26,18 @@ test('analytics strips non-primitive and unsafe properties', () => {
 });
 
 test('profile readiness names exactly what is missing', () => {
-  assert.deepEqual(getProfileReadiness({ firstName: 'Amina', city: 'Madinah', country: 'Saudi Arabia', bio: 'A considered profile with enough detail to introduce myself.', photoCount: 1 }), { ready: true, missing: [] });
-  assert.deepEqual(getProfileReadiness({}), { ready: false, missing: ['name', 'location', 'bio', 'photo'] });
+  const complete = {
+    firstName: 'Amina', city: 'Madinah', country: 'Saudi Arabia',
+    bio: 'A considered profile with enough detail to introduce myself, my family, my faith and my hopes.',
+    photoCount: 1, languages: ['en'], education: 'BSc', hasChildren: 'no', familyGoalsAnswered: true,
+    religiousDress: 'hijab', ethnicity: 'arab', ownHeightCm: 165, ownBuild: 'slim', preferencesSaved: true,
+  };
+  assert.deepEqual(getProfileReadiness(complete), { ready: true, missing: [] });
+  assert.deepEqual(getProfileReadiness({ ...complete, bio: 'Forty characters is no longer enough here.' }).missing, ['bio']);
+  assert.deepEqual(getProfileReadiness({}), {
+    ready: false,
+    missing: ['name', 'location', 'bio', 'photo', 'languages', 'education', 'has_children', 'children_when', 'dress', 'ethnicity', 'height', 'body_type'],
+  });
 });
 
 test('server release flags map only known, enabled capabilities', () => {
