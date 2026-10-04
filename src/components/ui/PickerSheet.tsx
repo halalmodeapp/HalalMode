@@ -78,11 +78,9 @@ export function PickerSheet({
     const filtered = searchGroups(groups, search, language);
     const flat: Row[] = [];
     for (const group of filtered) {
-      flat.push({
-        kind: 'header',
-        key: `h:${group.id}`,
-        label: optionLabel(group, language),
-      });
+      // A single unnamed group is a plain list: no empty heading above it.
+      const heading = optionLabel(group, language);
+      if (heading) flat.push({ kind: 'header', key: `h:${group.id}`, label: heading });
       for (const option of group.options) {
         flat.push({
           kind: 'option',

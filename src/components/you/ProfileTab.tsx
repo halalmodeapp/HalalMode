@@ -16,7 +16,8 @@ import { z } from 'zod';
 
 import { fetchMyProfileReadiness, setMyProfileDetails, setMySect, updateMyLocation, updateMyPreferences, updateMyProfile } from '@/api/profile';
 import { HAS_CHILDREN_PROFILE, asGroups, dressOptions } from '@/data/matchingOptions';
-import { ETHNICITY_PROFILE_GROUPS, findEthnicity } from '@/data/ethnicities';
+import { ETHNICITY_MAX, ETHNICITY_PROFILE_GROUPS, findEthnicity, withUnstatedAlone } from '@/data/ethnicities';
+import { HERITAGE_MAX, heritageGroups, heritageName } from '@/data/heritage';
 import { buildGroups, buildLabel } from '@/components/you/PrivateTab';
 import { BUILD_OPTIONS , PRACTICE_LABELS, TIMELINE_LABELS } from '@/data/preferences';
 import {
@@ -147,8 +148,9 @@ export function ProfileTab({
   // Matching answers about yourself, used by members' Premium filters.
   const [hasChildren, setHasChildren] = useState<Profile['hasChildren']>(profile.hasChildren);
   const [religiousDress, setReligiousDress] = useState<string | undefined>(profile.religiousDress);
-  const [ethnicity, setEthnicity] = useState<string | undefined>(profile.ethnicity);
-  const [detailPicker, setDetailPicker] = useState<'dress' | 'ethnicity' | null>(null);
+  const [ethnicities, setEthnicities] = useState<string[]>(profile.ethnicities ?? []);
+  const [heritage, setHeritage] = useState<string[]>(profile.heritageCountries ?? []);
+  const [detailPicker, setDetailPicker] = useState<'dress' | 'ethnicity' | 'heritage' | null>(null);
   // The column has a default, so only an answer the member chose counts.
   const [familyGoals, setFamilyGoals] = useState<Profile['familyGoals'] | undefined>(
     profile.familyGoalsAnswered ? profile.familyGoals : undefined
@@ -195,7 +197,8 @@ export function ProfileTab({
     !hasChildren ? t('profile.todo.hasChildren') : null,
     !familyGoals ? t('profile.todo.childrenWhen') : null,
     !religiousDress ? t('profile.dress') : null,
-    !ethnicity ? t('profile.ethnicity') : null,
+    ethnicities.length === 0 ? t('profile.ethnicity') : null,
+    heritage.length === 0 ? t('profile.heritage') : null,
     !(draft.education ?? '').trim() ? t('filters.education') : null,
     (draft.languages ?? []).length === 0 ? t('profile.languages') : null,
   ].filter((label): label is string => label !== null);
@@ -217,7 +220,8 @@ export function ProfileTab({
     hasChildren,
     familyGoalsAnswered: Boolean(familyGoals),
     religiousDress,
-    ethnicity,
+    ethnicities,
+    heritageCountries: heritage,
     ownHeightCm: Number(ownHeight),
     ownBuild,
     preferencesSaved: serverReadinessQuery.data
@@ -344,7 +348,7 @@ export function ProfileTab({
       };
       if (USE_MOCKS && photosDirty) patch.photos = photos;
       await updateMyProfile(patch);
-      await setMyProfileDetails({ hasChildren, religiousDress, ethnicity });
+      await setMyProfileDetails({ hasChildren, religiousDress, ethnicities, heritageCountries: heritage });
       await updateMyPreferences({
         ownHeightCm: Number(ownHeight) || 0,
         ownWeightKg: Number(ownWeight) || 0,
@@ -368,7 +372,8 @@ export function ProfileTab({
         // Kept in the cached profile too, so the answers survive a tab switch.
         hasChildren,
         religiousDress,
-        ethnicity,
+        ethnicities,
+        heritageCountries: heritage,
         familyGoals: familyGoals ?? profile.familyGoals,
         familyGoalsAnswered: Boolean(familyGoals) || profile.familyGoalsAnswered,
       };
@@ -408,7 +413,7 @@ export function ProfileTab({
       ].filter((label, index, all) => all.indexOf(label) === index));
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  ), [handleSubmit, save, t, ownHeight, ownBuild, hasChildren, familyGoals, religiousDress, ethnicity, draft.education, draft.languages]);
+  ), [handleSubmit, save, t, ownHeight, ownBuild, hasChildren, familyGoals, religiousDress, ethnicities, heritage, draft.education, draft.languages]);
 
 
   const refreshDeviceLocation = useCallback(async () => {
@@ -1215,24 +1220,50 @@ export function ProfileTab({
         </View>
 
         <View style={styles.profileChoice}>
+          {/* Two questions cover everyone: a broad ethnicity (two for mixed
+              heritage) and the countries you or your family are from. */}
           <SelectField
             label={required(t('profile.ethnicity'))}
-            error={ownChecked && !ethnicity ? ' ' : undefined}
-            value={ethnicity
-              ? optionLabel(findEthnicity(ethnicity) ?? { id: ethnicity, en: ethnicity, ar: ethnicity }, language)
-              : ''}
-            placeholder={t('profile.ethnicity')}
+            error={ownChecked && ethnicities.length === 0 ? ' ' : undefined}
+            value={ethnicities
+              .map((id) => { const option = findEthnicity(id); return option ? optionLabel(option, language) : id; })
+              .join(', ')}
+            placeholder={t('profile.ethnicityHint')}
             onPress={() => setDetailPicker('ethnicity')}
           />
           <PickerSheet
             visible={detailPicker === 'ethnicity'}
             groups={ETHNICITY_PROFILE_GROUPS}
-            selected={ethnicity ? [ethnicity] : []}
-            onChange={(next) => { setEthnicity(next[0]); setOwnDirty(true); }}
+            selected={ethnicities}
+            selectionMode="multiple"
+            maxSelected={ETHNICITY_MAX}
+            onChange={(next) => { setEthnicities(withUnstatedAlone(ethnicities, next)); setOwnDirty(true); }}
             onClose={() => setDetailPicker(null)}
             title={t('profile.ethnicity')}
-            eyebrow={t('profile.ethnicity')}
+            eyebrow={t('profile.ethnicityHint')}
             searchLabel={t('profile.ethnicity')}
+          />
+        </View>
+
+        <View style={styles.profileChoice}>
+          <SelectField
+            label={required(t('profile.heritage'))}
+            error={ownChecked && heritage.length === 0 ? ' ' : undefined}
+            value={heritage.map((code) => heritageName(code, language)).join(', ')}
+            placeholder={t('profile.heritageHint')}
+            onPress={() => setDetailPicker('heritage')}
+          />
+          <PickerSheet
+            visible={detailPicker === 'heritage'}
+            groups={heritageGroups(language, true)}
+            selected={heritage}
+            selectionMode="multiple"
+            maxSelected={HERITAGE_MAX}
+            onChange={(next) => { setHeritage(withUnstatedAlone(heritage, next)); setOwnDirty(true); }}
+            onClose={() => setDetailPicker(null)}
+            title={t('profile.heritage')}
+            eyebrow={t('profile.heritageHint')}
+            searchLabel={t('profile.heritageSearch')}
           />
         </View>
 

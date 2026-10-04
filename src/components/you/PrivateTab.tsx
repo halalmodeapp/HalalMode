@@ -36,6 +36,7 @@ import { OCCUPATION_GROUPS } from '@/data/occupations';
 import { LANGUAGE_GROUPS } from '@/data/spokenLanguages';
 import { HAS_CHILDREN_OPTIONS, asGroups, dressOptions } from '@/data/matchingOptions';
 import { ETHNICITY_GROUPS } from '@/data/ethnicities';
+import { heritageGroups } from '@/data/heritage';
 import { showNotice } from '@/lib/notice';
 import { useSession } from '@/state/session';
 import { alpha, color, font, radius } from '@/theme/tokens';
@@ -109,7 +110,7 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
 
 
   type PremiumList = 'preferredHasChildren' | 'preferredOccupations' | 'preferredLanguages'
-    | 'preferredEducation' | 'preferredDress' | 'preferredEthnicities';
+    | 'preferredEducation' | 'preferredDress' | 'preferredEthnicities' | 'preferredHeritageCountries';
 
   const toggleIn = (key: PremiumList, id: string) =>
     setDraft((current) => {
@@ -466,6 +467,7 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
           {premiumPicker('education', t('filters.education'), EDUCATION_GROUPS, 'preferredEducation')}
           {premiumPicker('dress', t('filters.dress'), asGroups(t('filters.dress'), dressOptions(partnerGender)), 'preferredDress')}
           {premiumPicker('ethnicities', t('filters.ethnicity'), ETHNICITY_GROUPS, 'preferredEthnicities')}
+          {premiumPicker('heritage', t('profile.heritage'), heritageGroups(language, false), 'preferredHeritageCountries')}
             </View>
             {!isPremium ? (
               <Pressable

@@ -16,7 +16,8 @@ export interface ProfileReadinessInput {
   hasChildren?: string | null;
   familyGoalsAnswered?: boolean | null;
   religiousDress?: string | null;
-  ethnicity?: string | null;
+  ethnicities?: readonly string[] | null;
+  heritageCountries?: readonly string[] | null;
   ownHeightCm?: number | null;
   ownBuild?: string | null;
   /** Unknown (undefined) is treated as saved; only `false` counts as missing. */
@@ -26,11 +27,11 @@ export interface ProfileReadinessInput {
 export type ProfileReadinessIssue =
   | 'name' | 'location' | 'bio' | 'photo'
   | 'languages' | 'education' | 'has_children' | 'children_when'
-  | 'dress' | 'ethnicity' | 'height' | 'body_type' | 'preferences';
+  | 'dress' | 'ethnicity' | 'heritage' | 'height' | 'body_type' | 'preferences';
 
 export const READINESS_ISSUES: readonly ProfileReadinessIssue[] = [
   'name', 'location', 'bio', 'photo', 'languages', 'education', 'has_children',
-  'children_when', 'dress', 'ethnicity', 'height', 'body_type', 'preferences',
+  'children_when', 'dress', 'ethnicity', 'heritage', 'height', 'body_type', 'preferences',
 ];
 
 export function isReadinessIssue(value: unknown): value is ProfileReadinessIssue {
@@ -49,7 +50,8 @@ export function getProfileReadiness(input: ProfileReadinessInput) {
   if (!input.hasChildren) missing.push('has_children');
   if (!input.familyGoalsAnswered) missing.push('children_when');
   if (!input.religiousDress) missing.push('dress');
-  if (!input.ethnicity) missing.push('ethnicity');
+  if ((input.ethnicities ?? []).length === 0) missing.push('ethnicity');
+  if ((input.heritageCountries ?? []).length === 0) missing.push('heritage');
   if (!(height >= 140 && height <= 210)) missing.push('height');
   if (!input.ownBuild?.trim()) missing.push('body_type');
   if (input.preferencesSaved === false) missing.push('preferences');
@@ -69,7 +71,7 @@ const STEP_ISSUES: Record<ReadinessStep, readonly ProfileReadinessIssue[]> = {
   bio: ['bio'],
   details: ['languages', 'education'],
   children: ['has_children', 'children_when'],
-  faith: ['dress', 'ethnicity'],
+  faith: ['dress', 'ethnicity', 'heritage'],
   body: ['height', 'body_type'],
   preferences: ['preferences'],
 };

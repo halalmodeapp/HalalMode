@@ -5,6 +5,7 @@ import { optionLabel, storedLabel } from '@/data/catalogOption';
 import { EDUCATION_GROUPS } from '@/data/educationLevels';
 import { HAS_CHILDREN_PROFILE, dressOptions } from '@/data/matchingOptions';
 import { findEthnicity } from '@/data/ethnicities';
+import { heritageName } from '@/data/heritage';
 import { SECT_GROUPS } from '@/data/sects';
 import { languageName } from '@/data/spokenLanguages';
 import type { Profile } from '@/types';
@@ -53,8 +54,11 @@ export function profileDetailLines(profile: Profile, t: Translate, language: App
 
   const dress = dressOptions(profile.gender).find((o) => o.id === profile.religiousDress);
   add('profile.dress', dress ? optionLabel(dress, language) : undefined);
-  const ethnicity = profile.ethnicity !== 'prefer_not_to_say' ? findEthnicity(profile.ethnicity) : undefined;
-  add('profile.ethnicity', ethnicity ? optionLabel(ethnicity, language) : undefined);
+  const shown = (ids: string[] | undefined) => (ids ?? []).filter((id) => id !== 'prefer_not_to_say');
+  add('profile.ethnicity', shown(profile.ethnicities)
+    .map((id) => { const option = findEthnicity(id); return option ? optionLabel(option, language) : id; })
+    .join(', '));
+  add('profile.heritage', shown(profile.heritageCountries).map((code) => heritageName(code, language)).join(', '));
 
   add('filters.education', profile.education ? storedLabel(EDUCATION_GROUPS, profile.education, language) : undefined);
   add('filters.languages', (profile.languagesSpoken ?? []).map((code) => languageName(code, language)).join(', '));

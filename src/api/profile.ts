@@ -94,8 +94,10 @@ export async function setMyPreferredSects(
   if (error) throw error;
 }
 
-/** Your own matching answers: has children, religious dress, ethnicity. */
-export async function setMyProfileDetails(details: Pick<Profile, 'hasChildren' | 'religiousDress' | 'ethnicity'>): Promise<void> {
+/** Your own matching answers: has children, religious dress, ethnicity and heritage. */
+export async function setMyProfileDetails(
+  details: Pick<Profile, 'hasChildren' | 'religiousDress' | 'ethnicities' | 'heritageCountries'>,
+): Promise<void> {
   if (USE_MOCKS) {
     Object.assign(MOCK_SELF, details);
     return;
@@ -103,7 +105,8 @@ export async function setMyProfileDetails(details: Pick<Profile, 'hasChildren' |
   const { error } = await requireSupabase().rpc('set_my_profile_details', {
     p_has_children: details.hasChildren ?? null,
     p_religious_dress: details.religiousDress ?? null,
-    p_ethnicity: details.ethnicity ?? null,
+    p_ethnicities: details.ethnicities ?? [],
+    p_heritage_countries: details.heritageCountries ?? [],
   });
   if (error) throw error;
 }
@@ -122,6 +125,7 @@ export async function setMyPremiumPreferences(preferences: PrivatePreferences): 
       education: preferences.preferredEducation ?? [],
       dress: preferences.preferredDress ?? [],
       ethnicities: preferences.preferredEthnicities ?? [],
+      heritage: preferences.preferredHeritageCountries ?? [],
       must_have: preferences.premiumMustHave ?? {},
     },
   });
@@ -221,7 +225,8 @@ function profileFromRow(raw: Record<string, unknown>): Profile {
     sectDetail: (row.sect_detail as string | null) ?? undefined,
     hasChildren: (row.has_children as Profile['hasChildren'] | null) ?? undefined,
     religiousDress: (row.religious_dress as string | null) ?? undefined,
-    ethnicity: (row.ethnicity as string | null) ?? undefined,
+    ethnicities: (row.ethnicities as string[] | null) ?? [],
+    heritageCountries: ((row.heritage_countries ?? row.heritageCountries) as string[] | null) ?? [],
     languagesSpoken: (row.languages_spoken as string[] | null) ?? [],
     isVerified: Boolean(row.is_verified),
     isPaused: Boolean(row.is_paused),
@@ -251,6 +256,7 @@ function preferencesFromRow(row: Record<string, unknown>): PrivatePreferences {
     preferredEducation: (row.preferred_education as string[] | null) ?? [],
     preferredDress: (row.preferred_dress as string[] | null) ?? [],
     preferredEthnicities: (row.preferred_ethnicities as string[] | null) ?? [],
+    preferredHeritageCountries: (row.preferred_heritage_countries as string[] | null) ?? [],
     premiumMustHave: (row.premium_must_have as PrivatePreferences['premiumMustHave'] | null) ?? {},
     // Absent means nothing is absolute, which is the safe default: an unreadable
     // or missing map must never silently narrow somebody's pool.
