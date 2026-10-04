@@ -11,25 +11,21 @@ import type {
  * Deliberately long and deliberately neutral — no term here ranks above
  * another. The point is to describe, so introductions land better, not to grade.
  */
+/**
+ * Seven distinct body types (migration 0176): each a different answer, not
+ * synonyms of one. A member may pick up to two to describe themselves.
+ */
 export const BUILD_OPTIONS = [
-  'Petite',
   'Slim',
-  'Slender',
-  'Lean',
-  'Tall & Lean',
-  'Average',
-  'Fit / Active',
   'Athletic',
-  'Toned',
   'Muscular',
-  'Medium / Solid',
+  'Average',
   'Curvy',
-  'Full-Figured',
-  'Plus Size',
-  'Broad',
   'Stocky',
-  'Robust / Sturdy',
+  'Full-Figured',
 ] as const;
+
+export const OWN_BUILD_MAX = 2;
 
 /** Quick-pick radii under the distance slider, in kilometres. */
 export const RADIUS_PRESETS = [25, 50, 100, 250, 500] as const;

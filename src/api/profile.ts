@@ -265,6 +265,7 @@ function preferencesFromRow(row: Record<string, unknown>): PrivatePreferences {
     ownHeightCm: Number(row.own_height_cm ?? 0),
     ownWeightKg: row.own_weight_kg as number | undefined,
     ownBuild: row.own_build as string | undefined,
+    ownBuildAlso: (row.own_build_also as string | null) ?? undefined,
   };
 }
 
@@ -288,6 +289,7 @@ function preferencesPatchToRow(
     ['ownHeightCm', 'own_height_cm'],
     ['ownWeightKg', 'own_weight_kg'],
     ['ownBuild', 'own_build'],
+    ['ownBuildAlso', 'own_build_also'],
   ];
   for (const [property, column] of fields) {
     if (patch[property] !== undefined) row[column] = patch[property];

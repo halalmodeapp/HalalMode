@@ -165,6 +165,8 @@ export interface PrivatePreferences {
   ownHeightCm: number;
   ownWeightKg?: number;
   ownBuild?: string;
+  /** An optional second body type (migration 0176). */
+  ownBuildAlso?: string;
 }
 
 /**

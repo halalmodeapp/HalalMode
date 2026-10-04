@@ -19,7 +19,7 @@ import { HAS_CHILDREN_PROFILE, asGroups, dressOptions } from '@/data/matchingOpt
 import { ETHNICITY_MAX, ETHNICITY_PROFILE_GROUPS, findEthnicity, withUnstatedAlone } from '@/data/ethnicities';
 import { HERITAGE_MAX, heritageGroups, heritageName } from '@/data/heritage';
 import { buildGroups, buildLabel } from '@/components/you/PrivateTab';
-import { BUILD_OPTIONS , PRACTICE_LABELS, TIMELINE_LABELS } from '@/data/preferences';
+import { BUILD_OPTIONS, OWN_BUILD_MAX, PRACTICE_LABELS, TIMELINE_LABELS } from '@/data/preferences';
 import {
   createProfileMediaSignedUrl,
   deleteProfilePhoto,
@@ -142,7 +142,11 @@ export function ProfileTab({
   // so they are filled in here rather than among the partner filters.
   const [ownHeight, setOwnHeight] = useState(preferences?.ownHeightCm ? String(preferences.ownHeightCm) : '');
   const [ownWeight, setOwnWeight] = useState(preferences?.ownWeightKg ? String(preferences.ownWeightKg) : '');
-  const [ownBuild, setOwnBuild] = useState<string | undefined>(preferences?.ownBuild ?? undefined);
+  // Up to two body types; the first is the main one matching compares.
+  const [ownBuilds, setOwnBuilds] = useState<string[]>(
+    [preferences?.ownBuild, preferences?.ownBuildAlso].filter((build): build is string => Boolean(build))
+  );
+  const ownBuild = ownBuilds[0];
   const [ownDirty, setOwnDirty] = useState(false);
   const [buildPicker, setBuildPicker] = useState(false);
   // Matching answers about yourself, used by members' Premium filters.
@@ -353,6 +357,8 @@ export function ProfileTab({
         ownHeightCm: Number(ownHeight) || 0,
         ownWeightKg: Number(ownWeight) || 0,
         ownBuild,
+        // An empty second answer clears it; the server stores it as none.
+        ownBuildAlso: ownBuilds[1] ?? '',
       });
       // Sect was never in the general patch, so it silently never saved.
       await setMySect(values.sect, values.sectDetail);
@@ -1287,7 +1293,7 @@ export function ProfileTab({
           </View>
           <SelectField
             label={required(t('filters.yourBodyType'))}
-            value={ownBuild ? buildLabel(ownBuild as (typeof BUILD_OPTIONS)[number], t) : ''}
+            value={ownBuilds.map((build) => buildLabel(build as (typeof BUILD_OPTIONS)[number], t)).join(', ')}
             placeholder={t('filters.yourBodyType')}
             onPress={() => setBuildPicker(true)}
             error={ownChecked && buildMissing ? ' ' : undefined}
@@ -1295,8 +1301,10 @@ export function ProfileTab({
           <PickerSheet
             visible={buildPicker}
             groups={buildGroups(t)}
-            selected={ownBuild ? [ownBuild] : []}
-            onChange={(next) => { setOwnBuild(next[0]); setOwnDirty(true); }}
+            selected={ownBuilds}
+            selectionMode="multiple"
+            maxSelected={OWN_BUILD_MAX}
+            onChange={(next) => { setOwnBuilds(next); setOwnDirty(true); }}
             onClose={() => setBuildPicker(false)}
             title={t('filters.yourBodyType')}
             eyebrow={t('filters.privateTitle')}

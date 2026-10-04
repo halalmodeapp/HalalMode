@@ -543,23 +543,13 @@ function FilterCheck({
 }
 
 const BUILD_KEYS: Record<(typeof BUILD_OPTIONS)[number], TranslationKey> = {
-  Petite: 'filters.build.petite',
   Slim: 'filters.build.slim',
-  Slender: 'filters.build.slender',
-  Lean: 'filters.build.lean',
-  'Tall & Lean': 'filters.build.tallLean',
-  Average: 'filters.build.average',
-  'Fit / Active': 'filters.build.fit',
   Athletic: 'filters.build.athletic',
-  Toned: 'filters.build.toned',
   Muscular: 'filters.build.muscular',
-  'Medium / Solid': 'filters.build.solid',
+  Average: 'filters.build.average',
   Curvy: 'filters.build.curvy',
-  'Full-Figured': 'filters.build.full',
-  'Plus Size': 'filters.build.plus',
-  Broad: 'filters.build.broad',
   Stocky: 'filters.build.stocky',
-  'Robust / Sturdy': 'filters.build.sturdy',
+  'Full-Figured': 'filters.build.full',
 };
 
 const PRACTICE_KEYS: Record<ReligiousPractice, TranslationKey> = {

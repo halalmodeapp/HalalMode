@@ -280,7 +280,7 @@ export const MOCK_PREFERENCES: PrivatePreferences = {
   mustHave: {},
   ownHeightCm: 182,
   ownWeightKg: 78,
-  ownBuild: 'Fit / Active',
+  ownBuild: 'Athletic',
 };
 
 /** Builds a round of the given size from the sample pool. */
