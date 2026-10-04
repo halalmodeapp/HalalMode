@@ -26,6 +26,7 @@ import { useI18n } from '@/i18n';
 import { alpha, color, radius, space } from '@/theme/tokens';
 import type { QuestionAnswer } from '@/types';
 import { RTL_LAYOUT } from '@/lib/rtl';
+import { errorMessage } from '@/lib/errorMessage';
 
 /**
  * Step 2 of 3 — answer each question in turn; theirs wait for the recap.
@@ -255,9 +256,7 @@ export default function AnswersScreen() {
 
         {mutation.isError ? (
           <InlineNotice
-            message={/contact details/i.test(String((mutation.error as { message?: string } | null)?.message ?? ''))
-              ? t('answers.noContact')
-              : t('answers.saveError')}
+            message={errorMessage(mutation.error, t, 'answers.saveError')}
           />
         ) : null}
 

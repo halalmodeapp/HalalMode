@@ -58,6 +58,7 @@ import { USE_MOCKS } from '@/lib/supabase';
 import { alpha, color, font, radius } from '@/theme/tokens';
 import type { MarriageTimeline, PrivatePreferences, Profile, ReligiousPractice } from '@/types';
 import { RTL_LAYOUT } from '@/lib/rtl';
+import { errorMessage } from '@/lib/errorMessage';
 
 function profileSchema(t: Translate) {
   return z.object({
@@ -143,6 +144,9 @@ export function ProfileTab({
   const [ownChecked, setOwnChecked] = useState(false);
   const heightMissing = !(Number(ownHeight) >= 140 && Number(ownHeight) <= 210);
   const buildMissing = !ownBuild;
+  // The checklist names everything Save will ask for, including your own
+  // height and build, so it never says "ready" while Save says "not yet".
+  const ownIncomplete = heightMissing || buildMissing;
   const [updatingLocation, setUpdatingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locationExplainer, setLocationExplainer] = useState(false);
@@ -195,6 +199,7 @@ export function ProfileTab({
   const readiness = (!isDirty && !photosDirty && serverReadinessQuery.data)
     ? serverReadinessQuery.data
     : draftReadiness;
+  const readyToShow = readiness.ready && !ownIncomplete;
 
   useEffect(() => {
     setMedia(mediaFrom(profile));
@@ -647,18 +652,21 @@ export function ProfileTab({
     <View style={[styles.wrap, isRTL && styles.rtl]}>
       <View style={styles.stack}>
       <Card tone="filled" style={styles.readinessCard}>
-        <Text variant="label">{readiness.ready ? t('profile.readinessReadyTitle') : t('profile.readinessTitle')}</Text>
-        {readiness.ready ? (
+        <Text variant="label">{readyToShow ? t('profile.readinessReadyTitle') : t('profile.readinessTitle')}</Text>
+        {readyToShow ? (
           <Text variant="caption" style={styles.readinessBody}>
             {t('profile.readinessReadyBody')}
           </Text>
         ) : (
           // One line per thing still needed, rather than a sentence to decode.
           <View style={styles.checklist}>
-            {readiness.missing.map((item) => (
-              <View key={item} style={[styles.checkItem, isRTL && styles.rowRTL]}>
+            {[
+              ...readiness.missing.map((item) => t(readinessKey[item])),
+              ...(ownIncomplete ? [t('filters.yourTitle')] : []),
+            ].map((label) => (
+              <View key={label} style={[styles.checkItem, isRTL && styles.rowRTL]}>
                 <View style={styles.checkBox} />
-                <Text variant="label" style={styles.checkLabel}>{t(readinessKey[item])}</Text>
+                <Text variant="label" style={styles.checkLabel}>{label}</Text>
               </View>
             ))}
           </View>
@@ -1197,7 +1205,7 @@ export function ProfileTab({
       />
       {save.isError ? (
         <Text accessibilityRole="alert" variant="caption" style={styles.saveError}>
-          {t('profile.saveError')}
+          {errorMessage(save.error, t, 'profile.saveError')}
         </Text>
       ) : null}
     </View>

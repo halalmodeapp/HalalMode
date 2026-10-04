@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Linking from 'expo-linking';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import {
   acceptCurrentLegalDocuments,
@@ -19,6 +19,7 @@ import { queryKeys } from '@/lib/queryClient';
 import { testIds } from '@/lib/testIds';
 import { alpha, color, radius, space } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
+import { showNotice } from '@/lib/notice';
 
 export default function LegalConsentScreen() {
   const { t, isRTL, localeTag } = useI18n();
@@ -68,7 +69,7 @@ export default function LegalConsentScreen() {
     try {
       await Linking.openURL(url);
     } catch {
-      Alert.alert(t('legal.linkErrorTitle'), t('legal.linkErrorBody'));
+      showNotice(t('legal.linkErrorTitle'), t('legal.linkErrorBody'));
     }
   };
 

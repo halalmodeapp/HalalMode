@@ -42,6 +42,7 @@ import type {
   Sect,
 } from '@/types';
 import { RTL_LAYOUT } from '@/lib/rtl';
+import { errorMessage } from '@/lib/errorMessage';
 import { useToast } from '@/state/toast';
 
 
@@ -123,7 +124,7 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
       {(
         <Card style={styles.card}>
           <View>
-            <Text variant="microAccent">{t('filters.partnerStep')}</Text>
+            <Text variant="microAccent">{t('filters.tab.partner')}</Text>
             <Text variant="displaySmall" style={styles.sectionTitle}>
               {t('filters.partnerTitle')}
             </Text>
@@ -378,7 +379,7 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
             loading={save.isPending}
             onPress={() => save.mutate()}
           />
-          {save.isError ? <InlineNotice message={t('filters.saveError')} /> : null}
+          {save.isError ? <InlineNotice message={errorMessage(save.error, t, 'filters.saveError')} /> : null}
         </Card>
       )}
 

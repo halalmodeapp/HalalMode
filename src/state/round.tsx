@@ -277,7 +277,8 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       submit,
       submitted,
       waitingForConnection,
-      submitError: submitMutation.error instanceof Error ? submitMutation.error.message : null,
+      // Supabase errors are not always Error instances; keep their message either way.
+      submitError: submitMutation.error ? String((submitMutation.error as { message?: unknown }).message ?? 'failed') : null,
       reset,
     }),
     [

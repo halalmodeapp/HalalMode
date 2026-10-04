@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { Alert, Linking, Pressable, StyleSheet, Switch, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Switch, View } from 'react-native';
 
 import { fetchMyReadReceipts, fetchMySampleMembers, requestAccountDeletion, setMyReadReceipts, setMySampleMembers, setProfilePaused } from '@/api/account';
 import { disableMyNotifications, enableMyNotifications, fetchMyNotificationConsent } from '@/api/notifications';
@@ -24,6 +24,7 @@ import { queryKeys } from '@/lib/queryClient';
 import { alpha, color, font, radius, space } from '@/theme/tokens';
 import { TIER_LIMITS, type Profile } from '@/types';
 import { RTL_LAYOUT } from '@/lib/rtl';
+import { showNotice } from '@/lib/notice';
 import { useToast } from '@/state/toast';
 import { useRound } from '@/state/round';
 
@@ -87,7 +88,7 @@ export function SettingsTab({
           : code === 'unsupported_runtime'
             ? 'settings.notificationBuildBody'
           : 'settings.notificationErrorBody';
-      Alert.alert(t('settings.notificationErrorTitle'), t(key));
+      showNotice(t('settings.notificationErrorTitle'), t(key));
     },
   });
   const readReceiptsQuery = useQuery({
@@ -101,7 +102,7 @@ export function SettingsTab({
       void queryClient.invalidateQueries({ queryKey: ['read-receipts'] });
       toast.show(`✓ ${t('filters.saved')}`);
     },
-    onError: () => Alert.alert(t('settings.activityErrorTitle'), t('settings.activityErrorBody')),
+    onError: () => showNotice(t('settings.activityErrorTitle'), t('settings.activityErrorBody')),
   });
   const premiumFeatures = [
     t('settings.premium.f1'),
@@ -123,7 +124,7 @@ export function SettingsTab({
       );
       setPauseConfirm(false);
     } catch {
-      Alert.alert(t('settings.pauseErrorTitle'), t('settings.pauseErrorBody'));
+      showNotice(t('settings.pauseErrorTitle'), t('settings.pauseErrorBody'));
     }
   };
 
@@ -133,7 +134,7 @@ export function SettingsTab({
       setDeleteConfirm(false);
       await signOut();
     } catch {
-      Alert.alert(t('settings.deleteErrorTitle'), t('settings.deleteErrorBody'));
+      showNotice(t('settings.deleteErrorTitle'), t('settings.deleteErrorBody'));
     }
   };
 
@@ -379,7 +380,7 @@ export function SettingsTab({
                 // person actually is.
                 void Linking.openURL(
                   `mailto:hello@halalmo.de?subject=${encodeURIComponent(t('settings.supportSubject'))}`
-                ).catch(() => Alert.alert(t('settings.support'), t('settings.supportFallback')));
+                ).catch(() => showNotice(t('settings.support'), t('settings.supportFallback')));
               }}
             />
           }

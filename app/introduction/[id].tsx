@@ -146,7 +146,7 @@ export default function IntroductionDetailScreen() {
           {/* Choosing happens here as on the deck; sending happens back on the
               deck, where the whole selection can be seen at once. */}
           <Button
-            label={chosen ? `✓ ${t('daily.interested')}` : t('daily.showInterest')}
+            label={chosen ? `✓ ${t('daily.interested')}` : t('daily.select')}
             variant={chosen ? 'gold' : 'primary'}
             onPress={() => {
               if (toggleSelect(introduction.id)) {

@@ -21,6 +21,7 @@ import { queryKeys } from '@/lib/queryClient';
 import { testIds } from '@/lib/testIds';
 import { alpha, color, layout, radius, shadow, space } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
+import { errorMessage } from '@/lib/errorMessage';
 
 export type SafetyScope =
   | { kind: 'connection'; id: string }
@@ -261,7 +262,7 @@ export function SafetyControl({
             {view === 'error' ? (
               <>
                 <Text variant="displaySmall">{t('safety.errorTitle')}</Text>
-                <Text variant="bodySmall" style={styles.body}>{t('safety.errorBody')}</Text>
+                <Text variant="bodySmall" style={styles.body}>{errorMessage(mutation.error, t, 'safety.errorBody')}</Text>
                 <Button
                   testID={testIds.safety.retry}
                   label={t('common.tryAgain')}

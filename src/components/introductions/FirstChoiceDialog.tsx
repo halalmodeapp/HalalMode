@@ -100,16 +100,16 @@ export function FirstChoiceDialog({
 
           <View style={styles.actions}>
             <Button
-              label={cancelLabel ?? t('daily.notYet')}
-              variant="secondary"
-              onPress={onCancel}
-              style={styles.action}
-            />
-            <Button
               label={confirmLabel ?? t('daily.yesSend')}
               variant="gold"
               disabled={selectedId === null}
               onPress={onConfirm}
+              style={styles.action}
+            />
+            <Button
+              label={cancelLabel ?? t('daily.notYet')}
+              variant="secondary"
+              onPress={onCancel}
               style={styles.action}
             />
           </View>
@@ -159,6 +159,7 @@ const styles = StyleSheet.create({
     borderColor: alpha.lineStrong,
   },
   dotSelected: { backgroundColor: color.goldGlow, borderColor: color.goldGlow },
-  actions: { flexDirection: 'row', gap: 10, marginTop: space.xl },
-  action: { flex: 1, paddingHorizontal: 8 },
+  // Stacked, main action first, so no label ever wraps into a tall oval.
+  actions: { gap: 10, marginTop: space.xl },
+  action: { alignSelf: 'stretch' },
 });

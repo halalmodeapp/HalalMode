@@ -22,7 +22,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const { language } = useSession();
   const locale = getLocale(language);
   const desiredRTL = locale.direction === 'rtl';
-  const nativeRestartRequired = I18nManager.isRTL !== desiredRTL;
+  // Only a phone needs a restart to flip layout direction; the web app redraws.
+  const nativeRestartRequired = Platform.OS !== 'web' && I18nManager.isRTL !== desiredRTL;
 
   useEffect(() => {
     // A browser flips a page from the document element, not from a style on

@@ -4,7 +4,6 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Alert,
   FlatList,
   KeyboardAvoidingView,
   Modal,
@@ -27,7 +26,9 @@ import { AudioGreeting } from '@/components/introductions/AudioGreeting';
 import { SafetyControl } from '@/components/safety/SafetyControl';
 import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
 import { Screen } from '@/components/ui/Screen';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Text } from '@/components/ui/Text';
+import { showNotice } from '@/lib/notice';
 import { shuffledOpeners } from '@/data/openers';
 import { useI18n } from '@/i18n';
 import { queryKeys } from '@/lib/queryClient';
@@ -219,27 +220,14 @@ export default function ChatScreen() {
       router.replace('/(tabs)/connections');
     },
     onError: () => {
-      Alert.alert(
-        t('chat.closeErrorTitle'),
-        t('chat.closeErrorBody')
-      );
+      showNotice(t('chat.closeErrorTitle'), t('chat.closeErrorBody'));
     },
   });
 
-  const confirmClose = () => {
-    Alert.alert(
-      t('chat.closeTitle'),
-      t('chat.closeBody', { name: connection?.profile.firstName ?? '' }),
-      [
-        { text: t('chat.keep'), style: 'cancel' },
-        {
-          text: t('chat.closeConfirm'),
-          style: 'destructive',
-          onPress: () => close.mutate(),
-        },
-      ]
-    );
-  };
+  // Our own dialog: Alert with buttons never appears in a browser, so closing
+  // a conversation on the web silently did nothing.
+  const [closeAsk, setCloseAsk] = useState(false);
+  const confirmClose = () => setCloseAsk(true);
 
   const conversation = useMemo<ConversationItem[]>(() => {
     const lastOutgoingId = [...messages].reverse().find((message) => message.sender === 'me')?.id;
@@ -439,10 +427,7 @@ export default function ChatScreen() {
             accessibilityRole="button"
             accessibilityLabel={t('chat.recordUnavailable')}
             onPress={() =>
-              Alert.alert(
-                t('chat.voiceTitle'),
-                t('chat.voiceBody')
-              )
+              showNotice(t('chat.voiceTitle'), t('chat.voiceBody'))
             }
             style={styles.recordButton}
           >
@@ -474,6 +459,18 @@ export default function ChatScreen() {
         photo={connection.profile.photos[0]}
         onConnected={() => setCallState('connected')}
         onEnd={() => setCallState(null)}
+      />
+      <ConfirmDialog
+        visible={closeAsk}
+        title={t('chat.closeTitle')}
+        body={t('chat.closeBody', { name: connection?.profile.firstName ?? '' })}
+        confirmLabel={t('chat.closeConfirm')}
+        cancelLabel={t('chat.keep')}
+        onConfirm={() => {
+          setCloseAsk(false);
+          close.mutate();
+        }}
+        onCancel={() => setCloseAsk(false)}
       />
     </Screen>
   );

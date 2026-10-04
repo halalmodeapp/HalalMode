@@ -93,7 +93,9 @@ export default function RecapScreen() {
         </View>
 
         <Card style={styles.summary}>
-          <Text variant="micro">{t('recap.summaryTitle')}</Text>
+          {/* Named for what wrote it: the Halal Mode Bot when its summary is in,
+              the app's own comparison otherwise. */}
+          <Text variant="micro">{summaryQuery.data ? `✦ ${t('recap.botSummaryTitle')}` : t('recap.summaryTitle')}</Text>
           <Text style={styles.summaryText}>
             {summaryQuery.isPending
               ? t('recap.summaryWriting')

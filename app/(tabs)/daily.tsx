@@ -36,6 +36,7 @@ import { useAuth } from '@/state/auth';
 import { useSession } from '@/state/session';
 import { alpha, color, font, space } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
+import { errorMessage } from '@/lib/errorMessage';
 
 /**
  * Names the criterion in the member's own words, matching the label on the
@@ -158,7 +159,12 @@ export default function DailyScreen() {
   // Under "resets at Fajr in London": yes, but when. Re-reads once a minute
   // until the last minute, so the phone is not woken every second for a number
   // that has not changed.
-  const resetsAt = round?.expiresAt;
+  // Counts to the member's own next Fajr — the same moment the "Nothing more
+  // today" screen counts to — rather than 24 hours after the set opened, which
+  // drifted from "resets at Fajr" by minutes or more.
+  const headerProfile = useQuery({ queryKey: queryKeys.profile('me'), queryFn: fetchMyProfile });
+  const headerFajr = useNextFajr(headerProfile.data?.city);
+  const resetsAt = headerFajr?.toISOString() ?? round?.expiresAt;
   const [countdown, setCountdown] = useState(() => countdownTo(resetsAt));
   useEffect(() => {
     setCountdown(countdownTo(resetsAt));
@@ -452,7 +458,7 @@ export default function DailyScreen() {
       </View>
 
       {submitError ? (
-        <InlineNotice message={t('daily.submitError')} />
+        <InlineNotice message={errorMessage({ message: submitError }, t, 'daily.submitError')} />
       ) : null}
 
       <View style={styles.stage}>
@@ -700,8 +706,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  captionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  captionText: { flex: 1 },
+  // The hint takes its own line; the quiet links sit beneath it, so neither is
+  // squeezed into a narrow column on a phone.
+  captionRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 16, rowGap: 4 },
+  captionText: { flexBasis: '100%' },
   selectAll: { color: color.ink, textDecorationLine: 'underline' },
   interestAction: { flex: 1, paddingHorizontal: 10 },
   primaryAction: { flex: 1.2, paddingHorizontal: 10 },

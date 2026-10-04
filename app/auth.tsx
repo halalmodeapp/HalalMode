@@ -2,7 +2,6 @@ import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -65,6 +64,9 @@ export default function AuthScreen() {
   const [secondsUntilResend, setSecondsUntilResend] = useState(0);
   const [busyProvider, setBusyProvider] = useState<AuthProvider | null>(null);
   const [languageOpen, setLanguageOpen] = useState(false);
+  // Shown in the page, under the button, not in a pop-up: a browser never
+  // displays React Native's Alert, so "check your email" used to vanish.
+  const [notice, setNotice] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     if (secondsUntilResend <= 0) return;
@@ -81,7 +83,7 @@ export default function AuthScreen() {
     try {
       await signInWithProvider(provider);
     } catch {
-      Alert.alert(t('auth.providerFailed'), t('auth.providerFailedBody'));
+      setNotice({ tone: 'error', text: `${t('auth.providerFailed')}. ${t('auth.providerFailedBody')}` });
     } finally {
       setBusyProvider(null);
     }
@@ -91,10 +93,11 @@ export default function AuthScreen() {
     if (sending || secondsUntilResend > 0) return;
     const cleanEmail = email.trim().toLowerCase();
     if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
-      Alert.alert(t('auth.invalidEmail'));
+      setNotice({ tone: 'error', text: t('auth.invalidEmail') });
       return;
     }
     clearAuthError();
+    setNotice(null);
     setSending(true);
     try {
       const { error } = await requireSupabase().auth.signInWithOtp({
@@ -105,9 +108,9 @@ export default function AuthScreen() {
       // Supabase remains the authority for rate limits. This short local pause
       // protects people from accidentally requesting several identical links.
       setSecondsUntilResend(60);
-      Alert.alert(t('auth.checkEmail'), t('auth.linkSent'));
+      setNotice({ tone: 'ok', text: `${t('auth.checkEmail')}. ${t('auth.linkSent')}` });
     } catch {
-      Alert.alert(t('auth.sendFailed'), t('auth.sendFailedBody'));
+      setNotice({ tone: 'error', text: `${t('auth.sendFailed')}. ${t('auth.sendFailedBody')}` });
     } finally {
       setSending(false);
     }
@@ -244,6 +247,15 @@ export default function AuthScreen() {
                 onPress={() => void sendLink()}
                 font={isRTL ? appFont.arabic : appFont.bodySemi}
               />
+              {notice ? (
+                <Text
+                  accessibilityRole="alert"
+                  accessibilityLiveRegion="polite"
+                  style={[notice.tone === 'ok' ? styles.sent : styles.error, align]}
+                >
+                  {notice.tone === 'ok' ? '✓ ' : ''}{notice.text}
+                </Text>
+              ) : null}
               <Text style={[styles.fine, align]}>{t('auth.privacyNote')}</Text>
             </View>
           </View>
@@ -432,6 +444,7 @@ const styles = StyleSheet.create({
   },
   label: { fontFamily: SANS, fontSize: 13, fontWeight: '600', color: C.ink, marginBottom: -6 },
   error: { fontFamily: SANS, fontSize: 13, lineHeight: 18, color: C.err },
+  sent: { fontFamily: SANS, fontSize: 13, lineHeight: 18, color: C.ink, fontWeight: '600' },
   input: {
     fontFamily: SANS,
     fontSize: 16,

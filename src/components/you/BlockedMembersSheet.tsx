@@ -1,9 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { fetchMyBlockedMembers, unblockMyMember } from '@/api/safety';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { showNotice } from '@/lib/notice';
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
 import { color, font, layout, radius, space } from '@/theme/tokens';
@@ -21,15 +24,13 @@ export function BlockedMembersSheet({ visible, onClose }: { visible: boolean; on
   const unblock = useMutation({
     mutationFn: unblockMyMember,
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['blocked-members'] }),
-    onError: () => Alert.alert(t('settings.blockedErrorTitle'), t('settings.blockedErrorBody')),
+    onError: () => showNotice(t('settings.blockedErrorTitle'), t('settings.blockedErrorBody')),
   });
 
-  const confirmUnblock = (id: string, firstName: string) => {
-    Alert.alert(t('settings.unblockTitle'), t('settings.unblockBody', { name: firstName }), [
-      { text: t('settings.notNow'), style: 'cancel' },
-      { text: t('settings.unblockAction'), onPress: () => unblock.mutate(id) },
-    ]);
-  };
+  // Our own dialog: Alert with buttons never shows in a browser, so on the web
+  // nobody could ever be unblocked.
+  const [pending, setPending] = useState<{ id: string; firstName: string } | null>(null);
+  const confirmUnblock = (id: string, firstName: string) => setPending({ id, firstName });
 
   return (
     <Modal
@@ -96,6 +97,18 @@ export function BlockedMembersSheet({ visible, onClose }: { visible: boolean; on
           ) : null}
         </View>
       </View>
+      <ConfirmDialog
+        visible={pending !== null}
+        title={t('settings.unblockTitle')}
+        body={t('settings.unblockBody', { name: pending?.firstName ?? '' })}
+        confirmLabel={t('settings.unblockAction')}
+        cancelLabel={t('settings.notNow')}
+        onConfirm={() => {
+          if (pending) unblock.mutate(pending.id);
+          setPending(null);
+        }}
+        onCancel={() => setPending(null)}
+      />
     </Modal>
   );
 }

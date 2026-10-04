@@ -69,18 +69,20 @@ export function ConfirmDialog({
               {body}
             </Text>
           ) : null}
-          <View style={[styles.row, isRTL && styles.rowReverse]}>
+          {/* Stacked, main action first: labels in any language get the full
+              width on one line instead of wrapping into tall ovals. */}
+          <View style={styles.stack}>
+            <Button
+              testID={testID ? `${testID}-confirm` : undefined}
+              label={confirmLabel}
+              onPress={onConfirm}
+              style={styles.action}
+            />
             <Button
               testID={testID ? `${testID}-cancel` : undefined}
               label={cancelLabel}
               variant="secondary"
               onPress={onCancel}
-              style={styles.action}
-            />
-            <Button
-              testID={testID ? `${testID}-confirm` : undefined}
-              label={confirmLabel}
-              onPress={onConfirm}
               style={styles.action}
             />
           </View>
@@ -113,6 +115,6 @@ const styles = StyleSheet.create({
     ...shadow.modal,
   },
   body: { marginTop: space.sm, marginBottom: space.xl, color: color.muted },
-  row: { flexDirection: 'row', gap: 10, marginTop: space.md },
-  action: { flex: 1, paddingHorizontal: 8, borderColor: alpha.lineStrong },
+  stack: { gap: 10, marginTop: space.md, alignSelf: 'stretch' },
+  action: { alignSelf: 'stretch', borderColor: alpha.lineStrong },
 });
