@@ -14,6 +14,7 @@ import {
   PlayfairDisplay_400Regular,
   PlayfairDisplay_400Regular_Italic,
 } from '@expo-google-fonts/playfair-display';
+import { Ionicons } from '@expo/vector-icons';
 import { focusManager, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
@@ -38,6 +39,22 @@ import { AppRecoveryBoundary } from '@/components/ui/AppRecoveryBoundary';
 
 void SplashScreen.preventAutoHideAsync();
 
+// A webfont that is slow to arrive (a weak connection, or a busy dev server)
+// makes the browser font check give up after 12 seconds and reject. Icons load
+// their own font without catching that, which showed as an uncaught error. The
+// icon font is now loaded with the others below, so icons find it ready; if it
+// is still slow, text and icons fall back until it arrives, and this rejection
+// is not reported as a crash.
+if (Platform.OS === 'web' && typeof window !== 'undefined') {
+  window.addEventListener('unhandledrejection', (event) => {
+    const message = (event.reason as { message?: unknown } | undefined)?.message;
+    if (typeof message === 'string' && /^\d+ms timeout exceeded$/.test(message)) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+  }, true);
+}
+
 export default function RootLayout() {
   const breakpoint = useBreakpoint();
   const [fontsLoaded, fontError] = useFonts({
@@ -51,6 +68,8 @@ export default function RootLayout() {
     NotoSans_500Medium,
     NotoSans_600SemiBold,
     NotoSans_700Bold,
+    // Loaded here so icons find it ready and a slow load is caught, not thrown.
+    ...Ionicons.font,
   });
 
   // Before anything else can break. A crash on the very first screen is the
