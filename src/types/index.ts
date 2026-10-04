@@ -10,6 +10,9 @@ export type Language = AppLocale;
 
 export type Gender = 'male' | 'female';
 
+/** Filters only Premium members can set (server: set_my_premium_preferences). */
+export type PremiumCriterion = 'has_children' | 'occupations' | 'languages' | 'education' | 'dress' | 'ethnicities';
+
 export type ReligiousPractice =
   | 'very_practicing'
   | 'practicing'
@@ -105,6 +108,10 @@ export interface Profile {
   sect: Sect;
   /** Optional tradition under `sect`, e.g. 'hanafi' (see src/data/sects.ts). */
   sectDetail?: string;
+  /** Matching answers about oneself (migration 0171). */
+  hasChildren?: 'no' | 'yes' | 'prefer_not_to_say';
+  religiousDress?: string;
+  ethnicity?: string;
   languagesSpoken: string[];
   isVerified: boolean;
   /** Present for the owner profile only; matching eligibility stays server-authoritative. */
@@ -134,6 +141,14 @@ export interface PrivatePreferences {
   preferredSects: Sect[];
   /** Optional traditions under preferredSects. Matching reads preferredSects. */
   preferredSectDetails?: string[];
+  /** Premium filters. Each rules people out only when its premiumMustHave flag is on. */
+  preferredHasChildren?: string[];
+  preferredOccupations?: string[];
+  preferredLanguages?: string[];
+  preferredEducation?: string[];
+  preferredDress?: string[];
+  preferredEthnicities?: string[];
+  premiumMustHave?: Partial<Record<PremiumCriterion, boolean>>;
   /**
    * Criteria this member treats as absolute. Absent or false means the
    * criterion is weighted rather than filtered — the only hard filters in

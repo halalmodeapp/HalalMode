@@ -3,10 +3,10 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
 import { alpha, color, font, radius } from '@/theme/tokens';
-import type { MustHaveCriterion } from '@/types';
+import type { MustHaveCriterion, PremiumCriterion } from '@/types';
 
 export interface MustHaveToggleProps {
-  criterion: MustHaveCriterion;
+  criterion: MustHaveCriterion | PremiumCriterion;
   value: boolean;
   onChange: (next: boolean) => void;
 }

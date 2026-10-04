@@ -1,8 +1,8 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { setMyPreferredSects, updateMyPreferences } from '@/api/profile';
+import { fetchMyProfile, setMyPreferredSects, setMyPremiumPreferences, updateMyPreferences } from '@/api/profile';
 import { Button } from '@/components/ui/Button';
 import { InlineNotice } from '@/components/ui/AsyncState';
 import { Card } from '@/components/ui/Card';
@@ -31,12 +31,19 @@ import {
 import type { CatalogGroup } from '@/data/catalogOption';
 import { optionLabel } from '@/data/catalogOption';
 import { SECT_GROUPS, isSectDetail, sectOf } from '@/data/sects';
+import { EDUCATION_GROUPS } from '@/data/educationLevels';
+import { OCCUPATION_GROUPS } from '@/data/occupations';
+import { LANGUAGE_GROUPS } from '@/data/spokenLanguages';
+import { ETHNICITY_OPTIONS, HAS_CHILDREN_OPTIONS, asGroups, dressOptions } from '@/data/matchingOptions';
+import { showNotice } from '@/lib/notice';
+import { useSession } from '@/state/session';
 import { alpha, color, font, radius } from '@/theme/tokens';
 import { queryKeys } from '@/lib/queryClient';
 import type {
   FamilyGoals,
   MarriageTimeline,
   MustHaveCriterion,
+  PremiumCriterion,
   PrivatePreferences,
   ReligiousPractice,
   Sect,
@@ -56,16 +63,22 @@ import { useToast } from '@/state/toast';
 export function PrivateTab({ preferences }: { preferences: PrivatePreferences }) {
   const { t, isRTL, language } = useI18n();
   const [picking, setPicking] = useState<'builds' | 'sects' | null>(null);
+  const [premiumPicking, setPremiumPicking] = useState<PremiumCriterion | null>(null);
   const [draft, setDraft] = useState(preferences);
   const [countrySheet, setCountrySheet] = useState(false);
   const [clearConfirm, setClearConfirm] = useState(false);
   const queryClient = useQueryClient();
+  const isPremium = useSession().tier === 'premium';
+  // Dress options are the other side's: a woman filters by men's options.
+  const meQuery = useQuery({ queryKey: queryKeys.profile('me'), queryFn: fetchMyProfile });
+  const partnerGender = meQuery.data?.gender === 'female' ? 'male' : 'female';
   const toast = useToast();
 
   const save = useMutation({
     mutationFn: async () => {
       await updateMyPreferences(draft);
       await setMyPreferredSects(draft.preferredSects ?? [], draft.preferredSectDetails ?? []);
+      if (isPremium) await setMyPremiumPreferences(draft);
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
@@ -93,6 +106,65 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
     value: PrivatePreferences[K]
   ) => setDraft((current) => ({ ...current, [key]: value }));
 
+
+  type PremiumList = 'preferredHasChildren' | 'preferredOccupations' | 'preferredLanguages'
+    | 'preferredEducation' | 'preferredDress' | 'preferredEthnicities';
+
+  const toggleIn = (key: PremiumList, id: string) =>
+    setDraft((current) => {
+      const list = current[key] ?? [];
+      return { ...current, [key]: list.includes(id) ? list.filter((item) => item !== id) : [...list, id] };
+    });
+
+  const premiumMustHaveFor = (criterion: PremiumCriterion) => (
+    <MustHaveToggle
+      criterion={criterion}
+      value={draft.premiumMustHave?.[criterion] ?? false}
+      onChange={(next) =>
+        setDraft((current) => ({
+          ...current,
+          premiumMustHave: { ...current.premiumMustHave, [criterion]: next },
+        }))
+      }
+    />
+  );
+
+  /** A multi-choice Premium filter: a dropdown, its list, and its must-have. */
+  const premiumPicker = (
+    criterion: PremiumCriterion,
+    label: string,
+    groups: readonly CatalogGroup[],
+    key: PremiumList,
+  ) => {
+    const chosen = draft[key] ?? [];
+    return (
+      <View style={styles.section}>
+        <SelectField
+          label={label}
+          value={chosen
+            .map((id) => {
+              const option = groups.flatMap((group) => group.options).find((entry) => entry.id === id);
+              return option ? optionLabel(option, language) : id;
+            })
+            .join(', ')}
+          placeholder={t('filters.any')}
+          onPress={() => setPremiumPicking(criterion)}
+        />
+        <PickerSheet
+          visible={premiumPicking === criterion}
+          groups={groups}
+          selected={chosen}
+          selectionMode="multiple"
+          onChange={(next) => setDraft((current) => ({ ...current, [key]: next }))}
+          onClose={() => setPremiumPicking(null)}
+          title={label}
+          eyebrow={t('filters.premiumTitle')}
+          searchLabel={label}
+        />
+        {premiumMustHaveFor(criterion)}
+      </View>
+    );
+  };
 
   const toggleListValue = <T extends string>(
     key: 'preferredPractice' | 'desiredTimeline' | 'desiredFamilyGoals' | 'preferredSects',
@@ -179,30 +251,6 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
           </View>
 
           <View style={styles.section}>
-            <SelectField
-              label={t('filters.bodyTypes')}
-              value={draft.preferredBuilds
-                .map((build) => buildLabel(build as (typeof BUILD_OPTIONS)[number], t))
-                .join(', ')}
-              placeholder={t('filters.bodyTypesPlaceholder')}
-              onPress={() => setPicking('builds')}
-            />
-            <PickerSheet
-              visible={picking === 'builds'}
-              groups={buildGroups(t)}
-              selected={draft.preferredBuilds}
-              selectionMode="multiple"
-              maxSelected={3}
-              onChange={(next) => patch('preferredBuilds', next)}
-              onClose={() => setPicking(null)}
-              title={t('filters.bodyTypes')}
-              eyebrow={t('filters.bodyTypesPlaceholder')}
-              searchLabel={t('filters.bodyTypes')}
-            />
-            {mustHaveFor('build')}
-          </View>
-
-          <View style={styles.section}>
             <Text variant="micro">{t('filters.locationDistance')}</Text>
             <View style={styles.radiusPanel}>
               <View style={[styles.radiusHead, isRTL && styles.rowReverse]}>
@@ -279,66 +327,6 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
           </View>
 
           <View style={styles.section}>
-            <Text variant="micro">{t('filters.marriageTiming')}</Text>
-            <Text variant="caption" style={styles.filterNote}>
-              {t('filters.marriageTimingBody')}
-            </Text>
-            <View style={styles.checkList}>
-              {(Object.entries(TIMELINE_LABELS) as [MarriageTimeline, string][]).map(
-                ([value]) => (
-                  <FilterCheck
-                    key={value}
-                    label={timelineLabel(value, t)}
-                    checked={draft.desiredTimeline.includes(value)}
-                    onPress={() => toggleListValue('desiredTimeline', value)}
-                  />
-                )
-              )}
-            </View>
-            {mustHaveFor('timeline')}
-          </View>
-
-          <View style={styles.section}>
-            <Text variant="micro">{t('filters.practice')}</Text>
-            <Text variant="caption" style={styles.filterNote}>
-              {t('filters.practiceBody')}
-            </Text>
-            <View style={styles.checkList}>
-              {(Object.entries(PRACTICE_LABELS) as [ReligiousPractice, string][]).map(
-                ([value]) => (
-                  <FilterCheck
-                    key={value}
-                    label={practiceLabel(value, t)}
-                    checked={draft.preferredPractice.includes(value)}
-                    onPress={() => toggleListValue('preferredPractice', value)}
-                  />
-                )
-              )}
-            </View>
-            {mustHaveFor('practice')}
-          </View>
-
-          <View style={styles.section}>
-            <Text variant="micro">{t('filters.children')}</Text>
-            <Text variant="caption" style={styles.filterNote}>
-              {t('filters.childrenBody')}
-            </Text>
-            <View style={styles.checkList}>
-              {(Object.entries(FAMILY_GOAL_LABELS) as [FamilyGoals, string][]).map(
-                ([value]) => (
-                  <FilterCheck
-                    key={value}
-                    label={familyGoalLabel(value, t)}
-                    checked={(draft.desiredFamilyGoals ?? []).includes(value)}
-                    onPress={() => toggleListValue('desiredFamilyGoals', value)}
-                  />
-                )
-              )}
-            </View>
-            {mustHaveFor('children')}
-          </View>
-
-          <View style={styles.section}>
             <SelectField
               label={t('filters.sect')}
               value={sectSelection(draft).map((id) => sectName(id, language)).join(', ')}
@@ -367,6 +355,128 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
             </Text>
             {mustHaveFor('sect')}
           </View>
+
+          {/* Everything below is Premium. Shown to everyone, so a free member
+              can see what it offers; only a Premium member can change it. */}
+          <View style={styles.premiumHead}>
+            <Text variant="microAccent">✦ {t('filters.premiumTitle')}</Text>
+            <Text variant="caption" style={styles.filterNote}>{t('filters.premiumBody')}</Text>
+          </View>
+          <View style={styles.premiumBlock}>
+            <View style={[styles.premiumInner, !isPremium && styles.locked]} pointerEvents={isPremium ? 'auto' : 'none'}>
+          <View style={styles.section}>
+            <SelectField
+              label={t('filters.bodyTypes')}
+              value={draft.preferredBuilds
+                .map((build) => buildLabel(build as (typeof BUILD_OPTIONS)[number], t))
+                .join(', ')}
+              placeholder={t('filters.bodyTypesPlaceholder')}
+              onPress={() => setPicking('builds')}
+            />
+            <PickerSheet
+              visible={picking === 'builds'}
+              groups={buildGroups(t)}
+              selected={draft.preferredBuilds}
+              selectionMode="multiple"
+              maxSelected={3}
+              onChange={(next) => patch('preferredBuilds', next)}
+              onClose={() => setPicking(null)}
+              title={t('filters.bodyTypes')}
+              eyebrow={t('filters.bodyTypesPlaceholder')}
+              searchLabel={t('filters.bodyTypes')}
+            />
+            {mustHaveFor('build')}
+          </View>
+
+          <View style={styles.section}>
+            <Text variant="micro">{t('filters.practice')}</Text>
+            <Text variant="caption" style={styles.filterNote}>
+              {t('filters.practiceBody')}
+            </Text>
+            <View style={styles.checkList}>
+              {(Object.entries(PRACTICE_LABELS) as [ReligiousPractice, string][]).map(
+                ([value]) => (
+                  <FilterCheck
+                    key={value}
+                    label={practiceLabel(value, t)}
+                    checked={draft.preferredPractice.includes(value)}
+                    onPress={() => toggleListValue('preferredPractice', value)}
+                  />
+                )
+              )}
+            </View>
+            {mustHaveFor('practice')}
+          </View>
+
+          <View style={styles.section}>
+            <Text variant="micro">{t('filters.marriageTiming')}</Text>
+            <Text variant="caption" style={styles.filterNote}>
+              {t('filters.marriageTimingBody')}
+            </Text>
+            <View style={styles.checkList}>
+              {(Object.entries(TIMELINE_LABELS) as [MarriageTimeline, string][]).map(
+                ([value]) => (
+                  <FilterCheck
+                    key={value}
+                    label={timelineLabel(value, t)}
+                    checked={draft.desiredTimeline.includes(value)}
+                    onPress={() => toggleListValue('desiredTimeline', value)}
+                  />
+                )
+              )}
+            </View>
+            {mustHaveFor('timeline')}
+          </View>
+
+          <View style={styles.section}>
+            <Text variant="micro">{t('filters.hasChildren')}</Text>
+            <View style={styles.chips}>
+              {HAS_CHILDREN_OPTIONS.map((option) => (
+                <Chip
+                  key={option.id}
+                  label={optionLabel(option, language)}
+                  selected={(draft.preferredHasChildren ?? []).includes(option.id)}
+                  onPress={() => toggleIn('preferredHasChildren', option.id)}
+                  showMark
+                />
+              ))}
+            </View>
+            {premiumMustHaveFor('has_children')}
+            <Text variant="micro" style={styles.subHeading}>{t('filters.childrenTimeframe')}</Text>
+            <Text variant="caption" style={styles.filterNote}>
+              {t('filters.childrenBody')}
+            </Text>
+            <View style={styles.checkList}>
+              {(Object.entries(FAMILY_GOAL_LABELS) as [FamilyGoals, string][]).map(
+                ([value]) => (
+                  <FilterCheck
+                    key={value}
+                    label={familyGoalLabel(value, t)}
+                    checked={(draft.desiredFamilyGoals ?? []).includes(value)}
+                    onPress={() => toggleListValue('desiredFamilyGoals', value)}
+                  />
+                )
+              )}
+            </View>
+            {mustHaveFor('children')}
+          </View>
+          {premiumPicker('occupations', t('filters.career'), OCCUPATION_GROUPS, 'preferredOccupations')}
+          {premiumPicker('languages', t('filters.languages'), LANGUAGE_GROUPS, 'preferredLanguages')}
+          {premiumPicker('education', t('filters.education'), EDUCATION_GROUPS, 'preferredEducation')}
+          {premiumPicker('dress', t('filters.dress'), asGroups(t('filters.dress'), dressOptions(partnerGender)), 'preferredDress')}
+          {premiumPicker('ethnicities', t('filters.ethnicity'), asGroups(t('filters.ethnicity'), ETHNICITY_OPTIONS), 'preferredEthnicities')}
+            </View>
+            {!isPremium ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('filters.premiumTitle')}
+                onPress={() => showNotice(t('filters.premiumTitle'), t('filters.premiumBody'))}
+                style={StyleSheet.absoluteFill}
+              />
+            ) : null}
+          </View>
+
+
 
           <Button
             label={t('filters.clear')}
@@ -622,6 +732,11 @@ const styles = StyleSheet.create({
 
   metricRow: { flexDirection: 'row', gap: 10 },
   metric: { flex: 1, gap: 6 },
+  premiumHead: { gap: 4, marginTop: 8, paddingTop: 16, borderTopWidth: 1, borderTopColor: alpha.lineFaint },
+  premiumBlock: { position: 'relative' },
+  premiumInner: { gap: 22 },
+  locked: { opacity: 0.45 },
+  subHeading: { marginTop: 12 },
   missing: { borderColor: '#B3261E', borderWidth: 1.5 },
   missingGroup: { borderWidth: 1.5, borderColor: '#B3261E', borderRadius: radius.md, padding: 6 },
   missingText: { color: '#B3261E', fontFamily: font.bodyBold },

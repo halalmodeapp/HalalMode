@@ -14,7 +14,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 
-import { fetchMyProfileReadiness, setMySect, updateMyLocation, updateMyPreferences, updateMyProfile } from '@/api/profile';
+import { fetchMyProfileReadiness, setMyProfileDetails, setMySect, updateMyLocation, updateMyPreferences, updateMyProfile } from '@/api/profile';
+import { ETHNICITY_PROFILE, HAS_CHILDREN_PROFILE, asGroups, dressOptions } from '@/data/matchingOptions';
 import { buildGroups, buildLabel } from '@/components/you/PrivateTab';
 import { BUILD_OPTIONS , PRACTICE_LABELS, TIMELINE_LABELS } from '@/data/preferences';
 import {
@@ -141,6 +142,11 @@ export function ProfileTab({
   const [ownBuild, setOwnBuild] = useState<string | undefined>(preferences?.ownBuild ?? undefined);
   const [ownDirty, setOwnDirty] = useState(false);
   const [buildPicker, setBuildPicker] = useState(false);
+  // Matching answers about yourself, used by members' Premium filters.
+  const [hasChildren, setHasChildren] = useState<Profile['hasChildren']>(profile.hasChildren);
+  const [religiousDress, setReligiousDress] = useState<string | undefined>(profile.religiousDress);
+  const [ethnicity, setEthnicity] = useState<string | undefined>(profile.ethnicity);
+  const [detailPicker, setDetailPicker] = useState<'dress' | 'ethnicity' | null>(null);
   const [ownChecked, setOwnChecked] = useState(false);
   const heightMissing = !(Number(ownHeight) >= 140 && Number(ownHeight) <= 210);
   const buildMissing = !ownBuild;
@@ -315,6 +321,7 @@ export function ProfileTab({
       };
       if (USE_MOCKS && photosDirty) patch.photos = photos;
       await updateMyProfile(patch);
+      await setMyProfileDetails({ hasChildren, religiousDress, ethnicity });
       await updateMyPreferences({
         ownHeightCm: Number(ownHeight) || 0,
         ownWeightKg: Number(ownWeight) || 0,
@@ -1141,6 +1148,62 @@ export function ProfileTab({
               {t('profile.missingFields', { fields: t('profile.timing') })}
             </Text>
           ) : null}
+        </View>
+
+        <View style={styles.profileChoice}>
+          <Text variant="micro">{t('profile.hasChildren')}</Text>
+          <View style={styles.choiceChips}>
+            {HAS_CHILDREN_PROFILE.map((option) => (
+              <Chip
+                key={option.id}
+                label={optionLabel(option, language)}
+                selected={hasChildren === option.id}
+                onPress={() => { setHasChildren(option.id as Profile['hasChildren']); setOwnDirty(true); }}
+              />
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.profileChoice}>
+          <SelectField
+            label={t('profile.dress')}
+            value={religiousDress
+              ? optionLabel(dressOptions(profile.gender).find((o) => o.id === religiousDress) ?? { id: religiousDress, en: religiousDress, ar: religiousDress }, language)
+              : ''}
+            placeholder={t('profile.dress')}
+            onPress={() => setDetailPicker('dress')}
+          />
+          <PickerSheet
+            visible={detailPicker === 'dress'}
+            groups={asGroups(t('profile.dress'), dressOptions(profile.gender))}
+            selected={religiousDress ? [religiousDress] : []}
+            onChange={(next) => { setReligiousDress(next[0]); setOwnDirty(true); }}
+            onClose={() => setDetailPicker(null)}
+            title={t('profile.dress')}
+            eyebrow={t('profile.dress')}
+            searchLabel={t('profile.dress')}
+          />
+        </View>
+
+        <View style={styles.profileChoice}>
+          <SelectField
+            label={t('profile.ethnicity')}
+            value={ethnicity
+              ? optionLabel(ETHNICITY_PROFILE.find((o) => o.id === ethnicity) ?? { id: ethnicity, en: ethnicity, ar: ethnicity }, language)
+              : ''}
+            placeholder={t('profile.ethnicity')}
+            onPress={() => setDetailPicker('ethnicity')}
+          />
+          <PickerSheet
+            visible={detailPicker === 'ethnicity'}
+            groups={asGroups(t('profile.ethnicity'), ETHNICITY_PROFILE)}
+            selected={ethnicity ? [ethnicity] : []}
+            onChange={(next) => { setEthnicity(next[0]); setOwnDirty(true); }}
+            onClose={() => setDetailPicker(null)}
+            title={t('profile.ethnicity')}
+            eyebrow={t('profile.ethnicity')}
+            searchLabel={t('profile.ethnicity')}
+          />
         </View>
 
         <View style={styles.profileChoice}>
