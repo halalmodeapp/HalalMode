@@ -766,6 +766,8 @@ export const tr: TranslationCatalog = {
   'profile.readinessPhoto': 'net bir fotoğraf',
   'profile.readinessPreferences': 'eşleşme tercihlerinizi',
   'profile.openMatchingPreferences': 'Eşleşme tercihlerini aç',
+  'profile.childrenWhen': "Ne zaman çocuk istersiniz?",
+  'intro.about': "{{name}} hakkında",
   'filters.premiumTitle': "Premium filtreler",
   'filters.premiumBody': "Halal Mode Premium ile. Filtre yalnızca «Olmazsa olmaz» açıkken kişileri eler.",
   'filters.hasChildren': "Çocuğu var",

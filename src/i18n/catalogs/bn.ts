@@ -766,6 +766,8 @@ export const bn: TranslationCatalog = {
   'profile.readinessPhoto': 'একটি স্পষ্ট ছবি',
   'profile.readinessPreferences': 'আপনার ম্যাচিংয়ের পছন্দ',
   'profile.openMatchingPreferences': 'ম্যাচিংয়ের পছন্দ খুলুন',
+  'profile.childrenWhen': "আপনি কবে সন্তান চান?",
+  'intro.about': "{{name}} সম্পর্কে",
   'filters.premiumTitle': "প্রিমিয়াম ফিল্টার",
   'filters.premiumBody': "Halal Mode Premium-এর সঙ্গে। «আবশ্যক» চালু থাকলেই কেবল ফিল্টার কাউকে বাদ দেয়।",
   'filters.hasChildren': "সন্তান আছে",

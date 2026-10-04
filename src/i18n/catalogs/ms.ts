@@ -766,6 +766,8 @@ export const ms: TranslationCatalog = {
   'profile.readinessPhoto': 'foto yang jelas',
   'profile.readinessPreferences': 'pilihan padanan anda',
   'profile.openMatchingPreferences': 'Buka pilihan padanan',
+  'profile.childrenWhen': "Bilakah anda mahu mempunyai anak?",
+  'intro.about': "Tentang {{name}}",
   'filters.premiumTitle': "Penapis Premium",
   'filters.premiumBody': "Dengan Halal Mode Premium. Penapis hanya menapis orang apabila «Mesti» dihidupkan.",
   'filters.hasChildren': "Ada anak",

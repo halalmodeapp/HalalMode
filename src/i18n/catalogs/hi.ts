@@ -766,6 +766,8 @@ export const hi: TranslationCatalog = {
   'profile.readinessPhoto': 'एक साफ़ फ़ोटो',
   'profile.readinessPreferences': 'अपनी मैचिंग पसंद',
   'profile.openMatchingPreferences': 'मैचिंग पसंद खोलें',
+  'profile.childrenWhen': "आप संतान कब चाहेंगे?",
+  'intro.about': "{{name}} के बारे में",
   'filters.premiumTitle': "प्रीमियम फ़िल्टर",
   'filters.premiumBody': "Halal Mode Premium के साथ। फ़िल्टर किसी को तभी बाहर करता है जब «ज़रूरी» चालू हो।",
   'filters.hasChildren': "संतान है",

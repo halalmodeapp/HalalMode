@@ -766,6 +766,8 @@ export const id: TranslationCatalog = {
   'profile.readinessPhoto': 'foto yang jelas',
   'profile.readinessPreferences': 'preferensi pencocokan Anda',
   'profile.openMatchingPreferences': 'Buka preferensi pencocokan',
+  'profile.childrenWhen': "Kapan Anda ingin punya anak?",
+  'intro.about': "Tentang {{name}}",
   'filters.premiumTitle': "Filter Premium",
   'filters.premiumBody': "Dengan Halal Mode Premium. Filter hanya menyaring orang saat «Wajib» aktif.",
   'filters.hasChildren': "Punya anak",

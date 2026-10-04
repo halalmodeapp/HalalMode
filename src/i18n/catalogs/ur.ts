@@ -766,6 +766,8 @@ export const ur: TranslationCatalog = {
   'profile.readinessPhoto': 'ایک واضح تصویر',
   'profile.readinessPreferences': 'اپنی میچنگ ترجیحات',
   'profile.openMatchingPreferences': 'میچنگ ترجیحات کھولیں',
+  'profile.childrenWhen': "آپ اولاد کب چاہیں گے؟",
+  'intro.about': "{{name}} کے بارے میں",
   'filters.premiumTitle': "پریمیم فلٹرز",
   'filters.premiumBody': "Halal Mode Premium کے ساتھ۔ فلٹر کسی کو صرف تب خارج کرتا ہے جب «لازمی» آن ہو۔",
   'filters.hasChildren': "اولاد ہے",

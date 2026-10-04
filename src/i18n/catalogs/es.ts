@@ -766,6 +766,8 @@ export const es: TranslationCatalog = {
   'profile.readinessPhoto': 'una foto clara',
   'profile.readinessPreferences': 'tus preferencias',
   'profile.openMatchingPreferences': 'Abrir preferencias',
+  'profile.childrenWhen': "¿Cuándo te gustaría tener hijos?",
+  'intro.about': "Sobre {{name}}",
   'filters.premiumTitle': "Filtros Premium",
   'filters.premiumBody': "Con Halal Mode Premium. Un filtro solo descarta a alguien cuando «Imprescindible» está activado.",
   'filters.hasChildren': "Tiene hijos",

@@ -766,6 +766,8 @@ export const ha: TranslationCatalog = {
   'profile.readinessPhoto': 'hoto bayyananne',
   'profile.readinessPreferences': 'zaɓuɓɓukan haɗawa',
   'profile.openMatchingPreferences': 'Buɗe zaɓuɓɓukan haɗawa',
+  'profile.childrenWhen': "Yaushe kuke son haihuwa?",
+  'intro.about': "Game da {{name}}",
   'filters.premiumTitle': "Matatun Premium",
   'filters.premiumBody': "Tare da Halal Mode Premium. Matata tana cire mutane ne kawai idan «Dole» yana kunne.",
   'filters.hasChildren': "Yana da yara",

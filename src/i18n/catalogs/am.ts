@@ -766,6 +766,8 @@ export const am: TranslationCatalog = {
   'profile.readinessPhoto': 'ግልጽ ፎቶ',
   'profile.readinessPreferences': 'የማዛመጃ ምርጫዎችዎ',
   'profile.openMatchingPreferences': 'የማዛመጃ ምርጫዎችን ክፈት',
+  'profile.childrenWhen': "ልጆች መቼ ይፈልጋሉ?",
+  'intro.about': "ስለ {{name}}",
   'filters.premiumTitle': "የPremium ማጣሪያዎች",
   'filters.premiumBody': "ከHalal Mode Premium ጋር። ማጣሪያ ሰዎችን የሚያስወጣው «ግዴታ» ሲበራ ብቻ ነው።",
   'filters.hasChildren': "ልጅ አለው/አላት",

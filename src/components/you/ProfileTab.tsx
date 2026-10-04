@@ -147,12 +147,14 @@ export function ProfileTab({
   const [religiousDress, setReligiousDress] = useState<string | undefined>(profile.religiousDress);
   const [ethnicity, setEthnicity] = useState<string | undefined>(profile.ethnicity);
   const [detailPicker, setDetailPicker] = useState<'dress' | 'ethnicity' | null>(null);
+  const [familyGoals, setFamilyGoals] = useState<Profile['familyGoals'] | undefined>(profile.familyGoals);
   const [ownChecked, setOwnChecked] = useState(false);
   const heightMissing = !(Number(ownHeight) >= 140 && Number(ownHeight) <= 210);
   const buildMissing = !ownBuild;
   // The checklist names everything Save will ask for, including your own
   // height and build, so it never says "ready" while Save says "not yet".
-  const ownIncomplete = heightMissing || buildMissing;
+  const ownIncomplete = heightMissing || buildMissing || !hasChildren || !familyGoals
+    || !religiousDress || !ethnicity;
   const [updatingLocation, setUpdatingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locationExplainer, setLocationExplainer] = useState(false);
@@ -318,6 +320,7 @@ export function ProfileTab({
         languagesSpoken: values.languages,
         religiousPractice: values.religiousPractice,
         timeline: values.timeline,
+        ...(familyGoals ? { familyGoals } : {}),
       };
       if (USE_MOCKS && photosDirty) patch.photos = photos;
       await updateMyProfile(patch);
@@ -342,6 +345,11 @@ export function ProfileTab({
         religiousPractice: values.religiousPractice,
         sect: values.sect,
         timeline: values.timeline,
+        // Kept in the cached profile too, so the answers survive a tab switch.
+        hasChildren,
+        religiousDress,
+        ethnicity,
+        familyGoals: familyGoals ?? profile.familyGoals,
       };
       queryClient.setQueryData(queryKeys.profile('me'), saved);
       void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
@@ -364,6 +372,12 @@ export function ProfileTab({
   const ownMissingLabels = [
     heightMissing ? t('filters.yourHeight') : null,
     buildMissing ? t('filters.yourBodyType') : null,
+    !hasChildren ? t('profile.hasChildren') : null,
+    !familyGoals ? t('profile.childrenWhen') : null,
+    !religiousDress ? t('profile.dress') : null,
+    !ethnicity ? t('profile.ethnicity') : null,
+    !(draft.education ?? '').trim() ? t('filters.education') : null,
+    (draft.languages ?? []).length === 0 ? t('profile.languages') : null,
   ].filter((label): label is string => label !== null);
   const submit = useMemo(() => handleSubmit(
     (values) => {
@@ -383,7 +397,7 @@ export function ProfileTab({
       ].filter((label, index, all) => all.indexOf(label) === index));
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  ), [handleSubmit, save, t, ownHeight, ownBuild]);
+  ), [handleSubmit, save, t, ownHeight, ownBuild, hasChildren, familyGoals, religiousDress, ethnicity, draft.education, draft.languages]);
 
 
   const refreshDeviceLocation = useCallback(async () => {
@@ -966,7 +980,7 @@ export function ProfileTab({
           render={({ field }) => (
             <>
               <SelectField
-                label={t('profile.education')}
+                label={required(t('filters.education'))}
                 value={storedLabel(EDUCATION_GROUPS, field.value, language)}
                 placeholder={t('profile.educationPlaceholder')}
                 onPress={() => setPicking('education')}
@@ -1026,7 +1040,7 @@ export function ProfileTab({
           render={({ field }) => (
             <>
               <SelectField
-                label={t('profile.languages')}
+                label={required(t('profile.languages'))}
                 value={field.value.map((code) => languageName(code, language)).join(', ')}
                 placeholder={t('profile.languagesPlaceholder')}
                 onPress={() => setLanguagePicker(true)}
@@ -1151,8 +1165,8 @@ export function ProfileTab({
         </View>
 
         <View style={styles.profileChoice}>
-          <Text variant="micro">{t('profile.hasChildren')}</Text>
-          <View style={styles.choiceChips}>
+          <Text variant="micro">{required(t('profile.hasChildren'))}</Text>
+          <View style={[styles.choiceChips, ownChecked && !hasChildren && styles.choiceMissing]}>
             {HAS_CHILDREN_PROFILE.map((option) => (
               <Chip
                 key={option.id}
@@ -1165,8 +1179,23 @@ export function ProfileTab({
         </View>
 
         <View style={styles.profileChoice}>
+          <Text variant="micro">{required(t('profile.childrenWhen'))}</Text>
+          <View style={[styles.choiceChips, ownChecked && !familyGoals && styles.choiceMissing]}>
+            {FAMILY_CHOICES.map(([value, key]) => (
+              <Chip
+                key={value}
+                label={t(key)}
+                selected={familyGoals === value}
+                onPress={() => { setFamilyGoals(value); setOwnDirty(true); }}
+              />
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.profileChoice}>
           <SelectField
-            label={t('profile.dress')}
+            label={required(t('profile.dress'))}
+            error={ownChecked && !religiousDress ? ' ' : undefined}
             value={religiousDress
               ? optionLabel(dressOptions(profile.gender).find((o) => o.id === religiousDress) ?? { id: religiousDress, en: religiousDress, ar: religiousDress }, language)
               : ''}
@@ -1187,7 +1216,8 @@ export function ProfileTab({
 
         <View style={styles.profileChoice}>
           <SelectField
-            label={t('profile.ethnicity')}
+            label={required(t('profile.ethnicity'))}
+            error={ownChecked && !ethnicity ? ' ' : undefined}
             value={ethnicity
               ? optionLabel(ETHNICITY_PROFILE.find((o) => o.id === ethnicity) ?? { id: ethnicity, en: ethnicity, ar: ethnicity }, language)
               : ''}
@@ -1278,6 +1308,13 @@ export function ProfileTab({
 function splitProfileList(value: string): string[] {
   return [...new Set(value.split(',').map((item) => item.trim()).filter(Boolean))].slice(0, 8);
 }
+
+const FAMILY_CHOICES: [Profile['familyGoals'], TranslationKey][] = [
+  ['wants_children_soon', 'filters.children.soon'],
+  ['wants_children_later', 'filters.children.later'],
+  ['open_to_children', 'filters.children.open'],
+  ['no_children', 'filters.children.none'],
+];
 
 const FIELD_LABELS: Record<keyof FormValues, TranslationKey> = {
   name: 'profile.displayName',

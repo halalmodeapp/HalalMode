@@ -766,6 +766,8 @@ export const fa: TranslationCatalog = {
   'profile.readinessPhoto': 'یک عکس واضح',
   'profile.readinessPreferences': 'ترجیحات تطبیق',
   'profile.openMatchingPreferences': 'باز کردن ترجیحات تطبیق',
+  'profile.childrenWhen': "چه زمانی دوست دارید فرزند داشته باشید؟",
+  'intro.about': "دربارهٔ {{name}}",
   'filters.premiumTitle': "فیلترهای ویژه",
   'filters.premiumBody': "با Halal Mode Premium. فیلتر فقط وقتی «ضروری» روشن است کسی را کنار می‌گذارد.",
   'filters.hasChildren': "دارای فرزند",

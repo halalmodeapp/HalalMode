@@ -18,6 +18,7 @@ import { useRound } from '@/state/round';
 import { alpha, color, radius, space } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
 import { occupationLabel } from '@/data/occupations';
+import { profileDetailLines } from '@/lib/profileDetails';
 
 export default function IntroductionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -122,6 +123,22 @@ export default function IntroductionDetailScreen() {
               durationSeconds={profile.audioDurationSeconds}
               url={profile.audioGreetingUrl}
             />
+          </View>
+        ) : null}
+
+        {/* What they said about themselves: the same answers the Premium
+            filters use, shown to everyone they are introduced to. */}
+        {profileDetailLines(profile, t, language).length > 0 ? (
+          <View style={styles.agreementBlock}>
+            <Text variant="micro">{t('intro.about', { name: profile.firstName })}</Text>
+            <View style={styles.agreementList}>
+              {profileDetailLines(profile, t, language).map((line) => (
+                <View key={line.label} style={[styles.agreementRow, isRTL && styles.rowRTL]}>
+                  <Text variant="bodySmall">{line.label}</Text>
+                  <Text variant="label" style={styles.agreementValue}>{line.value}</Text>
+                </View>
+              ))}
+            </View>
           </View>
         ) : null}
 

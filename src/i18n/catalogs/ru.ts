@@ -766,6 +766,8 @@ export const ru: TranslationCatalog = {
   'profile.readinessPhoto': 'чёткое фото',
   'profile.readinessPreferences': 'критерии подбора',
   'profile.openMatchingPreferences': 'Открыть критерии подбора',
+  'profile.childrenWhen': "Когда вы хотели бы детей?",
+  'intro.about': "О себе: {{name}}",
   'filters.premiumTitle': "Премиум-фильтры",
   'filters.premiumBody': "С Halal Mode Premium. Фильтр исключает людей, только если включено «Обязательно».",
   'filters.hasChildren': "Есть дети",

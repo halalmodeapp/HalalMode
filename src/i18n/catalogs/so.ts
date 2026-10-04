@@ -766,6 +766,8 @@ export const so: TranslationCatalog = {
   'profile.readinessPhoto': 'sawir cad',
   'profile.readinessPreferences': 'doorbidyada isku-aadka',
   'profile.openMatchingPreferences': 'Fur doorbidyada isku-aadka',
+  'profile.childrenWhen': "Goorma ayaad jeclaan lahayd carruur?",
+  'intro.about': "Ku saabsan {{name}}",
   'filters.premiumTitle': "Shaandhooyinka Premium",
   'filters.premiumBody': "Halal Mode Premium. Shaandhadu qof kama saarto ilaa «Waa lagama maarmaan» shidan yahay.",
   'filters.hasChildren': "Carruur leh",
