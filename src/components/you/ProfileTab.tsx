@@ -151,10 +151,6 @@ export function ProfileTab({
   const [ownChecked, setOwnChecked] = useState(false);
   const heightMissing = !(Number(ownHeight) >= 140 && Number(ownHeight) <= 210);
   const buildMissing = !ownBuild;
-  // The checklist names everything Save will ask for, including your own
-  // height and build, so it never says "ready" while Save says "not yet".
-  const ownIncomplete = heightMissing || buildMissing || !hasChildren || !familyGoals
-    || !religiousDress || !ethnicity;
   const [updatingLocation, setUpdatingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locationExplainer, setLocationExplainer] = useState(false);
@@ -187,6 +183,19 @@ export function ProfileTab({
     },
   });
   const draft = useWatch({ control });
+  // Everything Save asks for about you, named the same way in the checklist at
+  // the top and beside Save, so the two never disagree.
+  const ownMissingLabels = [
+    heightMissing ? t('profile.todo.height') : null,
+    buildMissing ? t('profile.todo.bodyType') : null,
+    !hasChildren ? t('profile.todo.hasChildren') : null,
+    !familyGoals ? t('profile.todo.childrenWhen') : null,
+    !religiousDress ? t('profile.dress') : null,
+    !ethnicity ? t('profile.ethnicity') : null,
+    !(draft.education ?? '').trim() ? t('filters.education') : null,
+    (draft.languages ?? []).length === 0 ? t('profile.languages') : null,
+  ].filter((label): label is string => label !== null);
+  const ownIncomplete = ownMissingLabels.length > 0;
   const draftReadiness = useMemo(
     () => getProfileReadiness({
       firstName: draft.name,
@@ -369,16 +378,6 @@ export function ProfileTab({
    * filled), and the list beside the button names them, rather than refusing
    * silently as the old button did.
    */
-  const ownMissingLabels = [
-    heightMissing ? t('filters.yourHeight') : null,
-    buildMissing ? t('filters.yourBodyType') : null,
-    !hasChildren ? t('profile.hasChildren') : null,
-    !familyGoals ? t('profile.childrenWhen') : null,
-    !religiousDress ? t('profile.dress') : null,
-    !ethnicity ? t('profile.ethnicity') : null,
-    !(draft.education ?? '').trim() ? t('filters.education') : null,
-    (draft.languages ?? []).length === 0 ? t('profile.languages') : null,
-  ].filter((label): label is string => label !== null);
   const submit = useMemo(() => handleSubmit(
     (values) => {
       setOwnChecked(true);
@@ -669,6 +668,17 @@ export function ProfileTab({
       });
   };
 
+  const checklist = (labels: string[]) => (
+    <View style={styles.checklist}>
+      {labels.map((label) => (
+        <View key={label} style={[styles.checkItem, isRTL && styles.rowRTL]}>
+          <View style={styles.checkBox} />
+          <Text variant="label" style={styles.checkLabel}>{label}</Text>
+        </View>
+      ))}
+    </View>
+  );
+
   return (
     <View style={[styles.wrap, isRTL && styles.rtl]}>
       <View style={styles.stack}>
@@ -680,17 +690,24 @@ export function ProfileTab({
           </Text>
         ) : (
           // One line per thing still needed, rather than a sentence to decode.
-          <View style={styles.checklist}>
-            {[
-              ...readiness.missing.map((item) => t(readinessKey[item])),
-              ...(ownIncomplete ? [t('filters.yourTitle')] : []),
-            ].map((label) => (
-              <View key={label} style={[styles.checkItem, isRTL && styles.rowRTL]}>
-                <View style={styles.checkBox} />
-                <Text variant="label" style={styles.checkLabel}>{label}</Text>
-              </View>
-            ))}
-          </View>
+          // What stops introductions comes first and says so; the rest is
+          // needed to complete the profile but does not hold introductions.
+          <>
+            {!readiness.ready ? (
+              <>
+                <Text variant="caption" style={styles.readinessBody}>{t('profile.introsBlocked')}</Text>
+                {checklist(readiness.missing.map((item) => sentenceCase(t(readinessKey[item]), language)))}
+              </>
+            ) : null}
+            {ownIncomplete ? (
+              <>
+                <Text variant="caption" style={[styles.readinessBody, !readiness.ready && styles.checklistGap]}>
+                  {readiness.ready ? t('profile.introsOnStillNeeded') : t('profile.alsoNeeded')}
+                </Text>
+                {checklist(ownMissingLabels)}
+              </>
+            ) : null}
+          </>
         )}
         {save.isPending ? (
           <Text variant="caption" style={styles.readinessBody}>{t('common.saving')}</Text>
@@ -1383,6 +1400,11 @@ function timelineLabel(value: MarriageTimeline, t: Translate): string {
   return t(keys[value]);
 }
 
+/** The readiness labels are written to sit mid-sentence; a list item starts a line. */
+function sentenceCase(text: string, language: string): string {
+  return text.charAt(0).toLocaleUpperCase(language) + text.slice(1);
+}
+
 const readinessKey: Record<ProfileReadinessIssue, 'profile.readinessName' | 'profile.readinessLocation' | 'profile.readinessBio' | 'profile.readinessPhoto' | 'profile.readinessPreferences'> = {
   name: 'profile.readinessName',
   location: 'profile.readinessLocation',
@@ -1557,6 +1579,7 @@ const styles = StyleSheet.create({
   column: { flex: 1, gap: 14 },
   stack: { gap: 14 },
   checklist: { gap: 8, marginTop: 10 },
+  checklistGap: { marginTop: 14 },
   checkItem: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   checkBox: { width: 16, height: 16, borderRadius: 4, borderWidth: 1.5, borderColor: color.gold },
   checkLabel: { flex: 1 },
