@@ -3,7 +3,7 @@ import type { CatalogGroup, CatalogOption } from './catalogOption';
 
 /**
  * Option lists for the Premium filters and the matching answers on a profile.
- * The ids must match the checks in migration 0171.
+ * The ids must match the checks in migration 0171 (ethnicity: 0174, src/data/ethnicities.ts).
  */
 
 type Langs = NonNullable<CatalogOption['t']>;
@@ -27,7 +27,7 @@ export const ETHNICITY_OPTIONS: CatalogOption[] = [
   O('other', 'Other', 'أخرى', { ur: 'دیگر', fa: 'دیگر', hi: 'अन्य', id: 'Lainnya', ms: 'Lain-lain', bn: 'অন্যান্য', fr: 'Autre', tr: 'Diğer', ha: 'Wani', am: 'ሌላ', so: 'Kale', es: 'Otro', ru: 'Другое', 'zh-Hans': '其他' }),
 ];
 
-const UNSTATED = O('prefer_not_to_say', 'Prefer not to say', 'أفضل عدم الإفصاح', { ur: 'بتانا نہیں چاہتا', fa: 'ترجیح می‌دهم نگویم', hi: 'नहीं बताना चाहते', id: 'Memilih tidak menyebutkan', ms: 'Memilih untuk tidak menyatakan', bn: 'বলতে চাই না', fr: 'Je préfère ne pas le dire', tr: 'Belirtmek istemiyorum', ha: 'Na fi son kada in faɗa', am: 'መናገር አልፈልግም', so: 'Ma doonayo inaan sheego', es: 'Prefiero no decirlo', ru: 'Предпочитаю не указывать', 'zh-Hans': '不愿透露' });
+export const UNSTATED = O('prefer_not_to_say', 'Prefer not to say', 'أفضل عدم الإفصاح', { ur: 'بتانا نہیں چاہتا', fa: 'ترجیح می‌دهم نگویم', hi: 'नहीं बताना चाहते', id: 'Memilih tidak menyebutkan', ms: 'Memilih untuk tidak menyatakan', bn: 'বলতে চাই না', fr: 'Je préfère ne pas le dire', tr: 'Belirtmek istemiyorum', ha: 'Na fi son kada in faɗa', am: 'መናገር አልፈልግም', so: 'Ma doonayo inaan sheego', es: 'Prefiero no decirlo', ru: 'Предпочитаю не указывать', 'zh-Hans': '不愿透露' });
 
 const NO_DRESS = O('no_religious_dress', 'No religious dress', 'بلا لباس ديني', { ur: 'کوئی مذہبی لباس نہیں', fa: 'بدون پوشش مذهبی', hi: 'कोई धार्मिक पहनावा नहीं', id: 'Tidak berpakaian religius', ms: 'Tiada pakaian keagamaan', bn: 'কোনো ধর্মীয় পোশাক নয়', fr: 'Pas de tenue religieuse', tr: 'Dini kıyafet yok', ha: 'Babu suturar addini', am: 'ሃይማኖታዊ አለባበስ የለም', so: 'Dhar diimeed ma leh', es: 'Sin vestimenta religiosa', ru: 'Без религиозной одежды', 'zh-Hans': '不穿宗教服饰' });
 
@@ -58,7 +58,6 @@ export const HAS_CHILDREN_OPTIONS: CatalogOption[] = [
 
 /** On a profile, "prefer not to say" is a real answer; in a filter it is not offered. */
 export const HAS_CHILDREN_PROFILE: CatalogOption[] = [...HAS_CHILDREN_OPTIONS, UNSTATED];
-export const ETHNICITY_PROFILE: CatalogOption[] = [...ETHNICITY_OPTIONS, UNSTATED];
 
 /** A flat list as a single picker group, labelled with the field's own title. */
 export function asGroups(title: string, options: CatalogOption[]): CatalogGroup[] {

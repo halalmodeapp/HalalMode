@@ -3,7 +3,8 @@ import type { TranslationKey } from '@/i18n/catalog';
 import type { AppLocale } from '@/i18n/locales';
 import { optionLabel, storedLabel } from '@/data/catalogOption';
 import { EDUCATION_GROUPS } from '@/data/educationLevels';
-import { ETHNICITY_PROFILE, HAS_CHILDREN_PROFILE, dressOptions } from '@/data/matchingOptions';
+import { HAS_CHILDREN_PROFILE, dressOptions } from '@/data/matchingOptions';
+import { findEthnicity } from '@/data/ethnicities';
 import { SECT_GROUPS } from '@/data/sects';
 import { languageName } from '@/data/spokenLanguages';
 import type { Profile } from '@/types';
@@ -52,7 +53,7 @@ export function profileDetailLines(profile: Profile, t: Translate, language: App
 
   const dress = dressOptions(profile.gender).find((o) => o.id === profile.religiousDress);
   add('profile.dress', dress ? optionLabel(dress, language) : undefined);
-  const ethnicity = ETHNICITY_PROFILE.find((o) => o.id === profile.ethnicity && o.id !== 'prefer_not_to_say');
+  const ethnicity = profile.ethnicity !== 'prefer_not_to_say' ? findEthnicity(profile.ethnicity) : undefined;
   add('profile.ethnicity', ethnicity ? optionLabel(ethnicity, language) : undefined);
 
   add('filters.education', profile.education ? storedLabel(EDUCATION_GROUPS, profile.education, language) : undefined);

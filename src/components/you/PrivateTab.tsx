@@ -34,7 +34,8 @@ import { SECT_GROUPS, isSectDetail, sectOf } from '@/data/sects';
 import { EDUCATION_GROUPS } from '@/data/educationLevels';
 import { OCCUPATION_GROUPS } from '@/data/occupations';
 import { LANGUAGE_GROUPS } from '@/data/spokenLanguages';
-import { ETHNICITY_OPTIONS, HAS_CHILDREN_OPTIONS, asGroups, dressOptions } from '@/data/matchingOptions';
+import { HAS_CHILDREN_OPTIONS, asGroups, dressOptions } from '@/data/matchingOptions';
+import { ETHNICITY_GROUPS } from '@/data/ethnicities';
 import { showNotice } from '@/lib/notice';
 import { useSession } from '@/state/session';
 import { alpha, color, font, radius } from '@/theme/tokens';
@@ -464,7 +465,7 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
           {premiumPicker('languages', t('filters.languages'), LANGUAGE_GROUPS, 'preferredLanguages')}
           {premiumPicker('education', t('filters.education'), EDUCATION_GROUPS, 'preferredEducation')}
           {premiumPicker('dress', t('filters.dress'), asGroups(t('filters.dress'), dressOptions(partnerGender)), 'preferredDress')}
-          {premiumPicker('ethnicities', t('filters.ethnicity'), asGroups(t('filters.ethnicity'), ETHNICITY_OPTIONS), 'preferredEthnicities')}
+          {premiumPicker('ethnicities', t('filters.ethnicity'), ETHNICITY_GROUPS, 'preferredEthnicities')}
             </View>
             {!isPremium ? (
               <Pressable

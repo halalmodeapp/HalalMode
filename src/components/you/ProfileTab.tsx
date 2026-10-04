@@ -15,7 +15,8 @@ import { Alert, Linking, Platform, Pressable, StyleSheet, View } from 'react-nat
 import { z } from 'zod';
 
 import { fetchMyProfileReadiness, setMyProfileDetails, setMySect, updateMyLocation, updateMyPreferences, updateMyProfile } from '@/api/profile';
-import { ETHNICITY_PROFILE, HAS_CHILDREN_PROFILE, asGroups, dressOptions } from '@/data/matchingOptions';
+import { HAS_CHILDREN_PROFILE, asGroups, dressOptions } from '@/data/matchingOptions';
+import { ETHNICITY_PROFILE_GROUPS, findEthnicity } from '@/data/ethnicities';
 import { buildGroups, buildLabel } from '@/components/you/PrivateTab';
 import { BUILD_OPTIONS , PRACTICE_LABELS, TIMELINE_LABELS } from '@/data/preferences';
 import {
@@ -1218,14 +1219,14 @@ export function ProfileTab({
             label={required(t('profile.ethnicity'))}
             error={ownChecked && !ethnicity ? ' ' : undefined}
             value={ethnicity
-              ? optionLabel(ETHNICITY_PROFILE.find((o) => o.id === ethnicity) ?? { id: ethnicity, en: ethnicity, ar: ethnicity }, language)
+              ? optionLabel(findEthnicity(ethnicity) ?? { id: ethnicity, en: ethnicity, ar: ethnicity }, language)
               : ''}
             placeholder={t('profile.ethnicity')}
             onPress={() => setDetailPicker('ethnicity')}
           />
           <PickerSheet
             visible={detailPicker === 'ethnicity'}
-            groups={asGroups(t('profile.ethnicity'), ETHNICITY_PROFILE)}
+            groups={ETHNICITY_PROFILE_GROUPS}
             selected={ethnicity ? [ethnicity] : []}
             onChange={(next) => { setEthnicity(next[0]); setOwnDirty(true); }}
             onClose={() => setDetailPicker(null)}
