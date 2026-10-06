@@ -756,6 +756,7 @@ export const id: TranslationCatalog = {
   'profile.readinessPhoto': 'foto yang jelas',
   'profile.readinessPreferences': 'preferensi pencocokan Anda',
   'profile.openMatchingPreferences': 'Buka preferensi pencocokan',
+  'legal.sensitiveConsent': "Saya secara tegas menyetujui Halal Mode menggunakan keyakinan agama dan etnis saya untuk ditampilkan di profil dan untuk perkenalan, sebagaimana dijelaskan dalam Pemberitahuan Privasi. Saya dapat menariknya kapan saja.",
   'profile.heritage': "Asal-usul",
   'profile.heritageHint': "Hingga 3 negara asal Anda atau keluarga Anda",
   'profile.ethnicityHint': "Pilih hingga 2 jika Anda berdarah campuran",

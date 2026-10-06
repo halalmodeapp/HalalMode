@@ -19,7 +19,7 @@ import { Text } from '@/components/ui/Text';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n, type Translate } from '@/i18n';
 import { requireSupabase } from '@/lib/supabase';
-import { fetchMyLegalConsentStatus } from '@/api/legalConsent';
+import { fetchMyLegalConsentStatus, recordSensitiveConsent } from '@/api/legalConsent';
 import { documentFromStatus, type LegalConsentStatus } from '@/lib/legalConsent';
 import { queryKeys } from '@/lib/queryClient';
 import { PermissionExplainer } from '@/components/ui/PermissionExplainer';
@@ -96,6 +96,7 @@ export default function OnboardingScreen() {
   const [locationBlocked, setLocationBlocked] = useState(false);
   const [ageConfirmationOpen, setAgeConfirmationOpen] = useState(false);
   const [legalAccepted, setLegalAccepted] = useState(false);
+  const [sensitiveAccepted, setSensitiveAccepted] = useState(false);
   const legalStatusQuery = useQuery({
     queryKey: queryKeys.legalConsent,
     queryFn: fetchMyLegalConsentStatus,
@@ -239,9 +240,9 @@ export default function OnboardingScreen() {
       }),
       {}
     );
-    if (!legalAccepted) allErrors.legal = t('onboarding.error.legal');
+    if (!legalAccepted || !sensitiveAccepted) allErrors.legal = t('onboarding.error.legal');
     if (!terms || !privacy) allErrors.legal = t('onboarding.legalUnavailable');
-    if (Object.keys(allErrors).length > 0 || !birthDate || !draft.gender || !legalAccepted || !terms || !privacy) {
+    if (Object.keys(allErrors).length > 0 || !birthDate || !draft.gender || !legalAccepted || !sensitiveAccepted || !terms || !privacy) {
       setErrors(allErrors);
       setSubmitError(t('onboarding.submitCheck'));
       return;
@@ -263,6 +264,7 @@ export default function OnboardingScreen() {
         p_privacy_version: privacy.version,
       });
       if (error) throw error;
+      await recordSensitiveConsent().catch(() => undefined);
       await clearOnboardingDraft(draftMemberId);
       // Everything fetched before this moment was fetched about somebody who did
       // not exist yet, and is cached for five minutes. Two of those answers did
@@ -361,6 +363,8 @@ export default function OnboardingScreen() {
               birthDate={birthDate}
               legalAccepted={legalAccepted}
               onLegalAcceptedChange={setLegalAccepted}
+              sensitiveAccepted={sensitiveAccepted}
+              onSensitiveAcceptedChange={setSensitiveAccepted}
               legalError={errors.legal}
               legalStatus={legalStatusQuery.data}
               legalStatusError={legalStatusQuery.isError}
@@ -627,6 +631,8 @@ function ReviewStep({
   birthDate,
   legalAccepted,
   onLegalAcceptedChange,
+  sensitiveAccepted,
+  onSensitiveAcceptedChange,
   legalError,
   legalStatus,
   legalStatusError,
@@ -636,6 +642,8 @@ function ReviewStep({
   birthDate: string | null;
   legalAccepted: boolean;
   onLegalAcceptedChange: (value: boolean) => void;
+  sensitiveAccepted: boolean;
+  onSensitiveAcceptedChange: (value: boolean) => void;
   legalError?: string;
   legalStatus?: LegalConsentStatus;
   legalStatusError: boolean;
@@ -677,6 +685,19 @@ function ReviewStep({
           {legalAccepted ? <Text style={styles.legalCheckMark}>✓</Text> : null}
         </View>
         <Text variant="caption" style={styles.legalConsentText}>{t('onboarding.legalConsent')}</Text>
+      </Pressable>
+      <Pressable
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: sensitiveAccepted, disabled: !legalDocumentsReady }}
+        accessibilityLabel={t('legal.sensitiveConsent')}
+        disabled={!legalDocumentsReady}
+        onPress={() => onSensitiveAcceptedChange(!sensitiveAccepted)}
+        style={[styles.legalConsent, isRTL && styles.rowReverse, sensitiveAccepted && styles.legalConsentSelected]}
+      >
+        <View style={[styles.legalCheck, sensitiveAccepted && styles.legalCheckSelected]}>
+          {sensitiveAccepted ? <Text style={styles.legalCheckMark}>✓</Text> : null}
+        </View>
+        <Text variant="caption" style={styles.legalConsentText}>{t('legal.sensitiveConsent')}</Text>
       </Pressable>
       <View style={[styles.legalLinks, isRTL && styles.rowReverse]}>
         <Pressable disabled={!terms} accessibilityRole="link" accessibilityLabel={t('onboarding.termsLink')} onPress={() => terms && void Linking.openURL(terms.url)}>

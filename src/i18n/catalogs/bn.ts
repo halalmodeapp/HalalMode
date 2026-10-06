@@ -756,6 +756,7 @@ export const bn: TranslationCatalog = {
   'profile.readinessPhoto': 'একটি স্পষ্ট ছবি',
   'profile.readinessPreferences': 'আপনার ম্যাচিংয়ের পছন্দ',
   'profile.openMatchingPreferences': 'ম্যাচিংয়ের পছন্দ খুলুন',
+  'legal.sensitiveConsent': "গোপনীয়তা নোটিশে যেমন বলা আছে, আমার প্রোফাইলে দেখাতে ও পরিচিতি করাতে হালাল মোড আমার ধর্মীয় বিশ্বাস ও জাতিগত পরিচয় ব্যবহার করতে পারে—এতে আমি স্পষ্টভাবে সম্মতি দিচ্ছি। আমি যেকোনো সময় তা প্রত্যাহার করতে পারি।",
   'profile.heritage': "বংশপরিচয়",
   'profile.heritageHint': "আপনি বা আপনার পরিবার যে দেশগুলো থেকে এসেছেন, সর্বোচ্চ ৩টি",
   'profile.ethnicityHint': "মিশ্র বংশোদ্ভূত হলে সর্বোচ্চ ২টি বেছে নিন",

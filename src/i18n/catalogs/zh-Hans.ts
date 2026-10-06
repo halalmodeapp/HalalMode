@@ -756,6 +756,7 @@ export const zhHans: TranslationCatalog = {
   'profile.readinessPhoto': '一张清晰的照片',
   'profile.readinessPreferences': '您的匹配偏好',
   'profile.openMatchingPreferences': '打开匹配偏好',
+  'legal.sensitiveConsent': "我明确同意 Halal Mode 按照《隐私声明》的说明，使用我的宗教信仰和民族信息在我的资料中展示并进行介绍。我可以随时撤回此同意。",
   'profile.heritage': "祖籍",
   'profile.heritageHint': "您或家人来自的国家，最多 3 个",
   'profile.ethnicityHint': "如为混血，最多选择 2 项",

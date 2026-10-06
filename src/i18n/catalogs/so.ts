@@ -756,6 +756,7 @@ export const so: TranslationCatalog = {
   'profile.readinessPhoto': 'sawir cad',
   'profile.readinessPreferences': 'doorbidyada isku-aadka',
   'profile.openMatchingPreferences': 'Fur doorbidyada isku-aadka',
+  'legal.sensitiveConsent': "Si cad ayaan u oggolaaday in Halal Mode ay isticmaasho caqiidadayda diimeed iyo qowmiyaddayda si loogu muujiyo boggayga loona sameeyo isbarasho, sida Ogeysiiska Asturnaanta sharraxayo. Waan ka noqon karaa wakhti kasta.",
   'profile.heritage': "Asal",
   'profile.heritageHint': "Ilaa 3 dal oo adiga ama qoyskaagu ka soo jeedaan",
   'profile.ethnicityHint': "Dooro ilaa 2 haddii asalkaagu isku dhafan yahay",

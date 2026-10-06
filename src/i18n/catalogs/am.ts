@@ -756,6 +756,7 @@ export const am: TranslationCatalog = {
   'profile.readinessPhoto': 'ግልጽ ፎቶ',
   'profile.readinessPreferences': 'የማዛመጃ ምርጫዎችዎ',
   'profile.openMatchingPreferences': 'የማዛመጃ ምርጫዎችን ክፈት',
+  'legal.sensitiveConsent': "ሃላል ሞድ ሃይማኖታዊ እምነቴንና ብሔሬን በመገለጫዬ ላይ ለማሳየትና መግቢያዎችን ለማድረግ እንዲጠቀም በግልጽ እስማማለሁ፣ የግላዊነት ማሳሰቢያው እንደሚያብራራው። ይህን በማንኛውም ጊዜ መሰረዝ እችላለሁ።",
   'profile.heritage': "የትውልድ ሐረግ",
   'profile.heritageHint': "እርስዎ ወይም ቤተሰብዎ የመጣችሁባቸው እስከ 3 አገሮች",
   'profile.ethnicityHint': "የተቀላቀለ ዝርያ ካለዎት እስከ 2 ይምረጡ",

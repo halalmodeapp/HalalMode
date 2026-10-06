@@ -756,6 +756,7 @@ export const ms: TranslationCatalog = {
   'profile.readinessPhoto': 'foto yang jelas',
   'profile.readinessPreferences': 'pilihan padanan anda',
   'profile.openMatchingPreferences': 'Buka pilihan padanan',
+  'legal.sensitiveConsent': "Saya secara jelas bersetuju Halal Mode menggunakan kepercayaan agama dan etnik saya untuk dipaparkan pada profil dan untuk perkenalan, seperti yang diterangkan dalam Notis Privasi. Saya boleh menarik balik persetujuan ini pada bila-bila masa.",
   'profile.heritage': "Asal usul",
   'profile.heritageHint': "Sehingga 3 negara asal anda atau keluarga anda",
   'profile.ethnicityHint': "Pilih sehingga 2 jika anda berketurunan campuran",

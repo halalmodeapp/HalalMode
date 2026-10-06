@@ -756,6 +756,7 @@ export const ru: TranslationCatalog = {
   'profile.readinessPhoto': 'чёткое фото',
   'profile.readinessPreferences': 'критерии подбора',
   'profile.openMatchingPreferences': 'Открыть критерии подбора',
+  'legal.sensitiveConsent': "Я даю явное согласие на то, чтобы Halal Mode использовал мои религиозные убеждения и этническую принадлежность для показа в профиле и для знакомств, как описано в Уведомлении о конфиденциальности. Я могу отозвать его в любое время.",
   'profile.heritage': "Происхождение",
   'profile.heritageHint': "До 3 стран, откуда вы или ваша семья",
   'profile.ethnicityHint': "Выберите до 2, если у вас смешанное происхождение",

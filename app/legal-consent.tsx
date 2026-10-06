@@ -25,6 +25,8 @@ export default function LegalConsentScreen() {
   const { t, isRTL, localeTag } = useI18n();
   const queryClient = useQueryClient();
   const [accepted, setAccepted] = useState(false);
+  // Separate on purpose: explicit consent may not be bundled with the terms.
+  const [sensitiveAccepted, setSensitiveAccepted] = useState(false);
   const statusQuery = useQuery({
     queryKey: queryKeys.legalConsent,
     queryFn: fetchMyLegalConsentStatus,
@@ -119,10 +121,24 @@ export default function LegalConsentScreen() {
           <Text variant="bodySmall" style={styles.consentText}>{t('legal.consent')}</Text>
         </Pressable>
 
+        <Pressable
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: sensitiveAccepted, disabled: acceptance.isPending }}
+          accessibilityLabel={t('legal.sensitiveConsent')}
+          disabled={acceptance.isPending}
+          onPress={() => setSensitiveAccepted((current) => !current)}
+          style={[styles.consent, isRTL && styles.rowReverse, sensitiveAccepted && styles.consentSelected]}
+        >
+          <View style={[styles.check, sensitiveAccepted && styles.checkSelected]}>
+            {sensitiveAccepted ? <Text style={styles.checkMark}>✓</Text> : null}
+          </View>
+          <Text variant="bodySmall" style={styles.consentText}>{t('legal.sensitiveConsent')}</Text>
+        </Pressable>
+
         <Button
           testID={testIds.legal.submit}
           label={t('legal.accept')}
-          disabled={!accepted}
+          disabled={!accepted || !sensitiveAccepted}
           loading={acceptance.isPending}
           onPress={() => acceptance.mutate()}
         />

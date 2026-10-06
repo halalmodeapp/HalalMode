@@ -756,6 +756,7 @@ export const hi: TranslationCatalog = {
   'profile.readinessPhoto': 'एक साफ़ फ़ोटो',
   'profile.readinessPreferences': 'अपनी मैचिंग पसंद',
   'profile.openMatchingPreferences': 'मैचिंग पसंद खोलें',
+  'legal.sensitiveConsent': "मैं स्पष्ट रूप से सहमति देता/देती हूँ कि हलाल मोड मेरी धार्मिक आस्था और जातीयता को मेरी प्रोफ़ाइल पर दिखाने और परिचय कराने के लिए उपयोग करे, जैसा गोपनीयता सूचना में बताया गया है। मैं इसे कभी भी वापस ले सकता/सकती हूँ।",
   'profile.heritage': "विरासत",
   'profile.heritageHint': "आप या आपका परिवार जिन देशों से हैं, अधिकतम 3",
   'profile.ethnicityHint': "मिश्रित विरासत हो तो अधिकतम 2 चुनें",

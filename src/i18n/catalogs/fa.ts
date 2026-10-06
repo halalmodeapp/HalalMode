@@ -756,6 +756,7 @@ export const fa: TranslationCatalog = {
   'profile.readinessPhoto': 'یک عکس واضح',
   'profile.readinessPreferences': 'ترجیحات تطبیق',
   'profile.openMatchingPreferences': 'باز کردن ترجیحات تطبیق',
+  'legal.sensitiveConsent': "صراحتاً موافقت می‌کنم که حلال مود باورهای دینی و قومیت مرا برای نمایش در نمایه‌ام و انجام معرفی‌ها به کار ببرد، همان‌طور که اطلاعیه حریم خصوصی توضیح می‌دهد. هر زمان می‌توانم آن را پس بگیرم.",
   'profile.heritage': "تبار",
   'profile.heritageHint': "حداکثر ۳ کشوری که شما یا خانواده‌تان از آنجا هستید",
   'profile.ethnicityHint': "اگر تبار مختلط دارید تا ۲ مورد انتخاب کنید",

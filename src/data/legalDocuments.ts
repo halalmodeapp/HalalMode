@@ -11,7 +11,14 @@
  * that is what members' acceptance is recorded against.
  */
 
-export const LEGAL_VERSION = '2026-10-04';
+export const LEGAL_VERSION = '2026-10-06';
+
+/** Who runs the service. Shown in both documents and on halalmo.de/impressum. */
+export const OPERATOR = {
+  name: 'Halal Mode LLC',
+  address: '1209 Mountain Road Pl NE, Ste R, Albuquerque, NM 87110, USA',
+  email: 'hello@halalmo.de',
+};
 
 export interface LegalSection {
   heading: string;
@@ -31,7 +38,7 @@ export const TERMS: LegalDocument = {
   title: 'Terms of Service',
   updated: LEGAL_VERSION,
   intro:
-    'Halal Mode introduces a small number of people to each other each day, for the purpose of marriage. These terms explain what we promise you, and what we ask of you in return.',
+    'Halal Mode introduces a small number of people to each other each day, for the purpose of marriage. These terms explain what we promise you, and what we ask of you in return. Halal Mode is run by Halal Mode LLC, 1209 Mountain Road Pl NE, Ste R, Albuquerque, NM 87110, USA.',
   sections: [
     {
       heading: 'Who can use Halal Mode',
@@ -66,6 +73,8 @@ export const TERMS: LegalDocument = {
         'You can block or report anyone you have been introduced to, at any time — even before accepting updated terms. Blocking is immediate and the other person is not told.',
         'If you choose not to see someone again, you are hidden from them too.',
         'We may suspend or remove an account that breaks these terms or puts other members at risk. Where we can, we will tell you why.',
+        'New photographs and changes to your bio are checked automatically for breaches of these terms, with the help of an AI service. A photograph that clearly breaks them is taken off your profile; anything uncertain is decided by a person. Reports are always read by a person.',
+        'If we remove content or restrict your account, you can ask us to look again by writing to hello@halalmo.de within six months. Someone who was not involved in the first decision will review it.',
         'Halal Mode is an introduction service. We do not verify identity, background, or intentions, and we cannot guarantee anyone’s honesty. Take the same care you would take meeting anyone new. Meet in public, tell someone where you are going, and involve your family as you see fit.',
       ],
     },
@@ -73,15 +82,30 @@ export const TERMS: LegalDocument = {
       heading: 'Your account',
       body: [
         'You can pause your profile or close your account at any time, from Settings.',
-        'Closing your account hides your profile at once. After a short recovery period your profile, photos, preferences, and messages are removed. Some records are kept where the law requires it, or where they are needed to keep other members safe — for example a report made by or about you.',
+        'Closing your account hides your profile at once. After a 30-day recovery period your profile, photos, preferences, and messages are removed. Some records are kept where the law requires it, or where they are needed to keep other members safe — for example a report made by or about you.',
       ],
     },
     {
       heading: 'Payment',
       body: [
         'Halal Mode Premium is an optional paid membership. Prices are shown before you pay.',
-        'Payment is handled by the app store you bought it from, and their refund rules apply. You can cancel a subscription from your app store account.',
+        'Premium is a subscription that renews automatically at the end of each period, at the price shown when you subscribed, until you cancel. Cancelling stops the next renewal; Premium continues until the end of the period you paid for.',
+        'Payment is handled by the app store you bought it from, and their refund rules apply. You can cancel from your app store account at any time.',
         'Premium changes how many introductions you receive. It does not buy anyone’s attention, and it does not make anyone more likely to choose you.',
+      ],
+    },
+    {
+      heading: 'Responsibility',
+      body: [
+        'We provide Halal Mode with care, but we cannot guarantee it will always be available or free of errors, or that any introduction will lead to marriage.',
+        'We are not responsible for what members say or do, inside or outside the app. Nothing in these terms limits a responsibility that the law where you live does not allow us to limit, including for death or personal injury caused by negligence, or for fraud.',
+        'If you live in the UK or EU, the consumer laws of your country still protect you, and you may bring a claim in its courts.',
+      ],
+    },
+    {
+      heading: 'Law',
+      body: [
+        'These terms are governed by the laws of the State of New Mexico, USA, except where the law of the country you live in gives you protections that cannot be set aside.',
       ],
     },
     {
@@ -102,7 +126,7 @@ export const PRIVACY: LegalDocument = {
   title: 'Privacy Notice',
   updated: LEGAL_VERSION,
   intro:
-    'This explains exactly what Halal Mode stores, who can see it, and what is never shown to anyone. It is written to be read, not to be skipped.',
+    'This explains exactly what Halal Mode stores, who can see it, and what is never shown to anyone. It is written to be read, not to be skipped. Halal Mode LLC, 1209 Mountain Road Pl NE, Ste R, Albuquerque, NM 87110, USA, is responsible for your data (the “controller”). Write to hello@halalmo.de about anything here.',
   sections: [
     {
       heading: 'What we store',
@@ -112,6 +136,24 @@ export const PRIVACY: LegalDocument = {
         'Your preferences: the age, distance, and other qualities you are looking for, and which of them are must-haves.',
         'Your activity: which introductions you were shown, which you kept, your answers to the questions, and your messages.',
         'Your location, rounded to about one kilometre, with the nearest city and country. It comes from your device, is used only to work out how far apart two people are, and is never shown to anyone.',
+        'Your background and faith: your sect or school, how you practise, religious dress, ethnicity, the countries your family are from, and whether you have or want children. Also your height and body type, which are never shown to anyone.',
+      ],
+    },
+    {
+      heading: 'Sensitive information, and your consent',
+      body: [
+        'Your religious beliefs and your ethnicity are sensitive information under data protection law. We use them only with your explicit consent, which you give separately when you join: to show them on your profile, and to make introductions.',
+        'You can withdraw that consent at any time by writing to hello@halalmo.de or by closing your account. Introductions depend on this information, so withdrawing it means we can no longer introduce you, and we will close your account at your request.',
+      ],
+    },
+    {
+      heading: 'Why we use your information',
+      body: [
+        'To provide the service you signed up for: your profile, introductions, questions and messages (performing our contract with you).',
+        'Your faith and ethnicity: with your explicit consent.',
+        'Keeping members safe: checking photographs and bios, handling reports and blocks, and preventing fraud (our legitimate interest in a safe service, and yours).',
+        'Understanding how the app is used: counts such as how many people complete a profile, never what anyone wrote, tied to a random device number rather than to you (our legitimate interest in improving the service).',
+        'Payment records, and anything else the law requires us to keep (legal obligation).',
       ],
     },
     {
@@ -158,7 +200,8 @@ export const PRIVACY: LegalDocument = {
       heading: 'Who we share with',
       body: [
         'We do not sell your data. We never have and we will not.',
-        'We use suppliers to run the service — hosting, database, email delivery, push notifications, an AI service for Halal Mode Bot summaries, and app store payments. They process data on our instructions and may not use it for anything else.',
+        'We use suppliers who process data on our instructions and may not use it for anything else: Supabase (database, sign-in and file storage, hosted in London), Cloudflare (website), Resend (email), Expo, Apple and Google (push notifications), Anthropic (Halal Mode Bot summaries and automatic checks of photographs and bios), PostHog (usage counts, hosted in the EU), and Apple and Google (payments).',
+        'Halal Mode LLC is based in the United States, and some suppliers process data there. Where data leaves the UK or EU, it is protected by the European Commission’s standard contractual clauses and the UK addendum to them, or by an adequacy decision.',
         'We will share information if the law requires it, or to protect someone from serious harm.',
       ],
     },
@@ -168,14 +211,17 @@ export const PRIVACY: LegalDocument = {
         'You can change or delete anything on your profile at any time.',
         'You can pause your profile, which stops new introductions without deleting anything.',
         'You can close your account. Your profile is hidden at once, and your profile, photographs, preferences, and messages are removed after a short recovery period.',
-        'You can ask for a copy of your data, or ask us to correct it. Write to hello@halalmo.de.',
+        'You can ask for a copy of your data, or ask us to correct or delete it, restrict it, or stop using it for a purpose you object to. Write to hello@halalmo.de and we will answer within one month.',
+        'If you are unhappy with how we handle your data, you can complain to the data protection authority where you live; in the UK, that is the Information Commissioner’s Office (ico.org.uk).',
       ],
     },
     {
       heading: 'How long we keep things',
       body: [
         'While your account is open, we keep your profile and messages so the service works.',
-        'When you close your account, we remove them after a short recovery period. We keep a minimal record where the law requires it, or where it is needed to keep other members safe — such as a safety report.',
+        'When you close your account, we remove your profile, photographs, preferences and messages after a 30-day recovery period.',
+        'Safety reports, and the record of an account removed for breaking the terms, are kept for up to two years so that a removed member cannot simply return. Payment records are kept as long as tax law requires, usually six years.',
+        'Waitlist email addresses are deleted when you join, or whenever you ask.',
       ],
     },
     {

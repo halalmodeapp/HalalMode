@@ -756,6 +756,7 @@ export const ur: TranslationCatalog = {
   'profile.readinessPhoto': 'ایک واضح تصویر',
   'profile.readinessPreferences': 'اپنی میچنگ ترجیحات',
   'profile.openMatchingPreferences': 'میچنگ ترجیحات کھولیں',
+  'legal.sensitiveConsent': "میں واضح طور پر رضامندی دیتا/دیتی ہوں کہ حلال موڈ میرے مذہبی عقائد اور نسل کو میری پروفائل پر دکھانے اور تعارف کرانے کے لیے استعمال کرے، جیسا کہ رازداری کے نوٹس میں بیان ہے۔ میں یہ کسی بھی وقت واپس لے سکتا/سکتی ہوں۔",
   'profile.heritage': "آبائی پس منظر",
   'profile.heritageHint': "وہ ممالک جہاں سے آپ یا آپ کا خاندان ہے، زیادہ سے زیادہ 3",
   'profile.ethnicityHint': "مخلوط پس منظر ہو تو زیادہ سے زیادہ 2 منتخب کریں",

@@ -756,6 +756,7 @@ export const fr: TranslationCatalog = {
   'profile.readinessPhoto': 'une photo claire',
   'profile.readinessPreferences': 'vos critères',
   'profile.openMatchingPreferences': 'Ouvrir les critères',
+  'legal.sensitiveConsent': "Je consens explicitement à ce que Halal Mode utilise mes convictions religieuses et mon origine ethnique pour les afficher sur mon profil et faire des présentations, comme l’explique l’Avis de confidentialité. Je peux retirer ce consentement à tout moment.",
   'profile.heritage': "Origines",
   'profile.heritageHint': "Jusqu’à 3 pays d’où vous ou votre famille venez",
   'profile.ethnicityHint': "Choisissez-en jusqu’à 2 si vos origines sont mixtes",

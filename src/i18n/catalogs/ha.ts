@@ -756,6 +756,7 @@ export const ha: TranslationCatalog = {
   'profile.readinessPhoto': 'hoto bayyananne',
   'profile.readinessPreferences': 'zaɓuɓɓukan haɗawa',
   'profile.openMatchingPreferences': 'Buɗe zaɓuɓɓukan haɗawa',
+  'legal.sensitiveConsent': "Na yarda a fili Halal Mode ta yi amfani da imanina na addini da kabilata don nuna su a bayanana da yin gabatarwa, kamar yadda Sanarwar Sirri ta bayyana. Zan iya janye wannan a kowane lokaci.",
   'profile.heritage': "Asali",
   'profile.heritageHint': "Har ƙasashe 3 da kai ko danginka suka fito",
   'profile.ethnicityHint': "Zaɓi har 2 idan asalinka gauraye ne",

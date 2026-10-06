@@ -756,6 +756,7 @@ export const tr: TranslationCatalog = {
   'profile.readinessPhoto': 'net bir fotoğraf',
   'profile.readinessPreferences': 'eşleşme tercihlerinizi',
   'profile.openMatchingPreferences': 'Eşleşme tercihlerini aç',
+  'legal.sensitiveConsent': "Gizlilik Bildirimi’nde açıklandığı gibi, Halal Mode’un dini inançlarımı ve etnik kökenimi profilimde göstermek ve tanıştırma yapmak için kullanmasına açıkça onay veriyorum. Bu onayı istediğim zaman geri alabilirim.",
   'profile.heritage': "Köken",
   'profile.heritageHint': "Sizin veya ailenizin geldiği en fazla 3 ülke",
   'profile.ethnicityHint': "Karışık kökenliyseniz en fazla 2 seçin",
