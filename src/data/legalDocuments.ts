@@ -200,7 +200,7 @@ export const PRIVACY: LegalDocument = {
       heading: 'Who we share with',
       body: [
         'We do not sell your data. We never have and we will not.',
-        'We use suppliers who process data on our instructions and may not use it for anything else: Supabase (database, sign-in and file storage, hosted in London), Cloudflare (website), Resend (email), Expo, Apple and Google (push notifications), Anthropic (Halal Mode Bot summaries), OpenAI (automatic checks of photographs and bios), PostHog (usage counts, hosted in the EU), and Apple and Google (payments).',
+        'We use suppliers who process data on our instructions and may not use it for anything else: Supabase (database, sign-in and file storage, hosted in London), Cloudflare (website), Resend (email), Expo, Apple and Google (push notifications), AI service providers (Halal Mode Bot summaries and automatic checks of photographs and bios), PostHog (usage counts, hosted in the EU), and Apple and Google (payments).',
         'Halal Mode LLC is based in the United States, and some suppliers process data there. Where data leaves the UK or EU, it is protected by the European Commission’s standard contractual clauses and the UK addendum to them, or by an adequacy decision.',
         'We will share information if the law requires it, or to protect someone from serious harm.',
       ],
