@@ -200,7 +200,7 @@ export function ProfileTab({
     buildMissing ? t('profile.todo.bodyType') : null,
     !hasChildren ? t('profile.todo.hasChildren') : null,
     !familyGoals ? t('profile.todo.childrenWhen') : null,
-    !religiousDress ? t('profile.dress') : null,
+    profile.gender === 'female' && !religiousDress ? t('profile.dress') : null,
     ethnicities.length === 0 ? t('profile.ethnicity') : null,
     heritage.length === 0 ? t('profile.heritage') : null,
     !(draft.education ?? '').trim() ? t('filters.education') : null,
@@ -227,6 +227,7 @@ export function ProfileTab({
     hasChildren,
     familyGoalsAnswered: Boolean(familyGoals),
     religiousDress,
+    gender: profile.gender,
     ethnicities,
     heritageCountries: heritage,
     ownHeightCm: Number(ownHeight),
@@ -238,7 +239,7 @@ export function ProfileTab({
   const unsaved = isDirty || photosDirty || ownDirty;
   const readyToShow = !unsaved && liveReadiness.ready
     && (USE_MOCKS || serverReadinessQuery.data?.ready === true);
-  const steps = readinessSteps(liveReadiness.missing);
+  const steps = readinessSteps(liveReadiness.missing, profile.gender);
 
   useEffect(() => {
     setMedia(mediaFrom(profile));
@@ -355,7 +356,12 @@ export function ProfileTab({
       };
       if (USE_MOCKS && photosDirty) patch.photos = photos;
       await updateMyProfile(patch);
-      await setMyProfileDetails({ hasChildren, religiousDress, ethnicities, heritageCountries: heritage });
+      await setMyProfileDetails({
+        hasChildren,
+        religiousDress: profile.gender === 'female' ? religiousDress : undefined,
+        ethnicities,
+        heritageCountries: heritage,
+      });
       await updateMyPreferences({
         ownHeightCm: Number(ownHeight) || 0,
         ownWeightKg: Number(ownWeight) || 0,
@@ -1203,6 +1209,8 @@ export function ProfileTab({
           </View>
         </View>
 
+        {/* Religious dress is asked of women only. */}
+        {profile.gender === 'female' ? (
         <View style={styles.profileChoice}>
           <SelectField
             label={required(t('profile.dress'))}
@@ -1224,6 +1232,7 @@ export function ProfileTab({
             searchLabel={t('profile.dress')}
           />
         </View>
+        ) : null}
 
         <View style={styles.profileChoice}>
           {/* Two questions cover everyone: a broad ethnicity (two for mixed

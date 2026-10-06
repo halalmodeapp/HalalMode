@@ -754,6 +754,7 @@ export const zhHans: TranslationCatalog = {
   'profile.readinessPhoto': '一张清晰的照片',
   'profile.readinessPreferences': '您的匹配偏好',
   'profile.openMatchingPreferences': '打开匹配偏好',
+  'readiness.step.background': "民族和祖籍",
   'daily.waitTitle': "你的下一批介绍将在晨礼时送达",
   'daily.waitBody': "今天没有人同时符合双方的选择，所以我们没有勉强配对。我们会在你的下一个晨礼时再找。你的偏好始终保密。",
   'daily.remindMe': "晨礼时提醒我",

@@ -48,8 +48,9 @@ export const DRESS_MALE: CatalogOption[] = [
   NO_DRESS,
 ];
 
+/** Religious dress is asked of women only (migration 0184): none for men. */
 export function dressOptions(gender: Gender | undefined): CatalogOption[] {
-  return gender === 'female' ? DRESS_FEMALE : DRESS_MALE;
+  return gender === 'female' ? DRESS_FEMALE : [];
 }
 
 export const HAS_CHILDREN_OPTIONS: CatalogOption[] = [

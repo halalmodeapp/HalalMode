@@ -754,6 +754,7 @@ export const tr: TranslationCatalog = {
   'profile.readinessPhoto': 'net bir fotoğraf',
   'profile.readinessPreferences': 'eşleşme tercihlerinizi',
   'profile.openMatchingPreferences': 'Eşleşme tercihlerini aç',
+  'readiness.step.background': "Etnik köken ve köken",
   'daily.waitTitle': "Sonraki tanıştırmalarınız sabah namazı vaktinde",
   'daily.waitBody': "Bugün iki tarafın seçimine de uyan kimse yoktu, bu yüzden hiçbir şey zorlanmadı. Bir sonraki sabah namazı vaktinizde yeniden bakacağız. Tercihleriniz gizli kalır.",
   'daily.remindMe': "Sabah namazında hatırlat",

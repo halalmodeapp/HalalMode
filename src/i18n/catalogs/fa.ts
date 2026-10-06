@@ -754,6 +754,7 @@ export const fa: TranslationCatalog = {
   'profile.readinessPhoto': 'یک عکس واضح',
   'profile.readinessPreferences': 'ترجیحات تطبیق',
   'profile.openMatchingPreferences': 'باز کردن ترجیحات تطبیق',
+  'readiness.step.background': "قومیت و تبار",
   'daily.waitTitle': "معرفی‌های بعدی شما هنگام فجر می‌آیند",
   'daily.waitBody': "امروز کسی با انتخاب‌های هر دو طرف جور نبود، پس چیزی تحمیل نشد. در فجر بعدی دوباره جستجو می‌کنیم. ترجیحات شما خصوصی می‌ماند.",
   'daily.remindMe': "هنگام فجر یادآوری کن",

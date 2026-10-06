@@ -16,6 +16,7 @@ const STEP_LABEL: Record<ReadinessStep, TranslationKey> = {
   details: 'readiness.step.details',
   children: 'readiness.step.children',
   faith: 'readiness.step.faith',
+  background: 'readiness.step.background',
   body: 'readiness.step.body',
   preferences: 'readiness.step.preferences',
 };

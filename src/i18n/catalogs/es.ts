@@ -754,6 +754,7 @@ export const es: TranslationCatalog = {
   'profile.readinessPhoto': 'una foto clara',
   'profile.readinessPreferences': 'tus preferencias',
   'profile.openMatchingPreferences': 'Abrir preferencias',
+  'readiness.step.background': "Etnia y herencia",
   'daily.waitTitle': "Tus próximas presentaciones llegan al Fajr",
   'daily.waitBody': "Hoy nadie encajaba con las preferencias de ambos, así que no forzamos nada. Volveremos a buscar en tu próximo Fajr. Tus preferencias siguen siendo privadas.",
   'daily.remindMe': "Recuérdamelo al Fajr",

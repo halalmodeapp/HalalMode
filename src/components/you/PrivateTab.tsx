@@ -465,7 +465,10 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
           {premiumPicker('occupations', t('filters.career'), OCCUPATION_GROUPS, 'preferredOccupations')}
           {premiumPicker('languages', t('filters.languages'), LANGUAGE_GROUPS, 'preferredLanguages')}
           {premiumPicker('education', t('filters.education'), EDUCATION_GROUPS, 'preferredEducation')}
-          {premiumPicker('dress', t('filters.dress'), asGroups(t('filters.dress'), dressOptions(partnerGender)), 'preferredDress')}
+          {/* Men are not asked about religious dress, so it is not a filter on them. */}
+          {partnerGender === 'female'
+            ? premiumPicker('dress', t('filters.dress'), asGroups(t('filters.dress'), dressOptions(partnerGender)), 'preferredDress')
+            : null}
           {premiumPicker('ethnicities', t('filters.ethnicity'), ETHNICITY_GROUPS, 'preferredEthnicities')}
           {premiumPicker('heritage', t('profile.heritage'), heritageGroups(language, false), 'preferredHeritageCountries')}
             </View>

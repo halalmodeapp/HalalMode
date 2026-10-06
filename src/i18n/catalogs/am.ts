@@ -754,6 +754,7 @@ export const am: TranslationCatalog = {
   'profile.readinessPhoto': 'ግልጽ ፎቶ',
   'profile.readinessPreferences': 'የማዛመጃ ምርጫዎችዎ',
   'profile.openMatchingPreferences': 'የማዛመጃ ምርጫዎችን ክፈት',
+  'readiness.step.background': "ብሔርና የትውልድ ሐረግ",
   'daily.waitTitle': "ቀጣዮቹ መግቢያዎችዎ በፈጅር ይመጣሉ",
   'daily.waitBody': "ዛሬ የሁለቱንም ምርጫ የሚያሟላ ሰው አልተገኘም፣ ስለዚህ ምንም አልተገደደም። በቀጣዩ ፈጅርዎ እንደገና እንፈልጋለን። ምርጫዎችዎ የግል ሆነው ይቆያሉ።",
   'daily.remindMe': "በፈጅር አስታውሰኝ",

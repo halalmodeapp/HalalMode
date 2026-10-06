@@ -310,7 +310,7 @@ export default function DailyScreen() {
   ) {
     // The same checklist as the profile, so a member sees exactly what is left
     // and that introductions start the moment it is done.
-    const steps = readinessSteps(readinessQuery.data?.missing ?? []);
+    const steps = readinessSteps(readinessQuery.data?.missing ?? [], headerProfile.data?.gender);
     const openStep = (step: ReadinessStep) =>
       router.push({ pathname: '/(tabs)/you', params: { tab: step === 'preferences' ? 'private' : 'profile' } });
     const next = steps.find((step) => !step.done);

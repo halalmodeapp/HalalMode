@@ -754,6 +754,7 @@ export const ur: TranslationCatalog = {
   'profile.readinessPhoto': 'ایک واضح تصویر',
   'profile.readinessPreferences': 'اپنی میچنگ ترجیحات',
   'profile.openMatchingPreferences': 'میچنگ ترجیحات کھولیں',
+  'readiness.step.background': "نسل اور آبائی پس منظر",
   'daily.waitTitle': "آپ کے اگلے تعارف فجر پر آئیں گے",
   'daily.waitBody': "آج دونوں کی پسند سے مطابقت رکھنے والا کوئی نہیں تھا، اس لیے کچھ زبردستی نہیں کیا گیا۔ آپ کی اگلی فجر پر ہم دوبارہ دیکھیں گے۔ آپ کی ترجیحات نجی رہتی ہیں۔",
   'daily.remindMe': "فجر پر یاد دلائیں",

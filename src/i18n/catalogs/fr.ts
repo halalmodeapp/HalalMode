@@ -754,6 +754,7 @@ export const fr: TranslationCatalog = {
   'profile.readinessPhoto': 'une photo claire',
   'profile.readinessPreferences': 'vos critères',
   'profile.openMatchingPreferences': 'Ouvrir les critères',
+  'readiness.step.background': "Origine ethnique et origines",
   'daily.waitTitle': "Vos prochaines présentations arrivent au Fajr",
   'daily.waitBody': "Personne ne correspondait aux choix des deux personnes aujourd’hui, alors rien n’a été forcé. Nous chercherons à nouveau à votre prochain Fajr. Vos préférences restent privées.",
   'daily.remindMe': "Me le rappeler au Fajr",

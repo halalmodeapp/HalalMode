@@ -754,6 +754,7 @@ export const so: TranslationCatalog = {
   'profile.readinessPhoto': 'sawir cad',
   'profile.readinessPreferences': 'doorbidyada isku-aadka',
   'profile.openMatchingPreferences': 'Fur doorbidyada isku-aadka',
+  'readiness.step.background': "Qowmiyad iyo asal",
   'daily.waitTitle': "Isbarashooyinkaaga xiga waxay yimaadaan Waaberiga",
   'daily.waitBody': "Maanta qof ku habboon doorashada labada dhinac lama helin, sidaas darteed waxba lama khasbin. Waaberigaaga xiga ayaan mar kale eegi doonnaa. Doorbidyadaadu way qarsoon yihiin.",
   'daily.remindMe': "I xasuusi Waaberiga",

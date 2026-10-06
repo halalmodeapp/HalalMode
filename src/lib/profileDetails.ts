@@ -52,7 +52,7 @@ export function profileDetailLines(profile: Profile, t: Translate, language: App
   const family = profile.familyGoals ? FAMILY[profile.familyGoals] : undefined;
   add('filters.childrenTimeframe', family ? t(family) : undefined);
 
-  const dress = dressOptions(profile.gender).find((o) => o.id === profile.religiousDress);
+  const dress = profile.gender === 'female' ? dressOptions('female').find((o) => o.id === profile.religiousDress) : undefined;
   add('profile.dress', dress ? optionLabel(dress, language) : undefined);
   const shown = (ids: string[] | undefined) => (ids ?? []).filter((id) => id !== 'prefer_not_to_say');
   add('profile.ethnicity', shown(profile.ethnicities)

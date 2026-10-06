@@ -754,6 +754,7 @@ export const ha: TranslationCatalog = {
   'profile.readinessPhoto': 'hoto bayyananne',
   'profile.readinessPreferences': 'zaɓuɓɓukan haɗawa',
   'profile.openMatchingPreferences': 'Buɗe zaɓuɓɓukan haɗawa',
+  'readiness.step.background': "Kabila da asali",
   'daily.waitTitle': "Gabatarwarka na gaba za su zo a lokacin Asuba",
   'daily.waitBody': "Yau ba wanda ya dace da zaɓin ɓangarorin biyu, don haka ba a tilasta komai ba. Za mu sake duba a Asubanka na gaba. Zaɓuɓɓukanka suna sirri.",
   'daily.remindMe': "Tunatar da ni a Asuba",

@@ -754,6 +754,7 @@ export const ru: TranslationCatalog = {
   'profile.readinessPhoto': 'чёткое фото',
   'profile.readinessPreferences': 'критерии подбора',
   'profile.openMatchingPreferences': 'Открыть критерии подбора',
+  'readiness.step.background': "Этническая принадлежность и происхождение",
   'daily.waitTitle': "Новые знакомства придут к фаджру",
   'daily.waitBody': "Сегодня никто не подошёл под выбор обеих сторон, поэтому мы ничего не навязывали. Поищем снова к вашему следующему фаджру. Ваши предпочтения остаются скрытыми.",
   'daily.remindMe': "Напомнить к фаджру",

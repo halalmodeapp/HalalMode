@@ -754,6 +754,7 @@ export const id: TranslationCatalog = {
   'profile.readinessPhoto': 'foto yang jelas',
   'profile.readinessPreferences': 'preferensi pencocokan Anda',
   'profile.openMatchingPreferences': 'Buka preferensi pencocokan',
+  'readiness.step.background': "Etnis dan asal-usul",
   'daily.waitTitle': "Perkenalan berikutnya datang saat Subuh",
   'daily.waitBody': "Hari ini tidak ada yang cocok dengan pilihan kedua pihak, jadi tidak ada yang dipaksakan. Kami akan mencari lagi pada Subuh berikutnya. Preferensi Anda tetap pribadi.",
   'daily.remindMe': "Ingatkan saya saat Subuh",

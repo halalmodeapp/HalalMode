@@ -754,6 +754,7 @@ export const bn: TranslationCatalog = {
   'profile.readinessPhoto': 'একটি স্পষ্ট ছবি',
   'profile.readinessPreferences': 'আপনার ম্যাচিংয়ের পছন্দ',
   'profile.openMatchingPreferences': 'ম্যাচিংয়ের পছন্দ খুলুন',
+  'readiness.step.background': "জাতিগত পরিচয় ও বংশপরিচয়",
   'daily.waitTitle': "আপনার পরের পরিচিতি আসবে ফজরে",
   'daily.waitBody': "আজ দুজনের পছন্দের সাথে মেলে এমন কেউ ছিল না, তাই কিছু চাপিয়ে দেওয়া হয়নি। আপনার পরের ফজরে আবার খুঁজব। আপনার পছন্দ গোপন থাকে।",
   'daily.remindMe': "ফজরে মনে করিয়ে দিন",

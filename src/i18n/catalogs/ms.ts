@@ -754,6 +754,7 @@ export const ms: TranslationCatalog = {
   'profile.readinessPhoto': 'foto yang jelas',
   'profile.readinessPreferences': 'pilihan padanan anda',
   'profile.openMatchingPreferences': 'Buka pilihan padanan',
+  'readiness.step.background': "Etnik dan asal usul",
   'daily.waitTitle': "Perkenalan seterusnya tiba waktu Subuh",
   'daily.waitBody': "Hari ini tiada yang sepadan dengan pilihan kedua-dua pihak, jadi tiada yang dipaksa. Kami akan mencari semula pada Subuh anda yang seterusnya. Pilihan anda kekal peribadi.",
   'daily.remindMe': "Ingatkan saya waktu Subuh",

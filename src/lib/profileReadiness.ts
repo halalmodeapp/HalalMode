@@ -16,6 +16,8 @@ export interface ProfileReadinessInput {
   hasChildren?: string | null;
   familyGoalsAnswered?: boolean | null;
   religiousDress?: string | null;
+  /** Religious dress is asked of women only. */
+  gender?: string | null;
   ethnicities?: readonly string[] | null;
   heritageCountries?: readonly string[] | null;
   ownHeightCm?: number | null;
@@ -49,7 +51,7 @@ export function getProfileReadiness(input: ProfileReadinessInput) {
   if (!input.education?.trim()) missing.push('education');
   if (!input.hasChildren) missing.push('has_children');
   if (!input.familyGoalsAnswered) missing.push('children_when');
-  if (!input.religiousDress) missing.push('dress');
+  if (input.gender === 'female' && !input.religiousDress) missing.push('dress');
   if ((input.ethnicities ?? []).length === 0) missing.push('ethnicity');
   if ((input.heritageCountries ?? []).length === 0) missing.push('heritage');
   if (!(height >= 140 && height <= 210)) missing.push('height');
@@ -63,7 +65,7 @@ export function getProfileReadiness(input: ProfileReadinessInput) {
  * Name and location are set at sign-up, so they appear only when missing.
  */
 export type ReadinessStep =
-  | 'essentials' | 'photo' | 'bio' | 'details' | 'children' | 'faith' | 'body' | 'preferences';
+  | 'essentials' | 'photo' | 'bio' | 'details' | 'children' | 'faith' | 'background' | 'body' | 'preferences';
 
 const STEP_ISSUES: Record<ReadinessStep, readonly ProfileReadinessIssue[]> = {
   essentials: ['name', 'location'],
@@ -72,12 +74,16 @@ const STEP_ISSUES: Record<ReadinessStep, readonly ProfileReadinessIssue[]> = {
   details: ['languages', 'education'],
   children: ['has_children', 'children_when'],
   faith: ['dress', 'ethnicity', 'heritage'],
+  background: ['ethnicity', 'heritage'],
   body: ['height', 'body_type'],
   preferences: ['preferences'],
 };
 
-export function readinessSteps(missing: readonly ProfileReadinessIssue[]) {
+export function readinessSteps(missing: readonly ProfileReadinessIssue[], gender?: string | null) {
+  // Men are not asked about religious dress, so theirs is "Ethnicity and heritage".
+  const skip: ReadinessStep = gender === 'female' ? 'background' : 'faith';
   return (Object.keys(STEP_ISSUES) as ReadinessStep[])
+    .filter((step) => step !== skip)
     .map((id) => ({ id, done: !STEP_ISSUES[id].some((issue) => missing.includes(issue)) }))
     .filter((step) => step.id !== 'essentials' || !step.done);
 }

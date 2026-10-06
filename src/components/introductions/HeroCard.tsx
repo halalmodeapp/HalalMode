@@ -43,9 +43,50 @@ import type { Profile } from '@/types';
 const RAD2DEG = 180 / Math.PI;
 
 /**
+ * A blur that deepens towards the bottom of the photo: none at 30% up, the
+ * most at the very bottom, so the name sits on a soft, quiet base. Four
+ * layers, each blurring more and starting lower, read as one smooth fade
+ * rather than a band. Web only (browser backdrop blur); the phone apps keep
+ * the plain photo until they are built with a native equivalent.
+ */
+const BLUR_LAYERS = [
+  { blur: 2, from: 0, to: 0.45 },
+  { blur: 4, from: 0.25, to: 0.7 },
+  { blur: 8, from: 0.5, to: 0.9 },
+  { blur: 16, from: 0.75, to: 1 },
+];
+
+function ProgressiveBlur() {
+  if (Platform.OS !== 'web') return null;
+  return (
+    <View pointerEvents="none" style={styles.blurZone}>
+      {BLUR_LAYERS.map(({ blur, from, to }) => {
+        // Transparent above `from`, fully blurred from `to` down.
+        const mask = `linear-gradient(to bottom, transparent ${from * 100}%, black ${to * 100}%)`;
+        return (
+          <View
+            key={blur}
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                backdropFilter: `blur(${blur}px)`,
+                WebkitBackdropFilter: `blur(${blur}px)`,
+                maskImage: mask,
+                WebkitMaskImage: mask,
+              } as object,
+            ]}
+          />
+        );
+      })}
+    </View>
+  );
+}
+
+/**
  * Film-grain opacity on the centred card.
  */
-const FILM_GRAIN_OPACITY = 0.06;
+const FILM_GRAIN_OPACITY = 0.04;
 
 /**
  * Keeps the immediate left and right cards already visible and decoded before
@@ -1238,6 +1279,8 @@ function DeckCard({
         accessibilityIgnoresInvertColors
       />
 
+      <ProgressiveBlur />
+
       <LinearGradient
         pointerEvents="none"
         colors={[
@@ -1325,6 +1368,7 @@ function DeckCard({
 }
 
 const styles = StyleSheet.create({
+  blurZone: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '30%' },
   rtl: RTL_LAYOUT,
 
   gestureArea: { flex: 1, overflow: 'visible' },

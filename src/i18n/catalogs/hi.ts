@@ -754,6 +754,7 @@ export const hi: TranslationCatalog = {
   'profile.readinessPhoto': 'एक साफ़ फ़ोटो',
   'profile.readinessPreferences': 'अपनी मैचिंग पसंद',
   'profile.openMatchingPreferences': 'मैचिंग पसंद खोलें',
+  'readiness.step.background': "जातीयता और विरासत",
   'daily.waitTitle': "आपके अगले परिचय फ़ज्र पर आएँगे",
   'daily.waitBody': "आज दोनों की पसंद से मेल खाने वाला कोई नहीं था, इसलिए कुछ थोपा नहीं गया। आपकी अगली फ़ज्र पर हम फिर देखेंगे। आपकी पसंद निजी रहती है।",
   'daily.remindMe': "फ़ज्र पर याद दिलाएँ",
