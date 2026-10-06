@@ -1,9 +1,11 @@
 import { Tabs } from 'expo-router';
 
 import { TabBar } from '@/components/navigation/TabBar';
+import { NoticeDialog } from '@/components/notices/NoticeDialog';
 
 export default function TabsLayout() {
   return (
+    <>
     <Tabs
       tabBar={(props) => <TabBar {...props} />}
       screenOptions={{ headerShown: false }}
@@ -23,5 +25,8 @@ export default function TabsLayout() {
         options={{ title: 'You' }}
       />
     </Tabs>
+    {/* What came of a report, or a removed photo. */}
+    <NoticeDialog />
+    </>
   );
 }

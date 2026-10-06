@@ -16,7 +16,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 interface Claimed {
   id: number;
   user_id: string;
-  kind: 'round_ready' | 'mutual_match' | 'new_message';
+  kind: 'round_ready' | 'mutual_match' | 'new_message' | 'notice';
   payload: Record<string, unknown>;
   push_token: string;
   platform: string;
@@ -30,81 +30,97 @@ const WORDING: Record<string, Wording> = {
     round_ready: { title: 'Your set is ready', body: "Your new introductions are ready, and it's time for Fajr." },
     mutual_match: { title: 'You matched', body: 'Someone you chose chose you back.' },
     new_message: { title: 'New message', body: 'You have a message waiting.' },
+    notice: { title: 'An update from Halal Mode', body: 'Open the app to see it.' },
   },
   ar: {
     round_ready: { title: 'مجموعتك جاهزة', body: "تعارفاتك الجديدة جاهزة، وحان وقت صلاة الفجر." },
     mutual_match: { title: 'تعارف متبادل', body: 'شخص اخترته اختارك أيضًا.' },
     new_message: { title: 'رسالة جديدة', body: 'لديك رسالة في إحدى محادثاتك.' },
+    notice: { title: 'تحديث من حلال مود', body: 'افتح التطبيق لتراه.' },
   },
   ur: {
     round_ready: { title: 'آپ کا سیٹ تیار ہے', body: "آپ کے نئے تعارف تیار ہیں، اور فجر کا وقت ہو گیا ہے۔" },
     mutual_match: { title: 'باہمی میچ', body: 'جسے آپ نے چنا، اس نے بھی آپ کو چنا۔' },
     new_message: { title: 'نیا پیغام', body: 'آپ کا ایک پیغام منتظر ہے۔' },
+    notice: { title: 'حلال موڈ کی طرف سے ایک اطلاع', body: 'دیکھنے کے لیے ایپ کھولیں۔' },
   },
   fa: {
     round_ready: { title: 'مجموعهٔ شما آماده است', body: "معرفی‌های تازه‌تان آماده است، و وقت نماز صبح است." },
     mutual_match: { title: 'انتخاب دوطرفه', body: 'کسی که انتخاب کردید، شما را هم انتخاب کرد.' },
     new_message: { title: 'پیام تازه', body: 'یک پیام منتظر شماست.' },
+    notice: { title: 'خبری از حلال مود', body: 'برای دیدنش برنامه را باز کنید.' },
   },
   hi: {
     round_ready: { title: 'आपका सेट तैयार है', body: "आपके नए परिचय तैयार हैं, और फ़ज्र का वक़्त हो गया है।" },
     mutual_match: { title: 'आपसी मैच', body: 'जिसे आपने चुना, उसने भी आपको चुना।' },
     new_message: { title: 'नया संदेश', body: 'आपका एक संदेश इंतज़ार कर रहा है।' },
+    notice: { title: 'हलाल मोड से एक सूचना', body: 'देखने के लिए ऐप खोलें।' },
   },
   id: {
     round_ready: { title: 'Set Anda siap', body: "Perkenalan baru Anda siap, dan sudah waktunya salat Subuh." },
     mutual_match: { title: 'Saling memilih', body: 'Seseorang yang Anda pilih juga memilih Anda.' },
     new_message: { title: 'Pesan baru', body: 'Ada pesan yang menunggu Anda.' },
+    notice: { title: 'Kabar dari Halal Mode', body: 'Buka aplikasi untuk melihatnya.' },
   },
   ms: {
     round_ready: { title: 'Set anda sedia', body: "Perkenalan baharu anda sudah sedia, dan sudah masuk waktu Subuh." },
     mutual_match: { title: 'Saling memilih', body: 'Seseorang yang anda pilih turut memilih anda.' },
     new_message: { title: 'Mesej baharu', body: 'Ada mesej yang menunggu anda.' },
+    notice: { title: 'Makluman daripada Halal Mode', body: 'Buka aplikasi untuk melihatnya.' },
   },
   bn: {
     round_ready: { title: 'আপনার সেট প্রস্তুত', body: "আপনার নতুন পরিচিতি প্রস্তুত, আর ফজরের সময় হয়েছে।" },
     mutual_match: { title: 'পারস্পরিক ম্যাচ', body: 'যাঁকে বেছেছেন তিনিও আপনাকে বেছেছেন।' },
     new_message: { title: 'নতুন বার্তা', body: 'আপনার একটি বার্তা অপেক্ষা করছে।' },
+    notice: { title: 'হালাল মোড থেকে একটি আপডেট', body: 'দেখতে অ্যাপটি খুলুন।' },
   },
   fr: {
     round_ready: { title: 'Votre sélection est prête', body: "Vos nouvelles présentations sont prêtes, et c’est l’heure du Fajr." },
     mutual_match: { title: 'Choix réciproque', body: 'Une personne que vous avez choisie vous a choisi aussi.' },
     new_message: { title: 'Nouveau message', body: 'Un message vous attend.' },
+    notice: { title: 'Une nouvelle de Halal Mode', body: 'Ouvrez l’app pour la voir.' },
   },
   tr: {
     round_ready: { title: 'Setiniz hazır', body: "Yeni tanıştırmalarınız hazır ve sabah namazı vakti geldi." },
     mutual_match: { title: 'Karşılıklı eşleşme', body: 'Seçtiğiniz biri de sizi seçti.' },
     new_message: { title: 'Yeni mesaj', body: 'Sizi bekleyen bir mesaj var.' },
+    notice: { title: 'Halal Mode’dan bir bilgi', body: 'Görmek için uygulamayı açın.' },
   },
   ha: {
     round_ready: { title: 'Saitinku ya shirya', body: "Sabbin gabatarwarka sun shirya, kuma lokacin sallar Asuba ya yi." },
     mutual_match: { title: 'Haɗi daga ɓangarorin biyu', body: 'Wanda kuka zaɓa ya zaɓe ku ma.' },
     new_message: { title: 'Sabon saƙo', body: 'Akwai saƙo da ke jiran ku.' },
+    notice: { title: 'Sanarwa daga Halal Mode', body: 'Buɗe manhajar don gani.' },
   },
   am: {
     round_ready: { title: 'ስብስብዎ ዝግጁ ነው', body: "አዲሶቹ መግቢያዎችዎ ዝግጁ ናቸው፣ የፈጅር ሶላት ጊዜም ደርሷል።" },
     mutual_match: { title: 'የጋራ ተዛማጅ', body: 'የመረጡት ሰው እርስዎንም መርጧል።' },
     new_message: { title: 'አዲስ መልእክት', body: 'የሚጠብቅዎት መልእክት አለ።' },
+    notice: { title: 'ከሃላል ሞድ የመጣ መልእክት', body: 'ለማየት መተግበሪያውን ይክፈቱ።' },
   },
   so: {
     round_ready: { title: 'Kooxdaadu waa diyaar', body: "Isbarashooyinkaaga cusub waa diyaar, waana waqtigii salaadda Subax." },
     mutual_match: { title: 'Isku-aad labada dhinac ah', body: 'Qof aad doorattay ayaa adigana ku doortay.' },
     new_message: { title: 'Fariin cusub', body: 'Fariin ayaa ku sugaysa.' },
+    notice: { title: 'War ka yimid Halal Mode', body: 'Fur app-ka si aad u aragto.' },
   },
   es: {
     round_ready: { title: 'Tu selección está lista', body: "Tus nuevas presentaciones están listas, y es la hora del Fajr." },
     mutual_match: { title: 'Elección mutua', body: 'Alguien a quien elegiste también te eligió.' },
     new_message: { title: 'Nuevo mensaje', body: 'Tienes un mensaje esperando.' },
+    notice: { title: 'Novedades de Halal Mode', body: 'Abre la app para verlo.' },
   },
   ru: {
     round_ready: { title: 'Ваша подборка готова', body: "Новые знакомства готовы, и пришло время фаджра." },
     mutual_match: { title: 'Взаимный выбор', body: 'Человек, которого вы выбрали, тоже выбрал вас.' },
     new_message: { title: 'Новое сообщение', body: 'Вас ждёт сообщение.' },
+    notice: { title: 'Новости от Halal Mode', body: 'Откройте приложение, чтобы посмотреть.' },
   },
   zh: {
     round_ready: { title: '你的推荐已就绪', body: '你的新介绍已备好，也到了晨礼的时间。' },
     mutual_match: { title: '双向选择', body: '你选择的人也选择了你。' },
     new_message: { title: '新消息', body: '你有一条消息等待查看。' },
+    notice: { title: '来自 Halal Mode 的通知', body: '打开应用查看。' },
   },
 };
 

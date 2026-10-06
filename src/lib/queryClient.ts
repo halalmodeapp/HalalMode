@@ -28,4 +28,5 @@ export const queryKeys = {
   connection: (id: string) => ['connection', id] as const,
   savedAnswers: ['saved-answers'] as const,
   messages: (connectionId: string) => ['messages', connectionId] as const,
+  notices: ['notices'] as const,
 };
