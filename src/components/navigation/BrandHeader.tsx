@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-import { Wordmark } from '@/components/brand/Wordmark';
+import { ShiningWordmark } from '@/components/brand/ShiningWordmark';
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
 import { useSession } from '@/state/session';
@@ -13,7 +13,7 @@ export function BrandHeader() {
 
   return (
     <View style={styles.header}>
-      <Wordmark width={110} />
+      <ShiningWordmark width={110} />
       {tier === 'premium' ? (
         // Beiruti rather than the logo's own letterforms, and gold rather than
         // ink — so it reads as a tier badge attached to the mark, not as part

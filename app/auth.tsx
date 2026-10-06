@@ -1,4 +1,3 @@
-import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -26,6 +25,7 @@ import { useAuth } from '@/state/auth';
 import { useBreakpoint } from '@/theme/breakpoints';
 import { font as appFont } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
+import { ShiningWordmark } from '@/components/brand/ShiningWordmark';
 import { trackProductEvent } from '@/lib/analytics';
 
 /**
@@ -139,12 +139,7 @@ export default function AuthScreen() {
           <View style={[styles.hero, { height: heroHeight }, wide && styles.heroWide]}>
             <HalftoneHero />
             <View pointerEvents="box-none" style={[styles.header, { paddingTop: insets.top + 18 }]}>
-              <Image
-                source={require('../assets/branding/logo.svg')}
-                style={styles.logo}
-                contentFit="contain"
-                accessibilityLabel="Halal Mode"
-              />
+              <ShiningWordmark width={176} />
               <Pressable
                 testID={testIds.auth.language}
                 accessibilityRole="button"
@@ -336,7 +331,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 24,
   },
-  logo: { width: 176, height: 25 },
   globe: {
     width: 38,
     height: 38,
