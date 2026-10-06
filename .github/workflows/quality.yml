@@ -1,11 +1,10 @@
 name: Quality gates
 
+# Every push, on every branch: the database contracts need a real Postgres,
+# which GitHub provides free here, so they never have to run on a laptop.
 on:
   pull_request:
   push:
-    branches:
-      - main
-      - 'codex/**'
 
 permissions:
   contents: read
