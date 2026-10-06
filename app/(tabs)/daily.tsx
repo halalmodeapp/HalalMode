@@ -627,7 +627,7 @@ export default function DailyScreen() {
  * A large clock counting down to this member's own next Fajr, to the second:
  * HH:MM:SS under a small label.
  */
-function FajrCountdown() {
+function FajrCountdown({ lead }: { lead?: string }) {
   const { t } = useI18n();
   const profileQuery = useQuery({ queryKey: queryKeys.profile('me'), queryFn: fetchMyProfile });
   const nextFajr = useNextFajr(profileQuery.data?.city);
@@ -644,8 +644,10 @@ function FajrCountdown() {
   const two = (value: number) => String(value).padStart(2, '0');
   const clock = `${two(Math.floor(total / 3600))}:${two(Math.floor((total % 3600) / 60))}:${two(total % 60)}`;
   return (
-    <View style={styles.fajrClock} accessibilityLabel={`${t('daily.countdownLabel')} ${clock}`}>
-      <Text variant="micro" center>{t('daily.countdownLabel')}</Text>
+    <View style={styles.fajrClock} accessibilityLabel={`${lead ?? t('daily.countdownLabel')} ${clock}`}>
+      {lead
+        ? <Text variant="body" center style={styles.fajrLead}>{lead}</Text>
+        : <Text variant="micro" center>{t('daily.countdownLabel')}</Text>}
       <Text center style={styles.countdownClock}>{clock}</Text>
     </View>
   );
@@ -684,19 +686,16 @@ function FajrWaitState({ firstSet = false }: { firstSet?: boolean }) {
     <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
       <BrandHeader />
       <Animated.View entering={FadeIn.duration(300)} style={styles.complete}>
-        {firstSet ? (
-          // One plain sentence pair, then the clock: nothing to repeat.
-          <Text variant="body" center style={styles.completeBody}>
-            {city ? t('daily.firstSetTitleCity', { city }) : t('daily.firstSetTitle')}
-          </Text>
-        ) : (
-          <Text variant="display" center style={styles.completeTitle}>{t('daily.waitTitle')}</Text>
-        )}
         {/* "No one fitted" only when matching ran and found nobody. */}
         {firstSet ? null : (
           <Text variant="bodySmall" center style={styles.completeBody}>{t('daily.waitBody')}</Text>
         )}
-        <FajrCountdown />
+        {/* One sentence that runs straight into the clock. */}
+        <FajrCountdown
+          lead={firstSet
+            ? (city ? t('daily.firstSetTitleCity', { city }) : t('daily.firstSetTitle'))
+            : (city ? t('daily.nextAtFajrCity', { city }) : t('daily.nextAtFajr'))}
+        />
         {!native ? (
           <Text variant="caption" center style={styles.completeBody}>{t('daily.remindersApp')}</Text>
         ) : consentQuery.data ? (
@@ -715,6 +714,7 @@ function FajrWaitState({ firstSet = false }: { firstSet?: boolean }) {
 
 function SetCompleteState({ onReset, waitingForConnection }: { onReset: () => void; waitingForConnection: boolean }) {
   const { t, isRTL } = useI18n();
+  const city = useQuery({ queryKey: queryKeys.profile('me'), queryFn: fetchMyProfile }).data?.city;
   return (
     <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
       <BrandHeader />
@@ -726,7 +726,7 @@ function SetCompleteState({ onReset, waitingForConnection }: { onReset: () => vo
         <Text variant="bodySmall" center style={styles.completeBody}>
           {t('daily.completeBody')}
         </Text>
-        <FajrCountdown />
+        <FajrCountdown lead={city ? t('daily.nextAtFajrCity', { city }) : t('daily.nextAtFajr')} />
         {waitingForConnection ? <InlineNotice message={t('daily.waitingConnection')} /> : null}
         {USE_MOCKS ? (
           <Button
@@ -744,6 +744,7 @@ function SetCompleteState({ onReset, waitingForConnection }: { onReset: () => vo
 const styles = StyleSheet.create({
   rtl: RTL_LAYOUT,
   remind: { width: '100%', maxWidth: 360, gap: 10, marginTop: 8 },
+  fajrLead: { color: color.inkSoft, maxWidth: 420 },
   fajrClock: { alignItems: 'center', gap: 4, marginVertical: 18 },
   countdownClock: { fontFamily: font.display, fontSize: 52, lineHeight: 60, color: color.ink, fontVariant: ['tabular-nums'] },
   rowReverse: { flexDirection: 'row-reverse' },
