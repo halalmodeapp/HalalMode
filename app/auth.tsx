@@ -26,6 +26,7 @@ import { useAuth } from '@/state/auth';
 import { useBreakpoint } from '@/theme/breakpoints';
 import { font as appFont } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
+import { trackProductEvent } from '@/lib/analytics';
 
 /**
  * The sign-in screen, dressed like halalmo.de: the gold halftone photo with the
@@ -105,6 +106,7 @@ export default function AuthScreen() {
         options: { emailRedirectTo: authReturnAddress() },
       });
       if (error) throw error;
+      trackProductEvent('auth_link_requested');
       // Supabase remains the authority for rate limits. This short local pause
       // protects people from accidentally requesting several identical links.
       setSecondsUntilResend(60);

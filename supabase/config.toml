@@ -68,3 +68,9 @@ verify_jwt = false
 
 [functions.send-notifications]
 verify_jwt = false
+
+[functions.send-mail]
+verify_jwt = false
+
+[functions.report-action]
+verify_jwt = false

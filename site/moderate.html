@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Confirm action · Halal Mode</title>
+<style>
+  :root { --ink:#0a0a0a; --soft:#6c6a65; --sand:#f2f0ec; --surface:#fcfcfb; --gold:#8a6a34; --red:#b3261e; }
+  body { margin:0; background:var(--surface); color:var(--ink); font:16px/1.5 system-ui, sans-serif; }
+  main { max-width:460px; margin:12vh auto; padding:0 16px; }
+  .card { background:var(--sand); border-radius:20px; padding:24px; }
+  h1 { font-size:22px; margin:0 0 8px; }
+  p { color:var(--soft); margin:0 0 20px; }
+  button { width:100%; border:0; border-radius:999px; padding:14px; font:600 15px system-ui, sans-serif; color:#fff; background:var(--ink); cursor:pointer; }
+  button.ban { background:var(--red); } button.suspend { background:var(--gold); }
+  button:disabled { opacity:.5; cursor:default; }
+  #result { margin-top:16px; font-weight:600; }
+</style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <h1 id="title">Confirm</h1>
+    <p id="body"></p>
+    <button id="go" type="button">Confirm</button>
+    <div id="result" role="status"></div>
+  </div>
+</main>
+<script>
+  // Opened from a report email. Nothing happens until the button is pressed:
+  // mail scanners open links to check them, and must not ban anyone.
+  var q = new URLSearchParams(location.search);
+  var a = q.get('a');
+  var words = {
+    suspend: ['Suspend for 7 days?', 'Their profile is hidden and they cannot sign in for a week. The report is marked resolved.', 'Suspend for 7 days'],
+    ban: ['Ban this member?', 'Their profile is hidden and they can no longer sign in. The report is marked resolved.', 'Ban'],
+    dismiss: ['Dismiss this report?', 'Nothing happens to the member. The report is marked resolved.', 'Dismiss report']
+  }[a];
+  var go = document.getElementById('go');
+  if (!words) { document.getElementById('title').textContent = 'This link is not valid.'; go.hidden = true; }
+  else {
+    document.getElementById('title').textContent = words[0];
+    document.getElementById('body').textContent = words[1];
+    go.textContent = words[2];
+    go.className = a;
+  }
+  go.addEventListener('click', function () {
+    go.disabled = true;
+    fetch('https://ziboxxxiedcqfdgzqgjv.supabase.co/functions/v1/report-action', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ r: q.get('r'), a: a, e: q.get('e'), t: q.get('t') })
+    }).then(function (res) { return res.json().then(function (data) { return [res.ok, data]; }); })
+      .then(function (out) {
+        document.getElementById('result').textContent = out[0] ? 'Done.' : 'Not done: ' + (out[1].error || 'error');
+        if (!out[0]) go.disabled = false;
+      })
+      .catch(function () { document.getElementById('result').textContent = 'Could not reach the server. Try again.'; go.disabled = false; });
+  });
+</script>
+</body>
+</html>

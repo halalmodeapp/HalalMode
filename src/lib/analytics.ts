@@ -6,6 +6,7 @@
 export type ProductEventName =
   | 'auth_link_requested'
   | 'onboarding_completed'
+  | 'profile_completed'
   | 'daily_round_viewed'
   | 'interest_submitted'
   | 'connection_opened'

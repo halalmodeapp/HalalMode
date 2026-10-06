@@ -1,4 +1,5 @@
 import { buildMockRound } from '@/data/mock';
+import { trackProductEvent } from '@/lib/analytics';
 import { requireSupabase, USE_MOCKS } from '@/lib/supabase';
 import { hydrateProfileMedia } from '@/api/profileMedia';
 import {
@@ -139,6 +140,7 @@ export async function submitKeeps(
     p_ordered_introduction_ids: keptIntroductionIds,
   });
   if (error) throw error;
+  trackProductEvent('interest_submitted', { chosen: keptIntroductionIds.length });
   return data as {
     mutualProfileIds: string[];
     waitingMutualProfileIds?: string[];

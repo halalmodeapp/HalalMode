@@ -13,7 +13,7 @@
     en: {
       language: 'Choose language', navHow: 'How it works', heroTitle: 'Marriage, taken seriously.',
       heroIntro: 'Halal Mode is a better Muslim marriage app, built around a small, curated set of introductions each day. It’s intentionally designed for',
-      heroBold: 'Less noise. Better connections.', comingSoon: 'Coming soon',
+      heroBold: 'less noise and better connections.', comingSoon: 'Coming soon',
       downloadOn: 'Download on the', getItOn: 'Get it on', join: 'Join the waitlist',
       early: 'Early members are invited first, in the order they joined.',
       email: 'Email', city: 'City', cityPlaceholder: 'e.g. London', age: 'Age range',

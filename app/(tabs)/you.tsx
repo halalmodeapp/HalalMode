@@ -15,6 +15,7 @@ import { PrivateTab } from '@/components/you/PrivateTab';
 import { ProfileTab } from '@/components/you/ProfileTab';
 import { SettingsTab } from '@/components/you/SettingsTab';
 import { useI18n } from '@/i18n';
+import { trackProductEvent } from '@/lib/analytics';
 import { queryKeys } from '@/lib/queryClient';
 import { useRound } from '@/state/round';
 import { color, radius, space } from '@/theme/tokens';
@@ -58,7 +59,10 @@ export default function YouScreen() {
   const ready = readinessQuery.data?.ready;
   useEffect(() => {
     if (ready === undefined) return;
-    if (wasReady.current === false && ready) setCelebrating(true);
+    if (wasReady.current === false && ready) {
+      setCelebrating(true);
+      trackProductEvent('profile_completed');
+    }
     wasReady.current = ready;
   }, [ready]);
   const startIntroductions = () => {
