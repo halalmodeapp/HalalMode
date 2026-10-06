@@ -13,7 +13,9 @@ const run = (command) => execSync(command, { stdio: 'inherit' });
 
 rmSync('dist/web', { recursive: true, force: true });
 rmSync('dist/pages', { recursive: true, force: true });
-run('npx expo export --platform web --output-dir dist/web');
+// --clear: environment values are baked into cached build output, so a
+// changed .env would otherwise ship the old values.
+run('npx expo export --platform web --output-dir dist/web --clear');
 
 mkdirSync('dist/pages', { recursive: true });
 const skip = new Set(['node_modules', '.wrangler', 'package.json', 'package-lock.json', 'logo-effect-src.js']);

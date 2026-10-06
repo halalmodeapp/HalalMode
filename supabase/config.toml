@@ -27,14 +27,18 @@ enabled = false
 
 [auth]
 enabled = true
-site_url = "http://127.0.0.1:8081"
-additional_redirect_urls = ["exp://127.0.0.1:8081", "halalmode://"]
+# Production values: `supabase config push` applies this file to the live
+# project, so local addresses are only extra allowed returns, never the default.
+site_url = "https://halalmo.de/app"
+additional_redirect_urls = ["https://halalmo.de/app", "https://halalmo.de/app/**", "https://*.halalmode.pages.dev/**", "halalmode://**", "exp://127.0.0.1:8081", "http://localhost:8081/**", "http://localhost:8082/**"]
 enable_signup = true
 enable_anonymous_sign_ins = false
 
 [auth.email]
 enable_signup = true
 enable_confirmations = false
+# One sign-in email per address per minute: stops accidental floods and abuse.
+max_frequency = "60s"
 
 [auth.sms]
 enable_signup = false
