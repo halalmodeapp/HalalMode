@@ -40,7 +40,7 @@ import { Text } from '@/components/ui/Text';
 import { queryKeys } from '@/lib/queryClient';
 import { testIds } from '@/lib/testIds';
 
-import { getProfileReadiness, readinessSteps } from '@/lib/profileReadiness';
+import { BIO_MIN_LENGTH, getProfileReadiness, readinessSteps } from '@/lib/profileReadiness';
 import { ReadinessChecklist } from '@/components/readiness/ReadinessChecklist';
 import { placeFromDevice } from '@/lib/deviceLocation';
 import { CITY_GROUPS, placeForCity } from '@/data/cities';
@@ -69,7 +69,7 @@ function profileSchema(t: Translate) {
     name: z.string().trim().min(2, t('profile.validation.name')),
     occupation: z.string().min(2, t('profile.validation.occupation')),
     education: z.string().max(120, t('profile.validation.education')),
-    bio: z.string().min(80, t('profile.validation.bioShort')).max(600, t('profile.validation.bioLong')),
+    bio: z.string().trim().min(BIO_MIN_LENGTH, t('profile.validation.bioShort')).max(600, t('profile.validation.bioLong')),
     values: z.string().max(180, t('profile.validation.values')),
     languages: z.array(z.string()).max(12),
     // A new account has none of these yet. Without a message here the form
@@ -210,6 +210,9 @@ export function ProfileTab({
     queryKey: queryKeys.profileReadiness,
     queryFn: fetchMyProfileReadiness,
     enabled: !USE_MOCKS,
+    // Always ask again on opening: a Preferences save elsewhere may have
+    // completed the checklist since this was last fetched.
+    refetchOnMount: 'always',
   });
   // The checklist ticks as the member types; the server decides when
   // introductions start, so "complete" waits for a save it agrees with.
@@ -755,9 +758,6 @@ export function ProfileTab({
       <Card>
         <View style={[styles.cardHead, isRTL && styles.rowRTL]}>
           <Text variant="micro">{required(t('profile.gallery'))}</Text>
-          <View style={styles.tagPill}>
-            <Text style={styles.tagPillLabel}>{t('profile.noFilters')}</Text>
-          </View>
         </View>
 
         <PhotoReorderGrid
@@ -1020,12 +1020,12 @@ export function ProfileTab({
           render={({ field }) => (
             <Field
               label={required(t('profile.bio'))}
+              placeholder={t('profile.bioPlaceholder')}
               value={field.value}
               onChangeText={field.onChange}
-              // Shown from the start, not only after a failed save: the rule
-              // is easier to meet when it is visible while writing.
-              error={errors.bio?.message
-                ?? ((field.value?.trim().length ?? 0) < 80 ? t('profile.validation.bioShort') : undefined)}
+              // Only once a save is refused: while writing, the prompt in the
+              // empty box does the encouraging.
+              error={errors.bio?.message}
               multiline
             />
           )}

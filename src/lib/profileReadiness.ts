@@ -3,7 +3,7 @@
  * same rules (profile_is_ready_for_matching, migration 0173) and decides; this
  * copy lets the checklist tick items off while the member is still typing.
  */
-export const BIO_MIN_LENGTH = 80;
+export const BIO_MIN_LENGTH = 50;
 
 export interface ProfileReadinessInput {
   firstName?: string | null;

@@ -53,6 +53,9 @@ export default function YouScreen() {
   const readinessQuery = useQuery({
     queryKey: queryKeys.profileReadiness,
     queryFn: fetchMyProfileReadiness,
+    // Always ask again on opening: a Preferences save elsewhere may have
+    // completed the checklist since this was last fetched.
+    refetchOnMount: 'always',
   });
   const wasReady = useRef<boolean | null>(null);
   const [celebrating, setCelebrating] = useState(false);

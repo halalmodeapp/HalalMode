@@ -33,7 +33,7 @@ test('profile readiness names exactly what is missing', () => {
     religiousDress: 'hijab', ethnicities: ['arab'], heritageCountries: ['LB', 'US'], ownHeightCm: 165, ownBuild: 'slim', preferencesSaved: true,
   };
   assert.deepEqual(getProfileReadiness(complete), { ready: true, missing: [] });
-  assert.deepEqual(getProfileReadiness({ ...complete, bio: 'Forty characters is no longer enough here.' }).missing, ['bio']);
+  assert.deepEqual(getProfileReadiness({ ...complete, bio: 'Too short to say much about anyone.' }).missing, ['bio']);
   assert.deepEqual(getProfileReadiness({}), {
     ready: false,
     missing: ['name', 'location', 'bio', 'photo', 'languages', 'education', 'has_children', 'children_when', 'dress', 'ethnicity', 'heritage', 'height', 'body_type'],

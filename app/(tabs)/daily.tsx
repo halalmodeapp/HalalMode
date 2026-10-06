@@ -2,7 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { ArcCarousel } from '@/components/introductions/ArcCarousel';
@@ -25,6 +25,7 @@ import type { TranslationKey } from '@/i18n/catalog';
 import type { NarrowingCriterion } from '@/lib/dailyRoundState';
 import { fetchMySampleMembers } from '@/api/account';
 import { fetchMyProfile, fetchMyProfileReadiness } from '@/api/profile';
+import { enableMyNotifications, fetchMyNotificationConsent } from '@/api/notifications';
 import { trackProductEvent } from '@/lib/analytics';
 import { queryKeys } from '@/lib/queryClient';
 import { acceptConduct, hasAcceptedConduct } from '@/lib/conductAcknowledgement';
@@ -401,6 +402,9 @@ export default function DailyScreen() {
         : matchingInputsUnavailable
           ? 'daily.matchingInputsUnavailableBody'
           : 'daily.noSuitableBody';
+    // Nobody today is not an error: it is a wait until the next Fajr, which
+    // the member can be reminded of.
+    if (emptyTitle === 'daily.noSuitableTitle') return <FajrWaitState />;
     return (
       <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
         <BrandHeader />
@@ -618,10 +622,9 @@ export default function DailyScreen() {
  * The end of the round. Deliberately a dead end — no refresh, no "see more".
  * The reference is explicit that the empty state should close the session.
  */
-function SetCompleteState({ onReset, waitingForConnection }: { onReset: () => void; waitingForConnection: boolean }) {
-  const { t, isRTL } = useI18n();
-  // Counts down to this member's own next Fajr, from where they are now.
-  // The member's own city is the fallback when the device will not say.
+/** Time left until this member's own next Fajr, as a short line. */
+function useFajrCountdown(): string | null {
+  const { t } = useI18n();
   const profileQuery = useQuery({ queryKey: queryKeys.profile('me'), queryFn: fetchMyProfile });
   const nextFajr = useNextFajr(profileQuery.data?.city);
   const [now, setNow] = useState(() => Date.now());
@@ -630,15 +633,69 @@ function SetCompleteState({ onReset, waitingForConnection }: { onReset: () => vo
     return () => clearInterval(timer);
   }, []);
   const left = countdownTo(nextFajr?.toISOString(), now);
-  const nextLabel = !left
-    ? null
-    : left.done
-      ? t('daily.newSetArriving')
-      : left.hours > 0
-        ? t('daily.newSetInHours', { hours: left.hours, minutes: left.minutes })
-        : left.minutes > 0
-          ? t('daily.newSetInMinutes', { minutes: left.minutes })
-          : t('daily.newSetInSeconds');
+  if (!left) return null;
+  if (left.done) return t('daily.newSetArriving');
+  if (left.hours > 0) return t('daily.newSetInHours', { hours: left.hours, minutes: left.minutes });
+  if (left.minutes > 0) return t('daily.newSetInMinutes', { minutes: left.minutes });
+  return t('daily.newSetInSeconds');
+}
+
+/**
+ * No introduction fitted both sides today. A countdown to the member's next
+ * Fajr, and on the phone apps a one-tap reminder: the Fajr notification says
+ * the new set is ready and that it is time to pray.
+ */
+function FajrWaitState() {
+  const { t, isRTL, localeTag } = useI18n();
+  const queryClient = useQueryClient();
+  const countdown = useFajrCountdown();
+  const native = Platform.OS !== 'web';
+  const consentQuery = useQuery({
+    queryKey: ['notification-consent'],
+    queryFn: fetchMyNotificationConsent,
+    enabled: native,
+  });
+  const [failed, setFailed] = useState(false);
+  const [turningOn, setTurningOn] = useState(false);
+  const turnOn = async () => {
+    setTurningOn(true);
+    setFailed(false);
+    try {
+      await enableMyNotifications(localeTag);
+      await queryClient.invalidateQueries({ queryKey: ['notification-consent'] });
+    } catch {
+      setFailed(true);
+    } finally {
+      setTurningOn(false);
+    }
+  };
+  return (
+    <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
+      <BrandHeader />
+      <Animated.View entering={FadeIn.duration(300)} style={styles.complete}>
+        {countdown ? <Text variant="micro" center style={styles.completeCountdown}>{countdown}</Text> : null}
+        <Text variant="display" center style={styles.completeTitle}>{t('daily.waitTitle')}</Text>
+        <Text variant="bodySmall" center style={styles.completeBody}>{t('daily.waitBody')}</Text>
+        {!native ? (
+          <Text variant="caption" center style={styles.completeBody}>{t('daily.remindersApp')}</Text>
+        ) : consentQuery.data ? (
+          <Text variant="label" center style={styles.completeBody}>✓ {t('daily.remindersOn')}</Text>
+        ) : (
+          <View style={styles.remind}>
+            <Button label={t('daily.remindMe')} onPress={() => void turnOn()} loading={turningOn} />
+            <Text variant="caption" center style={styles.completeBody}>{t('daily.remindMeNote')}</Text>
+            {failed ? <InlineNotice message={t('daily.remindError')} /> : null}
+          </View>
+        )}
+      </Animated.View>
+    </Screen>
+  );
+}
+
+function SetCompleteState({ onReset, waitingForConnection }: { onReset: () => void; waitingForConnection: boolean }) {
+  const { t, isRTL } = useI18n();
+  // Counts down to this member's own next Fajr, from where they are now.
+  const nextLabel = useFajrCountdown();
   return (
     <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
       <BrandHeader />
@@ -671,6 +728,7 @@ function SetCompleteState({ onReset, waitingForConnection }: { onReset: () => vo
 
 const styles = StyleSheet.create({
   rtl: RTL_LAYOUT,
+  remind: { width: '100%', maxWidth: 360, gap: 10, marginTop: 8 },
   rowReverse: { flexDirection: 'row-reverse' },
   centred: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
