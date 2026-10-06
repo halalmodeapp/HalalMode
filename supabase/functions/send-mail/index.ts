@@ -24,12 +24,23 @@ interface Report {
   subject_report_count: number;
 }
 
+interface Moderation {
+  id: number;
+  user_id: string;
+  kind: 'photo' | 'bio';
+  ref: string;
+  decision: 'remove' | 'review';
+  reason: string | null;
+  first_name: string | null;
+}
+
 interface Claimed {
   id: number;
-  kind: 'report' | 'waitlist_welcome';
+  kind: 'report' | 'waitlist_welcome' | 'moderation';
   to: string | null;
   locale: string;
   report: Report | null;
+  moderation: Moderation | null;
 }
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
@@ -70,6 +81,29 @@ Reports against them in total: <b>${report.subject_report_count}</b>${report.sub
 <p style="color:#6C6A65;font-size:13px">Each button opens a page to confirm, so nothing happens by accident. Links work for 14 days.</p>
 </div>`;
   return { subject, html };
+}
+
+// deno-lint-ignore no-explicit-any
+async function moderationEmail(item: Moderation, client: any) {
+  let shown = `<p><b>Bio:</b><br>${escape(item.ref).replace(/\n/g, '<br>')}</p>`;
+  if (item.kind === 'photo') {
+    const signed = await client.storage.from('profile-photos').createSignedUrl(item.ref, 7 * 24 * 3600);
+    shown = signed.data?.signedUrl
+      ? `<p><a href="${signed.data.signedUrl}">Open the photo</a> (private link, 7 days)</p>`
+      : '<p>The photo could not be linked.</p>';
+  }
+  const what = item.kind === 'photo'
+    ? (item.decision === 'remove' ? 'Photo removed automatically' : 'Photo needs a look')
+    : 'Bio needs a look';
+  return {
+    subject: `${what}: ${item.first_name ?? 'member'}`,
+    html: `<div style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.5;color:#0a0a0a">
+<p><b>${escape(what)}</b> — ${escape(item.reason ?? '')}</p>
+${shown}
+<p><b>Member:</b> ${escape(item.first_name)} <code>${escape(item.user_id)}</code></p>
+<p style="color:#6C6A65;font-size:13px">Checked by Claude Haiku. A removed photo can be added back by the member; a bio is never changed automatically.</p>
+</div>`,
+  };
 }
 
 const WELCOME: Record<string, { subject: string; body: string }> = {
@@ -122,6 +156,9 @@ Deno.serve(async (request) => {
     try {
       if (item.kind === 'report' && item.report) {
         const mail = await reportEmail(item.report, secret.data as string);
+        error = await send(apiKey, operator, mail.subject, mail.html);
+      } else if (item.kind === 'moderation' && item.moderation) {
+        const mail = await moderationEmail(item.moderation, client);
         error = await send(apiKey, operator, mail.subject, mail.html);
       } else if (item.kind === 'waitlist_welcome' && item.to) {
         const mail = welcomeEmail(item.locale);

@@ -74,3 +74,6 @@ verify_jwt = false
 
 [functions.report-action]
 verify_jwt = false
+
+[functions.moderate]
+verify_jwt = false
