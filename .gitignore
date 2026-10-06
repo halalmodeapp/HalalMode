@@ -28,3 +28,4 @@ ios/
 android/
 
 .DS_Store
+deno.lock

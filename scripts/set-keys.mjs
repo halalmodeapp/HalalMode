@@ -1,6 +1,6 @@
 /**
  * Asks for the three secret keys one at a time (input is hidden), then:
- *   1. stores RESEND_API_KEY, OPENAI_API_KEY and ANTHROPIC_API_KEY as Supabase function secrets,
+ *   1. stores RESEND_API_KEY and OPENAI_API_KEY as Supabase function secrets,
  *   2. turns on sign-in emails through Resend (SMTP),
  *   3. turns on Google sign-in with the Halal Mode Web client.
  *
@@ -66,15 +66,13 @@ function run(args, env = {}) {
 
 console.log('Halal Mode keys. Paste each key and press Enter. Nothing is shown as you paste. Press Enter alone to skip.');
 console.log('');
-const resend = await ask('1 of 4. Resend API key, starting re_: ');
-const openai = await ask('2 of 4. OpenAI API key, for photo checks, starting sk-: ');
-const anthropic = await ask('3 of 4. Anthropic API key, for Halal Mode Bot summaries, starting sk-ant-: ');
-const google = await ask('4 of 4. Google client secret, starting GOCSPX-: ');
+const resend = await ask('1 of 3. Resend API key, starting re_: ');
+const openai = await ask('2 of 3. OpenAI API key, starting sk-: ');
+const google = await ask('3 of 3. Google client secret, starting GOCSPX-: ');
 
 const secrets = [];
 if (resend) secrets.push(`RESEND_API_KEY=${resend}`);
 if (openai) secrets.push(`OPENAI_API_KEY=${openai}`);
-if (anthropic) secrets.push(`ANTHROPIC_API_KEY=${anthropic}`);
 if (secrets.length) {
   console.log(run(['secrets', 'set', '--project-ref', PROJECT, ...secrets])
     ? 'Done: function keys stored.'

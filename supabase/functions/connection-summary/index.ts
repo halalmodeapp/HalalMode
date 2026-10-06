@@ -7,14 +7,17 @@
  * whether they should marry.
  *
  * Written once per connection and language, then reused, so each pair costs
- * one small model call. Without an ANTHROPIC_API_KEY secret it returns
+ * one small model call, on OpenAI's cheapest tier (see _shared/luna.ts).
+ * Without an OPENAI_API_KEY secret it returns
  * { summary: null } and the app shows its own simpler summary instead.
  */
+import OpenAI from 'npm:openai';
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+
+import { withLuna } from '../_shared/luna.ts';
 
 import questions from './questions.json' with { type: 'json' };
 
-const MODEL = 'claude-haiku-4-5-20251001';
 const QUESTIONS = questions as Record<string, { en: string; ar: string }>;
 
 /** Marks a summary being written, so a second request does not start another. */
@@ -69,8 +72,7 @@ Deno.serve(async (request) => {
     .maybeSingle();
   if (cached?.body && cached.body !== PENDING) return reply({ summary: cached.body });
 
-  const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
-  if (!apiKey) return reply({ summary: null });
+  if (!Deno.env.get('OPENAI_API_KEY')) return reply({ summary: null });
 
   // One generation per connection and language. The first request claims the
   // row; others get "not yet" and the app shows its own summary meanwhile. A
@@ -116,27 +118,19 @@ Deno.serve(async (request) => {
     'Return only the paragraphs, with no heading.',
   ].join(' ');
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-    body: JSON.stringify({
-      model: MODEL,
-      max_tokens: 400,
-      system: instructions,
-      messages: [{ role: 'user', content: transcript }],
-    }),
-  });
-  if (!response.ok) {
-    await release();
-    return reply({ summary: null });
+  let summary = '';
+  try {
+    const openai = new OpenAI();
+    const { result } = await withLuna(openai, (model) => openai.responses.create({
+      model,
+      instructions,
+      input: transcript,
+      max_output_tokens: 500,
+    }));
+    summary = (result.output_text ?? '').trim().slice(0, 4000);
+  } catch {
+    summary = '';
   }
-  const result = await response.json();
-  const summary = (result.content ?? [])
-    .filter((part: { type: string }) => part.type === 'text')
-    .map((part: { text: string }) => part.text)
-    .join('\n')
-    .trim()
-    .slice(0, 4000);
   if (!summary) {
     await release();
     return reply({ summary: null });
