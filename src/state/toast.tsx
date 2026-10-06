@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AccessibilityInfo, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from '@/components/ui/Text';
@@ -9,7 +9,10 @@ import { alpha, color, radius, shadow, space } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
 
 interface ToastValue {
-  /** Shows a brief message. Replacing a visible one restarts its timer. */
+  /**
+   * Shows a brief message. A second one while the first is showing replaces it
+   * with a fresh toast, so two saves read as two saves, not one.
+   */
   show: (message: string) => void;
 }
 
@@ -28,12 +31,16 @@ const VISIBLE_MS = 4_000;
 export function ToastProvider({ children }: { children: ReactNode }) {
   const insets = useSafeAreaInsets();
   const { isRTL } = useI18n();
-  const [message, setMessage] = useState<string | null>(null);
+  // Each toast gets its own id: a new one cuts the old off at once and slides
+  // in fresh, so two saves read as two saves rather than one changed label.
+  const [message, setMessage] = useState<{ id: number; text: string } | null>(null);
+  const nextId = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const show = useCallback((next: string) => {
     if (timer.current) clearTimeout(timer.current);
-    setMessage(next);
+    nextId.current += 1;
+    setMessage({ id: nextId.current, text: next });
     // Announced separately: the toast is not focusable and a screen reader
     // moving to the new screen would otherwise pass straight over it.
     AccessibilityInfo.announceForAccessibility(next);
@@ -50,17 +57,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={value}>
       {children}
       {message ? (
-        <View
-          pointerEvents="none"
-          style={[styles.host, { paddingBottom: insets.bottom + space.xxl }]}
-        >
+        <View pointerEvents="none" style={styles.host}>
           <Animated.View
+            key={message.id}
             entering={FadeInDown.duration(220)}
-            exiting={FadeOutDown.duration(180)}
             accessibilityRole="alert"
-            style={[styles.toast, isRTL && styles.rtl]}
+            style={[styles.toast, { bottom: insets.bottom + space.xxl }, isRTL && styles.rtl]}
           >
-            <Text variant="bodySmall" style={styles.label}>{message}</Text>
+            <Text variant="bodySmall" style={styles.label}>{message.text}</Text>
           </Animated.View>
         </View>
       ) : null}
@@ -88,6 +92,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.gutterWide,
   },
   toast: {
+    position: 'absolute',
     maxWidth: 440,
     paddingVertical: space.md,
     paddingHorizontal: space.lg,
