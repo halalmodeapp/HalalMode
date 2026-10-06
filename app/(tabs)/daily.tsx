@@ -685,14 +685,14 @@ function FajrWaitState({ firstSet = false }: { firstSet?: boolean }) {
       <BrandHeader />
       <Animated.View entering={FadeIn.duration(300)} style={styles.complete}>
         <Text variant="display" center style={styles.completeTitle}>
-          {t(firstSet ? 'daily.firstSetTitle' : 'daily.waitTitle')}
+          {firstSet
+            ? (city ? t('daily.firstSetTitleCity', { city }) : t('daily.firstSetTitle'))
+            : t('daily.waitTitle')}
         </Text>
         {/* "No one fitted" only when matching ran and found nobody. */}
-        <Text variant="bodySmall" center style={styles.completeBody}>
-          {firstSet
-            ? (city ? t('daily.firstSetBodyCity', { city }) : t('daily.firstSetBody'))
-            : t('daily.waitBody')}
-        </Text>
+        {firstSet ? null : (
+          <Text variant="bodySmall" center style={styles.completeBody}>{t('daily.waitBody')}</Text>
+        )}
         <FajrCountdown />
         {!native ? (
           <Text variant="caption" center style={styles.completeBody}>{t('daily.remindersApp')}</Text>
