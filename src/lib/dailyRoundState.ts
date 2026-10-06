@@ -2,6 +2,7 @@ export const dailyRoundStatuses = [
   'ready',
   'profile_not_ready',
   'no_suitable_introductions',
+  'waiting_for_first_set',
   'matching_inputs_unavailable',
   'awaiting_turn',
   // A set that exists and has not opened yet. Rounds open at each member's own
