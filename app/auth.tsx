@@ -189,7 +189,7 @@ export default function AuthScreen() {
               {t('auth.heroTitle')}
             </Text>
             <Text style={[styles.lede, { fontFamily: isRTL ? appFont.arabic : SANS }, align]}>
-              {t('auth.heroIntro')} <Text style={styles.ledeBold}>{t('auth.heroBold')}</Text>
+              {t('auth.heroIntro')}
             </Text>
 
             <View style={styles.card}>
@@ -402,7 +402,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   lede: { fontSize: 17, lineHeight: 27, color: C.muted, marginBottom: 28 },
-  ledeBold: { fontWeight: '700' },
 
   card: {
     backgroundColor: 'rgba(252,252,251,0.92)',
