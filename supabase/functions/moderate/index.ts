@@ -91,6 +91,8 @@ Deno.serve(async (request) => {
   if (claimed.error) return new Response('claim failed', { status: 500 });
 
   const tally = { allow: 0, remove: 0, review: 0, skipped: 0, failed: 0 };
+  // The first failure, so a run can be diagnosed from its response alone.
+  let firstError: string | null = null;
   for (const item of (claimed.data ?? []) as Item[]) {
     try {
       if (!item.current) {
@@ -119,9 +121,10 @@ Deno.serve(async (request) => {
       tally[verdict.decision] += 1;
     } catch (error) {
       console.error('moderation failed', item.id, String(error));
+      firstError ??= String(error).slice(0, 300);
       await client.rpc('release_moderation_service', { p_id: item.id });
       tally.failed += 1;
     }
   }
-  return Response.json(tally);
+  return Response.json({ ...tally, firstError });
 });
