@@ -754,7 +754,7 @@ export const tr: TranslationCatalog = {
   'profile.readinessPhoto': 'net bir fotoğraf',
   'profile.readinessPreferences': 'eşleşme tercihlerinizi',
   'profile.openMatchingPreferences': 'Eşleşme tercihlerini aç',
-  'daily.firstSetTitleCity': "İlk tanıştırmalarınız {{city}} için sabah namazı vaktinde geliyor",
+  'daily.firstSetTitleCity': "Profiliniz tamamlandı. İlk tanıştırmalarınız {{city}} için sabah namazı vaktinde geliyor.",
   'daily.countdownLabel': "Sonraki set",
   'daily.firstSetTitle': "İlk tanıştırmalarınız sabah namazı vaktinde",
   'readiness.step.background': "Etnik köken ve köken",

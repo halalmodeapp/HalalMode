@@ -754,7 +754,7 @@ export const bn: TranslationCatalog = {
   'profile.readinessPhoto': 'একটি স্পষ্ট ছবি',
   'profile.readinessPreferences': 'আপনার ম্যাচিংয়ের পছন্দ',
   'profile.openMatchingPreferences': 'ম্যাচিংয়ের পছন্দ খুলুন',
-  'daily.firstSetTitleCity': "আপনার প্রথম পরিচিতি আসবে {{city}}-এর ফজরে",
+  'daily.firstSetTitleCity': "আপনার প্রোফাইল সম্পূর্ণ। আপনার প্রথম পরিচিতি আসবে {{city}}-এর ফজরে।",
   'daily.countdownLabel': "পরের সেট",
   'daily.firstSetTitle': "আপনার প্রথম পরিচিতি আসবে ফজরে",
   'readiness.step.background': "জাতিগত পরিচয় ও বংশপরিচয়",

@@ -684,11 +684,14 @@ function FajrWaitState({ firstSet = false }: { firstSet?: boolean }) {
     <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
       <BrandHeader />
       <Animated.View entering={FadeIn.duration(300)} style={styles.complete}>
-        <Text variant="display" center style={styles.completeTitle}>
-          {firstSet
-            ? (city ? t('daily.firstSetTitleCity', { city }) : t('daily.firstSetTitle'))
-            : t('daily.waitTitle')}
-        </Text>
+        {firstSet ? (
+          // One plain sentence pair, then the clock: nothing to repeat.
+          <Text variant="body" center style={styles.completeBody}>
+            {city ? t('daily.firstSetTitleCity', { city }) : t('daily.firstSetTitle')}
+          </Text>
+        ) : (
+          <Text variant="display" center style={styles.completeTitle}>{t('daily.waitTitle')}</Text>
+        )}
         {/* "No one fitted" only when matching ran and found nobody. */}
         {firstSet ? null : (
           <Text variant="bodySmall" center style={styles.completeBody}>{t('daily.waitBody')}</Text>

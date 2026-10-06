@@ -754,7 +754,7 @@ export const fa: TranslationCatalog = {
   'profile.readinessPhoto': 'یک عکس واضح',
   'profile.readinessPreferences': 'ترجیحات تطبیق',
   'profile.openMatchingPreferences': 'باز کردن ترجیحات تطبیق',
-  'daily.firstSetTitleCity': "نخستین معرفی‌هایتان هنگام فجرِ {{city}} می‌رسند",
+  'daily.firstSetTitleCity': "نمایه شما کامل است. نخستین معرفی‌هایتان هنگام فجرِ {{city}} می‌آیند.",
   'daily.countdownLabel': "مجموعه بعدی تا",
   'daily.firstSetTitle': "نخستین معرفی‌های شما هنگام فجر می‌آیند",
   'readiness.step.background': "قومیت و تبار",

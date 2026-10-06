@@ -754,7 +754,7 @@ export const ru: TranslationCatalog = {
   'profile.readinessPhoto': 'чёткое фото',
   'profile.readinessPreferences': 'критерии подбора',
   'profile.openMatchingPreferences': 'Открыть критерии подбора',
-  'daily.firstSetTitleCity': "Первые знакомства придут к фаджру в городе {{city}}",
+  'daily.firstSetTitleCity': "Ваш профиль заполнен. Первые знакомства придут к фаджру в городе {{city}}.",
   'daily.countdownLabel': "Следующая подборка через",
   'daily.firstSetTitle': "Первые знакомства придут к фаджру",
   'readiness.step.background': "Этническая принадлежность и происхождение",

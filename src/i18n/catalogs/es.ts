@@ -754,7 +754,7 @@ export const es: TranslationCatalog = {
   'profile.readinessPhoto': 'una foto clara',
   'profile.readinessPreferences': 'tus preferencias',
   'profile.openMatchingPreferences': 'Abrir preferencias',
-  'daily.firstSetTitleCity': "Tus primeras presentaciones llegan al Fajr en {{city}}",
+  'daily.firstSetTitleCity': "Tu perfil está completo. Tus primeras presentaciones llegan al Fajr en {{city}}.",
   'daily.countdownLabel': "Próximo grupo en",
   'daily.firstSetTitle': "Tus primeras presentaciones llegan al Fajr",
   'readiness.step.background': "Etnia y herencia",
