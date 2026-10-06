@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Image } from 'expo-image';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { fetchConnections } from '@/api/connections';
@@ -132,7 +133,12 @@ export default function YouScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={[styles.identity, isRTL && styles.rowReverse]}>
-          <View style={styles.mark} />
+          {/* The main photo, as members see it first. */}
+          {profile.photos[0] ? (
+            <Image source={profile.photos[0]} style={styles.mark} contentFit="cover" accessibilityIgnoresInvertColors />
+          ) : (
+            <View style={styles.mark} />
+          )}
           <View style={styles.identityText}>
             <Text variant="displaySmall" style={styles.name}>
               {profile.name}
