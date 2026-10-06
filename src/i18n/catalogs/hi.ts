@@ -754,6 +754,7 @@ export const hi: TranslationCatalog = {
   'profile.readinessPhoto': 'एक साफ़ फ़ोटो',
   'profile.readinessPreferences': 'अपनी मैचिंग पसंद',
   'profile.openMatchingPreferences': 'मैचिंग पसंद खोलें',
+  'daily.firstSetBodyCity': "आपकी प्रोफ़ाइल पूरी है। परिचय {{city}} की फ़ज्र पर तैयार होते हैं।",
   'daily.countdownLabel': "अगला सेट",
   'daily.firstSetBody': "आपकी प्रोफ़ाइल पूरी है। परिचय आपके यहाँ की फ़ज्र पर तैयार होते हैं।",
   'daily.firstSetTitle': "आपके पहले परिचय फ़ज्र पर आएँगे",

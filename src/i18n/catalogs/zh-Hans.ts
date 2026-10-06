@@ -754,6 +754,7 @@ export const zhHans: TranslationCatalog = {
   'profile.readinessPhoto': '一张清晰的照片',
   'profile.readinessPreferences': '您的匹配偏好',
   'profile.openMatchingPreferences': '打开匹配偏好',
+  'daily.firstSetBodyCity': "你的资料已完善。介绍会在{{city}}的晨礼时准备好。",
   'daily.countdownLabel': "下一批将在",
   'daily.firstSetBody': "你的资料已完善。介绍会在你所在地的晨礼时准备好。",
   'daily.firstSetTitle': "你的第一批介绍将在晨礼时送达",

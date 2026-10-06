@@ -754,6 +754,7 @@ export const id: TranslationCatalog = {
   'profile.readinessPhoto': 'foto yang jelas',
   'profile.readinessPreferences': 'preferensi pencocokan Anda',
   'profile.openMatchingPreferences': 'Buka preferensi pencocokan',
+  'daily.firstSetBodyCity': "Profil Anda sudah lengkap. Perkenalan disiapkan saat Subuh di {{city}}.",
   'daily.countdownLabel': "Set berikutnya dalam",
   'daily.firstSetBody': "Profil Anda sudah lengkap. Perkenalan disiapkan saat Subuh di tempat Anda.",
   'daily.firstSetTitle': "Perkenalan pertama Anda datang saat Subuh",

@@ -754,6 +754,7 @@ export const am: TranslationCatalog = {
   'profile.readinessPhoto': 'ግልጽ ፎቶ',
   'profile.readinessPreferences': 'የማዛመጃ ምርጫዎችዎ',
   'profile.openMatchingPreferences': 'የማዛመጃ ምርጫዎችን ክፈት',
+  'daily.firstSetBodyCity': "መገለጫዎ ተጠናቋል። መግቢያዎች በ{{city}} በፈጅር ይዘጋጃሉ።",
   'daily.countdownLabel': "ቀጣዩ ስብስብ በ",
   'daily.firstSetBody': "መገለጫዎ ተጠናቋል። መግቢያዎች ባሉበት ቦታ በፈጅር ይዘጋጃሉ።",
   'daily.firstSetTitle': "የመጀመሪያ መግቢያዎችዎ በፈጅር ይመጣሉ",

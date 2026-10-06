@@ -754,6 +754,7 @@ export const so: TranslationCatalog = {
   'profile.readinessPhoto': 'sawir cad',
   'profile.readinessPreferences': 'doorbidyada isku-aadka',
   'profile.openMatchingPreferences': 'Fur doorbidyada isku-aadka',
+  'daily.firstSetBodyCity': "Boggaagu waa dhammaystiran yahay. Isbarashooyinka waxaa la diyaariyaa Waaberiga {{city}}.",
   'daily.countdownLabel': "Kooxda xigta",
   'daily.firstSetBody': "Boggaagu waa dhammaystiran yahay. Isbarashooyinka waxaa la diyaariyaa Waaberiga meesha aad joogto.",
   'daily.firstSetTitle': "Isbarashooyinkaaga ugu horreeya waxay yimaadaan Waaberiga",

@@ -660,6 +660,7 @@ function FajrWaitState({ firstSet = false }: { firstSet?: boolean }) {
   const { t, isRTL, localeTag } = useI18n();
   const queryClient = useQueryClient();
   const native = Platform.OS !== 'web';
+  const city = useQuery({ queryKey: queryKeys.profile('me'), queryFn: fetchMyProfile }).data?.city;
   const consentQuery = useQuery({
     queryKey: ['notification-consent'],
     queryFn: fetchMyNotificationConsent,
@@ -688,7 +689,9 @@ function FajrWaitState({ firstSet = false }: { firstSet?: boolean }) {
         </Text>
         {/* "No one fitted" only when matching ran and found nobody. */}
         <Text variant="bodySmall" center style={styles.completeBody}>
-          {t(firstSet ? 'daily.firstSetBody' : 'daily.waitBody')}
+          {firstSet
+            ? (city ? t('daily.firstSetBodyCity', { city }) : t('daily.firstSetBody'))
+            : t('daily.waitBody')}
         </Text>
         <FajrCountdown />
         {!native ? (

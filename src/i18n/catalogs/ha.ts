@@ -754,6 +754,7 @@ export const ha: TranslationCatalog = {
   'profile.readinessPhoto': 'hoto bayyananne',
   'profile.readinessPreferences': 'zaɓuɓɓukan haɗawa',
   'profile.openMatchingPreferences': 'Buɗe zaɓuɓɓukan haɗawa',
+  'daily.firstSetBodyCity': "Bayananka sun cika. Ana shirya gabatarwa a lokacin Asuba a {{city}}.",
   'daily.countdownLabel': "Saitin gaba cikin",
   'daily.firstSetBody': "Bayananka sun cika. Ana shirya gabatarwa a lokacin Asuba inda kake.",
   'daily.firstSetTitle': "Gabatarwarka na farko za su zo a Asuba",

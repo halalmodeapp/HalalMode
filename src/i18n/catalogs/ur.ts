@@ -754,6 +754,7 @@ export const ur: TranslationCatalog = {
   'profile.readinessPhoto': 'ایک واضح تصویر',
   'profile.readinessPreferences': 'اپنی میچنگ ترجیحات',
   'profile.openMatchingPreferences': 'میچنگ ترجیحات کھولیں',
+  'daily.firstSetBodyCity': "آپ کی پروفائل مکمل ہے۔ تعارف {{city}} کی فجر پر تیار ہوتے ہیں۔",
   'daily.countdownLabel': "اگلا سیٹ",
   'daily.firstSetBody': "آپ کی پروفائل مکمل ہے۔ تعارف آپ کے علاقے کی فجر پر تیار ہوتے ہیں۔",
   'daily.firstSetTitle': "آپ کے پہلے تعارف فجر پر آئیں گے",
