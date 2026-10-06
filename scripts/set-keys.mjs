@@ -22,7 +22,12 @@ const NEWLINE = String.fromCharCode(10);
 
 // Plain line input: works in every Windows terminal, including screen readers.
 const lines = createInterface({ input: process.stdin, output: process.stdout });
-const ask = async (question) => (await lines.question(question)).trim();
+const answers = lines[Symbol.asyncIterator]();
+const ask = async (question) => {
+  process.stdout.write(question);
+  const next = await answers.next();
+  return (next.done ? '' : next.value).trim();
+};
 
 function run(args, env = {}) {
   const result = spawnSync('npx', ['supabase', ...args], {
