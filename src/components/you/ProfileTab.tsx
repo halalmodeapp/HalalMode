@@ -671,6 +671,7 @@ export function ProfileTab({
 
     if (USE_MOCKS) {
       setPhotosDirty(true);
+      toast.show(`✓ ${t('filters.saved')}`);
       return;
     }
 

@@ -1,12 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AccessibilityInfo, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
 import { alpha, color, radius, shadow, space } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
+import { TAB_BAR_SPACE } from '@/components/ui/Screen';
+import { useBreakpoint } from '@/theme/breakpoints';
 
 interface ToastValue {
   /**
@@ -31,6 +33,7 @@ const VISIBLE_MS = 4_000;
 export function ToastProvider({ children }: { children: ReactNode }) {
   const insets = useSafeAreaInsets();
   const { isRTL } = useI18n();
+  const islandLift = useBreakpoint() === 'phone' ? 0 : 24;
   // Each toast gets its own id: a new one cuts the old off at once and slides
   // in fresh, so two saves read as two saves rather than one changed label.
   const [message, setMessage] = useState<{ id: number; text: string } | null>(null);
@@ -60,9 +63,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         <View pointerEvents="none" style={styles.host}>
           <Animated.View
             key={message.id}
-            entering={FadeInDown.duration(220)}
+            // A short pop, so each new save visibly replaces the last.
+            entering={ZoomIn.duration(200)}
             accessibilityRole="alert"
-            style={[styles.toast, { bottom: insets.bottom + space.xxl }, isRTL && styles.rtl]}
+            // Above the floating tab bar, never on top of it.
+            style={[styles.toast, { bottom: insets.bottom + TAB_BAR_SPACE + islandLift + space.md }, isRTL && styles.rtl]}
           >
             <Text variant="bodySmall" style={styles.label}>{message.text}</Text>
           </Animated.View>
