@@ -120,9 +120,9 @@ export default function YouScreen() {
           onChange={setTab}
           testIDPrefix="you-tab"
           options={[
-            { value: 'profile', label: t('you.tab.profile') },
-            { value: 'private', label: t('you.tab.matching') },
-            { value: 'settings', label: t('you.tab.settings') },
+            { value: 'profile', label: t('you.tab.profile'), icon: '☺FE0E' },
+            { value: 'private', label: t('you.tab.matching'), icon: '♡' },
+            { value: 'settings', label: t('you.tab.settings'), icon: '⚙FE0E' },
           ]}
         />
       </View>

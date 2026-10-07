@@ -5,7 +5,8 @@ import { useI18n } from '@/i18n';
 import { color, font, radius } from '@/theme/tokens';
 
 export interface SegmentedProps<T extends string> {
-  options: { value: T; label: string }[];
+  /** An optional glyph shown before the label, like the tab bar's. */
+  options: { value: T; label: string; icon?: string }[];
   value: T;
   onChange: (value: T) => void;
   testIDPrefix?: string;
@@ -32,9 +33,16 @@ export function Segmented<T extends string>({
             onPress={() => onChange(option.value)}
             style={[styles.segment, active && styles.segmentActive]}
           >
-            <Text style={[styles.label, active && styles.labelActive]}>
-              {option.label}
-            </Text>
+            <View style={[styles.labelRow, isRTL && styles.rowReverse]}>
+              {option.icon ? (
+                <Text style={[styles.icon, active && styles.iconActive]} accessibilityElementsHidden importantForAccessibility="no">
+                  {option.icon}
+                </Text>
+              ) : null}
+              <Text style={[styles.label, active && styles.labelActive]}>
+                {option.label}
+              </Text>
+            </View>
           </Pressable>
         );
       })}
@@ -60,6 +68,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   segmentActive: { backgroundColor: color.surface },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  icon: { fontSize: 13, lineHeight: 16, color: color.faint },
+  iconActive: { color: color.gold },
   label: { fontFamily: font.bodyMedium, fontSize: 12, color: color.faint },
   labelActive: { fontFamily: font.bodySemi, color: color.ink },
 });

@@ -153,37 +153,6 @@ export function SettingsTab({
       {page === 'main' ? (
         <View style={styles.stack}>
         <View style={styles.stack}>
-      <Section
-        eyebrow={t('settings.privacy')}
-        title={t('settings.privacyTitle')}
-      >
-        <SettingRow
-          title={t('settings.visibility')}
-          subtitle={t('settings.visibilityBody')}
-          badge={t('settings.alwaysOn')}
-        />
-        <SettingRow
-          title={t('settings.activity')}
-          subtitle={t('settings.activityBody')}
-          value={readReceiptsQuery.data ?? true}
-          testID={testIds.settings.readReceipts}
-          disabled={readReceipts.isPending || readReceiptsQuery.isPending || readReceiptsQuery.isError}
-          onValueChange={(enabled) => readReceipts.mutate(enabled)}
-        />
-        {readReceiptsQuery.isError ? (
-          <InlineNotice
-            message={t('settings.activityLoadError')}
-            actionLabel={t('common.tryAgain')}
-            onAction={() => void readReceiptsQuery.refetch()}
-          />
-        ) : null}
-        <SettingRow
-          title={t('settings.photos')}
-          subtitle={t('settings.photosBody')}
-          trailing={<Text style={styles.lockGlyph}>○</Text>}
-        />
-      </Section>
-
       <Section eyebrow={t('settings.preferences')} title={t('settings.preferencesTitle')}>
         <SettingRow
           title={`🌐  ${t('settings.language')}`}
@@ -247,6 +216,37 @@ export function SettingsTab({
             onAction={() => void notificationsQuery.refetch()}
           />
         ) : null}
+      </Section>
+
+      <Section
+        eyebrow={t('settings.privacy')}
+        title={t('settings.privacyTitle')}
+      >
+        <SettingRow
+          title={t('settings.visibility')}
+          subtitle={t('settings.visibilityBody')}
+          badge={t('settings.alwaysOn')}
+        />
+        <SettingRow
+          title={t('settings.activity')}
+          subtitle={t('settings.activityBody')}
+          value={readReceiptsQuery.data ?? true}
+          testID={testIds.settings.readReceipts}
+          disabled={readReceipts.isPending || readReceiptsQuery.isPending || readReceiptsQuery.isError}
+          onValueChange={(enabled) => readReceipts.mutate(enabled)}
+        />
+        {readReceiptsQuery.isError ? (
+          <InlineNotice
+            message={t('settings.activityLoadError')}
+            actionLabel={t('common.tryAgain')}
+            onAction={() => void readReceiptsQuery.refetch()}
+          />
+        ) : null}
+        <SettingRow
+          title={t('settings.photos')}
+          subtitle={t('settings.photosBody')}
+          trailing={<Text style={styles.lockGlyph}>○</Text>}
+        />
       </Section>
 
       </View>
