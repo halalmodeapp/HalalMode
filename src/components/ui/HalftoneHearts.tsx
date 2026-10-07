@@ -20,7 +20,9 @@ interface Heart {
   born: number;
   /** Seconds from appearing to gone. */
   life: number;
-  drift: number;
+  /** Pixels per second it travels while alive. */
+  vx: number;
+  vy: number;
 }
 
 function spawn(width: number, height: number, now: number, stagger = 0): Heart {
@@ -30,15 +32,33 @@ function spawn(width: number, height: number, now: number, stagger = 0): Heart {
     size: 70 + Math.random() * 110,
     born: now - stagger,
     life: 7 + Math.random() * 6,
-    drift: (Math.random() - 0.5) * 6,
+    vx: (Math.random() - 0.5) * 36,
+    vy: -6 - Math.random() * 16,
   };
 }
 
-/** Inside the classic heart curve, how deep: 0 outside, rising toward 1. */
-function heartDepth(x: number, y: number): number {
-  const a = x * x + y * y - 1;
-  const f = a * a * a - x * x * y * y * y;
-  return f >= 0 ? 0 : Math.min(1, -f * 3);
+/**
+ * Signed distance to a filled heart (Inigo Quilez's): negative inside. The
+ * point of the heart is at (0, 0) and the top of the lobes near y = 1.1, so
+ * the lobes stay joined and it reads as a heart, not two circles.
+ */
+function heartDistance(px: number, py: number): number {
+  const x = Math.abs(px);
+  const y = py;
+  if (y + x > 1) {
+    return Math.hypot(x - 0.25, y - 0.75) - Math.SQRT2 / 4;
+  }
+  const m = 0.5 * Math.max(x + y, 0);
+  const a = (x) ** 2 + (y - 1) ** 2;
+  const b = (x - m) ** 2 + (y - m) ** 2;
+  return Math.sqrt(Math.min(a, b)) * Math.sign(x - y);
+}
+
+/** 1 deep inside, easing to 0 just past the edge. */
+function heartFill(x: number, y: number): number {
+  const d = heartDistance(x, y);
+  const t = Math.min(Math.max((0.06 - d) / 0.3, 0), 1);
+  return t * t * (3 - 2 * t);
 }
 
 /**
@@ -80,14 +100,18 @@ export function HalftoneHearts() {
         for (let x = STEP / 2; x < width; x += STEP) {
           let grow = 0;
           for (const heart of hearts) {
-            const age = (now - heart.born) / heart.life;
-            // Swells in, holds a breath, fades out.
+            const seconds = now - heart.born;
+            const age = seconds / heart.life;
+            // Swells in, holds a breath, fades out, while drifting across.
             const bloom = Math.sin(Math.PI * age) ** 2;
-            const scale = heart.size * (0.55 + 0.45 * bloom);
-            const hx = (x - heart.x) / scale;
-            const hy = -(y - (heart.y - heart.drift * age * 10)) / scale + 0.15;
-            if (hx * hx + hy * hy > 2.5) continue;
-            grow = Math.max(grow, heartDepth(hx * 1.15, hy * 1.15) * bloom);
+            const scale = heart.size * (0.6 + 0.4 * bloom);
+            const cx = heart.x + heart.vx * seconds;
+            const cy = heart.y + heart.vy * seconds;
+            // Heart space: point at the bottom, lobes up, centred on (cx, cy).
+            const hx = (x - cx) / scale;
+            const hy = (cy - y) / scale + 0.55;
+            if (hx < -0.8 || hx > 0.8 || hy < -0.2 || hy > 1.3) continue;
+            grow = Math.max(grow, heartFill(hx, hy) * bloom);
           }
           const radius = BASE_RADIUS + grow * GROW;
           context.beginPath();
