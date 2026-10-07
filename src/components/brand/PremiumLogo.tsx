@@ -13,7 +13,7 @@ const RATIO = 139.6 / 988.77;
  */
 export function PremiumWord({ logoWidth, dark }: { logoWidth: number; dark?: boolean }) {
   const height = logoWidth * RATIO;
-  const size = height * 1.32;
+  const size = height * 1.12;
   const tint = dark ? color.goldOnDark : color.gold;
   return (
     <View
@@ -30,7 +30,7 @@ export function PremiumWord({ logoWidth, dark }: { logoWidth: number; dark?: boo
       <Text
         accessibilityElementsHidden
         importantForAccessibility="no"
-        style={{ fontSize: size * 0.36, lineHeight: size * 0.36, color: tint, marginLeft: size * 0.05, marginTop: -size * 0.04 }}
+        style={{ fontSize: size * 0.55, lineHeight: size * 0.55, color: tint, marginLeft: size * 0.06, marginTop: -size * 0.14 }}
       >
         ✦
       </Text>
