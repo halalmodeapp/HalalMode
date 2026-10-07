@@ -3,6 +3,7 @@ import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { useBreakpoint } from '@/theme/breakpoints';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { HalftoneHearts } from '@/components/ui/HalftoneHearts';
 import { color } from '@/theme/tokens';
 
 export interface ScreenProps {
@@ -36,6 +37,8 @@ export function Screen({ children, withTabBar, dark, style }: ScreenProps) {
         style,
       ]}
     >
+      {/* Faint pulsing hearts in the white, behind everything. */}
+      {dark ? null : <HalftoneHearts />}
       {children}
     </View>
   );
