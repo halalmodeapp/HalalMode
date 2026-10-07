@@ -810,7 +810,7 @@ export const fr: TranslationCatalog = {
   'profile.todo.childrenWhen': "Quand vous aimeriez des enfants",
   'profile.childrenWhen': "Quand aimeriez-vous avoir des enfants ?",
   'intro.about': "À propos de {{name}}",
-  'filters.premiumTitle': "Filtres Premium",
+  'filters.premiumTitle': "Filtres Halal Mode Premium",
   'filters.premiumBody': "Avec Halal Mode Premium. Un filtre n’exclut quelqu’un que si « Indispensable » est activé.",
   'filters.hasChildren': "A des enfants",
   'filters.career': "Carrière",

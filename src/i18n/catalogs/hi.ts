@@ -810,7 +810,7 @@ export const hi: TranslationCatalog = {
   'profile.todo.childrenWhen': "आप कब बच्चे चाहते हैं",
   'profile.childrenWhen': "आप संतान कब चाहेंगे?",
   'intro.about': "{{name}} के बारे में",
-  'filters.premiumTitle': "प्रीमियम फ़िल्टर",
+  'filters.premiumTitle': "Halal Mode प्रीमियम फ़िल्टर",
   'filters.premiumBody': "Halal Mode Premium के साथ। फ़िल्टर किसी को तभी बाहर करता है जब «ज़रूरी» चालू हो।",
   'filters.hasChildren': "संतान है",
   'filters.career': "करियर",

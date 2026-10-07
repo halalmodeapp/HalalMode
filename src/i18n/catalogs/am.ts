@@ -810,7 +810,7 @@ export const am: TranslationCatalog = {
   'profile.todo.childrenWhen': "ልጆች መቼ እንደሚፈልጉ",
   'profile.childrenWhen': "ልጆች መቼ ይፈልጋሉ?",
   'intro.about': "ስለ {{name}}",
-  'filters.premiumTitle': "የPremium ማጣሪያዎች",
+  'filters.premiumTitle': "የHalal Mode Premium ማጣሪያዎች",
   'filters.premiumBody': "ከHalal Mode Premium ጋር። ማጣሪያ ሰዎችን የሚያስወጣው «ግዴታ» ሲበራ ብቻ ነው።",
   'filters.hasChildren': "ልጅ አለው/አላት",
   'filters.career': "ሙያ",

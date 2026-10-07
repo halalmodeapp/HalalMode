@@ -360,9 +360,13 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
 
           {/* Everything below is Premium. Shown to everyone, so a free member
               can see what it offers; only a Premium member can change it. */}
+          {/* Its own black card with gold, so it reads as something special. */}
+          <View style={styles.premiumCard}>
           <View style={styles.premiumHead}>
-            <Text variant="microAccent">✦ {t('filters.premiumTitle')}</Text>
-            <Text variant="caption" style={styles.filterNote}>{t('filters.premiumBody')}</Text>
+            <Text style={styles.premiumStar}>✦</Text>
+            <Text style={styles.premiumTitle} accessibilityRole="header">{t('filters.premiumTitle')}</Text>
+            <View style={styles.premiumRule} />
+            <Text variant="caption" style={styles.premiumBody}>{t('filters.premiumBody')}</Text>
           </View>
           <View style={styles.premiumBlock}>
             <View style={[styles.premiumInner, !isPremium && styles.locked]} pointerEvents={isPremium ? 'auto' : 'none'}>
@@ -480,6 +484,7 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
                 style={StyleSheet.absoluteFill}
               />
             ) : null}
+          </View>
           </View>
 
 
@@ -728,8 +733,23 @@ const styles = StyleSheet.create({
 
   metricRow: { flexDirection: 'row', gap: 10 },
   metric: { flex: 1, gap: 6 },
-  premiumHead: { gap: 4, marginTop: 8, paddingTop: 16, borderTopWidth: 1, borderTopColor: alpha.lineFaint },
-  premiumBlock: { position: 'relative' },
+  premiumCard: {
+    marginTop: 8,
+    marginHorizontal: -8,
+    padding: 8,
+    paddingTop: 22,
+    borderRadius: radius.xl,
+    backgroundColor: color.ink,
+    borderWidth: 1,
+    borderColor: color.goldOnDark,
+  },
+  premiumHead: { alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingBottom: 18 },
+  premiumStar: { color: color.goldOnDark, fontSize: 20, lineHeight: 24 },
+  premiumTitle: { fontFamily: font.display, fontSize: 26, lineHeight: 32, color: color.goldOnDark, textAlign: 'center' },
+  premiumRule: { width: 44, height: 1, backgroundColor: color.goldOnDark, marginVertical: 4 },
+  premiumBody: { color: 'rgba(252,252,251,0.72)', textAlign: 'center' },
+  // The controls sit on a light sheet inside the card, so they stay legible.
+  premiumBlock: { position: 'relative', backgroundColor: color.surface, borderRadius: radius.lg, padding: 16 },
   premiumInner: { gap: 22 },
   locked: { opacity: 0.45 },
   subHeading: { marginTop: 12 },

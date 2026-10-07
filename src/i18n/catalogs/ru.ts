@@ -810,7 +810,7 @@ export const ru: TranslationCatalog = {
   'profile.todo.childrenWhen': "Когда вы хотите детей",
   'profile.childrenWhen': "Когда вы хотели бы детей?",
   'intro.about': "О себе: {{name}}",
-  'filters.premiumTitle': "Премиум-фильтры",
+  'filters.premiumTitle': "Фильтры Halal Mode Premium",
   'filters.premiumBody': "С Halal Mode Premium. Фильтр исключает людей, только если включено «Обязательно».",
   'filters.hasChildren': "Есть дети",
   'filters.career': "Профессия",

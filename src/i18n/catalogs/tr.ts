@@ -810,7 +810,7 @@ export const tr: TranslationCatalog = {
   'profile.todo.childrenWhen': "Ne zaman çocuk istediğiniz",
   'profile.childrenWhen': "Ne zaman çocuk istersiniz?",
   'intro.about': "{{name}} hakkında",
-  'filters.premiumTitle': "Premium filtreler",
+  'filters.premiumTitle': "Halal Mode Premium filtreleri",
   'filters.premiumBody': "Halal Mode Premium ile. Filtre yalnızca «Olmazsa olmaz» açıkken kişileri eler.",
   'filters.hasChildren': "Çocuğu var",
   'filters.career': "Kariyer",

@@ -810,7 +810,7 @@ export const fa: TranslationCatalog = {
   'profile.todo.childrenWhen': "چه زمانی فرزند می‌خواهید",
   'profile.childrenWhen': "چه زمانی دوست دارید فرزند داشته باشید؟",
   'intro.about': "دربارهٔ {{name}}",
-  'filters.premiumTitle': "فیلترهای ویژه",
+  'filters.premiumTitle': "فیلترهای Halal Mode Premium",
   'filters.premiumBody': "با Halal Mode Premium. فیلتر فقط وقتی «ضروری» روشن است کسی را کنار می‌گذارد.",
   'filters.hasChildren': "دارای فرزند",
   'filters.career': "شغل",

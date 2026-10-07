@@ -810,7 +810,7 @@ export const zhHans: TranslationCatalog = {
   'profile.todo.childrenWhen': "希望何时要孩子",
   'profile.childrenWhen': "你希望什么时候要孩子？",
   'intro.about': "关于 {{name}}",
-  'filters.premiumTitle': "高级筛选",
+  'filters.premiumTitle': "Halal Mode 高级筛选",
   'filters.premiumBody': "需要 Halal Mode Premium。只有开启“必须”时，筛选才会排除他人。",
   'filters.hasChildren': "有孩子",
   'filters.career': "职业",

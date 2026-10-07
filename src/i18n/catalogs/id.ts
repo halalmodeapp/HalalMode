@@ -810,7 +810,7 @@ export const id: TranslationCatalog = {
   'profile.todo.childrenWhen': "Kapan Anda ingin punya anak",
   'profile.childrenWhen': "Kapan Anda ingin punya anak?",
   'intro.about': "Tentang {{name}}",
-  'filters.premiumTitle': "Filter Premium",
+  'filters.premiumTitle': "Filter Halal Mode Premium",
   'filters.premiumBody': "Dengan Halal Mode Premium. Filter hanya menyaring orang saat «Wajib» aktif.",
   'filters.hasChildren': "Punya anak",
   'filters.career': "Karier",

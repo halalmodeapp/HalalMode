@@ -810,7 +810,7 @@ export const ha: TranslationCatalog = {
   'profile.todo.childrenWhen': "Yaushe kake son yara",
   'profile.childrenWhen': "Yaushe kuke son haihuwa?",
   'intro.about': "Game da {{name}}",
-  'filters.premiumTitle': "Matatun Premium",
+  'filters.premiumTitle': "Matatun Halal Mode Premium",
   'filters.premiumBody': "Tare da Halal Mode Premium. Matata tana cire mutane ne kawai idan «Dole» yana kunne.",
   'filters.hasChildren': "Yana da yara",
   'filters.career': "Sana’a",

@@ -810,7 +810,7 @@ export const ms: TranslationCatalog = {
   'profile.todo.childrenWhen': "Bila anda mahukan anak",
   'profile.childrenWhen': "Bilakah anda mahu mempunyai anak?",
   'intro.about': "Tentang {{name}}",
-  'filters.premiumTitle': "Penapis Premium",
+  'filters.premiumTitle': "Penapis Halal Mode Premium",
   'filters.premiumBody': "Dengan Halal Mode Premium. Penapis hanya menapis orang apabila «Mesti» dihidupkan.",
   'filters.hasChildren': "Ada anak",
   'filters.career': "Kerjaya",

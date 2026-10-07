@@ -810,7 +810,7 @@ export const so: TranslationCatalog = {
   'profile.todo.childrenWhen': "Goorta aad carruur rabto",
   'profile.childrenWhen': "Goorma ayaad jeclaan lahayd carruur?",
   'intro.about': "Ku saabsan {{name}}",
-  'filters.premiumTitle': "Shaandhooyinka Premium",
+  'filters.premiumTitle': "Shaandhooyinka Halal Mode Premium",
   'filters.premiumBody': "Halal Mode Premium. Shaandhadu qof kama saarto ilaa «Waa lagama maarmaan» shidan yahay.",
   'filters.hasChildren': "Carruur leh",
   'filters.career': "Xirfadda",
