@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Linking, Pressable, StyleSheet, Switch, View } from 'react-native';
 
-import { fetchMyReadReceipts, fetchMySampleMembers, requestAccountDeletion, setMyReadReceipts, setMySampleMembers, setProfilePaused } from '@/api/account';
+import { fetchMyReadReceipts, fetchMySampleMembers, requestAccountDeletion, setMyReadReceipts, setMySampleMembers, setMyTestPremium, setProfilePaused } from '@/api/account';
 import { disableMyNotifications, enableMyNotifications, fetchMyNotificationConsent } from '@/api/notifications';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -53,6 +53,14 @@ export function SettingsTab({
   const [notificationsExplainer, setNotificationsExplainer] = useState(false);
   const [moderationOpen, setModerationOpen] = useState(false);
   /** Security and account each open as their own page within Settings. */
+  const testPremium = useMutation({
+    mutationFn: setMyTestPremium,
+    onSuccess: (_, enabled) => {
+      setTier(enabled ? 'premium' : 'free');
+      void queryClient.invalidateQueries({ queryKey: queryKeys.preferences });
+      toast.show(`✓ ${t('filters.saved')}`);
+    },
+  });
   const sampleMembersQuery = useQuery({ queryKey: ['sample-members'], queryFn: fetchMySampleMembers });
   const sampleMembers = useMutation({
     mutationFn: setMySampleMembers,
@@ -392,6 +400,15 @@ export function SettingsTab({
             value={sampleMembers.isPending ? sampleMembers.variables : sampleMembersQuery.data.enabled}
             disabled={sampleMembers.isPending}
             onValueChange={(enabled) => sampleMembers.mutate(enabled)}
+          />
+        ) : null}
+        {sampleMembersQuery.data?.allowed ? (
+          <SettingRow
+            title={t('settings.testPremium')}
+            subtitle={t('settings.testPremiumBody')}
+            value={testPremium.isPending ? testPremium.variables : tier === 'premium'}
+            disabled={testPremium.isPending}
+            onValueChange={(enabled) => testPremium.mutate(enabled)}
           />
         ) : null}
         {sampleMembersQuery.data?.allowed ? (

@@ -57,3 +57,10 @@ export async function resetMySampleFlow(): Promise<void> {
   const { error } = await requireSupabase().rpc('reset_my_sample_flow');
   if (error) throw error;
 }
+
+/** Testers only: switches Halal Mode Premium on or off without a purchase. */
+export async function setMyTestPremium(enabled: boolean): Promise<void> {
+  if (USE_MOCKS) return;
+  const { error } = await requireSupabase().rpc('set_my_test_premium', { p_enabled: enabled });
+  if (error) throw error;
+}
