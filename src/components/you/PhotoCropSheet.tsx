@@ -16,23 +16,36 @@ import { color, radius, shadow, space } from '@/theme/tokens';
 const ASPECT = 3 / 4;
 const MAX_ZOOM = 4;
 
-interface PhotoCropSheetProps {
-  /** The photo to crop; the sheet is hidden while this is null. */
-  uri: string | null;
-  onDone: (croppedUri: string) => void;
-  onCancel: () => void;
+/** The circle's place on the photo, as fractions of its width and height. */
+export interface CircleCrop {
+  cx: number;
+  cy: number;
+  /** Diameter as a fraction of the photo's width. */
+  size: number;
 }
 
+type PhotoCropSheetProps = {
+  /** The photo to crop; the sheet is hidden while this is null. */
+  uri: string | null;
+  onCancel: () => void;
+} & (
+  /** A gallery photo: cut to the 3:4 card, once, on upload. */
+  | { shape: 'card'; onDone: (croppedUri: string) => void }
+  /** The profile picture: a circle placed on the main photo, nothing cut. */
+  | { shape: 'circle'; initial?: CircleCrop | null; onCircle: (crop: CircleCrop) => void }
+);
+
 /**
- * Crop and position a photo before it is saved: drag to move, pinch or use the
- * slider to zoom. The frame is the 3:4 shape the photo is shown in, and the
- * centre of it is what the round profile circle shows.
+ * Crop and position a photo: drag to move, pinch or use the slider to zoom.
+ * As a card it is the 3:4 shape gallery photos are shown in; as a circle it
+ * places the round profile picture on the main photo.
  */
-export function PhotoCropSheet({ uri, onDone, onCancel }: PhotoCropSheetProps) {
+export function PhotoCropSheet(props: PhotoCropSheetProps) {
+  const { uri, onCancel, shape } = props;
   const { t, isRTL } = useI18n();
   const window = useWindowDimensions();
   const frameWidth = Math.min(300, window.width - 80);
-  const frameHeight = frameWidth / ASPECT;
+  const frameHeight = shape === 'circle' ? frameWidth : frameWidth / ASPECT;
 
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
   const [zoom, setZoom] = useState(1);
@@ -66,6 +79,19 @@ export function PhotoCropSheet({ uri, onDone, onCancel }: PhotoCropSheetProps) {
   const cover = size ? Math.max(frameWidth / size.width, frameHeight / size.height) : 1;
   const drawnWidth = (size?.width ?? 0) * cover;
   const drawnHeight = (size?.height ?? 0) * cover;
+
+  // A circle already placed opens where it was left.
+  const initial = shape === 'circle' ? props.initial : null;
+  useEffect(() => {
+    if (!size || !initial) return;
+    const zoomed = Math.min(Math.max(frameWidth / (initial.size * drawnWidth), 1), MAX_ZOOM);
+    scale.value = zoomed;
+    setZoom(Math.round(zoomed * 10) / 10);
+    x.value = (0.5 - initial.cx) * drawnWidth * zoomed;
+    y.value = (0.5 - initial.cy) * drawnHeight * zoomed;
+    // Only when a photo has loaded, not as the member drags.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [size]);
 
   const clamp = (value: number, limit: number) => {
     'worklet';
@@ -104,6 +130,17 @@ export function PhotoCropSheet({ uri, onDone, onCancel }: PhotoCropSheetProps) {
 
   const save = async () => {
     if (!uri || !size) return;
+    if (props.shape === 'circle') {
+      // Nothing is cut: only where the circle sits on the photo is kept.
+      const shown = drawnWidth * scale.value;
+      const shownHeight = drawnHeight * scale.value;
+      props.onCircle({
+        cx: Math.min(Math.max(0.5 - x.value / shown, 0), 1),
+        cy: Math.min(Math.max(0.5 - y.value / shownHeight, 0), 1),
+        size: Math.min(Math.max(frameWidth / shown, 0.05), 1),
+      });
+      return;
+    }
     setSaving(true);
     try {
       // Frame → source pixels. The image is centred in the frame, then moved
@@ -117,7 +154,7 @@ export function PhotoCropSheet({ uri, onDone, onCancel }: PhotoCropSheetProps) {
         .crop({ originX: Math.round(originX), originY: Math.round(originY), width: Math.round(width), height: Math.round(height) })
         .renderAsync();
       const saved = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.92 });
-      onDone(saved.uri);
+      props.onDone(saved.uri);
     } catch {
       setFailed(true);
     } finally {
@@ -129,10 +166,10 @@ export function PhotoCropSheet({ uri, onDone, onCancel }: PhotoCropSheetProps) {
     <Modal visible={uri !== null} transparent animationType="fade" onRequestClose={onCancel}>
       <GestureHandlerRootView style={styles.scrim}>
         <View accessibilityViewIsModal style={[styles.card, isRTL && styles.rtl]}>
-          <Text variant="displaySmall" center>{t('profile.cropTitle')}</Text>
-          <Text variant="caption" center style={styles.hint}>{t('profile.cropHint')}</Text>
+          <Text variant="displaySmall" center>{t(shape === 'circle' ? 'profile.avatarTitle' : 'profile.cropTitle')}</Text>
+          <Text variant="caption" center style={styles.hint}>{t(shape === 'circle' ? 'profile.avatarHint' : 'profile.cropHint')}</Text>
 
-          <View style={[styles.frame, { width: frameWidth, height: frameHeight }]}>
+          <View style={[styles.frame, { width: frameWidth, height: frameHeight }, shape === 'circle' && { borderRadius: frameWidth / 2 }]}>
             {size && uri ? (
               <GestureDetector gesture={Gesture.Simultaneous(pan, pinch)}>
                 <Animated.View style={[styles.fill, styles.center]}>
@@ -146,8 +183,6 @@ export function PhotoCropSheet({ uri, onDone, onCancel }: PhotoCropSheetProps) {
             ) : (
               <ActivityIndicator color={color.ink} />
             )}
-            {/* Where the round profile circle will fall. */}
-            <View pointerEvents="none" style={[styles.circle, { width: frameWidth - 4, height: frameWidth - 4, borderRadius: frameWidth }]} />
           </View>
 
           <View style={styles.zoom}>
@@ -188,7 +223,6 @@ const styles = StyleSheet.create({
   frame: { borderRadius: radius.lg, overflow: 'hidden', backgroundColor: color.clay, alignItems: 'center', justifyContent: 'center' },
   fill: { width: '100%', height: '100%' },
   center: { alignItems: 'center', justifyContent: 'center' },
-  circle: { position: 'absolute', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.8)' },
   zoom: { alignSelf: 'stretch', marginTop: space.md, paddingHorizontal: space.sm },
   stack: { alignSelf: 'stretch', gap: 10, marginTop: space.md },
   action: { alignSelf: 'stretch' },

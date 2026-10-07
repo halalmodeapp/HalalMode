@@ -1,7 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Image } from 'expo-image';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { fetchConnections } from '@/api/connections';
@@ -13,6 +12,7 @@ import { Screen } from '@/components/ui/Screen';
 import { Segmented } from '@/components/ui/Segmented';
 import { Text } from '@/components/ui/Text';
 import { PrivateTab } from '@/components/you/PrivateTab';
+import { ProfileAvatar } from '@/components/you/ProfileAvatar';
 import { ProfileTab } from '@/components/you/ProfileTab';
 import { SettingsTab } from '@/components/you/SettingsTab';
 import { useI18n } from '@/i18n';
@@ -133,12 +133,8 @@ export default function YouScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={[styles.identity, isRTL && styles.rowReverse]}>
-          {/* The main photo, as members see it first. */}
-          {profile.photos[0] ? (
-            <Image source={profile.photos[0]} style={styles.mark} contentFit="cover" accessibilityIgnoresInvertColors />
-          ) : (
-            <View style={styles.mark} />
-          )}
+          {/* Tap to move or zoom the circle on the main photo. */}
+          <ProfileAvatar profile={profile} />
           <View style={styles.identityText}>
             <Text variant="displaySmall" style={styles.name}>
               {profile.name}

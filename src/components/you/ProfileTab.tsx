@@ -550,56 +550,23 @@ export function ProfileTab({
       return;
     }
     // Crop and position first; the upload happens once it is confirmed.
-    setCropping({ uri: asset.uri, replace: null });
+    setCropping({ uri: asset.uri });
   };
 
-  /** A new photo, or one being re-cropped, both from the crop sheet. */
-  const saveCropped = async (uri: string, replace: number | null) => {
+  /** A new photo, cropped and confirmed: saved as it is, then fixed in place. */
+  const saveCropped = async (uri: string) => {
     setCropping(null);
-    const asset = { uri, mimeType: 'image/jpeg' as const };
     {
       if (USE_MOCKS) {
-        if (replace !== null) {
-          setMedia((current) => current.map((tile, index) => (index === replace ? { key: uri, displayUrl: uri } : tile)));
-          setPhotosDirty(true);
-          return;
-        }
-        setMedia((current) => [...current, { key: asset.uri, displayUrl: asset.uri }]);
+        setMedia((current) => [...current, { key: uri, displayUrl: uri }]);
         setPhotosDirty(true);
         return;
       }
 
-      // Cropping re-encodes every photo as JPEG.
-      const mimeType: ProfilePhotoMimeType = asset.mimeType;
-
       setUploadingPhoto(true);
       try {
-        const old = replace !== null ? media[replace] : undefined;
-        // With all six slots full there is no room for the new copy, so the
-        // old one has to go first.
-        const full = media.length >= 6;
-        if (old?.storagePath && full) await deleteProfilePhoto(old.storagePath);
-        const uploaded = await uploadProfilePhoto({ uri: asset.uri, mimeType });
-        if (replace !== null) {
-          // Swap in place: the new photo takes the old one's slot, then the
-          // old one is removed.
-          const displayUrl = await createProfileMediaSignedUrl(PROFILE_PHOTO_BUCKET, uploaded.path);
-          const next = media.map((tile, index) =>
-            index === replace ? { key: uploaded.path, displayUrl, storagePath: uploaded.path } : tile);
-          if (old?.storagePath && !full) await deleteProfilePhoto(old.storagePath);
-          await reorderProfilePhotos(next.map((tile) => tile.storagePath as string));
-          setMedia(next);
-          queryClient.setQueryData<Profile>(queryKeys.profile('me'), (current) =>
-            current
-              ? {
-                  ...current,
-                  photos: next.map((tile) => tile.displayUrl),
-                  photoMedia: next.map((tile) => ({ displayUrl: tile.displayUrl, storagePath: tile.storagePath })),
-                }
-              : current);
-          toast.show(`✓ ${t('filters.saved')}`);
-          return;
-        }
+        // Cropping re-encodes every photo as JPEG.
+        const uploaded = await uploadProfilePhoto({ uri, mimeType: 'image/jpeg' });
         const displayUrl = await createProfileMediaSignedUrl(
           PROFILE_PHOTO_BUCKET,
           uploaded.path
@@ -631,7 +598,7 @@ export function ProfileTab({
     }
   };
 
-  const [cropping, setCropping] = useState<{ uri: string; replace: number | null } | null>(null);
+  const [cropping, setCropping] = useState<{ uri: string } | null>(null);
 
   const removePhoto = (index: number) => {
     if (photos.length <= 1) {
@@ -809,11 +776,6 @@ export function ProfileTab({
           photos={media}
           onReorder={reorderPhotos}
           onRemove={removePhoto}
-          onEdit={(index) => {
-            const tile = media[index];
-            if (tile) setCropping({ uri: tile.displayUrl, replace: index });
-          }}
-          editLabel={(position) => t('profile.cropPhotoA11y', { count: position })}
           onAdd={() => void addPhoto('library')}
           removeDisabled={deletingPhoto !== null}
           addDisabled={uploadingPhoto}
@@ -1380,8 +1342,9 @@ export function ProfileTab({
       ) : null}
 
       <PhotoCropSheet
+        shape="card"
         uri={cropping?.uri ?? null}
-        onDone={(uri) => void saveCropped(uri, cropping?.replace ?? null)}
+        onDone={(uri) => void saveCropped(uri)}
         onCancel={() => setCropping(null)}
       />
       <ConfirmDialog

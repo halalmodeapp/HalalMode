@@ -36,9 +36,6 @@ export interface PhotoReorderGridProps {
   photos: readonly PhotoTile[];
   onReorder: (next: PhotoTile[]) => void;
   onRemove: (index: number) => void;
-  /** Re-crop a photo already in the gallery. */
-  onEdit?: (index: number) => void;
-  editLabel?: (position: number) => string;
   /** Tapping an empty slot. */
   onAdd: () => void;
   removeDisabled?: boolean;
@@ -73,8 +70,6 @@ export function PhotoReorderGrid({
   photos,
   onReorder,
   onRemove,
-  onEdit,
-  editLabel,
   onAdd,
   removeDisabled = false,
   addDisabled = false,
@@ -264,8 +259,6 @@ export function PhotoReorderGrid({
               onDrop={drop}
               onStep={step}
               onRemove={() => onRemove(index)}
-              onEdit={onEdit ? () => onEdit(index) : undefined}
-              editLabel={editLabel?.(index + 1)}
               removeDisabled={removeDisabled}
               mainLabel={mainLabel}
               removeLabel={removeLabel}
@@ -298,8 +291,6 @@ interface PhotoCellProps {
   onDrop: (outside?: boolean) => void;
   onStep: (from: number, to: number) => void;
   onRemove: () => void;
-  onEdit?: () => void;
-  editLabel?: string;
   removeDisabled: boolean;
   mainLabel: string;
   removeLabel: (position: number) => string;
@@ -320,8 +311,6 @@ function PhotoCell({
   onDrop,
   onStep,
   onRemove,
-  onEdit,
-  editLabel,
   removeDisabled,
   mainLabel,
   removeLabel,
@@ -512,17 +501,6 @@ function PhotoCell({
           >
             <Text style={styles.removeLabel}>×</Text>
           </Pressable>
-          {onEdit ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={editLabel}
-              hitSlop={8}
-              onPress={onEdit}
-              style={[styles.edit, isRTL && styles.editRTL]}
-            >
-              <Text style={styles.editLabel}>⤢</Text>
-            </Pressable>
-          ) : null}
         </Animated.View>
       </View>
     </GestureDetector>
@@ -594,17 +572,4 @@ const styles = StyleSheet.create({
   },
   removeRTL: { right: undefined, left: 6 },
   removeLabel: { color: color.white, fontSize: 15, fontFamily: font.body, lineHeight: 17 },
-  edit: {
-    position: 'absolute',
-    bottom: 6,
-    right: 6,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: 'rgba(10,10,10,0.62)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  editRTL: { right: undefined, left: 6 },
-  editLabel: { color: color.white, fontSize: 15, fontFamily: font.body, lineHeight: 18 },
 });

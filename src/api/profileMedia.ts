@@ -264,3 +264,39 @@ async function readLocalMedia(uri: string, maxBytes: number): Promise<ArrayBuffe
   if (file.size <= 0 || file.size > maxBytes) throw tooLarge();
   return file.arrayBuffer();
 }
+
+/** The round profile picture's place on the main photo (migration 0187). */
+export interface AvatarCrop {
+  /** The main photo this was set on; a different main photo starts centred. */
+  path: string;
+  /** Centre, as fractions of the photo's width and height. */
+  cx: number;
+  cy: number;
+  /** The circle's diameter as a fraction of the photo's width. */
+  size: number;
+}
+
+let mockAvatarCrop: AvatarCrop | null = null;
+
+export async function fetchMyAvatarCrop(): Promise<AvatarCrop | null> {
+  if (USE_MOCKS) return mockAvatarCrop;
+  const { data, error } = await requireSupabase().rpc('get_my_avatar_crop');
+  if (error) throw error;
+  const row = data as Partial<AvatarCrop> | null;
+  if (!row || typeof row.path !== 'string') return null;
+  return { path: row.path, cx: Number(row.cx), cy: Number(row.cy), size: Number(row.size) };
+}
+
+export async function saveMyAvatarCrop(crop: AvatarCrop): Promise<void> {
+  if (USE_MOCKS) {
+    mockAvatarCrop = crop;
+    return;
+  }
+  const { error } = await requireSupabase().rpc('set_my_avatar_crop', {
+    p_path: crop.path,
+    p_cx: crop.cx,
+    p_cy: crop.cy,
+    p_size: crop.size,
+  });
+  if (error) throw error;
+}
