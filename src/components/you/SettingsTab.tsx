@@ -16,6 +16,8 @@ import { useI18n } from '@/i18n';
 import { LanguageSheet } from '@/components/ui/LanguageSheet';
 import { localeName } from '@/i18n/locales';
 import { useSession } from '@/state/session';
+import { PremiumLogo } from '@/components/brand/PremiumLogo';
+import { SurfaceToneProvider } from '@/theme/tone';
 import { useAuth } from '@/state/auth';
 import { useFeatureFlags } from '@/state/featureFlags';
 import { USE_MOCKS } from '@/lib/supabase';
@@ -254,7 +256,11 @@ export function SettingsTab({
         <View style={[styles.premiumDetailsHead, isRTL && styles.rowReverse]}>
           <View>
             <Text style={styles.premiumLabel}>{t('settings.membership')}</Text>
-            <Text style={styles.premiumTitle}>{t('settings.premium')}</Text>
+            <View style={styles.premiumTitle}>
+              <SurfaceToneProvider tone="dark">
+                <PremiumLogo width={170} />
+              </SurfaceToneProvider>
+            </View>
           </View>
           <View style={[styles.planBadge, isPremium && styles.planBadgeActive]}>
             <Text style={[styles.planBadgeLabel, isPremium && styles.planBadgeLabelActive]}>
@@ -650,7 +656,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: color.goldOnDark,
   },
-  premiumTitle: { marginTop: 8, fontFamily: font.display, fontSize: 20, color: color.white },
+  premiumTitle: { marginTop: 12 },
   premiumUnavailable: { color: 'rgba(252,252,251,0.72)', lineHeight: 18 },
   featureList: { gap: 9 },
   featureRow: { flexDirection: 'row', gap: 9, alignItems: 'flex-start' },

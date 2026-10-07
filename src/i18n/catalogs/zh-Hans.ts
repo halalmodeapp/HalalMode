@@ -754,6 +754,7 @@ export const zhHans: TranslationCatalog = {
   'profile.readinessPhoto': '一张清晰的照片',
   'profile.readinessPreferences': '您的匹配偏好',
   'profile.openMatchingPreferences': '打开匹配偏好',
+  'filters.premiumFiltersWord': "筛选",
   'settings.testPremium': "Halal Mode Premium（测试）",
   'settings.testPremiumBody': "无需付费，为你自己的账户开启或关闭 Premium。只有测试人员能看到此开关。",
   'profile.avatarTitle': "头像",

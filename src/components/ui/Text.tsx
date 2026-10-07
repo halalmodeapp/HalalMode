@@ -2,6 +2,7 @@ import { Text as RNText, type TextProps as RNTextProps, StyleSheet } from 'react
 
 import { color, font, microLabel } from '@/theme/tokens';
 import { useI18n } from '@/i18n';
+import { onDark, useSurfaceTone } from '@/theme/tone';
 
 /**
  * The reference gives every string one of a handful of jobs. Naming those jobs
@@ -43,12 +44,14 @@ export function Text({
   ...rest
 }: TextProps) {
   const { isRTL } = useI18n();
+  const dark = useSurfaceTone() === 'dark';
   return (
     <RNText
       {...rest}
       style={[
         styles[variant],
         isRTL ? styles.rtl : null,
+        dark ? { color: DARK_INK[variant] } : null,
         tone ? { color: color[tone] } : null,
         center ? { textAlign: 'center' } : null,
         style,
@@ -56,6 +59,19 @@ export function Text({
     />
   );
 }
+
+/** On a black card: headings white, reading text soft, hints quiet. */
+const DARK_INK: Record<TextVariant, string> = {
+  display: onDark.ink,
+  displaySmall: onDark.ink,
+  quote: onDark.ink,
+  micro: onDark.quiet,
+  microAccent: color.goldOnDark,
+  body: onDark.soft,
+  bodySmall: onDark.soft,
+  label: onDark.ink,
+  caption: onDark.quiet,
+};
 
 const styles = StyleSheet.create({
   rtl: {

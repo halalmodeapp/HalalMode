@@ -754,6 +754,7 @@ export const so: TranslationCatalog = {
   'profile.readinessPhoto': 'sawir cad',
   'profile.readinessPreferences': 'doorbidyada isku-aadka',
   'profile.openMatchingPreferences': 'Fur doorbidyada isku-aadka',
+  'filters.premiumFiltersWord': "Shaandhooyin",
   'settings.testPremium': "Halal Mode Premium (tijaabo)",
   'settings.testPremiumBody': "Daar ama dami Premium akoonkaaga adigoon bixin. Tijaabiyeyaasha keliya ayaa arka furahan.",
   'profile.avatarTitle': "Sawirka boggaaga",

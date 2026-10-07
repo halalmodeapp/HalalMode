@@ -754,6 +754,7 @@ export const ur: TranslationCatalog = {
   'profile.readinessPhoto': 'ایک واضح تصویر',
   'profile.readinessPreferences': 'اپنی میچنگ ترجیحات',
   'profile.openMatchingPreferences': 'میچنگ ترجیحات کھولیں',
+  'filters.premiumFiltersWord': "فلٹرز",
   'settings.testPremium': "Halal Mode Premium (ٹیسٹ)",
   'settings.testPremiumBody': "ادائیگی کے بغیر اپنے اکاؤنٹ کے لیے Premium آن یا آف کریں۔ یہ سوئچ صرف ٹیسٹر دیکھتے ہیں۔",
   'profile.avatarTitle': "پروفائل تصویر",

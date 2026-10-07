@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 
 import { Text } from '@/components/ui/Text';
+import { onDark, useSurfaceTone } from '@/theme/tone';
 import { useI18n } from '@/i18n';
 import { alpha, color, font, radius } from '@/theme/tokens';
 
@@ -33,6 +34,7 @@ export function SelectField({
 }: SelectFieldProps) {
   const { isRTL } = useI18n();
   const chosen = value.length > 0;
+  const dark = useSurfaceTone() === 'dark';
 
   return (
     <View style={[styles.wrap, containerStyle]}>
@@ -48,13 +50,14 @@ export function SelectField({
         style={({ pressed }) => [
           styles.control,
           isRTL && styles.controlRTL,
+          dark && styles.controlDark,
           error && styles.controlError,
-          pressed && styles.controlPressed,
+          pressed && (dark ? styles.controlPressedDark : styles.controlPressed),
         ]}
       >
         <Text
           numberOfLines={1}
-          style={[styles.value, !chosen && styles.placeholder]}
+          style={[styles.value, dark && styles.valueDark, !chosen && (dark ? styles.placeholderDark : styles.placeholder)]}
         >
           {chosen ? value : placeholder}
         </Text>
@@ -87,6 +90,10 @@ const styles = StyleSheet.create({
     minHeight: 48,
     backgroundColor: color.surface,
   },
+  controlDark: { backgroundColor: 'transparent', borderColor: onDark.lineStrong },
+  controlPressedDark: { backgroundColor: onDark.fill },
+  valueDark: { color: onDark.ink },
+  placeholderDark: { color: onDark.quiet },
   controlRTL: { flexDirection: 'row-reverse' },
   controlPressed: { backgroundColor: color.sandLight },
   controlError: { borderColor: '#B3261E', borderWidth: 1.5 },

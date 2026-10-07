@@ -754,6 +754,7 @@ export const es: TranslationCatalog = {
   'profile.readinessPhoto': 'una foto clara',
   'profile.readinessPreferences': 'tus preferencias',
   'profile.openMatchingPreferences': 'Abrir preferencias',
+  'filters.premiumFiltersWord': "Filtros",
   'settings.testPremium': "Halal Mode Premium (prueba)",
   'settings.testPremiumBody': "Activa o desactiva Premium en tu cuenta sin pagar. Solo los testers ven este interruptor.",
   'profile.avatarTitle': "Foto de perfil",

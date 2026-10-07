@@ -754,6 +754,7 @@ export const hi: TranslationCatalog = {
   'profile.readinessPhoto': 'एक साफ़ फ़ोटो',
   'profile.readinessPreferences': 'अपनी मैचिंग पसंद',
   'profile.openMatchingPreferences': 'मैचिंग पसंद खोलें',
+  'filters.premiumFiltersWord': "फ़िल्टर",
   'settings.testPremium': "Halal Mode Premium (टेस्ट)",
   'settings.testPremiumBody': "बिना भुगतान अपने खाते के लिए Premium चालू या बंद करें। यह स्विच सिर्फ़ टेस्टर देखते हैं।",
   'profile.avatarTitle': "प्रोफ़ाइल फ़ोटो",

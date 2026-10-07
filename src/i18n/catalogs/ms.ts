@@ -754,6 +754,7 @@ export const ms: TranslationCatalog = {
   'profile.readinessPhoto': 'foto yang jelas',
   'profile.readinessPreferences': 'pilihan padanan anda',
   'profile.openMatchingPreferences': 'Buka pilihan padanan',
+  'filters.premiumFiltersWord': "Penapis",
   'settings.testPremium': "Halal Mode Premium (ujian)",
   'settings.testPremiumBody': "Hidupkan atau matikan Premium untuk akaun anda tanpa bayaran. Hanya penguji nampak suis ini.",
   'profile.avatarTitle': "Gambar profil",

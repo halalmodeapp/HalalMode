@@ -754,6 +754,7 @@ export const am: TranslationCatalog = {
   'profile.readinessPhoto': 'ግልጽ ፎቶ',
   'profile.readinessPreferences': 'የማዛመጃ ምርጫዎችዎ',
   'profile.openMatchingPreferences': 'የማዛመጃ ምርጫዎችን ክፈት',
+  'filters.premiumFiltersWord': "ማጣሪያዎች",
   'settings.testPremium': "Halal Mode Premium (ሙከራ)",
   'settings.testPremiumBody': "ሳይከፍሉ ለራስዎ መለያ Premiumን ያብሩ ወይም ያጥፉ። ይህን ማብሪያ የሚያዩት ሞካሪዎች ብቻ ናቸው።",
   'profile.avatarTitle': "የመገለጫ ፎቶ",

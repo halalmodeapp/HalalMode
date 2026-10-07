@@ -754,6 +754,7 @@ export const id: TranslationCatalog = {
   'profile.readinessPhoto': 'foto yang jelas',
   'profile.readinessPreferences': 'preferensi pencocokan Anda',
   'profile.openMatchingPreferences': 'Buka preferensi pencocokan',
+  'filters.premiumFiltersWord': "Filter",
   'settings.testPremium': "Halal Mode Premium (uji)",
   'settings.testPremiumBody': "Nyalakan atau matikan Premium untuk akun Anda tanpa membayar. Hanya penguji yang melihat sakelar ini.",
   'profile.avatarTitle': "Foto profil",

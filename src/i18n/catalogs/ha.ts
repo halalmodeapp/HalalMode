@@ -754,6 +754,7 @@ export const ha: TranslationCatalog = {
   'profile.readinessPhoto': 'hoto bayyananne',
   'profile.readinessPreferences': 'zaɓuɓɓukan haɗawa',
   'profile.openMatchingPreferences': 'Buɗe zaɓuɓɓukan haɗawa',
+  'filters.premiumFiltersWord': "Matatu",
   'settings.testPremium': "Halal Mode Premium (gwaji)",
   'settings.testPremiumBody': "Kunna ko kashe Premium a asusunka ba tare da biya ba. Masu gwaji kaɗai ke ganin wannan maɓalli.",
   'profile.avatarTitle': "Hoton bayanai",

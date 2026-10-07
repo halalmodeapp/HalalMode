@@ -4,6 +4,8 @@ import { Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SurfaceToneProvider } from '@/theme/tone';
+
 import { Button } from '@/components/ui/Button';
 import { Text } from '@/components/ui/Text';
 import { optionLabel, searchGroups, type CatalogGroup } from '@/data/catalogOption';
@@ -110,6 +112,8 @@ export function PickerSheet({
   };
 
   return (
+    // A sheet is its own light surface, even opened from a black card.
+    <SurfaceToneProvider tone="light">
     <Modal
       visible={visible}
       transparent
@@ -234,6 +238,7 @@ export function PickerSheet({
         </Animated.View>
       </View>
     </Modal>
+    </SurfaceToneProvider>
   );
 }
 

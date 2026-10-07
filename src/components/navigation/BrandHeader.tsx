@@ -1,10 +1,9 @@
 import { StyleSheet, View } from 'react-native';
 
 import { ShiningWordmark } from '@/components/brand/ShiningWordmark';
-import { Text } from '@/components/ui/Text';
+import { PremiumWord } from '@/components/brand/PremiumLogo';
 import { useI18n } from '@/i18n';
 import { useSession } from '@/state/session';
-import { color, font } from '@/theme/tokens';
 
 /** The wordmark strip that tops every primary screen in the reference. */
 export function BrandHeader() {
@@ -15,10 +14,10 @@ export function BrandHeader() {
     <View style={styles.header}>
       <ShiningWordmark width={110} />
       {tier === 'premium' ? (
-        // Beiruti rather than the logo's own letterforms, and gold rather than
-        // ink — so it reads as a tier badge attached to the mark, not as part
-        // of the mark itself.
-        <Text testID="membership-premium-badge" accessibilityLabel={t('settings.premium')} style={styles.premium}>{t('settings.premiumBadge')}</Text>
+        // The same lockup as everywhere Halal Mode Premium is named.
+        <View testID="membership-premium-badge" accessible accessibilityLabel={t('settings.premium')}>
+          <PremiumWord logoWidth={110} />
+        </View>
       ) : null}
     </View>
   );
@@ -31,14 +30,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 26,
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: 6,
     paddingBottom: 4,
-  },
-  premium: {
-    fontFamily: font.bodySemi,
-    fontSize: 15,
-    lineHeight: 17,
-    letterSpacing: 0.2,
-    color: color.gold,
   },
 });

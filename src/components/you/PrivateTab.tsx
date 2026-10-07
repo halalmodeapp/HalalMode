@@ -53,6 +53,8 @@ import type {
 import { RTL_LAYOUT } from '@/lib/rtl';
 import { errorMessage } from '@/lib/errorMessage';
 import { useToast } from '@/state/toast';
+import { PremiumLogo } from '@/components/brand/PremiumLogo';
+import { onDark, SurfaceToneProvider, useSurfaceTone } from '@/theme/tone';
 
 
 /**
@@ -361,10 +363,14 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
           {/* Everything below is Premium. Shown to everyone, so a free member
               can see what it offers; only a Premium member can change it. */}
           {/* Its own black card with gold, so it reads as something special. */}
+          <SurfaceToneProvider tone="dark">
           <View style={styles.premiumCard}>
           <View style={styles.premiumHead}>
             <Text style={styles.premiumStar}>✦</Text>
-            <Text style={styles.premiumTitle} accessibilityRole="header">{t('filters.premiumTitle')}</Text>
+            <View accessible accessibilityRole="header" accessibilityLabel={t('filters.premiumTitle')} style={styles.premiumTitle}>
+              <PremiumLogo width={190} />
+              <Text style={styles.premiumFilters}>{t('filters.premiumFiltersWord')}</Text>
+            </View>
             <View style={styles.premiumRule} />
             <Text variant="caption" style={styles.premiumBody}>{t('filters.premiumBody')}</Text>
           </View>
@@ -486,6 +492,7 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
             ) : null}
           </View>
           </View>
+          </SurfaceToneProvider>
 
 
 
@@ -534,18 +541,19 @@ function FilterCheck({
   onPress: () => void;
 }) {
   const { isRTL } = useI18n();
+  const dark = useSurfaceTone() === 'dark';
   return (
     <Pressable
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
       accessibilityLabel={label}
       onPress={onPress}
-      style={[styles.checkRow, isRTL && styles.rowReverse, checked && styles.checkRowSelected]}
+      style={[styles.checkRow, isRTL && styles.rowReverse, dark && styles.checkRowDark, checked && (dark ? styles.checkRowSelectedDark : styles.checkRowSelected)]}
     >
-      <View style={[styles.checkBox, checked && styles.checkBoxSelected]}>
-        {checked ? <Text style={styles.checkMark}>✓</Text> : null}
+      <View style={[styles.checkBox, dark && styles.checkBoxDark, checked && (dark ? styles.checkBoxSelectedDark : styles.checkBoxSelected)]}>
+        {checked ? <Text style={[styles.checkMark, dark && { color: color.ink }]}>✓</Text> : null}
       </View>
-      <Text style={styles.checkLabel}>{label}</Text>
+      <Text style={[styles.checkLabel, dark && { color: onDark.ink }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -675,6 +683,10 @@ const styles = StyleSheet.create({
     borderColor: alpha.lineStrong,
     backgroundColor: color.surface,
   },
+  checkRowDark: { borderColor: onDark.line, backgroundColor: 'transparent' },
+  checkRowSelectedDark: { borderColor: color.goldOnDark, backgroundColor: onDark.fill },
+  checkBoxDark: { borderColor: onDark.lineStrong },
+  checkBoxSelectedDark: { backgroundColor: color.goldOnDark, borderColor: color.goldOnDark },
   checkRowSelected: { borderColor: color.ink, backgroundColor: color.sandLight },
   checkBox: {
     width: 19,
@@ -745,11 +757,11 @@ const styles = StyleSheet.create({
   },
   premiumHead: { alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingBottom: 18 },
   premiumStar: { color: color.goldOnDark, fontSize: 20, lineHeight: 24 },
-  premiumTitle: { fontFamily: font.display, fontSize: 26, lineHeight: 32, color: color.goldOnDark, textAlign: 'center' },
+  premiumTitle: { alignItems: 'center', gap: 8 },
+  premiumFilters: { fontFamily: font.display, fontSize: 22, lineHeight: 28, color: color.white, textAlign: 'center' },
   premiumRule: { width: 44, height: 1, backgroundColor: color.goldOnDark, marginVertical: 4 },
   premiumBody: { color: 'rgba(252,252,251,0.72)', textAlign: 'center' },
-  // The controls sit on a light sheet inside the card, so they stay legible.
-  premiumBlock: { position: 'relative', backgroundColor: color.surface, borderRadius: radius.lg, padding: 16 },
+  premiumBlock: { position: 'relative', paddingHorizontal: 14, paddingBottom: 14 },
   premiumInner: { gap: 22 },
   locked: { opacity: 0.45 },
   subHeading: { marginTop: 12 },

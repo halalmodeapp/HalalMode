@@ -754,6 +754,7 @@ export const ru: TranslationCatalog = {
   'profile.readinessPhoto': 'чёткое фото',
   'profile.readinessPreferences': 'критерии подбора',
   'profile.openMatchingPreferences': 'Открыть критерии подбора',
+  'filters.premiumFiltersWord': "Фильтры",
   'settings.testPremium': "Halal Mode Premium (тест)",
   'settings.testPremiumBody': "Включайте и выключайте Premium для своего аккаунта без оплаты. Этот переключатель видят только тестировщики.",
   'profile.avatarTitle': "Фото профиля",

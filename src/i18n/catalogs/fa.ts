@@ -754,6 +754,7 @@ export const fa: TranslationCatalog = {
   'profile.readinessPhoto': 'یک عکس واضح',
   'profile.readinessPreferences': 'ترجیحات تطبیق',
   'profile.openMatchingPreferences': 'باز کردن ترجیحات تطبیق',
+  'filters.premiumFiltersWord': "فیلترها",
   'settings.testPremium': "Halal Mode Premium (آزمایشی)",
   'settings.testPremiumBody': "Premium را بدون پرداخت برای حساب خودتان روشن یا خاموش کنید. فقط آزمایشگران این کلید را می‌بینند.",
   'profile.avatarTitle': "عکس نمایه",

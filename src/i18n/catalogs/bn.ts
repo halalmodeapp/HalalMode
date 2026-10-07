@@ -754,6 +754,7 @@ export const bn: TranslationCatalog = {
   'profile.readinessPhoto': 'একটি স্পষ্ট ছবি',
   'profile.readinessPreferences': 'আপনার ম্যাচিংয়ের পছন্দ',
   'profile.openMatchingPreferences': 'ম্যাচিংয়ের পছন্দ খুলুন',
+  'filters.premiumFiltersWord': "ফিল্টার",
   'settings.testPremium': "Halal Mode Premium (টেস্ট)",
   'settings.testPremiumBody': "টাকা না দিয়ে নিজের অ্যাকাউন্টে Premium চালু বা বন্ধ করুন। শুধু পরীক্ষকরাই এই সুইচ দেখেন।",
   'profile.avatarTitle': "প্রোফাইল ছবি",

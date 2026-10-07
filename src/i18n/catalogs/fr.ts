@@ -754,6 +754,7 @@ export const fr: TranslationCatalog = {
   'profile.readinessPhoto': 'une photo claire',
   'profile.readinessPreferences': 'vos critères',
   'profile.openMatchingPreferences': 'Ouvrir les critères',
+  'filters.premiumFiltersWord': "Filtres",
   'settings.testPremium': "Halal Mode Premium (test)",
   'settings.testPremiumBody': "Activez ou désactivez Premium sur votre compte sans payer. Seuls les testeurs voient ce bouton.",
   'profile.avatarTitle': "Photo de profil",

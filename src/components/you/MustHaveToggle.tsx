@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/ui/Text';
+import { onDark, useSurfaceTone } from '@/theme/tone';
 import { useI18n } from '@/i18n';
 import { alpha, color, font, radius } from '@/theme/tokens';
 import type { MustHaveCriterion, PremiumCriterion } from '@/types';
@@ -27,6 +28,7 @@ export interface MustHaveToggleProps {
  */
 export function MustHaveToggle({ criterion, value, onChange }: MustHaveToggleProps) {
   const { t, isRTL } = useI18n();
+  const dark = useSurfaceTone() === 'dark';
 
   return (
     <Pressable
@@ -42,10 +44,10 @@ export function MustHaveToggle({ criterion, value, onChange }: MustHaveTogglePro
         pressed && styles.pressed,
       ]}
     >
-      <View style={[styles.box, value && styles.boxChecked]}>
-        {value ? <Text style={styles.tick}>✓</Text> : null}
+      <View style={[styles.box, dark && styles.boxDark, value && (dark ? styles.boxCheckedDark : styles.boxChecked)]}>
+        {value ? <Text style={[styles.tick, dark && styles.tickDark]}>✓</Text> : null}
       </View>
-      <Text style={[styles.label, value && styles.labelChecked]}>
+      <Text style={[styles.label, value && styles.labelChecked, dark && (value ? styles.labelCheckedDark : styles.labelDark)]}>
         {t('filters.mustHave')}
       </Text>
     </Pressable>
@@ -79,6 +81,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
     color: color.faintest,
   },
+  boxDark: { borderColor: onDark.lineStrong },
+  boxCheckedDark: { backgroundColor: color.goldOnDark, borderColor: color.goldOnDark },
+  tickDark: { color: color.ink },
+  labelDark: { color: onDark.quiet },
+  labelCheckedDark: { color: color.goldOnDark },
   labelChecked: { fontFamily: font.bodySemi, color: color.inkSoft },
 });
 
