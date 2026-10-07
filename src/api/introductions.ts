@@ -59,7 +59,9 @@ export async function fetchCurrentRoundState(
   // decides whether this member gets one — it is behind its own flag, once a
   // day, and never for a member who has a real round — so asking costs one
   // call and the answer is usually no. See migration 0148.
-  if ((data as { status?: unknown } | null)?.status === 'no_suitable_introductions') {
+  // A member still waiting for their first real set (migration 0185) asks too.
+  const emptyStatus = (data as { status?: unknown } | null)?.status;
+  if (emptyStatus === 'no_suitable_introductions' || emptyStatus === 'waiting_for_first_set') {
     const sample = await client.rpc('request_demo_round');
     const answer = sample.data as { created?: unknown; reason?: unknown } | null;
     // "has_round" counts too. Two requests at once — which the app makes on

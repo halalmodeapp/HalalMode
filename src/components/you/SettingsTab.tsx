@@ -565,9 +565,7 @@ function SettingRow({
         </Text>
       </View>
       {onPress ? (
-        <View style={styles.disclosure}>
-          <Text style={styles.arrow}>{isRTL ? '←' : '→'}</Text>
-        </View>
+        <Text style={styles.chevron}>{isRTL ? '‹' : '›'}</Text>
       ) : control ? (
         <View style={styles.rowControl}>{control}</View>
       ) : null}
@@ -582,7 +580,7 @@ function SettingRow({
         accessibilityLabel={title}
         accessibilityHint={subtitle}
         onPress={onPress}
-        style={({ pressed }) => [styles.row, isRTL && styles.rowReverse, pressed && styles.rowPressed]}
+        style={({ pressed }) => [styles.row, styles.openRow, isRTL && styles.rowReverse, pressed && styles.openRowPressed]}
       >
         {content}
       </Pressable>
@@ -612,7 +610,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: alpha.lineFaint,
   },
-  rowPressed: { opacity: 0.55 },
+  // Same box as the Preferences fields: the whole outline is the button.
+  openRow: {
+    borderWidth: 1,
+    borderColor: alpha.lineStrong,
+    borderBottomColor: alpha.lineStrong,
+    borderRadius: radius.md,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginVertical: 6,
+    backgroundColor: color.surface,
+  },
+  openRowPressed: { backgroundColor: color.sandLight },
+  chevron: { fontFamily: font.body, fontSize: 20, lineHeight: 20, color: color.faintest },
   rowText: { flex: 1, gap: 5 },
   rowTitleLine: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 7 },
   rowTitle: { fontFamily: font.bodyBold, fontSize: 13.5, color: color.ink },
