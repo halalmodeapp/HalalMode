@@ -296,12 +296,12 @@ export function SettingsTab({
         <SettingRow
           title={t('settings.manageAccount')}
           subtitle={t('settings.manageAccountBody')}
-          trailing={<Disclosure label={t('settings.manageAccount')} onPress={() => setPage('account')} />}
+          onPress={() => setPage('account')}
         />
         <SettingRow
           title={t('settings.security')}
           subtitle={t('settings.securityBody')}
-          trailing={<Disclosure label={t('settings.security')} onPress={() => setPage('security')} />}
+          onPress={() => setPage('security')}
         />
       </Section>
 
@@ -321,32 +321,14 @@ export function SettingsTab({
         <SettingRow
           title={t('settings.blocked')}
           subtitle={t('settings.blockedBody')}
-          trailing={
-            <Pressable
-              testID={testIds.settings.blocked}
-              accessibilityRole="button"
-              accessibilityLabel={t('settings.blocked')}
-              onPress={() => setBlockedOpen(true)}
-              style={styles.disclosure}
-            >
-              <Text style={styles.arrow}>{isRTL ? '←' : '→'}</Text>
-            </Pressable>
-          }
+          testID={testIds.settings.blocked}
+          onPress={() => setBlockedOpen(true)}
         />
         <SettingRow
           title={t('settings.reporting')}
           subtitle={t('settings.reportingBody')}
-          trailing={
-            <Pressable
-              testID={testIds.settings.moderation}
-              accessibilityRole="button"
-              accessibilityLabel={t('settings.reporting')}
-              onPress={() => setModerationOpen(true)}
-              style={styles.disclosure}
-            >
-              <Text style={styles.arrow}>{isRTL ? '←' : '→'}</Text>
-            </Pressable>
-          }
+          testID={testIds.settings.moderation}
+          onPress={() => setModerationOpen(true)}
         />
         <ModerationSheet visible={moderationOpen} onClose={() => setModerationOpen(false)} />
       </Section>
@@ -502,15 +484,6 @@ export function SettingsTab({
 }
 
 
-function Disclosure({ label, onPress }: { label: string; onPress: () => void }) {
-  const { isRTL } = useI18n();
-  return (
-    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={styles.disclosure}>
-      <Text style={styles.arrow}>{isRTL ? '←' : '→'}</Text>
-    </Pressable>
-  );
-}
-
 function BackRow({ onPress }: { onPress: () => void }) {
   const { t, isRTL } = useI18n();
   return (
@@ -551,6 +524,7 @@ function SettingRow({
   badge,
   trailing,
   testID,
+  onPress,
 }: {
   title: string;
   subtitle: string;
@@ -560,6 +534,8 @@ function SettingRow({
   badge?: string;
   trailing?: React.ReactNode;
   testID?: string;
+  /** Makes the whole row one button that opens something, arrow and all. */
+  onPress?: () => void;
 }) {
   const { isRTL } = useI18n();
   const control =
@@ -577,8 +553,8 @@ function SettingRow({
       trailing
     );
 
-  return (
-    <View style={[styles.row, isRTL && styles.rowReverse]}>
+  const content = (
+    <>
       <View style={styles.rowText}>
         <View style={[styles.rowTitleLine, isRTL && styles.rowReverse]}>
           <Text style={styles.rowTitle}>{title}</Text>
@@ -588,9 +564,31 @@ function SettingRow({
           {subtitle}
         </Text>
       </View>
-      {control ? <View style={styles.rowControl}>{control}</View> : null}
-    </View>
+      {onPress ? (
+        <View style={styles.disclosure}>
+          <Text style={styles.arrow}>{isRTL ? '←' : '→'}</Text>
+        </View>
+      ) : control ? (
+        <View style={styles.rowControl}>{control}</View>
+      ) : null}
+    </>
   );
+
+  if (onPress) {
+    return (
+      <Pressable
+        testID={testID}
+        accessibilityRole="button"
+        accessibilityLabel={title}
+        accessibilityHint={subtitle}
+        onPress={onPress}
+        style={({ pressed }) => [styles.row, isRTL && styles.rowReverse, pressed && styles.rowPressed]}
+      >
+        {content}
+      </Pressable>
+    );
+  }
+  return <View style={[styles.row, isRTL && styles.rowReverse]}>{content}</View>;
 }
 
 const styles = StyleSheet.create({
@@ -614,6 +612,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: alpha.lineFaint,
   },
+  rowPressed: { opacity: 0.55 },
   rowText: { flex: 1, gap: 5 },
   rowTitleLine: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 7 },
   rowTitle: { fontFamily: font.bodyBold, fontSize: 13.5, color: color.ink },
