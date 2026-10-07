@@ -11,6 +11,7 @@ import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
 import { Screen } from '@/components/ui/Screen';
 import { Segmented } from '@/components/ui/Segmented';
 import { Text } from '@/components/ui/Text';
+import { PreferencesIcon, ProfileIcon } from '@/components/ui/TabIcons';
 import { PrivateTab } from '@/components/you/PrivateTab';
 import { ProfileAvatar } from '@/components/you/ProfileAvatar';
 import { ProfileTab } from '@/components/you/ProfileTab';
@@ -120,8 +121,8 @@ export default function YouScreen() {
           onChange={setTab}
           testIDPrefix="you-tab"
           options={[
-            { value: 'profile', label: t('you.tab.profile'), icon: '☺︎' },
-            { value: 'private', label: t('you.tab.matching'), icon: '♡' },
+            { value: 'profile', label: t('you.tab.profile'), icon: (tint: string) => <ProfileIcon color={tint} /> },
+            { value: 'private', label: t('you.tab.matching'), icon: (tint: string) => <PreferencesIcon color={tint} /> },
             { value: 'settings', label: t('you.tab.settings'), icon: '⚙︎' },
           ]}
         />

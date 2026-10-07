@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/ui/Text';
@@ -6,7 +7,7 @@ import { color, font, radius } from '@/theme/tokens';
 
 export interface SegmentedProps<T extends string> {
   /** An optional glyph shown before the label, like the tab bar's. */
-  options: { value: T; label: string; icon?: string }[];
+  options: { value: T; label: string; icon?: string | ((color: string) => ReactNode) }[];
   value: T;
   onChange: (value: T) => void;
   testIDPrefix?: string;
@@ -34,7 +35,11 @@ export function Segmented<T extends string>({
             style={[styles.segment, active && styles.segmentActive]}
           >
             <View style={[styles.labelRow, isRTL && styles.rowReverse]}>
-              {option.icon ? (
+              {typeof option.icon === 'function' ? (
+                <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                  {option.icon(active ? color.gold : color.faint)}
+                </View>
+              ) : option.icon ? (
                 <Text style={[styles.icon, active && styles.iconActive]} accessibilityElementsHidden importantForAccessibility="no">
                   {option.icon}
                 </Text>
