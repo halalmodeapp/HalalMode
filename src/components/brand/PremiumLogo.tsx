@@ -14,22 +14,27 @@ const RATIO = 139.6 / 988.77;
 export function PremiumWord({ logoWidth, dark }: { logoWidth: number; dark?: boolean }) {
   const height = logoWidth * RATIO;
   const size = height * 1.32;
+  const tint = dark ? color.goldOnDark : color.gold;
   return (
-    <Text
-      style={[
-        styles.word,
-        {
-          fontSize: size,
-          lineHeight: size,
-          // Lowers the line box so the baseline lands on the logo's bottom.
-          marginBottom: -size * 0.11,
-          marginLeft: height * 0.45,
-          color: dark ? color.goldOnDark : color.gold,
-        },
-      ]}
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        // Lowers the line box so the baseline lands on the logo's bottom.
+        marginBottom: -size * 0.11,
+        marginLeft: height * 0.45,
+      }}
     >
-      Premium
-    </Text>
+      <Text style={[styles.word, { fontSize: size, lineHeight: size, color: tint }]}>Premium</Text>
+      {/* A small sparkle at the top right of the word. */}
+      <Text
+        accessibilityElementsHidden
+        importantForAccessibility="no"
+        style={{ fontSize: size * 0.36, lineHeight: size * 0.36, color: tint, marginLeft: size * 0.05, marginTop: -size * 0.04 }}
+      >
+        ✦
+      </Text>
+    </View>
   );
 }
 
