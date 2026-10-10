@@ -73,4 +73,15 @@ export const ILLUSTRATIONS: Partial<Record<string, ImageSourcePropType>> = {
   'adv-ramadan-boundary': require('../../assets/halal-cards/adv-ramadan-boundary.webp'),
   'adv-ramadan-lastten': require('../../assets/halal-cards/adv-ramadan-lastten.webp'),
   'adv-ramadan-eid': require('../../assets/halal-cards/adv-ramadan-eid.webp'),
+
+  'adv-ramadan-end-table': require('../../assets/halal-cards/adv-ramadan-end-table.webp'),
+  'adv-ramadan-end-ours': require('../../assets/halal-cards/adv-ramadan-end-ours.webp'),
+  'adv-ramadan-end-cracks': require('../../assets/halal-cards/adv-ramadan-end-cracks.webp'),
+  'adv-ramadan-end-us': require('../../assets/halal-cards/adv-ramadan-end-us.webp'),
+  'adv-ramadan-end-lonely': require('../../assets/halal-cards/adv-ramadan-end-lonely.webp'),
+  'adv-ramadan-end-truce': require('../../assets/halal-cards/adv-ramadan-end-truce.webp'),
+  'adv-ramadan-end-steady': require('../../assets/halal-cards/adv-ramadan-end-steady.webp'),
+  'adv-ramadan-end-quiet': require('../../assets/halal-cards/adv-ramadan-end-quiet.webp'),
+  'adv-ramadan-end-kitchen': require('../../assets/halal-cards/adv-ramadan-end-kitchen.webp'),
+  'adv-1142-message': require('../../assets/halal-cards/adv-1142-message.webp'),
 };
