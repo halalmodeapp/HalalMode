@@ -124,4 +124,11 @@ export const ILLUSTRATIONS: Partial<Record<string, ImageSourcePropType>> = {
   'adv-offer-year': require('../../assets/halal-cards/adv-offer-year.webp'),
   'adv-offer-end-promise': require('../../assets/halal-cards/adv-offer-end-promise.webp'),
   'adv-offer-end-both': require('../../assets/halal-cards/adv-offer-end-both.webp'),
+  'adv-offer-end-guilt': require('../../assets/halal-cards/adv-offer-end-guilt.webp'),
+  'adv-offer-end-home': require('../../assets/halal-cards/adv-offer-end-home.webp'),
+  'adv-offer-end-road': require('../../assets/halal-cards/adv-offer-end-road.webp'),
+  'adv-offer-end-separate': require('../../assets/halal-cards/adv-offer-end-separate.webp'),
+  'adv-offer-end-shape': require('../../assets/halal-cards/adv-offer-end-shape.webp'),
+  'adv-offer-end-together': require('../../assets/halal-cards/adv-offer-end-together.webp'),
+  'adv-offer-end-still': require('../../assets/halal-cards/adv-offer-end-still.webp'),
 };
