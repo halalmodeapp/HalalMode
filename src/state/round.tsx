@@ -36,6 +36,8 @@ interface RoundValue {
   nextSetCity: string | null;
   /** Whose questions the member must answer before seeing a set. */
   owed: OwedAnswers | null;
+  /** Everyone the member still owes answers to, oldest first. */
+  owedAll: OwedAnswers[];
   isLoading: boolean;
   error: Error | null;
   refresh: () => void;
@@ -118,6 +120,7 @@ export function RoundProvider({ children }: { children: ReactNode }) {
   const narrowingCriterion = roundState?.narrowingCriterion ?? null;
   const nextSetCity = roundState?.city ?? null;
   const owed = roundState?.owed ?? null;
+  const owedAll = useMemo(() => roundState?.owedAll ?? (owed ? [owed] : []), [roundState?.owedAll, owed]);
 
   const keepLimit = TIER_LIMITS[tier].keeps;
 
@@ -258,6 +261,7 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       narrowingCriterion,
       nextSetCity,
       owed,
+      owedAll,
       isLoading,
       error: (error as Error) ?? null,
       refresh: () => void refetch(),
@@ -287,6 +291,7 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       narrowingCriterion,
       nextSetCity,
       owed,
+      owedAll,
       isLoading,
       error,
       refetch,

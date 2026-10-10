@@ -3,6 +3,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
+import { ActionIcon } from '@/components/ui/ActionIcon';
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
 import { RTL_LAYOUT } from '@/lib/rtl';
@@ -60,7 +61,7 @@ export function ModerationSheet({
               onPress={onClose}
               style={styles.close}
             >
-              <Text style={styles.closeGlyph}>✕</Text>
+              <ActionIcon name="close" size={16} color={color.inkSoft} />
             </Pressable>
           </View>
 
@@ -143,7 +144,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  closeGlyph: { fontFamily: font.body, fontSize: 13, color: color.inkSoft },
 
   body: { flexGrow: 1, flexShrink: 1 },
   bodyContent: { padding: space.gutter, gap: 18 },

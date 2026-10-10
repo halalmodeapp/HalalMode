@@ -2,6 +2,7 @@
 export const testIds = {
   auth: {
     email: 'auth-email',
+    emailContinue: 'auth-email-continue',
     submit: 'auth-send-link',
     language: 'auth-language',
     google: 'auth-continue-google',

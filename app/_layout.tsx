@@ -14,7 +14,6 @@ import {
   PlayfairDisplay_400Regular,
   PlayfairDisplay_400Regular_Italic,
 } from '@expo-google-fonts/playfair-display';
-import { Ionicons } from '@expo/vector-icons';
 import { focusManager, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
@@ -41,11 +40,8 @@ import { AppRecoveryBoundary } from '@/components/ui/AppRecoveryBoundary';
 void SplashScreen.preventAutoHideAsync();
 
 // A webfont that is slow to arrive (a weak connection, or a busy dev server)
-// makes the browser font check give up after 12 seconds and reject. Icons load
-// their own font without catching that, which showed as an uncaught error. The
-// icon font is now loaded with the others below, so icons find it ready; if it
-// is still slow, text and icons fall back until it arrives, and this rejection
-// is not reported as a crash.
+// makes the browser font check give up after 12 seconds and reject. This is a
+// font-loading timeout, not an application crash.
 if (Platform.OS === 'web' && typeof window !== 'undefined') {
   window.addEventListener('unhandledrejection', (event) => {
     const message = (event.reason as { message?: unknown } | undefined)?.message;
@@ -54,6 +50,26 @@ if (Platform.OS === 'web' && typeof window !== 'undefined') {
       event.stopImmediatePropagation();
     }
   }, true);
+}
+
+// On a phone browser, focusing a field scrolls the whole page up to clear the
+// keyboard, and the browser does not always scroll it back. The app is one
+// fixed-height screen, so any leftover page scroll pushes everything (the
+// cards most of all) up out of reach until the app is reopened. Put it back
+// whenever the keyboard goes away.
+if (Platform.OS === 'web' && typeof window !== 'undefined') {
+  const settle = () => {
+    const active = document.activeElement;
+    const typing = active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement;
+    if (typing) return;
+    if (window.scrollY !== 0 || document.documentElement.scrollTop !== 0 || document.body.scrollTop !== 0) {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+  };
+  window.addEventListener('focusout', () => setTimeout(settle, 120));
+  window.visualViewport?.addEventListener('resize', () => setTimeout(settle, 120));
 }
 
 export default function RootLayout() {
@@ -69,8 +85,6 @@ export default function RootLayout() {
     NotoSans_500Medium,
     NotoSans_600SemiBold,
     NotoSans_700Bold,
-    // Loaded here so icons find it ready and a slow load is caught, not thrown.
-    ...Ionicons.font,
   });
 
   // Before anything else can break. A crash on the very first screen is the
@@ -138,6 +152,7 @@ export default function RootLayout() {
                         >
                           {/* Sign-in is a full-bleed picture and form, not an app column. */}
                           <Stack.Screen name="auth" options={{ contentStyle: { backgroundColor: color.surface } }} />
+                          <Stack.Screen name="auth-email" options={{ animation: 'slide_from_right' }} />
                           <Stack.Screen name="onboarding" />
                           <Stack.Screen name="legal-consent" options={{ gestureEnabled: false }} />
                           {/* Full width, so the Daily deck can show whole cards either side; each

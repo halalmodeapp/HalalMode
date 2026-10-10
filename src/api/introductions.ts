@@ -25,6 +25,8 @@ export interface CurrentRoundState {
   city?: string | null;
   /** Set only with `answers_owed`: whose questions to go back to. */
   owed?: OwedAnswers | null;
+  /** Everyone still owed answers, oldest first; `owed` is the first of them. */
+  owedAll?: OwedAnswers[];
 }
 
 export interface OwedAnswers {
@@ -76,7 +78,7 @@ export async function fetchCurrentRoundState(
   }
 
   const payload = data && typeof data === 'object'
-    ? data as { status?: unknown; round?: IntroductionRound | null; criterion?: unknown; city?: unknown; owed?: OwedAnswers | null }
+    ? data as { status?: unknown; round?: IntroductionRound | null; criterion?: unknown; city?: unknown; owed?: OwedAnswers | null; owedAll?: OwedAnswers[] }
     : {};
   const round = payload.round ?? undefined;
   const status = normalizeDailyRoundStatus(payload.status);
@@ -91,6 +93,9 @@ export async function fetchCurrentRoundState(
       // with no round to carry it.
       city: typeof payload.city === 'string' ? payload.city : null,
       owed: payload.owed && typeof payload.owed.connectionId === 'string' ? payload.owed : null,
+      owedAll: Array.isArray(payload.owedAll)
+        ? payload.owedAll.filter((item) => typeof item?.connectionId === 'string' && typeof item?.name === 'string')
+        : payload.owed && typeof payload.owed.connectionId === 'string' ? [payload.owed] : [],
     };
   }
   return {

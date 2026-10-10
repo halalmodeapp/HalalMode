@@ -1,8 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { ActionIcon } from '@/components/ui/ActionIcon';
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
 import { alpha, color, space } from '@/theme/tokens';
@@ -54,7 +54,7 @@ export function ScreenHeader({
           pressed && styles.pressed,
         ]}
       >
-        <Ionicons
+        <ActionIcon
           name={
             action === 'close'
               ? 'close'

@@ -22,6 +22,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ActionIcon } from '@/components/ui/ActionIcon';
 import { Text } from '@/components/ui/Text';
 import { SafetyControl } from '@/components/safety/SafetyControl';
 import { useI18n } from '@/i18n';
@@ -76,9 +77,10 @@ export default function GalleryScreen() {
   };
 
   const goTo = useCallback((next: number) => {
-    listRef.current?.scrollToIndex({ index: next, animated: true });
-    setIndex(next);
-  }, []);
+    const target = safeGalleryIndex(next, photos.length);
+    listRef.current?.scrollToOffset({ offset: target * width, animated: true });
+    setIndex(target);
+  }, [photos.length, width]);
   const swipeTo = (distance: number, velocity: number) => {
     const current = safeGalleryIndex(index, photos.length);
     if (distance < -40 || velocity < -500) goTo(Math.min(photos.length - 1, current + 1));
@@ -107,7 +109,7 @@ export default function GalleryScreen() {
           style={styles.close}
           hitSlop={12}
         >
-          <Text style={styles.closeGlyph}>✕</Text>
+          <ActionIcon name="close" size={18} color={color.white} />
         </Pressable>
         <Text style={styles.title} numberOfLines={1}>
           {t('gallery.title', { name: introduction.profile.firstName })}
@@ -134,7 +136,9 @@ export default function GalleryScreen() {
         keyExtractor={(item) => item}
         horizontal
         pagingEnabled
-        scrollEnabled={!zoomed}
+        // Web uses the gesture on each slide so a mouse drag pages reliably;
+        // native keeps FlatList's momentum scrolling for touch screens.
+        scrollEnabled={!zoomed && Platform.OS !== 'web'}
         // A list only redraws its pages when told something changed. Without
         // this, zooming never reached the page, so it could not be dragged
         // around, and a new stage size never re-fitted the frame.
@@ -157,6 +161,40 @@ export default function GalleryScreen() {
           />
         )}
       />
+      {photos.length > 1 ? (
+        <View pointerEvents="box-none" style={styles.navLayer}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('gallery.photoA11y', { count: number(Math.max(1, safeIndex)) })}
+            accessibilityState={{ disabled: safeIndex === 0 }}
+            disabled={safeIndex === 0}
+            onPress={() => goTo(safeIndex - 1)}
+            style={({ pressed }) => [
+              styles.navButton,
+              safeIndex === 0 && styles.navButtonDisabled,
+              pressed && styles.navButtonPressed,
+              Platform.OS === 'web' && styles.webButton,
+            ]}
+          >
+            <ActionIcon name={isRTL ? 'chevron-forward' : 'chevron-back'} size={22} color={color.white} />
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('gallery.photoA11y', { count: number(Math.min(photos.length, safeIndex + 2)) })}
+            accessibilityState={{ disabled: safeIndex === photos.length - 1 }}
+            disabled={safeIndex === photos.length - 1}
+            onPress={() => goTo(safeIndex + 1)}
+            style={({ pressed }) => [
+              styles.navButton,
+              safeIndex === photos.length - 1 && styles.navButtonDisabled,
+              pressed && styles.navButtonPressed,
+              Platform.OS === 'web' && styles.webButton,
+            ]}
+          >
+            <ActionIcon name={isRTL ? 'chevron-back' : 'chevron-forward'} size={22} color={color.white} />
+          </Pressable>
+        </View>
+      ) : null}
       </View>
 
       <ScrollView
@@ -430,10 +468,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  closeGlyph: { fontFamily: font.body, fontSize: 15, color: color.white },
 
-  stage: { flex: 1 },
+  stage: { flex: 1, position: 'relative' },
   slide: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  navLayer: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  navButton: {
+    width: 46,
+    height: 46,
+    marginHorizontal: 14,
+    borderRadius: 23,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(10,10,10,0.56)',
+    borderWidth: 1,
+    borderColor: 'rgba(252,252,251,0.24)',
+  },
+  navButtonDisabled: { opacity: 0.22 },
+  navButtonPressed: { opacity: 0.72, transform: [{ scale: 0.94 }] },
+  webButton: { cursor: 'pointer' } as object,
   photo: {
     overflow: 'hidden',
     borderRadius: radius.lg,

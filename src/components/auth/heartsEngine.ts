@@ -5,7 +5,7 @@
  * and `halo`.
  */
 
-export const SPRITE = { frameWidth: 314, frameHeight: 313, columns: 4 } as const;
+export const SPRITE = { frameWidth: 314, frameHeight: 313, columns: 4, rows: 3 } as const;
 
 const SIZES = [1.1, 0.88];
 const SPOTS = [
@@ -60,7 +60,8 @@ export function createEngine() {
   function seat(heart: Heart, index: number) {
     heart.size = baseSize() * (SIZES[index] ?? 1);
     heart.radius = heart.size * 0.4;
-    const spot = SPOTS[index] ?? SPOTS[0];
+    const compactSpots = [[0.38, 0.62], [0.64, 0.74]] as const;
+    const spot = (height < 190 ? compactSpots[index] : SPOTS[index]) ?? SPOTS[0];
     heart.x = width * spot[0];
     heart.y = height * spot[1];
   }

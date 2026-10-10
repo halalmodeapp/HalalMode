@@ -9,6 +9,7 @@ import { SafetyControl } from '@/components/safety/SafetyControl';
 import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { LoadingDots } from '@/components/ui/LoadingDots';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
 import { queryKeys } from '@/lib/queryClient';
@@ -49,7 +50,12 @@ export default function RecapScreen() {
     queryFn: () => fetchConnectionSummary(id, language),
     enabled: !!connectionId,
     staleTime: Infinity,
+    // Still being written: ask again every few seconds, for up to two minutes.
+    refetchInterval: (query) =>
+      query.state.data?.pending && query.state.dataUpdateCount < 40 ? 3000 : false,
   });
+  const botSummary = summaryQuery.data?.summary ?? null;
+  const preparing = summaryQuery.isPending || (summaryQuery.data?.pending === true && !botSummary);
 
   const openMutation = useMutation({
     mutationFn: () => openConnection(id),
@@ -95,12 +101,17 @@ export default function RecapScreen() {
         <Card style={styles.summary}>
           {/* Named for what wrote it: the Halal Mode Bot when its summary is in,
               the app's own comparison otherwise. */}
-          <Text variant="micro">{summaryQuery.data ? `✦ ${t('recap.botSummaryTitle')}` : t('recap.summaryTitle')}</Text>
-          <Text style={styles.summaryText}>
-            {summaryQuery.isPending
-              ? t('recap.summaryWriting')
-              : summaryQuery.data ?? builtInSummary(compatibilityBreakdown, t)}
-          </Text>
+          <Text variant="micro">{botSummary || preparing ? `✦ ${t('recap.botSummaryTitle')}` : t('recap.summaryTitle')}</Text>
+          {preparing ? (
+            <View style={styles.preparing} accessible accessibilityLiveRegion="polite" accessibilityLabel={t('recap.summaryPreparing')}>
+              <LoadingDots />
+              <Text style={styles.preparingText}>{t('recap.summaryPreparing')}</Text>
+            </View>
+          ) : (
+            <Text style={styles.summaryText}>
+              {botSummary ?? builtInSummary(compatibilityBreakdown, t)}
+            </Text>
+          )}
         </Card>
 
 
@@ -133,6 +144,11 @@ export default function RecapScreen() {
         </Card>
 
         <View style={styles.actions}>
+          {connection?.stage === 'open' ? (
+            // Come back to reread it: the conversation is already open.
+            <Button label={t('common.back')} onPress={() => (router.canGoBack() ? router.back() : router.replace(`/connection/${id}/chat`))} />
+          ) : (
+          <>
           <Button
             testID={testIds.recap.open}
             label={t('recap.open')}
@@ -144,6 +160,8 @@ export default function RecapScreen() {
             variant="quiet"
             onPress={() => router.replace('/(tabs)/connections')}
           />
+          </>
+          )}
         </View>
       </ScrollView>
     </Screen>
@@ -231,6 +249,8 @@ const styles = StyleSheet.create({
   subtitle: { marginTop: 10 },
 
   summary: { marginHorizontal: space.gutterWide, marginTop: 18, gap: 10 },
+  preparing: { gap: 10, paddingVertical: 4 },
+  preparingText: { fontFamily: 'Beiruti_400Regular', fontSize: 15, lineHeight: 23, color: color.inkSoft },
   summaryText: { fontFamily: 'Beiruti_400Regular', fontSize: 15, lineHeight: 23, color: color.ink },
   answersSection: { paddingHorizontal: space.gutterWide, marginTop: 28, gap: 10 },
   pair: {

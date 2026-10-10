@@ -42,7 +42,7 @@ export function inkFromPixels(pixels: ArrayLike<number>, count: number) {
  * `reveal` rises; where it is light it stays a pinprick, so only the picture
  * shows through the hearts' wake.
  */
-export function dotRadius(ink: number, reveal: number) {
-  const base = CELL * DOT_BASE;
-  return base + Math.min(1, reveal) * Math.max(0, Math.sqrt(ink) * CELL * DOT_FULL - base);
+export function dotRadius(ink: number, reveal: number, cell = CELL) {
+  const base = cell * DOT_BASE;
+  return base + Math.min(1, reveal) * Math.max(0, Math.sqrt(ink) * cell * DOT_FULL - base);
 }

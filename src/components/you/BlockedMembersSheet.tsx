@@ -4,6 +4,7 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, View } fro
 
 import { fetchMyBlockedMembers, unblockMyMember } from '@/api/safety';
 import { Button } from '@/components/ui/Button';
+import { ActionIcon } from '@/components/ui/ActionIcon';
 import { Card } from '@/components/ui/Card';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { showNotice } from '@/lib/notice';
@@ -52,7 +53,7 @@ export function BlockedMembersSheet({ visible, onClose }: { visible: boolean; on
               <Text variant="caption">{t('settings.blockedSheetBody')}</Text>
             </View>
             <Pressable accessibilityRole="button" accessibilityLabel={t('common.dismiss')} onPress={onClose} style={styles.close}>
-              <Text style={styles.closeText}>×</Text>
+              <ActionIcon name="close" size={18} color={color.ink} />
             </Pressable>
           </View>
 
@@ -126,7 +127,6 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', gap: 12, alignItems: 'flex-start', justifyContent: 'space-between' },
   headerText: { flex: 1, gap: 4 },
   close: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  closeText: { fontFamily: font.body, fontSize: 28, color: color.ink },
   loading: { paddingVertical: 30 },
   empty: { paddingVertical: 28, gap: 14, alignItems: 'center' },
   list: { gap: 10, paddingBottom: 16 },

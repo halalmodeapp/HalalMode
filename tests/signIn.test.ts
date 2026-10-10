@@ -21,7 +21,8 @@ test('both providers come back to the address the deep-link listener watches', (
   // One return address for both, chosen in one place: the app's link scheme
   // on phones, the app's own page (under /app) on the web.
   assert.match(api, /redirectTo: authReturnAddress\(\)/u);
-  const screen = read('app/auth.tsx');
+  // Email sign-in has its own screen; its link must land on the same route.
+  const screen = read('app/auth-email.tsx');
   assert.match(
     screen,
     /emailRedirectTo: authReturnAddress\(\)/u,
@@ -44,8 +45,11 @@ test('both providers are offered, and named in both languages', () => {
   const screen = read('app/auth.tsx');
   assert.match(screen, /testIds\.auth\.google/u);
   assert.match(screen, /testIds\.auth\.apple/u);
-  // Android has no Apple accounts; the button is hidden rather than dead.
-  assert.match(screen, /Platform\.OS === 'android' \? null/u);
+  // Phones lead with their own platform's sign-in (Apple on iPhone, Google
+  // elsewhere); the other provider is offered on the web only, so Android
+  // never shows an Apple button it cannot use.
+  assert.match(screen, /Platform\.OS === 'ios' \? 'apple' : 'google'/u);
+  assert.match(screen, /Platform\.OS === 'web' \?/u);
 
   const catalog = read('src/i18n/catalog.ts');
   for (const key of ['auth.continueGoogle', 'auth.continueApple', 'auth.orEmail']) {

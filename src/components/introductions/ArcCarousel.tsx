@@ -8,6 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { ChosenSparkles } from '@/components/introductions/ChosenSparkles';
+import { SelectionGlow } from '@/components/introductions/SelectionGlow';
 import { ShineWipe } from '@/components/introductions/ShineWipe';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useI18n } from '@/i18n';
@@ -48,7 +49,7 @@ export function computeArcLayout(
 export interface ArcCarouselProps {
   live: Introduction[];
   activeId: string;
-  /** Introductions the member has shown interest in; these wear the gold ring. */
+  /** Introductions the member has shown interest in; these wear the gold glow. */
   selectedIds: string[];
   onSelect: (id: string) => void;
   onOpen: (id: string) => void;
@@ -161,7 +162,7 @@ const ArcFace = memo(function ArcFace({
       ]}
       pointerEvents={slot.opacity < 0.2 ? 'none' : 'auto'}
     >
-      <Animated.View style={[styles.frameWrap, frameStyle]}>
+      <Animated.View style={[styles.frameWrap, chosen && styles.frameWrapChosen, frameStyle]}>
         {chosen ? (
           <ChosenSparkles
             size={size}
@@ -181,7 +182,6 @@ const ArcFace = memo(function ArcFace({
           style={[
             styles.frame,
             isActive ? styles.frameActive : styles.frameIdle,
-            chosen && styles.frameChosen,
           ]}
         >
           <Image
@@ -189,10 +189,13 @@ const ArcFace = memo(function ArcFace({
             style={styles.photo}
             contentFit="cover"
             transition={200}
+            recyclingKey={introduction.profile.id}
             accessibilityIgnoresInvertColors
           />
           {/* Idle faces desaturate so the centred one owns the eye. */}
           {!isActive ? <View style={styles.desaturate} /> : null}
+
+          {chosen ? <SelectionGlow identity={introduction.id} /> : null}
 
           {/* Inside the frame, so the band clips to the circle. */}
           {chosen ? (
@@ -213,7 +216,14 @@ const styles = StyleSheet.create({
    */
   strip: { position: 'relative', overflow: 'visible', marginTop: 2 },
   slot: { position: 'absolute', left: '50%' },
-  frameWrap: { width: '100%', height: '100%' },
+  frameWrap: { width: '100%', height: '100%', borderRadius: 999, overflow: 'visible' },
+  frameWrapChosen: {
+    shadowColor: '#C5A054',
+    shadowOpacity: 0.8,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 10,
+  },
   frame: {
     width: '100%',
     height: '100%',
@@ -230,15 +240,6 @@ const styles = StyleSheet.create({
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 8 },
     elevation: 6,
-  },
-  frameChosen: {
-    borderWidth: 2,
-    borderColor: 'rgba(197,160,84,0.9)',
-    shadowColor: '#C5A054',
-    shadowOpacity: 0.75,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 10,
   },
   photo: { width: '100%', height: '100%' },
   /**

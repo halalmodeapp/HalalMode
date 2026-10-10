@@ -9,6 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Image } from 'expo-image';
 
+import { ActionIcon } from '@/components/ui/ActionIcon';
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
 import { moveItem, slotFromPosition, slotPosition } from '@/lib/reorder';
@@ -499,7 +500,7 @@ function PhotoCell({
             onPress={onRemove}
             style={[styles.remove, isRTL && styles.removeRTL]}
           >
-            <Text style={styles.removeLabel}>×</Text>
+            <ActionIcon name="close" size={14} color={color.white} />
           </Pressable>
         </Animated.View>
       </View>
@@ -571,5 +572,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   removeRTL: { right: undefined, left: 6 },
-  removeLabel: { color: color.white, fontSize: 15, fontFamily: font.body, lineHeight: 17 },
 });

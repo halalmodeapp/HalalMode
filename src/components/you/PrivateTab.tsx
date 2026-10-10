@@ -367,7 +367,7 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
           <View style={styles.premiumCard}>
           <View style={styles.premiumHead}>
             <View accessible accessibilityRole="header" accessibilityLabel={t('filters.premiumTitle')} style={styles.premiumTitle}>
-              <PremiumLogo width={190} />
+              <PremiumLogo width={142} />
               <Text style={styles.premiumFilters}>{t('filters.premiumFiltersWord')}</Text>
             </View>
             <View style={styles.premiumRule} />
@@ -754,7 +754,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: color.goldOnDark,
   },
-  premiumHead: { alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingBottom: 18 },
+  premiumHead: { alignItems: 'center', gap: 6, paddingHorizontal: 32, paddingBottom: 18 },
   premiumTitle: { alignItems: 'center', gap: 8 },
   premiumFilters: { fontFamily: font.body, fontSize: 20, lineHeight: 26, color: color.white, textAlign: 'center' },
   premiumRule: { width: 44, height: 1, backgroundColor: color.goldOnDark, marginVertical: 4 },

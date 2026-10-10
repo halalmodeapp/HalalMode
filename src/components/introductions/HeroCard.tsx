@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from 'expo-router';
-import { Gyroscope } from 'expo-sensors';
+import { DeviceMotion, Gyroscope } from 'expo-sensors';
 import {
   useCallback,
   useEffect,
@@ -31,6 +31,7 @@ import Animated, {
 import type { SharedValue } from 'react-native-reanimated';
 
 import { Text } from '@/components/ui/Text';
+import { SelectionGlow } from '@/components/introductions/SelectionGlow';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useI18n } from '@/i18n';
 import { deckDirectionForAccessibilityAction } from '@/lib/roundInvariants';
@@ -41,47 +42,6 @@ import { color, radius } from '@/theme/tokens';
 import type { Profile } from '@/types';
 
 const RAD2DEG = 180 / Math.PI;
-
-/**
- * A blur that deepens towards the bottom of the photo: none at 30% up, the
- * most at the very bottom, so the name sits on a soft, quiet base. Four
- * layers, each blurring more and starting lower, read as one smooth fade
- * rather than a band. Web only (browser backdrop blur); the phone apps keep
- * the plain photo until they are built with a native equivalent.
- */
-const BLUR_LAYERS = [
-  { blur: 2, from: 0, to: 0.45 },
-  { blur: 4, from: 0.25, to: 0.7 },
-  { blur: 8, from: 0.5, to: 0.9 },
-  { blur: 16, from: 0.75, to: 1 },
-];
-
-function ProgressiveBlur() {
-  if (Platform.OS !== 'web') return null;
-  return (
-    <View pointerEvents="none" style={styles.blurZone}>
-      {BLUR_LAYERS.map(({ blur, from, to }) => {
-        // Transparent above `from`, fully blurred from `to` down.
-        const mask = `linear-gradient(to bottom, transparent ${from * 100}%, black ${to * 100}%)`;
-        return (
-          <View
-            key={blur}
-            pointerEvents="none"
-            style={[
-              StyleSheet.absoluteFill,
-              {
-                backdropFilter: `blur(${blur}px)`,
-                WebkitBackdropFilter: `blur(${blur}px)`,
-                maskImage: mask,
-                WebkitMaskImage: mask,
-              } as object,
-            ]}
-          />
-        );
-      })}
-    </View>
-  );
-}
 
 /**
  * Film-grain opacity on the centred card.
@@ -100,24 +60,10 @@ const FILM_GRAIN_NEIGHBOUR_STRENGTH = 0.5;
 const MAX_TILT_ANGLE = 12;
 
 /**
- * How strongly rotational device movement affects the cards.
+ * How strongly the phone's held orientation affects the cards.
  */
-const GYRO_SENSITIVITY = 0.2;
-
-/**
- * Ignores tiny sensor fluctuations while the phone is stationary.
- */
-const GYRO_DEAD_ZONE = 0.015;
-
-/**
- * Prevents large jumps if the JavaScript thread briefly stalls.
- */
-const MAX_DELTA_TIME = 0.05;
-
-/**
- * Controls how quickly the gyroscope tilt returns toward zero.
- */
-const RECENTER_TIME_SECONDS = 0.35;
+const ORIENTATION_SENSITIVITY = 0.72;
+const ORIENTATION_SMOOTHING = 0.32;
 
 /**
  * The full ring cannot turn farther than 100 degrees in either direction.
@@ -193,7 +139,7 @@ export interface HeroCardProps {
 
   chosen: boolean;
 
-  /** Every chosen profile, so each keeps its tick and gold outline wherever it sits in the deck. */
+  /** Every chosen profile, so each keeps its gold glow wherever it sits in the deck. */
   chosenIds?: readonly string[];
 
   /** Pinned to the top corner of the centred card, e.g. the report button. */
@@ -294,20 +240,20 @@ export function HeroCard({
   const pendingSwipeProfileId = useRef<string | null>(null);
 
   /**
-   * Gyroscope-based transient tilt.
-   *
-   * Rotational movement adds tilt while exponential decay continuously
-   * returns the cards toward zero.
+   * Follow the phone's actual orientation instead of integrating angular
+   * velocity. This keeps a visible tilt while the phone is held at an angle.
    */
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
 
       let subscription:
+        | ReturnType<typeof DeviceMotion.addListener>
         | ReturnType<typeof Gyroscope.addListener>
         | null = null;
-
-      let previousTime = Date.now();
+      let baseBeta: number | null = null;
+      let baseGamma: number | null = null;
+      let baseGravity: { x: number; y: number } | null = null;
 
       /**
        * Clear invalid values that may have survived Fast Refresh.
@@ -318,128 +264,104 @@ export function HeroCard({
       ringMomentumIndex.value = 0;
       lastRingDirection.value = 0;
 
-      const startGyroscope = async () => {
+      const startDeviceMotion = async () => {
         try {
-          const available =
-            await Gyroscope.isAvailableAsync();
+          // Browser sensor implementations expose rotation rate but often do
+          // not expose fused beta/gamma orientation angles.
+          if (Platform.OS === 'web') {
+            const available = await Gyroscope.isAvailableAsync();
+            if (!available || cancelled) return;
+            Gyroscope.setUpdateInterval(16);
+            let previousTime = performance.now();
+            subscription = Gyroscope.addListener(({ x, y }) => {
+              const now = performance.now();
+              const deltaTime = clamp((now - previousTime) / 1000, 0, 0.05);
+              previousTime = now;
+              if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+              tiltX.value = clamp(
+                tiltX.value + x * RAD2DEG * deltaTime * 0.45,
+                -MAX_TILT_ANGLE,
+                MAX_TILT_ANGLE,
+              );
+              tiltY.value = clamp(
+                tiltY.value - y * RAD2DEG * deltaTime * 0.45,
+                -MAX_TILT_ANGLE,
+                MAX_TILT_ANGLE,
+              );
+            });
+            return;
+          }
+
+          const available = await DeviceMotion.isAvailableAsync();
 
           if (!available || cancelled) {
             return;
           }
 
-          Gyroscope.setUpdateInterval(16);
-          previousTime = Date.now();
+          DeviceMotion.setUpdateInterval(1000 / 30);
+          subscription = DeviceMotion.addListener((measurement) => {
+            const beta = measurement?.rotation?.beta;
+            const gamma = measurement?.rotation?.gamma;
+            let targetX: number;
+            let targetY: number;
 
-          subscription = Gyroscope.addListener(
-            (measurement) => {
-              const x = measurement?.x;
-              const y = measurement?.y;
-
-              /**
-               * Never allow incomplete sensor values into a transform.
-               */
-              if (
-                !Number.isFinite(x) ||
-                !Number.isFinite(y)
-              ) {
-                tiltX.value = 0;
-                tiltY.value = 0;
-                previousTime = Date.now();
+            if (typeof beta === 'number' && Number.isFinite(beta)
+              && typeof gamma === 'number' && Number.isFinite(gamma)) {
+              // The first reading is the phone's natural holding position. Keep
+              // movement relative to it, so a user's normal grip is not tilted.
+              if (baseBeta === null || baseGamma === null) {
+                baseBeta = beta;
+                baseGamma = gamma;
                 return;
               }
 
-              const currentTime = Date.now();
-
-              const deltaTime = Math.min(
-                Math.max(
-                  (currentTime - previousTime) / 1000,
-                  0,
-                ),
-                MAX_DELTA_TIME,
+              const angleFromBase = (angle: number, base: number) =>
+                Math.atan2(Math.sin(angle - base), Math.cos(angle - base));
+              targetX = clamp(
+                -angleFromBase(beta, baseBeta) * RAD2DEG * ORIENTATION_SENSITIVITY,
+                -MAX_TILT_ANGLE,
+                MAX_TILT_ANGLE,
               );
-
-              previousTime = currentTime;
-
-              if (!Number.isFinite(deltaTime)) {
-                tiltX.value = 0;
-                tiltY.value = 0;
+              targetY = clamp(
+                angleFromBase(gamma, baseGamma) * RAD2DEG * ORIENTATION_SENSITIVITY,
+                -MAX_TILT_ANGLE,
+                MAX_TILT_ANGLE,
+              );
+            } else {
+              // A few devices omit fused angles; gravity still provides a
+              // stable relative tilt for those sensors.
+              const gravity = measurement?.accelerationIncludingGravity;
+              if (!gravity || !Number.isFinite(gravity.x) || !Number.isFinite(gravity.y)) return;
+              if (baseGravity === null) {
+                baseGravity = { x: gravity.x, y: gravity.y };
                 return;
               }
-
-              const cleanX =
-                Math.abs(x) < GYRO_DEAD_ZONE
-                  ? 0
-                  : x;
-
-              const cleanY =
-                Math.abs(y) < GYRO_DEAD_ZONE
-                  ? 0
-                  : y;
-
-              const movementX =
-                cleanX *
-                RAD2DEG *
-                deltaTime *
-                GYRO_SENSITIVITY;
-
-              const movementY =
-                -cleanY *
-                RAD2DEG *
-                deltaTime *
-                GYRO_SENSITIVITY;
-
-              const recenterMultiplier =
-                Math.exp(
-                  -deltaTime /
-                    RECENTER_TIME_SECONDS,
-                );
-
-              const currentTiltX =
-                Number.isFinite(tiltX.value)
-                  ? tiltX.value
-                  : 0;
-
-              const currentTiltY =
-                Number.isFinite(tiltY.value)
-                  ? tiltY.value
-                  : 0;
-
-              const nextTiltX = clamp(
-                (
-                  currentTiltX +
-                  movementX
-                ) * recenterMultiplier,
+              const gravityTilt = (delta: number) =>
+                Math.asin(clamp(delta / DeviceMotion.Gravity, -1, 1)) * RAD2DEG;
+              targetX = clamp(
+                gravityTilt(gravity.y - baseGravity.y) * ORIENTATION_SENSITIVITY,
                 -MAX_TILT_ANGLE,
                 MAX_TILT_ANGLE,
               );
-
-              const nextTiltY = clamp(
-                (
-                  currentTiltY +
-                  movementY
-                ) * recenterMultiplier,
+              targetY = clamp(
+                gravityTilt(gravity.x - baseGravity.x) * ORIENTATION_SENSITIVITY,
                 -MAX_TILT_ANGLE,
                 MAX_TILT_ANGLE,
               );
+            }
 
-              tiltX.value =
-                Number.isFinite(nextTiltX)
-                  ? nextTiltX
-                  : 0;
-
-              tiltY.value =
-                Number.isFinite(nextTiltY)
-                  ? nextTiltY
-                  : 0;
-            },
-          );
+            const currentX = Number.isFinite(tiltX.value) ? tiltX.value : 0;
+            const currentY = Number.isFinite(tiltY.value) ? tiltY.value : 0;
+            tiltX.value = currentX + (targetX - currentX) * ORIENTATION_SMOOTHING;
+            tiltY.value = currentY + (targetY - currentY) * ORIENTATION_SMOOTHING;
+          });
         } catch {
           tiltX.value = 0;
           tiltY.value = 0;
         }
       };
 
-      void startGyroscope();
+      void startDeviceMotion();
 
       return () => {
         cancelled = true;
@@ -1146,6 +1068,12 @@ function DeckCard({
           {
             perspective: 900,
           },
+          {
+            translateX: safeTiltY * 0.55,
+          },
+          {
+            translateY: safeTiltX * 0.38,
+          },
 
           /**
            * Shared ring-facing angle.
@@ -1276,10 +1204,9 @@ function DeckCard({
         source={profile.photos[0]}
         style={StyleSheet.absoluteFill}
         contentFit="cover"
+        recyclingKey={profile.id}
         accessibilityIgnoresInvertColors
       />
-
-      <ProgressiveBlur />
 
       <LinearGradient
         pointerEvents="none"
@@ -1329,6 +1256,10 @@ function DeckCard({
         />
       </Animated.View>
 
+      {chosen ? (
+        <SelectionGlow identity={`deck-${profile.id}`} shape="card" />
+      ) : null}
+
       <View
         style={[
           styles.caption,
@@ -1368,7 +1299,6 @@ function DeckCard({
 }
 
 const styles = StyleSheet.create({
-  blurZone: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '30%' },
   rtl: RTL_LAYOUT,
 
   gestureArea: { flex: 1, overflow: 'visible' },
@@ -1382,6 +1312,9 @@ const styles = StyleSheet.create({
   card: {
     ...StyleSheet.absoluteFill,
     borderRadius: radius.hero,
+    // Keep the photo's clipping bounds identical as interest is toggled.
+    borderWidth: 3,
+    borderColor: 'transparent',
     overflow: 'hidden',
     backgroundColor: color.clay,
     // A lift, not a halo.
@@ -1413,7 +1346,6 @@ const styles = StyleSheet.create({
   chosenTickGlyph: { color: '#FFFFFF', fontSize: 18, lineHeight: 20, fontWeight: '700' },
 
   cardChosen: {
-    borderWidth: 3,
     borderColor: '#C5A054',
     shadowColor: '#C5A054',
     shadowOpacity: 0.7,

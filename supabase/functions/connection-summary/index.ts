@@ -78,13 +78,14 @@ Deno.serve(async (request) => {
   // row; others get "not yet" and the app shows its own summary meanwhile. A
   // claim older than two minutes is treated as abandoned.
   if (cached?.body === PENDING) {
-    if (Date.now() - Date.parse(cached.created_at) < 120_000) return reply({ summary: null });
+    // Being written by another request: say so, so the app keeps waiting.
+    if (Date.now() - Date.parse(cached.created_at) < 120_000) return reply({ summary: null, pending: true });
     await admin.from('connection_summaries').delete()
       .eq('connection_id', connectionId).eq('language', language).eq('body', PENDING);
   }
   const claim = await admin.from('connection_summaries')
     .insert({ connection_id: connectionId, language, body: PENDING });
-  if (claim.error) return reply({ summary: null });
+  if (claim.error) return reply({ summary: null, pending: true });
   const release = () => admin.from('connection_summaries').delete()
     .eq('connection_id', connectionId).eq('language', language).eq('body', PENDING);
 

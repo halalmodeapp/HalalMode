@@ -69,6 +69,8 @@ export default function AnswersScreen() {
     mutationFn: (text: string) => submitAnswer(id, current!.questionId, text),
     onSuccess: (result, text) => {
       setRevealed((state) => ({ ...state, [result.questionId]: result }));
+      // Daily may be waiting on these answers: it should know straight away.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.round });
       if (keep[result.questionId] && saved[result.questionId] !== text) {
         // A convenience. Failing to keep a copy never costs the answer itself.
         void saveAnswer(result.questionId, text)

@@ -1,12 +1,13 @@
 import { FlashList } from '@shopify/flash-list';
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SurfaceToneProvider } from '@/theme/tone';
 
 import { Button } from '@/components/ui/Button';
+import { ActionIcon } from '@/components/ui/ActionIcon';
 import { Text } from '@/components/ui/Text';
 import { optionLabel, searchGroups, type CatalogGroup } from '@/data/catalogOption';
 import { useI18n } from '@/i18n';
@@ -31,6 +32,11 @@ export interface PickerSheetProps {
   clearLabel?: string;
   testID?: string;
 }
+
+/** Up to this many options, a plain list with no search box. */
+const NO_SEARCH_UP_TO = 15;
+/** Up to this many, a plain scrolling list; beyond, a virtualised one. */
+const PLAIN_LIST_UP_TO = 80;
 
 type Row =
   | { kind: 'header'; key: string; label: string }
@@ -97,6 +103,14 @@ export function PickerSheet({
   }, [groups, language, search]);
 
   const optionCount = rows.filter((row) => row.kind === 'option').length;
+  // A short list is chosen from, not searched: nine sects need no search box.
+  const total = useMemo(() => groups.reduce((sum, group) => sum + group.options.length, 0), [groups]);
+  const searchable = total > NO_SEARCH_UP_TO;
+  // The virtualised list needs a definite height, which a sheet that only has
+  // a maximum height does not give it: on phones it collapsed to nothing and
+  // left just the search box. Plain lists size themselves; a long one gets a
+  // tall sheet of fixed height instead.
+  const virtualised = total > PLAIN_LIST_UP_TO;
 
   const choose = (id: string) => {
     if (isSingle) {
@@ -111,72 +125,7 @@ export function PickerSheet({
     });
   };
 
-  return (
-    // A sheet is its own light surface, even opened from a black card.
-    <SurfaceToneProvider tone="light">
-    <Modal
-      visible={visible}
-      transparent
-      animationType="none"
-      onRequestClose={onClose}
-      accessibilityViewIsModal
-    >
-      <View style={[styles.scrim, isRTL && styles.rtl]}>
-        <Pressable
-          style={StyleSheet.absoluteFill}
-          onPress={onClose}
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-        />
-
-        <Animated.View
-          entering={FadeInDown.duration(280)}
-          style={styles.sheet}
-          accessibilityViewIsModal
-          testID={testID}
-        >
-          <View style={styles.head}>
-            <View style={[styles.headTop, isRTL && styles.rowReverse]}>
-              <View style={styles.headText}>
-                <Text variant="microAccent">{eyebrow}</Text>
-                <Text variant="displaySmall" style={styles.headTitle}>
-                  {title}
-                </Text>
-              </View>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={t('picker.close')}
-                onPress={onClose}
-                style={styles.close}
-              >
-                <Text style={styles.closeGlyph}>✕</Text>
-              </Pressable>
-            </View>
-
-            <TextInput
-              accessibilityLabel={searchLabel}
-              value={search}
-              onChangeText={setSearch}
-              placeholder={searchLabel}
-              placeholderTextColor={color.whisper}
-              autoCorrect={false}
-              style={[styles.search, isRTL && styles.searchRTL]}
-            />
-
-            <Text variant="caption" style={styles.resultLabel}>
-              {t('picker.shown', { count: optionCount })}
-            </Text>
-          </View>
-
-          <FlashList
-            data={rows}
-            keyExtractor={(row) => row.key}
-            getItemType={(row) => row.kind}
-            style={styles.list}
-            contentContainerStyle={styles.rows}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            renderItem={({ item }) => {
+  const renderRow = (item: Row) => {
               if (item.kind === 'header') {
                 return (
                   <Text variant="micro" style={[styles.groupLabel, isRTL && styles.textRTL]}>
@@ -203,13 +152,105 @@ export function PickerSheet({
                   </View>
                 </Pressable>
               );
-            }}
+  };
+
+  return (
+    // A sheet is its own light surface, even opened from a black card.
+    <SurfaceToneProvider tone="light">
+    <Modal
+      visible={visible}
+      transparent
+      animationType="none"
+      onRequestClose={onClose}
+      accessibilityViewIsModal
+    >
+      <KeyboardAvoidingView
+        // The sheet rides up above the keyboard so the options stay in view.
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={[styles.scrim, isRTL && styles.rtl]}
+      >
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={onClose}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        />
+
+        <Animated.View
+          entering={FadeInDown.duration(280)}
+          style={[styles.sheet, virtualised && styles.sheetTall]}
+          accessibilityViewIsModal
+          testID={testID}
+        >
+          <View style={styles.head}>
+            <View style={[styles.headTop, isRTL && styles.rowReverse]}>
+              <View style={styles.headText}>
+                <Text variant="microAccent">{eyebrow}</Text>
+                <Text variant="displaySmall" style={styles.headTitle}>
+                  {title}
+                </Text>
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('picker.close')}
+                onPress={onClose}
+                style={styles.close}
+              >
+                <ActionIcon name="close" size={16} color={color.inkSoft} />
+              </Pressable>
+            </View>
+
+            {searchable ? (
+            <TextInput
+              accessibilityLabel={searchLabel}
+              value={search}
+              onChangeText={setSearch}
+              placeholder={searchLabel}
+              placeholderTextColor={color.whisper}
+              autoCorrect={false}
+              style={[styles.search, isRTL && styles.searchRTL]}
+            />
+            ) : null}
+
+            {searchable ? (
+              <Text variant="caption" style={styles.resultLabel}>
+                {t('picker.shown', { count: optionCount })}
+              </Text>
+            ) : null}
+          </View>
+
+          {virtualised ? (
+          <FlashList
+            data={rows}
+            keyExtractor={(row) => row.key}
+            getItemType={(row) => row.kind}
+            style={styles.list}
+            contentContainerStyle={styles.rows}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            renderItem={({ item }) => renderRow(item)}
             ListEmptyComponent={
               <Text variant="bodySmall" center style={styles.noResults}>
                 {t('picker.noResults')}
               </Text>
             }
           />
+          ) : (
+            <ScrollView
+              style={styles.list}
+              contentContainerStyle={styles.rows}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              {rows.length === 0 ? (
+                <Text variant="bodySmall" center style={styles.noResults}>
+                  {t('picker.noResults')}
+                </Text>
+              ) : (
+                rows.map((item) => <View key={item.key}>{renderRow(item)}</View>)
+              )}
+            </ScrollView>
+          )}
 
           <View style={[styles.foot, { paddingBottom: insets.bottom + 20 }]}>
             {clearLabel ? (
@@ -236,7 +277,7 @@ export function PickerSheet({
             ) : null}
           </View>
         </Animated.View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
     </SurfaceToneProvider>
   );
@@ -264,6 +305,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: radius.sheet,
     overflow: 'hidden',
   },
+  sheetTall: { height: '88%' },
 
   head: {
     padding: space.gutter,
@@ -286,7 +328,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  closeGlyph: { fontFamily: font.body, fontSize: 13, color: color.inkSoft },
 
   search: {
     marginTop: 14,

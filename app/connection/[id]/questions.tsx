@@ -30,6 +30,8 @@ export default function QuestionSelectScreen() {
     mutationFn: () => submitQuestionPicks(id, picked),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.connection(id) });
+      // Daily may be waiting on these picks: it should know straight away.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.round });
       router.replace(`/connection/${id}/waiting`);
     },
   });

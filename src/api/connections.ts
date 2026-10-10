@@ -100,17 +100,25 @@ export async function submitAnswer(
 }
 
 /**
- * The written comparison of both members' answers, or null when it is not
- * available (not finished yet, or no AI key set on the server).
+ * The written comparison of both members' answers. `summary` is null when it
+ * is not available; `pending` says it is still being written, so it is worth
+ * asking again in a moment. Once written it is saved on the server, so later
+ * reads return the same text straight away.
  */
-export async function fetchConnectionSummary(connectionId: string, language: string): Promise<string | null> {
-  if (USE_MOCKS) return null;
+export async function fetchConnectionSummary(
+  connectionId: string,
+  language: string,
+): Promise<{ summary: string | null; pending: boolean }> {
+  if (USE_MOCKS) return { summary: null, pending: false };
   const client = requireSupabase();
   const { data, error } = await client.functions.invoke('connection-summary', {
     body: { connectionId, language },
   });
-  if (error) return null;
-  return typeof data?.summary === 'string' ? data.summary : null;
+  if (error) return { summary: null, pending: false };
+  return {
+    summary: typeof data?.summary === 'string' ? data.summary : null,
+    pending: data?.pending === true,
+  };
 }
 
 /** Answers the member chose to keep, by question id. Private to them. */

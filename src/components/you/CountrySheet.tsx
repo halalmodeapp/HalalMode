@@ -11,6 +11,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
+import { ActionIcon } from '@/components/ui/ActionIcon';
 import { Text } from '@/components/ui/Text';
 import { countryName } from '@/data/countryCodes';
 import { COUNTRIES } from '@/data/preferences';
@@ -113,7 +114,7 @@ export function CountrySheet({
                 onPress={onClose}
                 style={styles.close}
               >
-                <Text style={styles.closeGlyph}>✕</Text>
+                <ActionIcon name="close" size={16} color={color.inkSoft} />
               </Pressable>
             </View>
 
@@ -243,7 +244,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  closeGlyph: { fontFamily: font.body, fontSize: 13, color: color.inkSoft },
 
   search: {
     marginTop: 14,

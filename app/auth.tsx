@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -7,18 +7,17 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 
-import { authReturnAddress, signInWithProvider, type AuthProvider } from '@/api/auth';
+import { signInWithProvider, type AuthProvider } from '@/api/auth';
 import { HalftoneHero } from '@/components/auth/HalftoneHero';
 import { useI18n } from '@/i18n';
 import { localeName, supportedLocales } from '@/i18n/locales';
-import { requireSupabase } from '@/lib/supabase';
 import { testIds } from '@/lib/testIds';
 import { useSession } from '@/state/session';
 import { useAuth } from '@/state/auth';
@@ -26,7 +25,6 @@ import { useBreakpoint } from '@/theme/breakpoints';
 import { font as appFont } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
 import { ShiningWordmark } from '@/components/brand/ShiningWordmark';
-import { trackProductEvent } from '@/lib/analytics';
 
 /**
  * The sign-in screen, dressed like halalmo.de: the gold halftone photo with the
@@ -56,89 +54,71 @@ export default function AuthScreen() {
   const { language, setLanguage } = useSession();
   const { authError, clearAuthError } = useAuth();
   const insets = useSafeAreaInsets();
-  const { height } = useWindowDimensions();
+  const { height, width } = useWindowDimensions();
+  const router = useRouter();
   // From tablet width up the picture and the form sit side by side, the way
   // the landing page does, instead of a phone layout stretched sideways.
   const wide = useBreakpoint() !== 'phone';
-  const [email, setEmail] = useState('');
-  const [sending, setSending] = useState(false);
-  const [secondsUntilResend, setSecondsUntilResend] = useState(0);
+  const landscape = width > height;
+  const split = wide || landscape;
   const [busyProvider, setBusyProvider] = useState<AuthProvider | null>(null);
   const [languageOpen, setLanguageOpen] = useState(false);
-  // Shown in the page, under the button, not in a pop-up: a browser never
-  // displays React Native's Alert, so "check your email" used to vanish.
-  const [notice, setNotice] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
-
-  useEffect(() => {
-    if (secondsUntilResend <= 0) return;
-    const timer = setInterval(() => {
-      setSecondsUntilResend((remaining) => Math.max(0, remaining - 1));
-    }, 1_000);
-    return () => clearInterval(timer);
-  }, [secondsUntilResend]);
+  const [providerError, setProviderError] = useState<string | null>(null);
+  const primaryProvider: AuthProvider = Platform.OS === 'ios' ? 'apple' : 'google';
 
   const continueWith = async (provider: AuthProvider) => {
     if (busyProvider) return;
     clearAuthError();
+    setProviderError(null);
     setBusyProvider(provider);
     try {
       await signInWithProvider(provider);
     } catch {
-      setNotice({ tone: 'error', text: `${t('auth.providerFailed')}. ${t('auth.providerFailedBody')}` });
+      setProviderError(`${t('auth.providerFailed')}. ${t('auth.providerFailedBody')}`);
     } finally {
       setBusyProvider(null);
-    }
-  };
-
-  const sendLink = async () => {
-    if (sending || secondsUntilResend > 0) return;
-    const cleanEmail = email.trim().toLowerCase();
-    if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
-      setNotice({ tone: 'error', text: t('auth.invalidEmail') });
-      return;
-    }
-    clearAuthError();
-    setNotice(null);
-    setSending(true);
-    try {
-      const { error } = await requireSupabase().auth.signInWithOtp({
-        email: cleanEmail,
-        options: { emailRedirectTo: authReturnAddress() },
-      });
-      if (error) throw error;
-      trackProductEvent('auth_link_requested');
-      // Supabase remains the authority for rate limits. This short local pause
-      // protects people from accidentally requesting several identical links.
-      setSecondsUntilResend(60);
-      setNotice({ tone: 'ok', text: `${t('auth.checkEmail')}. ${t('auth.linkSent')}` });
-    } catch {
-      setNotice({ tone: 'error', text: `${t('auth.sendFailed')}. ${t('auth.sendFailedBody')}` });
-    } finally {
-      setSending(false);
     }
   };
 
   // Headlines in Playfair; Arabic script in Beiruti, which reads better there.
   const body = isRTL ? appFont.arabic : SERIF;
   const align = isRTL ? styles.rtlText : undefined;
-  // The picture takes about 70% of the screen: of its height on a phone held
-  // upright, of its width on anything wider. The sign-in sheet has the rest.
-  const heroHeight = wide ? height : Math.max(260, Math.round(height * 0.7));
+  // The picture fills a wide viewport, while phone layouts reserve most of the
+  // height for the complete sign-in form.
+  const compact = !wide || (landscape && height < 700);
+  const dense = height < 560;
+  const usableHeight = Math.max(1, height - insets.top - insets.bottom);
+  const splitPanelWidth = !split
+    ? undefined
+    : compact
+      ? Math.min(440, width * 0.48)
+      : Math.min(520, Math.max(380, width * 0.4));
+  // Keep the sign-in controls together in a compact bottom sheet in portrait;
+  // landscape uses a side-by-side composition so the form has enough height.
+  const phoneSheetHeight = Math.max(234, Math.min(292, Math.round(usableHeight * 0.32)));
 
   return (
     <View style={[styles.page, isRTL && styles.rtl]}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
           contentContainerStyle={[
-            { paddingBottom: wide ? 0 : insets.bottom + 40 },
-            wide && styles.split,
+            styles.scrollContent,
+            { minHeight: height, paddingBottom: 0 },
+            split && styles.split,
           ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={[styles.hero, { height: heroHeight }, wide && styles.heroWide]}>
+          <View style={[
+            styles.hero,
+            split ? styles.heroWide : styles.heroPortrait,
+            split && compact && styles.heroWideCompact,
+          ]}>
             <HalftoneHero />
-            <View pointerEvents="box-none" style={[styles.header, { paddingTop: insets.top + 18 }]}>
+            <View
+              pointerEvents="box-none"
+              style={[styles.header, compact && styles.headerCompact, { paddingTop: insets.top + (compact ? 8 : 18) }]}
+            >
               <ShiningWordmark width={176} />
               <Pressable
                 testID={testIds.auth.language}
@@ -179,29 +159,44 @@ export default function AuthScreen() {
             ) : null}
           </View>
 
-          <View style={[styles.sheet, wide && styles.sheetWide]}>
-            <Text style={[styles.h1, { fontFamily: body }, isRTL && styles.noTracking, align]}>
+          <View
+            style={[
+              styles.sheet,
+              compact && styles.sheetCompact,
+              dense && styles.sheetDense,
+              split ? styles.sheetWide : styles.sheetPortrait,
+              split && compact && styles.sheetWideCompact,
+              {
+                paddingBottom: insets.bottom + (compact ? 8 : 24),
+                ...(splitPanelWidth ? { width: splitPanelWidth } : {}),
+                ...(!split ? { minHeight: phoneSheetHeight } : {}),
+              },
+            ]}
+          >
+            <Text style={[styles.h1, compact && styles.h1Compact, dense && styles.h1Dense, { fontFamily: body }, isRTL && styles.noTracking, align]}>
               {t('auth.heroTitle')}
             </Text>
-            <Text style={[styles.lede, { fontFamily: isRTL ? appFont.arabic : SANS }, align]}>
+            <Text style={[styles.lede, compact && styles.ledeCompact, dense && styles.ledeDense, { fontFamily: isRTL ? appFont.arabic : SANS }, align]}>
               {t('auth.heroIntro')}
             </Text>
 
-            <View style={styles.card}>
-              <Text style={[styles.h2, { fontFamily: body }, align]}>{t('auth.cardTitle')}</Text>
-              <Text style={[styles.sub, { fontFamily: isRTL ? appFont.arabic : SANS }, align]}>{t('auth.cardSub')}</Text>
+            <View style={[styles.card, compact && styles.cardCompact, dense && styles.cardDense]}>
+              <Text style={[styles.h2, compact && styles.h2Compact, dense && styles.h2Dense, { fontFamily: body }, align]}>{t('auth.cardTitle')}</Text>
+              <Text style={[styles.sub, compact && styles.subCompact, dense && styles.subDense, { fontFamily: isRTL ? appFont.arabic : SANS }, align]}>{t('auth.cardSub')}</Text>
 
               <PillButton
-                testID={testIds.auth.google}
-                label={t('auth.continueGoogle')}
-                busy={busyProvider === 'google'}
+                testID={primaryProvider === 'apple' ? testIds.auth.apple : testIds.auth.google}
+                label={primaryProvider === 'apple' ? t('auth.continueApple') : t('auth.continueGoogle')}
+                busy={busyProvider === primaryProvider}
                 disabled={busyProvider !== null}
-                onPress={() => void continueWith('google')}
+                onPress={() => void continueWith(primaryProvider)}
                 font={isRTL ? appFont.arabic : appFont.bodySemi}
+                compact={compact}
+                dense={dense}
               />
-              {/* Android has no Apple accounts to speak of; a button that leads
-                  somewhere nobody there can finish is worse than no button. */}
-              {Platform.OS === 'android' ? null : (
+              {/* Keep the alternate provider on desktop; phones lead with the
+                  platform's native sign-in method. */}
+              {Platform.OS === 'web' ? (
                 <PillButton
                   testID={testIds.auth.apple}
                   label={t('auth.continueApple')}
@@ -210,50 +205,34 @@ export default function AuthScreen() {
                   onPress={() => void continueWith('apple')}
                   font={isRTL ? appFont.arabic : appFont.bodySemi}
                   outline
+                  compact={compact}
+                  dense={dense}
                 />
-              )}
-
-              <View style={styles.dividerRow}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>{t('auth.orEmail')}</Text>
-                <View style={styles.dividerLine} />
-              </View>
-
-              <Text style={[styles.label, align]}>{t('auth.email')}</Text>
+              ) : null}
+              <Pressable
+                testID={testIds.auth.emailContinue}
+                accessibilityRole="button"
+                accessibilityLabel={t('auth.orEmail')}
+                onPress={() => router.push('/auth-email')}
+                style={({ pressed }) => [
+                  styles.pill,
+                  compact && styles.pillCompact,
+                  dense && styles.pillDense,
+                  styles.pillOutline,
+                  pressed && styles.pillPressed,
+                ]}
+              >
+                <Text style={[styles.pillLabel, compact && styles.pillLabelCompact, dense && styles.pillLabelDense, { fontFamily: isRTL ? appFont.arabic : appFont.bodySemi }, styles.pillLabelOutline]}>
+                  {t('auth.orEmail')}
+                </Text>
+              </Pressable>
+              {providerError ? (
+                <Text accessibilityRole="alert" style={[styles.error, align]}>{providerError}</Text>
+              ) : null}
               {authError === 'invalid_link' ? (
                 <Text accessibilityRole="alert" style={[styles.error, align]}>{t('auth.linkInvalid')}</Text>
               ) : null}
-              <TextInput
-                testID={testIds.auth.email}
-                accessibilityLabel={t('auth.email')}
-                autoCapitalize="none"
-                autoComplete="email"
-                keyboardType="email-address"
-                placeholder={t('auth.emailPlaceholder')}
-                placeholderTextColor={C.label}
-                value={email}
-                onChangeText={setEmail}
-                onSubmitEditing={() => void sendLink()}
-                style={styles.input}
-              />
-              <PillButton
-                testID={testIds.auth.submit}
-                label={secondsUntilResend > 0 ? t('auth.waitToResend', { seconds: secondsUntilResend }) : t('auth.send')}
-                busy={sending}
-                disabled={secondsUntilResend > 0}
-                onPress={() => void sendLink()}
-                font={isRTL ? appFont.arabic : appFont.bodySemi}
-              />
-              {notice ? (
-                <Text
-                  accessibilityRole="alert"
-                  accessibilityLiveRegion="polite"
-                  style={[notice.tone === 'ok' ? styles.sent : styles.error, align]}
-                >
-                  {notice.tone === 'ok' ? '✓ ' : ''}{notice.text}
-                </Text>
-              ) : null}
-              <Text style={[styles.fine, align]}>{t('auth.privacyNote')}</Text>
+              <Text style={[styles.fine, compact && styles.fineCompact, dense && styles.fineDense, align]}>{t('auth.privacyNote')}</Text>
             </View>
           </View>
         </ScrollView>
@@ -271,6 +250,8 @@ function PillButton({
   outline,
   font,
   testID,
+  compact,
+  dense,
 }: {
   label: string;
   onPress: () => void;
@@ -279,6 +260,8 @@ function PillButton({
   outline?: boolean;
   font?: string;
   testID?: string;
+  compact?: boolean;
+  dense?: boolean;
 }) {
   return (
     <Pressable
@@ -290,6 +273,8 @@ function PillButton({
       onPress={onPress}
       style={({ pressed }) => [
         styles.pill,
+        compact && styles.pillCompact,
+        dense && styles.pillDense,
         outline && styles.pillOutline,
         (disabled || busy) && styles.pillDisabled,
         pressed && styles.pillPressed,
@@ -298,7 +283,7 @@ function PillButton({
       {busy ? (
         <ActivityIndicator color={outline ? C.ink : C.surface} />
       ) : (
-        <Text style={[styles.pillLabel, { fontFamily: font }, outline && styles.pillLabelOutline]}>{label}</Text>
+        <Text style={[styles.pillLabel, compact && styles.pillLabelCompact, dense && styles.pillLabelDense, { fontFamily: font }, outline && styles.pillLabelOutline]}>{label}</Text>
       )}
     </Pressable>
   );
@@ -307,16 +292,19 @@ function PillButton({
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: C.surface },
   flex: { flex: 1 },
+  scrollContent: { flexGrow: 1 },
   rtl: RTL_LAYOUT,
   rtlText: { textAlign: 'right', writingDirection: 'rtl' },
   noTracking: { letterSpacing: 0 },
 
   hero: { position: 'relative', overflow: 'visible' },
   split: { flexDirection: 'row', minHeight: '100%' },
-  heroWide: { flex: 7, overflow: 'hidden' },
+  heroPortrait: { flex: 1, minHeight: 170 },
+  heroWide: { flex: 1, overflow: 'hidden' },
+  heroWideCompact: { flex: 1 },
   sheetWide: {
-    flex: 3,
-    minWidth: 380,
+    flex: 0,
+    minWidth: 0,
     justifyContent: 'center',
     marginTop: 0,
     paddingVertical: 48,
@@ -325,12 +313,20 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
   },
+  sheetWideCompact: {
+    flex: 0,
+    minWidth: 0,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    justifyContent: 'center',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 24,
   },
+  headerCompact: { paddingHorizontal: 20 },
   globe: {
     width: 38,
     height: 38,
@@ -387,6 +383,20 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: 'rgba(138,106,52,0.16)',
   },
+  sheetCompact: {
+    flexGrow: 0,
+    marginTop: -16,
+    paddingHorizontal: 18,
+    paddingTop: 12,
+  },
+  sheetPortrait: {
+    flexGrow: 0,
+    flexShrink: 0,
+    marginTop: -16,
+    paddingTop: 12,
+    paddingHorizontal: 16,
+  },
+  sheetDense: { marginTop: -12, paddingTop: 8 },
   h1: {
     fontSize: 42,
     lineHeight: 44,
@@ -395,7 +405,11 @@ const styles = StyleSheet.create({
     color: C.ink,
     marginBottom: 20,
   },
+  h1Compact: { fontSize: 25, lineHeight: 29, marginBottom: 4 },
+  h1Dense: { fontSize: 21, lineHeight: 24, marginBottom: 2 },
   lede: { fontSize: 17, lineHeight: 27, color: C.muted, marginBottom: 28 },
+  ledeCompact: { fontSize: 12.5, lineHeight: 17, marginBottom: 8 },
+  ledeDense: { fontSize: 11, lineHeight: 14, marginBottom: 4 },
 
   card: {
     backgroundColor: 'rgba(252,252,251,0.92)',
@@ -410,8 +424,14 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 20 },
     elevation: 6,
   },
+  cardCompact: { padding: 10, gap: 5, borderRadius: 17 },
+  cardDense: { padding: 8, gap: 4, borderRadius: 15 },
   h2: { fontSize: 26, fontWeight: '600', color: C.ink },
+  h2Compact: { fontSize: 17, lineHeight: 21 },
+  h2Dense: { fontSize: 15, lineHeight: 18 },
   sub: { fontSize: 15, lineHeight: 22, color: C.muted, marginTop: -6, marginBottom: 8 },
+  subCompact: { fontSize: 12.5, lineHeight: 17, marginTop: -4, marginBottom: 2 },
+  subDense: { fontSize: 11.5, lineHeight: 15, marginTop: -3, marginBottom: 1 },
 
   pill: {
     minHeight: 52,
@@ -421,36 +441,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 18,
   },
+  pillCompact: { minHeight: 38 },
+  pillDense: { minHeight: 33 },
   pillOutline: { backgroundColor: 'transparent', borderWidth: 1, borderColor: C.ink },
   pillDisabled: { opacity: 0.55 },
   pillPressed: { opacity: 0.85 },
   pillLabel: { fontSize: 17, fontWeight: '600', color: C.surface },
+  pillLabelCompact: { fontSize: 13.5 },
+  pillLabelDense: { fontSize: 12.5 },
   pillLabelOutline: { color: C.ink },
 
-  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 4 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: C.line },
-  dividerText: {
-    fontFamily: SANS,
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1.6,
-    textTransform: 'uppercase',
-    color: C.gold,
-  },
-  label: { fontFamily: SANS, fontSize: 13, fontWeight: '600', color: C.ink, marginBottom: -6 },
   error: { fontFamily: SANS, fontSize: 13, lineHeight: 18, color: C.err },
-  sent: { fontFamily: SANS, fontSize: 13, lineHeight: 18, color: C.ink, fontWeight: '600' },
-  input: {
-    fontFamily: SANS,
-    fontSize: 16,
-    paddingVertical: 13,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: C.line,
-    borderRadius: 14,
-    backgroundColor: C.surface,
-    color: C.ink,
-    textAlign: 'left',
-  },
   fine: { fontFamily: SANS, fontSize: 12, lineHeight: 17, color: C.label },
+  fineCompact: { fontSize: 10.5, lineHeight: 14 },
+  fineDense: { fontSize: 10, lineHeight: 13 },
 });

@@ -6,7 +6,7 @@
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "orientation": "portrait",
+    "orientation": "default",
     "scheme": "halalmode",
     "userInterfaceStyle": "light",
     "backgroundColor": "#FCFCFB",
@@ -18,6 +18,7 @@
         "NSPhotoLibraryUsageDescription": "Halal Mode uses your photo library so you can add clear, recent photos to your profile.",
         "NSCameraUsageDescription": "Halal Mode uses your camera so you can take a clear, recent profile photo.",
         "NSMicrophoneUsageDescription": "Halal Mode uses your microphone to record your voice introduction and voice notes.",
+        "NSMotionUsageDescription": "Halal Mode uses device motion to let profile cards respond to your phone's tilt.",
         "NSLocationWhenInUseUsageDescription": "Halal Mode uses your location while you set up your profile to privately apply your chosen distance preference. Your exact location is never shown to other members.",
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -26,7 +27,7 @@
       "package": "com.halalmode.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/adaptive-icon.png",
-        "backgroundColor": "#0A0A0A"
+        "backgroundColor": "#A82149"
       },
       "permissions": [
         "android.permission.RECORD_AUDIO",
@@ -49,7 +50,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#FCFCFB",
+          "backgroundColor": "#A82149",
           "image": "./assets/branding/halalmode-splash.png",
           "imageWidth": 220,
           "resizeMode": "contain"

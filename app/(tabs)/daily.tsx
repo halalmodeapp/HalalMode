@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
@@ -40,6 +40,8 @@ import { useSession } from '@/state/session';
 import { alpha, color, font, space } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
 import { errorMessage } from '@/lib/errorMessage';
+import { useBreakpoint } from '@/theme/breakpoints';
+import { ActionIcon } from '@/components/ui/ActionIcon';
 
 /**
  * Names the criterion in the member's own words, matching the label on the
@@ -57,7 +59,16 @@ const NARROWING_CRITERION_KEYS: Record<NarrowingCriterion, TranslationKey> = {
 };
 
 export default function DailyScreen() {
-  const { t, isRTL } = useI18n();
+  const { t, isRTL, localeTag } = useI18n();
+  // Back from Settings or Profile: undo any page scroll a phone keyboard left
+  // behind, so the cards are where they belong.
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.scrollY !== 0) window.scrollTo(0, 0);
+    }, []),
+  );
+  const breakpoint = useBreakpoint();
+  const wideLayout = breakpoint !== 'phone';
   const queryClient = useQueryClient();
   // Testers get the reset button on the live app too, during this phase.
   const testerQuery = useQuery({ queryKey: ['sample-members'], queryFn: fetchMySampleMembers });
@@ -74,6 +85,7 @@ export default function DailyScreen() {
     narrowingCriterion,
     nextSetCity,
     owed,
+    owedAll,
     isLoading,
     error,
     refresh,
@@ -285,20 +297,26 @@ export default function DailyScreen() {
   }
 
   // Someone is waiting on this member. No set until they have caught up.
-  if (emptyReason === 'answers_owed' && owed) {
-    const picks = owed.step === 'questions';
+  // Names everyone they owe, with one button each. Answering one refreshes
+  // this at once (the answer screens invalidate the round), so the list
+  // shrinks and then gives way to the countdown.
+  if (emptyReason === 'answers_owed' && owedAll.length > 0) {
+    const names = listNames(owedAll.map((item) => item.name), localeTag);
     return (
       <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
         <BrandHeader />
         <View style={styles.readinessEmpty}>
           <EmptyState
-            title={t(picks ? 'daily.owedPicksTitle' : 'daily.owedTitle', { name: owed.name })}
-            message={t(picks ? 'daily.owedPicksBody' : 'daily.owedBody')}
+            title={t('daily.owedListTitle', { names })}
+            message={t('daily.owedListBody')}
           />
-          <Button
-            label={t(picks ? 'daily.owedPicksAction' : 'daily.owedAction', { name: owed.name })}
-            onPress={() => router.push(`/connection/${owed.connectionId}/${owed.step}`)}
-          />
+          {owedAll.map((item) => (
+            <Button
+              key={item.connectionId}
+              label={t(item.step === 'questions' ? 'daily.owedPicksAction' : 'daily.owedAction', { name: item.name })}
+              onPress={() => router.push(`/connection/${item.connectionId}/${item.step}`)}
+            />
+          ))}
         </View>
       </Screen>
     );
@@ -462,7 +480,7 @@ export default function DailyScreen() {
             onPress={reset}
             style={styles.resetButton}
           >
-            <Text style={styles.resetGlyph}>↺</Text>
+            <ActionIcon name="refresh" size={14} color={color.muted} />
           </Pressable>
         ) : null}
       </View>
@@ -514,8 +532,12 @@ export default function DailyScreen() {
       </View>
 
       <View style={styles.footer}>
-        <View style={[styles.captionRow, isRTL && styles.rowReverse]}>
-          <Text variant="caption" tone="whisper" style={styles.captionText}>
+        <View style={[styles.captionRow, wideLayout && styles.captionRowWide, isRTL && styles.rowReverse]}>
+          <Text
+            variant="caption"
+            tone="whisper"
+            style={[styles.captionText, wideLayout && styles.captionTextWide]}
+          >
             {selected.length > 0
               ? t('daily.chosenOf', { count: selected.length, limit: Math.min(keepLimit, live.length) })
               : t('daily.chooseUpTo', { limit: Math.min(keepLimit, live.length) })}
@@ -772,7 +794,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  resetGlyph: { fontFamily: font.body, fontSize: 14, color: color.muted },
 
   // Not clipped: tilted side cards sit lower than the centre one. The page
   // itself stops sideways scrolling (see +html.tsx).
@@ -791,6 +812,8 @@ const styles = StyleSheet.create({
   // squeezed into a narrow column on a phone.
   captionRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 16, rowGap: 4 },
   captionText: { flexBasis: '100%' },
+  captionRowWide: { justifyContent: 'space-between', columnGap: 10 },
+  captionTextWide: { flex: 1, flexBasis: 'auto' },
   selectAll: { color: color.ink, textDecorationLine: 'underline' },
   interestAction: { flex: 1, paddingHorizontal: 10 },
   primaryAction: { flex: 1.2, paddingHorizontal: 10 },
@@ -811,3 +834,12 @@ const styles = StyleSheet.create({
   gateTitle: { fontSize: 30 },
   gateCard: { padding: 18, borderRadius: 20, backgroundColor: color.sand },
 });
+
+/** "Rukia", "Rukia and Salma", "Rukia, Salma and Amina", in the member's language. */
+function listNames(names: string[], localeTag: string): string {
+  try {
+    return new Intl.ListFormat(localeTag, { style: 'long', type: 'conjunction' }).format(names);
+  } catch {
+    return names.join(', ');
+  }
+}

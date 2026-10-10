@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -14,6 +13,7 @@ import {
   type ReportReason,
 } from '@/api/safety';
 import { Button } from '@/components/ui/Button';
+import { ActionIcon } from '@/components/ui/ActionIcon';
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
 import { useToast } from '@/state/toast';
@@ -144,7 +144,7 @@ export function SafetyControl({
           pressed && styles.pressed,
         ]}
       >
-        <Ionicons
+        <ActionIcon
           name="ellipsis-horizontal"
           size={20}
           color={tone === 'dark' ? color.white : color.inkSoft}
@@ -177,6 +177,18 @@ export function SafetyControl({
                 {/* First, and not marked destructive: recognising somebody from
                     life is the most ordinary reason to open this menu, and it
                     says nothing against them. */}
+                {/* A matched conversation: the Halal Mode Bot summary of their
+                    answers can be reread at any time. It is saved once written. */}
+                {scope.kind === 'connection' ? (
+                  <SafetyOption
+                    testID="safety-reread-summary"
+                    label={t('safety.rereadSummary')}
+                    onPress={() => {
+                      close();
+                      router.push(`/connection/${scope.id}/recap`);
+                    }}
+                  />
+                ) : null}
                 <SafetyOption
                   testID={testIds.safety.hide}
                   label={t('safety.hide')}
@@ -304,7 +316,7 @@ function SafetyOption({
       style={({ pressed }) => [styles.option, pressed && styles.pressed]}
     >
       <Text style={destructive ? styles.destructive : undefined}>{label}</Text>
-      <Ionicons name="chevron-forward" size={18} color={destructive ? DANGER : color.muted} />
+      <ActionIcon name="chevron-forward" size={18} color={destructive ? DANGER : color.muted} />
     </Pressable>
   );
 }
