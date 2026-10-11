@@ -34,6 +34,24 @@ export const ILLUSTRATIONS: Partial<Record<string, ImageSourcePropType>> = {
   'adv-1142-talk': require('../../assets/halal-cards/adv-1142-talk.webp'),
   'adv-1142-weekend': require('../../assets/halal-cards/adv-1142-weekend.webp'),
   'adv-1142-yusuf': require('../../assets/halal-cards/adv-1142-yusuf.webp'),
+  'adv-fajr-alarm-after': require('../../assets/halal-cards/adv-fajr-alarm-after.webp'),
+  'adv-fajr-alarm-alarm': require('../../assets/halal-cards/adv-fajr-alarm-alarm.webp'),
+  'adv-fajr-alarm-distance': require('../../assets/halal-cards/adv-fajr-alarm-distance.webp'),
+  'adv-fajr-alarm-end-defended': require('../../assets/halal-cards/adv-fajr-alarm-end-defended.webp'),
+  'adv-fajr-alarm-end-growing': require('../../assets/halal-cards/adv-fajr-alarm-end-growing.webp'),
+  'adv-fajr-alarm-end-judged': require('../../assets/halal-cards/adv-fajr-alarm-end-judged.webp'),
+  'adv-fajr-alarm-end-kindness': require('../../assets/halal-cards/adv-fajr-alarm-end-kindness.webp'),
+  'adv-fajr-alarm-end-one': require('../../assets/halal-cards/adv-fajr-alarm-end-one.webp'),
+  'adv-fajr-alarm-end-pace': require('../../assets/halal-cards/adv-fajr-alarm-end-pace.webp'),
+  'adv-fajr-alarm-end-parallel': require('../../assets/halal-cards/adv-fajr-alarm-end-parallel.webp'),
+  'adv-fajr-alarm-end-performance': require('../../assets/halal-cards/adv-fajr-alarm-end-performance.webp'),
+  'adv-fajr-alarm-friend': require('../../assets/halal-cards/adv-fajr-alarm-friend.webp'),
+  'adv-fajr-alarm-lonely': require('../../assets/halal-cards/adv-fajr-alarm-lonely.webp'),
+  'adv-fajr-alarm-morning': require('../../assets/halal-cards/adv-fajr-alarm-morning.webp'),
+  'adv-fajr-alarm-overheard': require('../../assets/halal-cards/adv-fajr-alarm-overheard.webp'),
+  'adv-fajr-alarm-qadr': require('../../assets/halal-cards/adv-fajr-alarm-qadr.webp'),
+  'adv-fajr-alarm-ramadan': require('../../assets/halal-cards/adv-fajr-alarm-ramadan.webp'),
+  'adv-fajr-alarm-talk': require('../../assets/halal-cards/adv-fajr-alarm-talk.webp'),
   'adv-offer-cover': require('../../assets/halal-cards/adv-offer-cover.webp'),
   'adv-offer-dinner': require('../../assets/halal-cards/adv-offer-dinner.webp'),
   'adv-offer-dubai': require('../../assets/halal-cards/adv-offer-dubai.webp'),
@@ -141,11 +159,5 @@ export const ILLUSTRATIONS: Partial<Record<string, ImageSourcePropType>> = {
 
 /** Small versions of the covers, for list tiles. */
 export const THUMBNAILS: Partial<Record<string, ImageSourcePropType>> = {
-  'quiz-budget-cover': require('../../assets/halal-cards/thumbs/quiz-budget-cover.webp'),
-  'quiz-check-in-cover': require('../../assets/halal-cards/thumbs/quiz-check-in-cover.webp'),
-  'quiz-families-cover': require('../../assets/halal-cards/thumbs/quiz-families-cover.webp'),
-  'quiz-first-year-cover': require('../../assets/halal-cards/thumbs/quiz-first-year-cover.webp'),
-  'quiz-love-cover': require('../../assets/halal-cards/thumbs/quiz-love-cover.webp'),
-  'quiz-nikah-cover': require('../../assets/halal-cards/thumbs/quiz-nikah-cover.webp'),
-  'quiz-parenting-cover': require('../../assets/halal-cards/thumbs/quiz-parenting-cover.webp'),
+
 };
