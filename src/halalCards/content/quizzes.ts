@@ -210,6 +210,81 @@ export const affection: Quiz = {
   guide: [{ id: 'af-g1', text: 'Show love the way the other receives it, not only the way we give it.' }],
 };
 
+// ---------------------------------------------------------------------------
+// Engaged and married tracks
+// ---------------------------------------------------------------------------
+
+export const nikahPlans: Quiz = {
+  id: 'quiz-nikah-plans',
+  kind: 'quiz',
+  format: 'same_page',
+  topic: 'family',
+  tracks: ['engaged'],
+  title: 'Planning the nikah',
+  tagline: 'The decisions between “yes” and the nikah.',
+  description:
+    'Engaged couples make dozens of decisions fast, often with two families watching. Answer privately, compare, and settle the ones that matter before anyone else settles them for you.',
+  minutes: 8,
+  cover: slot('quiz-nikah-cover', 'cover', 'An engaged couple sitting at a café table with their two mothers, a small notebook and a calendar between them, everyone leaning in kindly.', 'An engaged couple planning with their mothers at a café table.'),
+  cards: [
+    { id: 'nk-time', prompt: 'From engagement to nikah should take…', options: ['A few weeks', 'Two or three months', 'Six months or so', 'As long as we need'] },
+    { id: 'nk-mahr', prompt: 'The mahr should be decided by…', options: ['The bride, freely', 'The two of us together', 'Our families, with our agreement', 'Custom in our community'], talk: 'What does the mahr mean to each of you?' },
+    { id: 'nk-wali', prompt: 'The wali’s role in our planning is…', options: ['Central — he leads it', 'Consulted on the big things', 'Mostly a formality', 'Still to be worked out'] },
+    { id: 'nk-size', prompt: 'The nikah itself should be…', options: ['Just close family at the masjid', 'Family and friends, simple', 'A full celebration', 'Small nikah now, celebration later'] },
+    { id: 'nk-first-home', prompt: 'Our first home is…', options: ['Our own place from day one', 'With one family for a while', 'Close to one family', 'Wherever work takes us'] },
+    { id: 'nk-tension', prompt: 'If our families disagree about the plans…', options: ['We decide together and tell them kindly', 'We ask an elder to help', 'We go with whoever feels most strongly', 'We compromise on everything'], talk: 'Which decisions are ours alone?' },
+  ],
+  guide: [
+    { id: 'nk-g1', text: 'We agree between ourselves before we answer our families.' },
+    { id: 'nk-g2', text: 'The nikah is the point; everything else is optional.' },
+  ],
+};
+
+export const firstYear: Quiz = {
+  id: 'quiz-first-year',
+  kind: 'quiz',
+  format: 'scale',
+  topic: 'expectations',
+  tracks: ['engaged', 'married'],
+  title: 'The first year',
+  tagline: 'What an ordinary week of marriage looks like.',
+  description:
+    'Most early-marriage friction is about rhythm, not values: how often, how much, who does what. Place yourselves on each scale and see where your weeks would clash.',
+  minutes: 7,
+  cover: slot('quiz-first-year-cover', 'cover', 'A young married couple in a small flat unpacking boxes together, one holding a framed picture, the other laughing, a kettle on the counter.', 'A newly married couple unpacking boxes in their first home.'),
+  cards: [
+    { id: 'fy-visits', prompt: 'Family visits in the first year…', options: ['Several times a week', 'Every weekend', 'Every couple of weeks', 'Monthly', 'Only on occasions'] },
+    { id: 'fy-alone', prompt: 'Evenings with nobody but us…', options: ['Most nights', 'A few a week', 'Once a week', 'When we can'] },
+    { id: 'fy-money', prompt: 'Sitting down together about money…', options: ['Every week', 'Every month', 'A few times a year', 'Only when something comes up'] },
+    { id: 'fy-prayer', prompt: 'Praying together at home…', options: ['Every prayer we can', 'At least once a day', 'Now and then', 'We each keep our own'] },
+    { id: 'fy-friends', prompt: 'Time with friends, apart from each other…', options: ['Rarely, the first year', 'Now and then', 'Every week', 'As much as before'] },
+    { id: 'fy-repair', prompt: 'After a disagreement, we talk it through…', options: ['Before we sleep', 'The next day', 'Once we have both calmed down', 'When it comes up again'], talk: 'This one shapes every other year.' },
+  ],
+  guide: [{ id: 'fy-g1', text: 'We protect some evenings that belong only to us.' }],
+};
+
+export const marriedCheckIn: Quiz = {
+  id: 'quiz-married-check-in',
+  kind: 'quiz',
+  format: 'guess_my_answer',
+  topic: 'affection',
+  tracks: ['married'],
+  title: 'Married check-in',
+  tagline: 'How are we, really — lately?',
+  description:
+    'A quiet check-in for married couples. Answer for yourself and guess for the other: the gaps show what you have each been carrying without saying.',
+  minutes: 6,
+  cover: slot('quiz-check-in-cover', 'cover', 'A married couple sitting on a sofa at the end of the day with mugs of tea, turned toward each other, talking softly, a lamp glowing.', 'A married couple talking over tea at the end of the day.'),
+  cards: [
+    { id: 'ci-need', prompt: 'Lately, I could use more…', guessPrompt: 'Lately, {{name}} could use more…', options: ['Time together', 'Help at home', 'Rest', 'Encouragement'] },
+    { id: 'ci-stress', prompt: 'What’s weighing on me most right now…', guessPrompt: 'What’s weighing on {{name}} most right now…', options: ['Work', 'Family', 'Money', 'Our deen', 'Nothing much'] },
+    { id: 'ci-best', prompt: 'The best moment for us this month was…', guessPrompt: 'For {{name}}, the best moment for us this month was…', options: ['Something we did together', 'A conversation', 'A quiet ordinary day', 'Time with family'] },
+    { id: 'ci-unsaid', prompt: 'Something small I haven’t mentioned is about…', guessPrompt: 'Something small {{name}} hasn’t mentioned is about…', options: ['Chores', 'Time', 'Family', 'Nothing — we’re good'], talk: 'Rule 1: small things, early.' },
+    { id: 'ci-dua', prompt: 'My du’a for us this month is mostly about…', guessPrompt: '{{name}}’s du’a for us this month is mostly about…', options: ['Barakah in our home', 'Patience with each other', 'Children', 'Our families'] },
+  ],
+  guide: [{ id: 'ci-g1', text: 'We check in with each other once a month, on purpose.' }],
+};
+
 export const QUIZZES: Quiz[] = [
   knowMe,
   guessMyAnswer,
@@ -220,4 +295,7 @@ export const QUIZZES: Quiz[] = [
   affection,
   moreLikely,
   wouldYouRather,
+  nikahPlans,
+  firstYear,
+  marriedCheckIn,
 ];

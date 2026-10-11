@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
-import { StyleSheet, Text as RNText, View, type ImageStyle, type TextStyle, type ViewStyle } from 'react-native';
+import { Platform, StyleSheet, Text as RNText, View, type ImageStyle, type TextStyle, type ViewStyle } from 'react-native';
 
 import { ILLUSTRATIONS, THUMBNAILS } from '@/halalCards/illustrations';
 import type { ImageSlot } from '@/halalCards/types';
@@ -63,7 +63,6 @@ export function Illustration({
             colors={['rgba(10,10,10,0)', 'rgba(10,10,10,0.58)', 'rgba(10,10,10,0.9)']}
             locations={[0, 0.42, 1]}
             style={styles.scrim}
-            pointerEvents="none"
           />
           <View style={styles.overlay}>{children}</View>
         </>
@@ -96,16 +95,16 @@ export function OverlayText({
 const styles = StyleSheet.create({
   frame: { width: '100%', overflow: 'hidden', backgroundColor: color.clay, justifyContent: 'flex-end' },
   rounded: { borderRadius: radius.lg },
-  scrim: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '78%' },
+  scrim: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '78%', pointerEvents: 'none' },
   overlay: { padding: space.lg, gap: 4 },
 });
 
 const overlayText = StyleSheet.create<Record<string, TextStyle>>({
-  shadow: {
-    textShadowColor: 'rgba(0,0,0,0.55)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 8,
-  },
+  // The web renderer wants one CSS shorthand; phones want the three props.
+  shadow:
+    Platform.OS === 'web'
+      ? ({ textShadow: '0px 1px 8px rgba(0,0,0,0.55)' } as TextStyle)
+      : { textShadowColor: 'rgba(0,0,0,0.55)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 8 },
   rtl: { fontFamily: font.arabic, letterSpacing: 0, textTransform: 'none', textAlign: 'right', writingDirection: 'rtl' },
   eyebrow: {
     fontFamily: font.bodyBold,

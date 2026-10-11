@@ -5,7 +5,7 @@ shows a drawn placeholder. This file is generated from the content —
 regenerate it with `npm run cards:illustrations` after adding or changing
 scenes. A machine-readable copy is in `docs/halal-cards-illustrations.json`.
 
-**117 illustrations** in total.
+**120 illustrations** in total.
 
 ## How to add a picture
 
@@ -685,6 +685,63 @@ SCENE DESIGN
 Illustrate the following scenario:
 
 A fork in a garden path lined with lanterns, one path toward mountains, one toward the sea.
+
+Format: 1600 × 2000 px (4:5, portrait). Also shown cropped to 16:10 in lists — keep the characters in the middle third, and keep the lower quarter simple and uncluttered (the app lays the title over it).
+Create one single illustration of this scene — the reference image is a sheet of examples, so do not copy its grid or panels.
+```
+
+### `quiz-nikah-cover` · Cover
+
+- **Where it appears:** Cover of “Planning the nikah”: its tile on the Halal Cards home, the top of its quiz page, the invitation, the first quiz card and the “Quiz complete” card.
+- **Save as:** `assets/halal-cards/quiz-nikah-cover.webp`
+- **Size:** 1600 × 2000 px (4:5, portrait)
+- **Alt text:** An engaged couple planning with their mothers at a café table.
+
+**Scene design**
+
+```text
+SCENE DESIGN
+Illustrate the following scenario:
+
+An engaged couple sitting at a café table with their two mothers, a small notebook and a calendar between them, everyone leaning in kindly.
+
+Format: 1600 × 2000 px (4:5, portrait). Also shown cropped to 16:10 in lists — keep the characters in the middle third, and keep the lower quarter simple and uncluttered (the app lays the title over it).
+Create one single illustration of this scene — the reference image is a sheet of examples, so do not copy its grid or panels.
+```
+
+### `quiz-first-year-cover` · Cover
+
+- **Where it appears:** Cover of “The first year”: its tile on the Halal Cards home, the top of its quiz page, the invitation, the first quiz card and the “Quiz complete” card.
+- **Save as:** `assets/halal-cards/quiz-first-year-cover.webp`
+- **Size:** 1600 × 2000 px (4:5, portrait)
+- **Alt text:** A newly married couple unpacking boxes in their first home.
+
+**Scene design**
+
+```text
+SCENE DESIGN
+Illustrate the following scenario:
+
+A young married couple in a small flat unpacking boxes together, one holding a framed picture, the other laughing, a kettle on the counter.
+
+Format: 1600 × 2000 px (4:5, portrait). Also shown cropped to 16:10 in lists — keep the characters in the middle third, and keep the lower quarter simple and uncluttered (the app lays the title over it).
+Create one single illustration of this scene — the reference image is a sheet of examples, so do not copy its grid or panels.
+```
+
+### `quiz-check-in-cover` · Cover
+
+- **Where it appears:** Cover of “Married check-in”: its tile on the Halal Cards home, the top of its quiz page, the invitation, the first quiz card and the “Quiz complete” card.
+- **Save as:** `assets/halal-cards/quiz-check-in-cover.webp`
+- **Size:** 1600 × 2000 px (4:5, portrait)
+- **Alt text:** A married couple talking over tea at the end of the day.
+
+**Scene design**
+
+```text
+SCENE DESIGN
+Illustrate the following scenario:
+
+A married couple sitting on a sofa at the end of the day with mugs of tea, turned toward each other, talking softly, a lamp glowing.
 
 Format: 1600 × 2000 px (4:5, portrait). Also shown cropped to 16:10 in lists — keep the characters in the middle third, and keep the lower quarter simple and uncluttered (the app lays the title over it).
 Create one single illustration of this scene — the reference image is a sheet of examples, so do not copy its grid or panels.
