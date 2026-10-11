@@ -16,6 +16,7 @@ export const ruleZero: LabLesson = {
   kind: 'lab',
   rule: 'zero',
   ruleLabel: 'Rule Zero',
+  soloPreview: true,
   title: 'Pick well',
   tagline: 'Look past the spark to the person you would build a life with.',
   description:

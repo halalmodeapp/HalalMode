@@ -83,8 +83,8 @@ const entries = slots.map(({ image, section, placement, mood }) => ({
 const brief = {
   instructions:
     'For each slot: generate an image from `prompt` (the Halal Mode illustration system with this slot\'s scene ' +
-    'already placed in SCENE DESIGN), attaching `referenceImage` as the style reference. Save it as WebP (about ' +
-    '300 KB or less) at `file`, then register it in src/halalCards/illustrations.ts under its `id`.',
+    'already placed in SCENE DESIGN), attaching `referenceImage` as the style reference. Save it as WebP at `file`, ' +
+    'then run `python scripts/optimize-halal-cards-images.py` to resize and register it.',
   referenceImage: images.STYLE_REFERENCE_IMAGE,
   styleSystem: images.ILLUSTRATION_STYLE,
   rules: images.ILLUSTRATION_RULES,
@@ -95,9 +95,8 @@ writeFileSync('docs/halal-cards-illustrations.json', `${JSON.stringify(brief, nu
 const ROLE = { cover: 'Cover', scene: 'Scene', turning_point: 'Turning point', outcome: 'Outcome' };
 let md = `# Halal Cards — illustration brief
 
-Every picture in Halal Cards has a slot. Until a slot has its own illustration
-the app shows a stand-in stock photograph (\`src/halalCards/stockImages.ts\`),
-so nothing looks empty. This file is generated from the content —
+Every picture in Halal Cards has a slot. A slot without its own illustration
+shows a drawn placeholder. This file is generated from the content —
 regenerate it with \`npm run cards:illustrations\` after adding or changing
 scenes. A machine-readable copy is in \`docs/halal-cards-illustrations.json\`.
 
@@ -110,17 +109,10 @@ scenes. A machine-readable copy is in \`docs/halal-cards-illustrations.json\`.
    attach the style reference image (\`${images.STYLE_REFERENCE_IMAGE}\`). In
    ChatGPT you can paste the system once per chat, then one scene block per
    image. The JSON has every prompt already assembled.
-2. Save it as the **Save as** path — WebP, about 300 KB or less.
-3. Register it in \`src/halalCards/illustrations.ts\`:
-
-   \`\`\`ts
-   export const ILLUSTRATIONS: Partial<Record<string, ImageSourcePropType>> = {
-     'adv-ramadan-friday': require('../../assets/halal-cards/adv-ramadan-friday.webp'),
-   };
-   \`\`\`
-
-   A registered illustration replaces the stock photo for that slot at once.
-   Once every slot is registered, \`stockImages.ts\` can be deleted.
+2. Save it as the **Save as** path (WebP).
+3. Run \`python scripts/optimize-halal-cards-images.py\`. It resizes the
+   picture for the app, makes a thumbnail if it is a cover, and registers it
+   in \`src/halalCards/illustrations.ts\` — no hand edits needed.
 
 ## Readability
 

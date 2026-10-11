@@ -22,7 +22,7 @@ export const readAt1142: Adventure = {
   variables: {
     trust: { label: 'Trust', initial: 0, readings: ['Trust has taken a knock.', 'Trust is holding.', 'Trust has grown.'] },
     closeness: { label: 'Closeness', initial: 0, readings: ['They feel distant.', 'They feel connected enough.', 'They feel close.'] },
-    loop: { label: 'The loop', initial: 0, readings: ['The pursue–withdraw loop has quietened.', 'The loop flickers now and then.', 'The pursue–withdraw loop is running them.'] },
+    loop: { label: 'The loop', initial: 0, concerning: true, readings: ['The pursue–withdraw loop has quietened.', 'The loop flickers now and then.', 'The pursue–withdraw loop is running them.'] },
   },
   start: 'the_message',
   scenes: {

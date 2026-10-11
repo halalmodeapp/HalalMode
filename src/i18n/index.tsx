@@ -1,8 +1,9 @@
 import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
-import { I18nManager, Platform } from 'react-native';
+import { I18nManager, Platform, View } from 'react-native';
 
 import { type TranslationKey } from '@/i18n/catalog';
 import { getLocale, type AppLocale } from '@/i18n/locales';
+import { LTR_LAYOUT, LTR_WEB_PROPS } from '@/lib/rtl';
 import { useSession } from '@/state/session';
 
 export type TranslationParams = Record<string, string | number>;
@@ -83,4 +84,21 @@ export function useI18n(): I18nValue {
   const value = useContext(I18nContext);
   if (!value) throw new Error('useI18n must be used inside I18nProvider');
   return value;
+}
+
+/**
+ * Lays out a subtree left to right in Latin type, whatever the app language.
+ * For content that exists only in English (Halal Cards' stories and lessons):
+ * without it, English sentences pick up the Arabic face and right alignment.
+ * `t` is unchanged, so shared controls keep the member's language.
+ */
+export function LeftToRight({ children }: { children: ReactNode }) {
+  const value = useI18n();
+  const ltr = useMemo(() => ({ ...value, isRTL: false }), [value]);
+  if (!value.isRTL) return <>{children}</>;
+  return (
+    <I18nContext.Provider value={ltr}>
+      <View style={[{ flex: 1 }, LTR_LAYOUT]} {...LTR_WEB_PROPS}>{children}</View>
+    </I18nContext.Provider>
+  );
 }

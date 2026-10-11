@@ -15,6 +15,14 @@ export type Seat = 'host' | 'guest';
 export type ActivityKind = 'lab' | 'quiz' | 'adventure';
 
 /**
+ * Where a couple is. Getting-to-know content suits two people still deciding;
+ * some cards only make sense once engaged or married, and are kept for then.
+ */
+export type CardsTrack = 'getting_to_know' | 'engaged' | 'married';
+
+export const CARDS_TRACKS: CardsTrack[] = ['getting_to_know', 'engaged', 'married'];
+
+/**
  * Room for an illustration generated outside the app. Until an image is added
  * to `images.ts` under this id, the card shows a drawn placeholder; `prompt`
  * is what to give the image model so every picture shares one style.
@@ -53,6 +61,16 @@ interface ActivityBase {
   description: string;
   minutes: number;
   cover: ImageSlot;
+  /**
+   * Bump when a change would break a session in progress (steps, cards or
+   * scene ids removed or reordered). Sessions remember the edition they
+   * started on and offer a restart instead of breaking. Defaults to 1.
+   */
+  version?: number;
+  /** Tracks this suits. Absent means every track. */
+  tracks?: CardsTrack[];
+  /** Free members may try it alone, as a preview. */
+  soloPreview?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -181,6 +199,8 @@ export interface StoryVariable {
   initial: number;
   /** Shown at the ending as a short line, from low to high. */
   readings: [low: string, middle: string, high: string];
+  /** True when more of it is worse (resentment, the loop), so meters read the right way round. */
+  concerning?: boolean;
 }
 
 export type Condition =
@@ -358,7 +378,21 @@ export interface AdventureState {
 
 export type ActivityState = LabState | QuizState | AdventureState;
 
-export type SessionStatus = 'invited' | 'active' | 'declined' | 'cancelled' | 'completed';
+export type SessionStatus = 'invited' | 'active' | 'declined' | 'cancelled' | 'completed' | 'expired';
+
+export type Awaiting = Seat | 'both';
+
+/** The light view of a session that lists and the chat use. */
+export interface CardsSummary {
+  id: string;
+  connectionId: string;
+  activityId: string;
+  mySeat: Seat;
+  status: SessionStatus;
+  awaiting?: Awaiting | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Sealed answers keyed by step. The server returns the other seat's answer
@@ -381,6 +415,10 @@ export interface CardsSession {
   status: SessionStatus;
   state: ActivityState;
   version: number;
+  /** The content edition this session started on. */
+  contentVersion?: number;
+  /** Who the session is waiting on, as last written. */
+  awaiting?: Awaiting | null;
   answers: Record<string, SealedAnswer>;
   createdAt: string;
   updatedAt: string;
@@ -401,4 +439,5 @@ export interface CardsAccess {
   /** A Premium member has unlocked Halal Cards for this connection. */
   unlocked: boolean;
   unlockedByMe: boolean;
+  track: CardsTrack;
 }

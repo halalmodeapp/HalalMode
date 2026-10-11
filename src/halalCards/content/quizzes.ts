@@ -58,7 +58,7 @@ export const samePageMoney: Quiz = {
   kind: 'quiz',
   format: 'same_page',
   topic: 'money',
-  title: 'Same page? Money',
+  title: 'Money',
   tagline: 'The conversations couples wish they had had earlier.',
   description:
     'Answer privately, reveal together. Different answers are not a problem — finding out after the nikah is. Each card has a question to talk over.',
@@ -84,7 +84,7 @@ export const samePageFamily: Quiz = {
   kind: 'quiz',
   format: 'same_page',
   topic: 'family',
-  title: 'Same page? Family',
+  title: 'Family',
   tagline: 'In-laws, boundaries and the families you are joining.',
   description:
     'Two families are about to become one. Answer privately, compare, and talk about what each answer would mean in an ordinary week.',
@@ -195,6 +195,7 @@ export const affection: Quiz = {
   format: 'guess_my_answer',
   topic: 'affection',
   title: 'Love languages',
+  tracks: ['engaged', 'married'],
   tagline: 'How you each feel cared for — and how you show it.',
   description: 'Answer for yourself, guess for them. Most couples show love the way they want to receive it — which is not always how the other hears it.',
   minutes: 7,

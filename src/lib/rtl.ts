@@ -14,3 +14,10 @@ import { Platform, type ViewStyle } from 'react-native';
  * of them was wrong in a browser.
  */
 export const RTL_LAYOUT: ViewStyle = Platform.OS === 'web' ? {} : { direction: 'rtl' };
+
+/**
+ * The opposite: pin a subtree left to right. On a device that is Yoga's
+ * `direction`; on the web it is the `dir` attribute, spread as props.
+ */
+export const LTR_LAYOUT: ViewStyle = Platform.OS === 'web' ? {} : { direction: 'ltr' };
+export const LTR_WEB_PROPS = (Platform.OS === 'web' ? { dir: 'ltr' } : {}) as object;

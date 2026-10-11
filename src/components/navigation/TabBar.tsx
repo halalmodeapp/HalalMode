@@ -32,6 +32,7 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 
+import { useCardsAttention } from '@/halalCards/hooks';
 import { useI18n } from '@/i18n';
 import { font } from '@/theme/tokens';
 
@@ -625,6 +626,8 @@ export function TabBar({
   navigation,
 }: BottomTabBarProps) {
   const { t, isRTL } = useI18n();
+  const attention = useCardsAttention().data ?? {};
+  const cardsWaiting = Object.values(attention).reduce((sum, count) => sum + count, 0);
   const insets = useSafeAreaInsets();
   const island = useBreakpoint() !== 'phone';
 
@@ -1052,6 +1055,12 @@ export function TabBar({
                       focused={focused}
                       label={label}
                     />
+                    {route.name === 'connections' && cardsWaiting > 0 ? (
+                      <View
+                        style={styles.cardsDot}
+                        accessibilityLabel={t('halalCards.badgeA11y', { count: cardsWaiting })}
+                      />
+                    ) : null}
                   </View>
                 </Pressable>
               );
@@ -1339,6 +1348,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
 
+  cardsDot: { position: 'absolute', top: -2, right: -6, width: 8, height: 8, borderRadius: 4, backgroundColor: '#C5A054' },
   label: {
     fontFamily: font.bodySemi,
     fontSize: 12.5,

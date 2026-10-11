@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Wordmark } from '@/components/brand/Wordmark';
+import { LTR_LAYOUT, LTR_WEB_PROPS } from '@/lib/rtl';
 import { useSurfaceTone } from '@/theme/tone';
 import { color, font } from '@/theme/tokens';
 
@@ -46,7 +47,7 @@ export function PremiumWord({ logoWidth, dark }: { logoWidth: number; dark?: boo
 export function PremiumLogo({ width = 150 }: { width?: number }) {
   const dark = useSurfaceTone() === 'dark';
   return (
-    <View accessible accessibilityRole="header" accessibilityLabel="Halal Mode Premium" style={styles.row}>
+    <View accessible accessibilityRole="header" accessibilityLabel="Halal Mode Premium" style={[styles.row, LTR_LAYOUT]} {...LTR_WEB_PROPS}>
       <Wordmark width={width} fill={dark ? color.white : color.ink} />
       <PremiumWord logoWidth={width} dark={dark} />
     </View>
@@ -54,6 +55,6 @@ export function PremiumLogo({ width = 150 }: { width?: number }) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'flex-end', direction: 'ltr' },
+  row: { flexDirection: 'row', alignItems: 'flex-end' },
   word: { fontFamily: font.body },
 });

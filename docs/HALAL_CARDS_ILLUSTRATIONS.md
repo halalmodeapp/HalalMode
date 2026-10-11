@@ -1,8 +1,7 @@
 # Halal Cards — illustration brief
 
-Every picture in Halal Cards has a slot. Until a slot has its own illustration
-the app shows a stand-in stock photograph (`src/halalCards/stockImages.ts`),
-so nothing looks empty. This file is generated from the content —
+Every picture in Halal Cards has a slot. A slot without its own illustration
+shows a drawn placeholder. This file is generated from the content —
 regenerate it with `npm run cards:illustrations` after adding or changing
 scenes. A machine-readable copy is in `docs/halal-cards-illustrations.json`.
 
@@ -15,17 +14,10 @@ scenes. A machine-readable copy is in `docs/halal-cards-illustrations.json`.
    attach the style reference image (`docs/halal-cards-style-reference.webp`). In
    ChatGPT you can paste the system once per chat, then one scene block per
    image. The JSON has every prompt already assembled.
-2. Save it as the **Save as** path — WebP, about 300 KB or less.
-3. Register it in `src/halalCards/illustrations.ts`:
-
-   ```ts
-   export const ILLUSTRATIONS: Partial<Record<string, ImageSourcePropType>> = {
-     'adv-ramadan-friday': require('../../assets/halal-cards/adv-ramadan-friday.webp'),
-   };
-   ```
-
-   A registered illustration replaces the stock photo for that slot at once.
-   Once every slot is registered, `stockImages.ts` can be deleted.
+2. Save it as the **Save as** path (WebP).
+3. Run `python scripts/optimize-halal-cards-images.py`. It resizes the
+   picture for the app, makes a thumbnail if it is a cover, and registers it
+   in `src/halalCards/illustrations.ts` — no hand edits needed.
 
 ## Readability
 
@@ -567,7 +559,7 @@ Create one single illustration of this scene — the reference image is a sheet 
 
 ### `quiz-money-cover` · Cover
 
-- **Where it appears:** Cover of “Same page? Money”: its tile on the Halal Cards home, the top of its quiz page, the invitation, the first quiz card and the “Quiz complete” card.
+- **Where it appears:** Cover of “Money”: its tile on the Halal Cards home, the top of its quiz page, the invitation, the first quiz card and the “Quiz complete” card.
 - **Save as:** `assets/halal-cards/quiz-money-cover.webp`
 - **Size:** 1600 × 2000 px (4:5, portrait)
 - **Alt text:** A bowl of coins beside a shared notebook.
@@ -586,7 +578,7 @@ Create one single illustration of this scene — the reference image is a sheet 
 
 ### `quiz-family-cover` · Cover
 
-- **Where it appears:** Cover of “Same page? Family”: its tile on the Halal Cards home, the top of its quiz page, the invitation, the first quiz card and the “Quiz complete” card.
+- **Where it appears:** Cover of “Family”: its tile on the Halal Cards home, the top of its quiz page, the invitation, the first quiz card and the “Quiz complete” card.
 - **Save as:** `assets/halal-cards/quiz-family-cover.webp`
 - **Size:** 1600 × 2000 px (4:5, portrait)
 - **Alt text:** Many hands passing dishes around a family table.

@@ -11,6 +11,8 @@ import {
 } from '../src/halalCards/content/index';
 import {
   adventurePending,
+  canLetStoryDecide,
+  letStoryDecide,
   choicesFor,
   exploreAdventure,
   findLesson,
@@ -23,7 +25,19 @@ import {
 } from '../src/halalCards/engine/adventure';
 import { holds, resolveNext } from '../src/halalCards/engine/conditions';
 import { revealCard, scoreQuiz, quizNeeds } from '../src/halalCards/engine/quiz';
-import { advanceCursor, currentTurn, initialState, isFinished } from '../src/halalCards/engine/session';
+import { advanceCursor, awaitingOf, contentMatches, currentTurn, initialState, isFinished } from '../src/halalCards/engine/session';
+import {
+  firstTrack,
+  initialSeenCursor,
+  inTrack,
+  promptRepeatsTitle,
+  quizSummaryKey,
+  resolveRetryDelay,
+  showFormatEyebrow,
+  viewCursor,
+} from '../src/halalCards/present';
+import { soloActingSeat, soloAdvance, soloAnswer, soloStart, soloView } from '../src/halalCards/solo';
+import { sessionCue } from '../src/halalCards/status';
 import { canStartSession } from '../src/halalCards/access';
 import type { Adventure, AdventureState, CardsSession, Quiz } from '../src/halalCards/types';
 
@@ -343,7 +357,120 @@ test('quizzes: scale measures distance', () => {
 });
 
 test('premium unlocks the connection, not the person', () => {
-  assert.equal(canStartSession({ myTier: 'premium', access: { unlocked: false, unlockedByMe: false } }), true);
-  assert.equal(canStartSession({ myTier: 'free', access: { unlocked: true, unlockedByMe: false } }), true);
-  assert.equal(canStartSession({ myTier: 'free', access: { unlocked: false, unlockedByMe: false } }), false);
+  assert.equal(canStartSession({ myTier: 'premium', access: { unlocked: false, unlockedByMe: false, track: 'getting_to_know' } }), true);
+  assert.equal(canStartSession({ myTier: 'free', access: { unlocked: true, unlockedByMe: false, track: 'getting_to_know' } }), true);
+  assert.equal(canStartSession({ myTier: 'free', access: { unlocked: false, unlockedByMe: false, track: 'getting_to_know' } }), false);
+});
+
+// ---------------------------------------------------------------------------
+// Improvement pass: turns, catch-up, escape hatches, versions, solo, tracks
+// ---------------------------------------------------------------------------
+
+test('awaiting names who the session waits on, for badges and pushes', () => {
+  const lesson = LAB_LESSONS[0]!;
+  const atScenario = advanceCursor(lesson, initialState(lesson));
+  const key = `l:${lesson.steps[1]!.id}`;
+  const base = session({ activityId: lesson.id, state: atScenario });
+  assert.equal(awaitingOf(lesson, base), 'both');
+  assert.equal(awaitingOf(lesson, { ...base, answers: { [key]: { theirReady: true } } }), 'host');
+  assert.equal(awaitingOf(lesson, { ...base, answers: { [key]: { mine: 'ask', theirReady: false } } }), 'guest');
+  assert.equal(awaitingOf(lesson, { ...base, answers: { [key]: { mine: 'ask', theirs: 'walk', theirReady: true } } }), null);
+  assert.equal(awaitingOf(lesson, session({ activityId: lesson.id, state: initialState(lesson) })), null, 'reading is nobody\'s turn');
+
+  const story = startAdventure(tiny, 'male');
+  assert.equal(awaitingOf(tiny, session({ activityId: 'tiny', state: story })), 'guest', 'the actor of a role decision');
+});
+
+test('a session on an older content edition is offered a restart', () => {
+  const adventure = ADVENTURES[0]!;
+  const state = startAdventure(adventure);
+  assert.equal(contentMatches(adventure, { state, contentVersion: 1 }), true);
+  assert.equal(contentMatches(adventure, { state, contentVersion: 2 }), false);
+  assert.equal(contentMatches(adventure, { state: { ...state, sceneId: 'renamed' }, contentVersion: 1 }), false);
+  const lesson = LAB_LESSONS[0]!;
+  assert.equal(contentMatches(lesson, { state: { kind: 'lab', cursor: 999 }, contentVersion: 1 }), false);
+});
+
+test('joint decisions can be handed to the story after two mismatches', () => {
+  let state = resolveRoleChoice(tiny, startAdventure(tiny, 'male'), 'guest', 'kind');
+  state = resolveSealedChoices(tiny, state, { host: 'stay', guest: 'reach' });
+  assert.equal(canLetStoryDecide(tiny, state), false);
+  state = resolveSealedChoices(tiny, state, { host: 'talk', guest: 'bury' });
+  assert.equal(canLetStoryDecide(tiny, state), false, 'one mismatch is not enough');
+  state = resolveSealedChoices(tiny, state, { host: 'talk', guest: 'bury' });
+  assert.equal(canLetStoryDecide(tiny, state), true);
+  const decided = letStoryDecide(tiny, state);
+  assert.ok(decided.endingId, 'the story moves on');
+  assert.ok(['talk', 'bury'].includes(decided.history.at(-1)!.picks.host!), 'it takes one of their choices');
+});
+
+test('catch-up: a reveal the partner skipped past is still shown', () => {
+  const lesson = LAB_LESSONS[0]!;
+  const scenario = lesson.steps[1]!;
+  const key = `l:${scenario.id}`;
+  const answered = { [key]: { mine: 'ask', theirs: 'walk', theirReady: true } };
+  const moved = session({ activityId: lesson.id, state: { kind: 'lab', cursor: 2 }, answers: answered });
+  assert.equal(initialSeenCursor(lesson, moved), 1, 'opening shows the reveal that was skipped');
+  assert.deepEqual(viewCursor(1, 2), { index: 1, catchingUp: true });
+  assert.deepEqual(viewCursor(2, 2), { index: 2, catchingUp: false });
+  assert.equal(initialSeenCursor(lesson, session({ activityId: lesson.id, state: { kind: 'lab', cursor: 1 } })), 1);
+});
+
+test('quiz results are described in words, never counted', () => {
+  const quiz = QUIZZES.find((item) => item.format === 'same_page') as Quiz;
+  const same = { host: { self: 0 }, guest: { self: 0 } };
+  const differ = { host: { self: 0 }, guest: { self: 1 } };
+  assert.equal(quizSummaryKey(scoreQuiz(quiz, [same, same, same])), 'quizMostlySame');
+  assert.equal(quizSummaryKey(scoreQuiz(quiz, [same, differ])), 'quizMixed');
+  assert.equal(quizSummaryKey(scoreQuiz(quiz, [differ, differ, differ])), 'quizMostlyDifferent');
+});
+
+test('repeated labels are dropped', () => {
+  assert.equal(showFormatEyebrow({ title: 'Would you rather?' }, 'Would you rather'), false);
+  assert.equal(showFormatEyebrow({ title: 'Money' }, 'Same page?'), true);
+  assert.equal(promptRepeatsTitle({ title: 'Would you rather?' }, 'Would you rather…'), true);
+  assert.equal(promptRepeatsTitle({ title: 'Money' }, 'The wedding should be…'), false);
+});
+
+test('tracks keep later-stage cards for later', () => {
+  const affection = QUIZZES.find((item) => item.id === 'quiz-affection')!;
+  assert.equal(inTrack(affection, 'getting_to_know'), false);
+  assert.equal(inTrack(affection, 'engaged'), true);
+  assert.equal(firstTrack(affection), 'engaged');
+  assert.equal(inTrack(LAB_LESSONS[0]!, 'getting_to_know'), true);
+});
+
+test('solo preview: a Lab workshop shows every path, alone', () => {
+  const lesson = LAB_LESSONS[0]!;
+  let run = soloStart(lesson);
+  run = soloAdvance(run, advanceCursor(lesson, run.state));
+  const key = `l:${lesson.steps[1]!.id}`;
+  assert.equal(currentTurn(lesson, soloView(lesson, run)).kind, 'answer');
+  run = soloAnswer(lesson, run, key, 'ask');
+  assert.deepEqual(currentTurn(lesson, soloView(lesson, run)), { kind: 'reveal', key });
+});
+
+test('solo preview: an Adventure is played as both characters', () => {
+  let run = soloStart(tiny);
+  assert.equal(soloActingSeat(tiny, run), 'guest', 'the first move belongs to B');
+  run = soloAdvance(run, resolveRoleChoice(tiny, run.state as AdventureState, 'guest', 'kind'));
+  assert.equal(soloActingSeat(tiny, run), 'host');
+  run = soloAnswer(tiny, run, 'a:1:0', 'stay');
+  assert.equal(soloActingSeat(tiny, run), 'guest');
+  run = soloAnswer(tiny, run, 'a:1:0', 'wait');
+  assert.equal((run.state as AdventureState).sceneId, 'three', 'the story moved on by itself');
+  run = soloAnswer(tiny, run, 'a:2:0', 'talk');
+  assert.equal((run.state as AdventureState).endingId, 'good');
+});
+
+test('session cues come from the light summary', () => {
+  assert.equal(sessionCue({ status: 'invited', mySeat: 'guest', awaiting: null }), 'invited_you');
+  assert.equal(sessionCue({ status: 'active', mySeat: 'host', awaiting: 'both' }), 'your_turn');
+  assert.equal(sessionCue({ status: 'active', mySeat: 'host', awaiting: 'guest' }), 'their_turn');
+  assert.equal(sessionCue({ status: 'active', mySeat: 'host', awaiting: null }), 'in_play');
+  assert.equal(sessionCue({ status: 'expired', mySeat: 'host', awaiting: null }), 'ended');
+});
+
+test('a failed story resolve retries with growing waits', () => {
+  assert.deepEqual([0, 1, 2, 3, 10].map(resolveRetryDelay), [1000, 2000, 4000, 8000, 30000]);
 });

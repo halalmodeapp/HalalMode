@@ -7,11 +7,11 @@ import { respondCardsInvite } from '@/api/halalCards';
 import { Text } from '@/components/ui/Text';
 import { findActivity } from '@/halalCards/content';
 import { useCardsCopy } from '@/halalCards/copy';
-import { useCardsSessions } from '@/halalCards/hooks';
+import { useCardsSummary } from '@/halalCards/hooks';
 import { cardsPaths } from '@/halalCards/navigation';
 import { CUE_PRIORITY, sessionCue } from '@/halalCards/status';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { useI18n } from '@/i18n';
+import { LeftToRight, useI18n } from '@/i18n';
 import { queryKeys } from '@/lib/queryClient';
 import { showNotice } from '@/lib/notice';
 import { alpha, color, font, radius, space } from '@/theme/tokens';
@@ -26,10 +26,12 @@ export function ChatCardsBanner({ connectionId, partnerName }: { connectionId: s
   const { isRTL } = useI18n();
   const reducedMotion = useReducedMotion();
   const queryClient = useQueryClient();
-  const sessions = useCardsSessions(connectionId);
+  const sessions = useCardsSummary(connectionId);
 
   const respond = useMutation({
-    mutationFn: (input: { sessionId: string; accept: boolean }) => respondCardsInvite(input.sessionId, input.accept),
+    // Accepting from the chat: the session starts on its first card, owed by both.
+    mutationFn: (input: { sessionId: string; accept: boolean }) =>
+      respondCardsInvite(input.sessionId, input.accept, input.accept ? 'both' : null),
     onSuccess: (session, input) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.cardsSessions(connectionId) });
       if (input.accept) router.push(cardsPaths.play(connectionId, session.id) as never);
@@ -39,7 +41,7 @@ export function ChatCardsBanner({ connectionId, partnerName }: { connectionId: s
 
   const ranked = (sessions.data ?? [])
     .map((session) => ({ session, activity: findActivity(session.activityId) }))
-    .map((item) => ({ ...item, cue: sessionCue(item.session, item.activity) }))
+    .map((item) => ({ ...item, cue: sessionCue(item.session) }))
     .filter((item) => item.activity && (item.cue === 'invited_you' || item.cue === 'your_turn' || item.cue === 'awaiting_accept'))
     .sort((left, right) => CUE_PRIORITY[left.cue] - CUE_PRIORITY[right.cue]);
   const top = ranked[0];
@@ -55,13 +57,14 @@ export function ChatCardsBanner({ connectionId, partnerName }: { connectionId: s
         : copy('waitingAccept', { name: partnerName });
 
   return (
+    <LeftToRight>
     <Animated.View entering={reducedMotion ? undefined : FadeInDown.springify().damping(18)} style={styles.card}>
       <View style={[styles.row, isRTL && styles.rowReverse]}>
         <View style={styles.mark}>
           <Text style={styles.markGlyph}>✦</Text>
         </View>
         <View style={styles.text}>
-          <Text style={styles.eyebrow}>{copy('chatCardTitle')} · {line}</Text>
+          <Text style={styles.eyebrow}>{copy('brand')} · {line}</Text>
           <Text style={styles.title} numberOfLines={1}>{activity.title}</Text>
         </View>
       </View>
@@ -90,6 +93,7 @@ export function ChatCardsBanner({ connectionId, partnerName }: { connectionId: s
         </Pressable>
       ) : null}
     </Animated.View>
+    </LeftToRight>
   );
 }
 

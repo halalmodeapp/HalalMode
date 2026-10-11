@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 
+import { DiscussButton, FinishActions } from '@/components/halalCards/Actions';
 import { ChoiceOption, Pill, PlayCard, RevealTile, Waiting } from '@/components/halalCards/CardParts';
 import { GuideSuggestions } from '@/components/halalCards/GuideSaveButton';
 import { Illustration, OverlayText } from '@/components/halalCards/Illustration';
@@ -19,63 +20,106 @@ import {
 } from '@/halalCards/engine/quiz';
 import { answersBySeat, bothAnswered, otherSeat } from '@/halalCards/engine/seats';
 import { advanceCursor } from '@/halalCards/engine/session';
+import { guessesKey, initialSeenCursor, promptRepeatsTitle, quizSummaryKey, showFormatEyebrow, viewCursor } from '@/halalCards/present';
 import type { Quiz, QuizAnswer, QuizCard, QuizState, Seat } from '@/halalCards/types';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { alpha, color, font, space } from '@/theme/tokens';
 import type { PlayProps } from './types';
 
 export function QuizPlay(props: PlayProps<Quiz>) {
-  const { session, activity, partnerName, connectionId, onAdvance, busy } = props;
+  const { session, activity, partnerName, onAdvance, busy } = props;
   const copy = useCardsCopy();
   const state = session.state as QuizState;
-  const card = activity.cards[state.cursor];
+  const [seen, setSeen] = useState(() => initialSeenCursor(activity, session));
+  const { index, catchingUp } = viewCursor(seen, state.cursor);
+  const card = activity.cards[index];
 
-  if (!card) {
-    const score = scoreQuiz(
-      activity,
-      activity.cards.map((item) => {
-        const answers = answersBySeat<QuizAnswer>(session, quizKey(item));
-        return bothAnswered(answers) ? answers : undefined;
-      })
-    );
-    const me = session.mySeat;
-    return (
-      <PlayCard tone="gold" dealKey="done">
-        <Illustration image={activity.cover} aspectRatio={16 / 10}>
-          <OverlayText kind="eyebrow">{activity.title}</OverlayText>
-          <OverlayText kind="titleLarge">{copy('quizDone')}</OverlayText>
-        </Illustration>
-        {score.compared ? (
-          <Text variant="quote">
-            {copy('quizScoreSame', { agreed: score.agreed, total: score.compared })}
-            {score.close ? ` ${copy('quizScoreClose', { count: score.close })}` : ''}
-          </Text>
-        ) : null}
-        {(['host', 'guest'] as Seat[]).map((seat) =>
-          score.guesses[seat].total ? (
-            <Text key={seat} variant="body">
-              {copy('quizScoreGuesses', {
-                name: seat === me ? copy('you') : partnerName,
-                right: score.guesses[seat].right,
-                total: score.guesses[seat].total,
-              })}
-            </Text>
-          ) : null
-        )}
-        <GuideSuggestions connectionId={connectionId} suggestions={activity.guide ?? []} source={activity.title} partnerName={partnerName} />
-      </PlayCard>
-    );
-  }
+  if (!card) return <QuizResults {...props} />;
+
+  // My own Next moves my mark with the cursor; someone else's leaves it behind,
+  // so I still see the reveal they skipped past.
+  const next = () => {
+    if (catchingUp) {
+      setSeen(index + 1);
+      return;
+    }
+    setSeen(state.cursor + 1);
+    onAdvance(advanceCursor(activity, state));
+  };
 
   return (
-    <QuizCardView
-      key={card.id}
-      {...props}
-      card={card}
-      index={state.cursor}
-      onNext={() => onAdvance(advanceCursor(activity, state))}
-      busy={busy}
-    />
+    <View style={styles.stack}>
+      {catchingUp ? <Pill label={copy('catchUp', { name: partnerName })} tone="gold" /> : null}
+      <QuizCardView key={card.id} {...props} card={card} index={index} reviewing={catchingUp} onNext={next} busy={busy && !catchingUp} />
+    </View>
+  );
+}
+
+function answerLabel(_quiz: Quiz, _card: QuizCard, options: string[], answer: QuizAnswer | undefined): string {
+  const value = answer?.self ?? answer?.guess;
+  return value === undefined ? '—' : options[value] ?? '—';
+}
+
+function QuizResults({ session, activity, partnerName, connectionId, onReplay }: PlayProps<Quiz>) {
+  const copy = useCardsCopy();
+  const me = session.mySeat;
+  const them = otherSeat(me);
+  const answered = activity.cards.map((item) => {
+    const answers = answersBySeat<QuizAnswer>(session, quizKey(item));
+    return bothAnswered(answers) ? answers : undefined;
+  });
+  const score = scoreQuiz(activity, answered);
+  const summary = quizSummaryKey(score);
+  const guesses = guessesKey(score);
+  const optionsOf = (item: QuizCard) => (activity.format === 'more_likely' ? [copy('me'), copy('myPartner')] : item.options);
+  const line = (item: QuizCard, cardIndex: number) => {
+    const answers = answered[cardIndex];
+    if (!answers) return '';
+    const options = optionsOf(item);
+    return `${copy('you')}: ${answerLabel(activity, item, options, answers[me])} · ${partnerName}: ${answerLabel(activity, item, options, answers[them])}`;
+  };
+  const heading = (item: QuizCard, cardIndex: number) =>
+    promptRepeatsTitle(activity, item.prompt) ? item.options.join(' / ') || `${cardIndex + 1}.` : item.prompt;
+  const differences = activity.cards
+    .map((item, cardIndex) => ({ item, cardIndex }))
+    .filter(({ cardIndex }) => {
+      const answers = answered[cardIndex];
+      return answers && revealCard(activity, cardIndex, answers).agreed === false;
+    });
+
+  return (
+    <PlayCard tone="gold" dealKey="done">
+      <Illustration image={activity.cover} aspectRatio={16 / 10}>
+        <OverlayText kind="eyebrow">{activity.title}</OverlayText>
+        <OverlayText kind="titleLarge">{copy('quizDone')}</OverlayText>
+      </Illustration>
+      {summary ? <Text variant="quote">{copy(summary)}</Text> : null}
+      {guesses ? <Text variant="body">{copy(guesses)}</Text> : null}
+      {differences.length ? (
+        <View style={styles.block}>
+          <Text variant="micro">{copy('worthTalking')}</Text>
+          {differences.map(({ item, cardIndex }) => (
+            <View key={item.id} style={styles.row}>
+              <Text variant="label">{heading(item, cardIndex)}</Text>
+              <Text variant="bodySmall">{line(item, cardIndex)}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+      <View style={styles.block}>
+        <Text variant="micro">{copy('allAnswers')}</Text>
+        {activity.cards.map((item, cardIndex) =>
+          answered[cardIndex] ? (
+            <View key={item.id} style={styles.row}>
+              <Text variant="label">{heading(item, cardIndex)}</Text>
+              <Text variant="bodySmall">{line(item, cardIndex)}</Text>
+            </View>
+          ) : null
+        )}
+      </View>
+      <GuideSuggestions connectionId={connectionId} suggestions={activity.guide ?? []} source={activity.title} partnerName={partnerName} />
+      <FinishActions connectionId={connectionId} kind="quiz" onReplay={onReplay} />
+    </PlayCard>
   );
 }
 
@@ -84,12 +128,14 @@ function QuizCardView({
   activity,
   turn,
   partnerName,
+  connectionId,
   onAnswer,
   card,
   index,
   onNext,
   busy,
-}: PlayProps<Quiz> & { card: QuizCard; index: number; onNext: () => void }) {
+  reviewing,
+}: PlayProps<Quiz> & { card: QuizCard; index: number; onNext: () => void; reviewing: boolean }) {
   const copy = useCardsCopy();
   const me = session.mySeat;
   const needs = quizNeeds(activity, index, me);
@@ -97,30 +143,39 @@ function QuizCardView({
   const key = quizKey(card);
   const options = activity.format === 'more_likely' ? [copy('me'), copy('myPartner')] : card.options;
   const answers = answersBySeat<QuizAnswer>(session, key);
-
+  const repeats = promptRepeatsTitle(activity, card.prompt);
+  const formatLabel = copy(`format.${activity.format}`);
+  const counter = `${index + 1} / ${activity.cards.length}`;
   const header =
     activity.format === 'know_me'
       ? knowMeSubject(index) === me
         ? copy('youAnswerTheyGuess', { name: partnerName })
         : copy('theyAnswerYouGuess', { name: partnerName })
-      : `${index + 1} / ${activity.cards.length}`;
+      : repeats
+        ? `${activity.title.replace(/\?$/, '')}… · ${counter}`
+        : counter;
+  const answering = turn?.kind === 'answer' && !reviewing;
+  const both = bothAnswered(answers) ? answers : null;
+  const revealed = !!both && (reviewing || turn?.kind === 'reveal' || session.status === 'completed');
+  const agreed = both ? revealCard(activity, index, both).agreed : null;
+  const title = repeats ? activity.title : card.prompt;
 
   return (
     <View style={styles.stack}>
       <PlayCard dealKey={card.id}>
         {index === 0 ? (
           <Illustration image={activity.cover} aspectRatio={16 / 10}>
-            <OverlayText kind="eyebrow">{copy(`format.${activity.format}`)}</OverlayText>
+            {showFormatEyebrow(activity, formatLabel) ? <OverlayText kind="eyebrow">{formatLabel}</OverlayText> : null}
             <OverlayText kind="title">{activity.title}</OverlayText>
           </Illustration>
         ) : null}
         <Text variant="microAccent">{header}</Text>
-        {turn?.kind === 'answer' ? (
+        {answering ? (
           <>
             {needs.self ? (
               <View style={styles.block}>
                 {needs.guess ? <Text variant="micro">{copy('aboutYou')}</Text> : null}
-                <Text variant="displaySmall">{card.prompt}</Text>
+                {repeats ? null : <Text variant="displaySmall">{card.prompt}</Text>}
                 <View style={styles.choices}>
                   {options.map((option, optionIndex) => (
                     <ChoiceOption
@@ -152,27 +207,34 @@ function QuizCardView({
               </View>
             ) : null}
             <Text variant="caption" center>{copy('privateNote')}</Text>
-            <Button
-              label={copy('lockIn')}
-              disabled={!answerComplete(needs, draft)}
-              loading={busy}
-              onPress={() => onAnswer(key, draft)}
-            />
+            <Button label={copy('lockIn')} disabled={!answerComplete(needs, draft)} loading={busy} onPress={() => onAnswer(key, draft)} />
           </>
-        ) : (
+        ) : repeats ? null : (
           <Text variant="displaySmall">
-            {activity.format === 'know_me' && knowMeSubject(index) !== me
-              ? personalise(card.guessPrompt ?? card.prompt, partnerName)
-              : card.prompt}
+            {activity.format === 'know_me' && knowMeSubject(index) !== me ? personalise(card.guessPrompt ?? card.prompt, partnerName) : card.prompt}
           </Text>
         )}
-        {turn?.kind === 'waiting' ? <Waiting label={copy('waitingFor', { name: partnerName })} /> : null}
+        {turn?.kind === 'waiting' && !reviewing ? <Waiting label={copy('waitingFor', { name: partnerName })} /> : null}
       </PlayCard>
 
-      {turn?.kind === 'reveal' && bothAnswered(answers) ? (
+      {revealed && both ? (
         <PlayCard tone="gold" dealKey={`${card.id}-reveal`}>
-          <Reveal quiz={activity} card={card} index={index} answers={answers} me={me} partnerName={partnerName} options={options} />
+          <Reveal quiz={activity} card={card} index={index} answers={both} me={me} partnerName={partnerName} options={options} />
           {card.talk ? <Text variant="quote">{card.talk}</Text> : null}
+          {activity.format !== 'know_me' && activity.format !== 'more_likely' ? (
+            <DiscussButton
+              connectionId={connectionId}
+              text={
+                agreed
+                  ? copy('discuss.same', { title, mine: answerLabel(activity, card, options, both[me]) })
+                  : copy('discuss.differ', {
+                      title,
+                      mine: answerLabel(activity, card, options, both[me]),
+                      theirs: answerLabel(activity, card, options, both[otherSeat(me)]),
+                    })
+              }
+            />
+          ) : null}
           <Button label={index === activity.cards.length - 1 ? copy('finish') : copy('next')} onPress={onNext} loading={busy} />
         </PlayCard>
       ) : null}
@@ -301,6 +363,7 @@ function Reveal({
 
 const styles = StyleSheet.create({
   stack: { gap: space.lg },
+  row: { gap: 2, paddingVertical: space.xs, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: alpha.line },
   block: { gap: space.md },
   choices: { gap: space.sm },
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md },

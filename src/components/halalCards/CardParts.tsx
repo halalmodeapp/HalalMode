@@ -64,7 +64,7 @@ export function ChoiceOption({
     <Pressable
       testID={testID}
       accessibilityRole="radio"
-      accessibilityState={{ selected: !!selected, disabled: !!disabled || !!dimmed }}
+      accessibilityState={{ checked: !!selected, disabled: !!disabled || !!dimmed }}
       disabled={disabled || dimmed}
       onPress={() => {
         void Haptics.selectionAsync();
@@ -86,7 +86,7 @@ export function ChoiceOption({
   );
 }
 
-export function LessonChip({ tag, text, delay = 0 }: { tag: string; text: string; delay?: number }) {
+export function LessonChip({ tag, text, delay = 0 }: { tag?: string; text: string; delay?: number }) {
   const reducedMotion = useReducedMotion();
   return (
     <Animated.View
@@ -94,7 +94,7 @@ export function LessonChip({ tag, text, delay = 0 }: { tag: string; text: string
       style={styles.lesson}
       accessibilityRole="text"
     >
-      <Text style={styles.lessonTag}>✦ {tag}</Text>
+      {tag ? <Text style={styles.lessonTag}>✦ {tag}</Text> : null}
       <Text style={styles.lessonText}>{text}</Text>
     </Animated.View>
   );
@@ -136,6 +136,21 @@ export function RevealTile({
       <Text style={styles.tileAnswer}>{answer}</Text>
       {detail ? <Text variant="bodySmall">{detail}</Text> : null}
     </Animated.View>
+  );
+}
+
+/** A short list of points with gold marks — for insights and summaries. */
+export function Points({ items }: { items: string[] }) {
+  const { isRTL } = useI18n();
+  return (
+    <View style={styles.points}>
+      {items.map((item) => (
+        <View key={item} style={[styles.point, isRTL && styles.rowReverse]}>
+          <Text style={styles.pointMark}>✦</Text>
+          <Text style={styles.pointText}>{item}</Text>
+        </View>
+      ))}
+    </View>
   );
 }
 
@@ -234,6 +249,10 @@ const styles = StyleSheet.create({
   pillText: { fontFamily: font.bodySemi, fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: color.muted },
   pillTextGold: { color: color.gold },
   pillTextInk: { color: onDark.ink },
+  points: { gap: space.sm },
+  point: { flexDirection: 'row', gap: space.sm, alignItems: 'flex-start' },
+  pointMark: { color: color.goldGlow, fontSize: 11, lineHeight: 22 },
+  pointText: { flex: 1, fontFamily: font.display, fontSize: 15, lineHeight: 22, color: color.ink },
   progressTrack: { height: 3, borderRadius: 2, backgroundColor: alpha.line, overflow: 'hidden' },
   progressFill: { height: 3, borderRadius: 2, backgroundColor: color.goldGlow },
 });

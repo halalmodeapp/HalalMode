@@ -1,37 +1,70 @@
+import { useMutation } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { sendMessage } from '@/api/connections';
 import { PremiumLogo } from '@/components/brand/PremiumLogo';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Text } from '@/components/ui/Text';
 import { useCardsCopy } from '@/halalCards/copy';
 import { USE_MOCKS } from '@/lib/supabase';
+import { useFeatureFlags } from '@/state/featureFlags';
 import { useSession } from '@/state/session';
 import { space } from '@/theme/tokens';
 import { SurfaceToneProvider } from '@/theme/tone';
 
 /**
  * Shown when neither member has unlocked Halal Cards. Everything stays
- * browsable; only starting a shared session needs Premium.
+ * browsable; only starting a shared session needs Premium. Never a dead end:
+ * there is always a preview to try alone, and a way to ask the match — who may
+ * have Premium — to start one.
  */
-export function PremiumGate({ partnerName }: { partnerName: string }) {
+export function PremiumGate({
+  partnerName,
+  connectionId,
+  onTrySolo,
+}: {
+  partnerName: string;
+  connectionId: string;
+  onTrySolo?: () => void;
+}) {
   const copy = useCardsCopy();
   const { setTier } = useSession();
+  const { premiumPurchases } = useFeatureFlags();
+  const [asked, setAsked] = useState(false);
+  const ask = useMutation({
+    mutationFn: () => sendMessage(connectionId, copy('askMessage')),
+    onSuccess: () => setAsked(true),
+  });
+  const canBuy = premiumPurchases || USE_MOCKS;
+
   return (
     <Card tone="dark" style={styles.card}>
       <SurfaceToneProvider tone="dark">
         <PremiumLogo width={150} />
         <View style={styles.text}>
-          <Text variant="displaySmall">{copy('premiumTitle')}</Text>
-          <Text variant="bodySmall">{copy('premiumBody', { name: partnerName })}</Text>
+          <Text variant="displaySmall">{canBuy ? copy('premiumTitle') : copy('premiumSoon')}</Text>
+          <Text variant="bodySmall">
+            {canBuy ? copy('premiumBody', { name: partnerName }) : copy('premiumSoonBody', { name: partnerName })}
+          </Text>
         </View>
+        {canBuy ? (
+          <Button
+            label={copy('premiumCta')}
+            variant="onDark"
+            // Demo builds can switch Premium on locally; a real build opens the
+            // membership card in Settings, where purchases live.
+            onPress={() => (USE_MOCKS ? setTier('premium') : router.push('/(tabs)/you?tab=settings' as never))}
+          />
+        ) : null}
+        {onTrySolo ? <Button label={copy('trySolo')} variant={canBuy ? 'quiet' : 'onDark'} onPress={onTrySolo} /> : null}
         <Button
-          label={copy('premiumCta')}
-          variant="onDark"
-          // Demo builds can switch Premium on locally; a real build goes to the
-          // membership card, where purchases live.
-          onPress={() => (USE_MOCKS ? setTier('premium') : router.push('/(tabs)/you'))}
+          label={asked ? copy('askSent') : copy('askPartner', { name: partnerName })}
+          variant="quiet"
+          disabled={asked || ask.isPending}
+          onPress={() => ask.mutate()}
         />
       </SurfaceToneProvider>
     </Card>

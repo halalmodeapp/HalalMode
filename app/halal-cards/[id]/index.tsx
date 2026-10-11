@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import type { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fetchConnection } from '@/api/connections';
 import { Illustration, OverlayText } from '@/components/halalCards/Illustration';
@@ -10,31 +11,45 @@ import { PremiumGate } from '@/components/halalCards/PremiumGate';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
 import { Screen } from '@/components/ui/Screen';
+import { Segmented } from '@/components/ui/Segmented';
 import { Text } from '@/components/ui/Text';
 import { canStartSession } from '@/halalCards/access';
-import { ADVENTURE_CONCEPTS, ADVENTURES, findActivity, LAB_LESSONS, QUIZZES } from '@/halalCards/content';
-import { GUIDE_HERO, HUB_HERO } from '@/halalCards/content/images';
+import { ADVENTURES, findActivity, LAB_LESSONS, QUIZZES } from '@/halalCards/content';
+import { HUB_HERO } from '@/halalCards/content/images';
 import { useCardsCopy } from '@/halalCards/copy';
-import { useCardsAccess, useCardsSessions, useGuide } from '@/halalCards/hooks';
+import { useCardsAccess, useCardsSummary, useGuide, useSetCardsTrack } from '@/halalCards/hooks';
 import { backOr, cardsPaths } from '@/halalCards/navigation';
 import { CUE_PRIORITY, sessionCue, type SessionCue } from '@/halalCards/status';
-import type { Activity, CardsSession } from '@/halalCards/types';
+import { CARDS_TRACKS, type Activity, type ActivityKind, type CardsSummary, type ImageSlot } from '@/halalCards/types';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useI18n } from '@/i18n';
 import { queryKeys } from '@/lib/queryClient';
 import { useSession } from '@/state/session';
 import { alpha, color, font, layout, radius, shadow, space } from '@/theme/tokens';
 
+/** The picture that stands for each section on its gate card. */
+const SECTION_IMAGE: Record<ActivityKind, ImageSlot> = {
+  lab: LAB_LESSONS[1]!.cover,
+  quiz: QUIZZES[0]!.cover,
+  adventure: ADVENTURES[0]!.cover,
+};
+
+const SECTION_TITLE = { lab: 'lab', quiz: 'quizzes', adventure: 'adventures' } as const;
+const SECTION_GATE = { lab: 'labGate', quiz: 'quizzesGate', adventure: 'adventuresGate' } as const;
+
 export default function HalalCardsHub() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const copy = useCardsCopy();
+  const { language } = useI18n();
   const { tier } = useSession();
+  const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
 
   const connection = useQuery({ queryKey: queryKeys.connection(id), queryFn: () => fetchConnection(id) });
   const access = useCardsAccess(id);
-  const sessions = useCardsSessions(id, { poll: 8000 });
+  const sessions = useCardsSummary(id, { poll: 20_000 });
   const guide = useGuide(id);
+  const setTrack = useSetCardsTrack(id);
 
   if (connection.isPending) {
     return (
@@ -53,140 +68,145 @@ export default function HalalCardsHub() {
 
   const name = connection.data.profile.firstName;
   const canStart = canStartSession({ myTier: tier, access: access.data });
-  const live = (sessions.data ?? [])
-    .map((session) => ({ session, activity: findActivity(session.activityId) }))
-    .map((item) => ({ ...item, cue: sessionCue(item.session, item.activity) }))
-    .filter((item) => item.activity && item.cue !== 'ended' && item.cue !== 'finished')
-    .sort((left, right) => CUE_PRIORITY[left.cue] - CUE_PRIORITY[right.cue]);
-  const agreed = guide.query.data?.filter((entry) => entry.agreed).length ?? 0;
+  const track = access.data?.track ?? 'getting_to_know';
+  const rows = (sessions.data ?? [])
+    .map((session) => ({ session, activity: findActivity(session.activityId), cue: sessionCue(session) }))
+    .filter((item): item is { session: CardsSummary; activity: Activity; cue: SessionCue } => !!item.activity);
+  const live = rows
+    .filter((item) => item.cue !== 'ended' && item.cue !== 'finished')
+    .sort((a, b) => CUE_PRIORITY[a.cue] - CUE_PRIORITY[b.cue]);
+  const played = rows.filter((item) => item.cue === 'finished').slice(0, 6);
+  const agreed = guide.query.data?.filter((entry) => entry.agreed) ?? [];
   const pending = guide.query.data?.filter((entry) => !entry.agreed).length ?? 0;
   const enter = (index: number) => (reducedMotion ? undefined : FadeInDown.delay(60 * index).springify().damping(18));
+  const counts: Record<ActivityKind, string> = {
+    lab: copy('lessons', { count: LAB_LESSONS.length }),
+    quiz: copy('decks', { count: QUIZZES.length }),
+    adventure: copy('stories', { count: ADVENTURES.length }),
+  };
 
   return (
-    <Screen>
-      <ScreenHeader onAction={() => backOr(cardsPaths.chat(id))} />
+    <Screen style={styles.screen}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <View style={styles.column}>
-          <Animated.View entering={enter(0)}>
-            <Illustration image={HUB_HERO} aspectRatio={4 / 5} style={styles.heroImage}>
+        {/* The title fills the top of the screen — a header, not a card. */}
+        <View style={styles.hero}>
+          <Illustration image={HUB_HERO} aspectRatio={4 / 5} rounded={false} style={styles.heroImage}>
+            <View style={styles.heroText}>
               <OverlayText kind="eyebrow">{copy('brandWith', { name })}</OverlayText>
               <OverlayText kind="titleLarge">{copy('brand')}</OverlayText>
               <OverlayText kind="body">{copy('hubIntro')}</OverlayText>
-            </Illustration>
-          </Animated.View>
+            </View>
+          </Illustration>
+          <View style={[styles.heroHeader, { top: insets.top }]}>
+            <ScreenHeader tone="dark" onAction={() => backOr(cardsPaths.chat(id))} />
+          </View>
+        </View>
+
+        <View style={styles.column}>
+          {language !== 'en' ? <Text variant="caption" center>{copy('englishNote')}</Text> : null}
 
           {canStart ? (
             <Text variant="caption" center>
-              {access.data?.unlockedByMe || (tier === 'premium' && !access.data?.unlocked)
-                ? copy('unlockedByYou')
-                : copy('unlockedForYou')}
+              {access.data?.unlocked
+                ? access.data.unlockedByMe
+                  ? copy('unlockedByYou')
+                  : copy('unlockedForYou')
+                : copy('canUnlock', { name })}
             </Text>
           ) : (
-            <PremiumGate partnerName={name} />
+            <PremiumGate
+              partnerName={name}
+              connectionId={id}
+              onTrySolo={() => router.push(cardsPaths.solo(id, LAB_LESSONS[0]!.id) as never)}
+            />
           )}
 
           {live.length ? (
             <Section title={copy('inProgress')}>
-              {live.map(({ session, activity, cue }) => (
-                <SessionRow key={session.id} session={session} activity={activity as Activity} cue={cue} name={name} connectionId={id} />
+              {live.map((item) => (
+                <SessionRow key={item.session.id} {...item} name={name} connectionId={id} />
               ))}
             </Section>
           ) : null}
 
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.push(cardsPaths.guide(id) as never)}
-            style={({ pressed }) => [styles.guideCard, pressed && styles.pressed]}
-          >
-            <Illustration image={GUIDE_HERO} aspectRatio={16 / 10} rounded={false}>
-              <OverlayText kind="eyebrow">
-                {copy('guideCount', { count: agreed })}
-                {pending ? ` · ${copy('guidePending', { count: pending })}` : ''}
-              </OverlayText>
-              <OverlayText kind="title">{copy('guide')}</OverlayText>
-              <OverlayText kind="body">{copy('guideBlurb')}</OverlayText>
-            </Illustration>
-          </Pressable>
-
-          <Section title={copy('lab')} blurb={copy('labBlurb')}>
-            {LAB_LESSONS.map((lesson, index) => (
-              <Animated.View key={lesson.id} entering={enter(index + 1)}>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => router.push(cardsPaths.activity(id, lesson.id) as never)}
-                  style={({ pressed }) => [styles.imageCard, pressed && styles.pressed]}
-                >
-                  <Illustration image={lesson.cover} aspectRatio={16 / 10}>
-                    <OverlayText kind="eyebrow">{`${lesson.ruleLabel} · ${copy('minutes', { count: lesson.minutes })}`}</OverlayText>
-                    <OverlayText kind="title">{lesson.title}</OverlayText>
-                    <OverlayText kind="body" numberOfLines={2}>{lesson.tagline}</OverlayText>
-                  </Illustration>
-                </Pressable>
-              </Animated.View>
-            ))}
-          </Section>
-
-          <Section title={copy('quizzes')} blurb={copy('quizzesBlurb')}>
-            <View style={styles.grid}>
-              {QUIZZES.map((quiz) => (
-                <Pressable
-                  key={quiz.id}
-                  accessibilityRole="button"
-                  onPress={() => router.push(cardsPaths.activity(id, quiz.id) as never)}
-                  style={({ pressed }) => [styles.quizTile, pressed && styles.pressed]}
-                >
-                  <Illustration image={quiz.cover} aspectRatio={4 / 5}>
-                    <OverlayText kind="eyebrow" numberOfLines={1}>{copy(`format.${quiz.format}`)}</OverlayText>
-                    <OverlayText kind="title" numberOfLines={3}>{quiz.title}</OverlayText>
-                  </Illustration>
-                </Pressable>
-              ))}
-            </View>
-          </Section>
-
-          <Section title={copy('adventures')} blurb={copy('adventuresBlurb')}>
-            {ADVENTURES.map((adventure) => (
-              <Pressable
-                key={adventure.id}
-                accessibilityRole="button"
-                onPress={() => router.push(cardsPaths.activity(id, adventure.id) as never)}
-                style={({ pressed }) => [styles.imageCard, pressed && styles.pressed]}
-              >
-                <Illustration image={adventure.cover} aspectRatio={4 / 5}>
-                  <OverlayText kind="eyebrow">{adventure.themes.slice(0, 3).join(' · ')}</OverlayText>
-                  <OverlayText kind="titleLarge">{adventure.title}</OverlayText>
-                  <OverlayText kind="body">{adventure.tagline}</OverlayText>
-                </Illustration>
-              </Pressable>
-            ))}
-          </Section>
-
-          <Section title={copy('comingSoon')} blurb={copy('conceptsBlurb')}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.concepts}>
-              {ADVENTURE_CONCEPTS.map((concept) => (
-                <View key={concept.id} style={styles.conceptTile}>
-                  <Illustration image={concept.cover} aspectRatio={4 / 5}>
-                    <OverlayText kind="eyebrow">{copy('comingSoon')}</OverlayText>
-                    <OverlayText kind="title" numberOfLines={2}>{concept.title}</OverlayText>
-                  </Illustration>
-                  <Text variant="caption" numberOfLines={3}>{concept.logline}</Text>
+          <Animated.View entering={enter(1)}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={copy('journal')}
+              onPress={() => router.push(cardsPaths.journal(id) as never)}
+              style={({ pressed }) => [styles.journal, pressed && styles.pressed]}
+            >
+              <View style={styles.journalSpine} />
+              <View style={styles.journalBody}>
+                <View style={styles.journalHead}>
+                  <Text style={styles.journalMark}>❦</Text>
+                  <Text style={styles.journalTitle}>{copy('journal')}</Text>
                 </View>
+                <Text variant="bodySmall">{copy('journalBlurb')}</Text>
+                {/* Ruled lines with the latest agreements written on them. */}
+                <View style={styles.lines}>
+                  {[0, 1].map((line) => (
+                    <View key={line} style={styles.line}>
+                      <Text style={styles.lineText} numberOfLines={1}>
+                        {agreed[agreed.length - 1 - line]?.text ?? (line === 0 && !agreed.length ? copy('journalNew') : ' ')}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+                <Text variant="caption">
+                  {copy('journalCount', { count: agreed.length })}
+                  {pending ? ` · ${copy('journalPending', { count: pending })}` : ''}
+                </Text>
+              </View>
+            </Pressable>
+          </Animated.View>
+
+          <View style={styles.track}>
+            <Text variant="label">{copy('trackTitle')}</Text>
+            <Segmented
+              value={track}
+              onChange={(value) => setTrack.mutate(value)}
+              options={CARDS_TRACKS.map((value) => ({ value, label: copy(`track.${value}`) }))}
+            />
+            <Text variant="caption">{copy('trackHint')}</Text>
+          </View>
+
+          {(['lab', 'quiz', 'adventure'] as const).map((kind, index) => (
+            <Animated.View key={kind} entering={enter(index + 2)}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => router.push(cardsPaths.section(id, kind) as never)}
+                style={({ pressed }) => [styles.gate, pressed && styles.pressed]}
+              >
+                <Illustration image={SECTION_IMAGE[kind]} aspectRatio={16 / 9} rounded={false} thumb>
+                  <OverlayText kind="eyebrow">{counts[kind]}</OverlayText>
+                  <OverlayText kind="title">{copy(SECTION_TITLE[kind])}</OverlayText>
+                </Illustration>
+                <View style={styles.gateBody}>
+                  <Text variant="body">{copy(SECTION_GATE[kind])}</Text>
+                  <Text style={styles.gateCta}>{`${copy('explore')} ›`}</Text>
+                </View>
+              </Pressable>
+            </Animated.View>
+          ))}
+
+          {played.length ? (
+            <Section title={copy('played')}>
+              {played.map((item) => (
+                <SessionRow key={item.session.id} {...item} name={name} connectionId={id} />
               ))}
-            </ScrollView>
-          </Section>
+            </Section>
+          ) : null}
         </View>
       </ScrollView>
     </Screen>
   );
 }
 
-function Section({ title, blurb, children }: { title: string; blurb?: string; children: ReactNode }) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <View style={styles.section}>
-      <View style={styles.sectionHead}>
-        <Text variant="displaySmall">{title}</Text>
-        {blurb ? <Text variant="bodySmall">{blurb}</Text> : null}
-      </View>
+      <Text variant="displaySmall">{title}</Text>
       {children}
     </View>
   );
@@ -199,75 +219,103 @@ function SessionRow({
   name,
   connectionId,
 }: {
-  session: CardsSession;
+  session: CardsSummary;
   activity: Activity;
   cue: SessionCue;
   name: string;
   connectionId: string;
 }) {
   const copy = useCardsCopy();
-  const { isRTL } = useI18n();
-  const line =
-    cue === 'invited_you'
-      ? copy('invitedYou', { name })
-      : cue === 'your_turn'
-        ? copy('yourTurn')
-        : cue === 'their_turn'
-          ? copy('theirTurn', { name })
-          : copy('waitingAccept', { name });
+  const line = {
+    invited_you: copy('invitedYou', { name }),
+    your_turn: copy('yourTurn'),
+    in_play: copy('inPlay'),
+    their_turn: copy('theirTurn', { name }),
+    awaiting_accept: copy('waitingAccept', { name }),
+    finished: copy('viewResults'),
+    ended: '',
+  }[cue];
   const urgent = cue === 'invited_you' || cue === 'your_turn';
   return (
     <Pressable
       accessibilityRole="button"
       onPress={() => router.push(cardsPaths.play(connectionId, session.id) as never)}
-      style={({ pressed }) => [styles.sessionRow, isRTL && styles.rowReverse, urgent && styles.sessionUrgent, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.sessionRow, urgent && styles.sessionUrgent, pressed && styles.pressed]}
     >
-      <View style={[styles.dot, urgent && styles.dotUrgent]} />
+      <View style={styles.thumb}>
+        <Illustration image={activity.cover} aspectRatio={1} thumb />
+      </View>
       <View style={styles.flex}>
         <Text variant="micro">{copy(`kind.${activity.kind}`)}</Text>
-        <Text style={styles.cardTitle}>{activity.title}</Text>
+        <Text style={styles.cardTitle} numberOfLines={1}>{activity.title}</Text>
         <Text variant="caption" style={urgent ? styles.urgentText : undefined}>{line}</Text>
       </View>
-      <Text style={styles.chevron}>{isRTL ? '‹' : '›'}</Text>
+      <Text style={styles.chevron}>›</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: { paddingTop: 0 },
   scroll: { paddingBottom: 60 },
+  hero: { width: '100%', maxWidth: layout.maxContentWidth + 120, alignSelf: 'center' },
+  heroImage: { maxHeight: 620 },
+  heroText: { paddingHorizontal: space.sm, paddingBottom: space.lg, gap: 6 },
+  heroHeader: { position: 'absolute', left: 0, right: 0 },
   column: {
     width: '100%',
     maxWidth: layout.maxContentWidth,
     alignSelf: 'center',
     paddingHorizontal: space.gutter,
+    paddingTop: space.xl,
     gap: space.xxl,
   },
-  flex: { flex: 1, gap: 3 },
-  rowReverse: { flexDirection: 'row-reverse' },
-  pressed: { opacity: 0.8, transform: [{ scale: 0.99 }] },
-  heroImage: { borderRadius: radius.hero },
+  flex: { flex: 1, gap: 2 },
+  pressed: { opacity: 0.85, transform: [{ scale: 0.99 }] },
   section: { gap: space.md },
-  sectionHead: { gap: 2 },
+  journal: {
+    flexDirection: 'row',
+    borderRadius: radius.lg,
+    backgroundColor: '#FBF6EA',
+    borderWidth: 1,
+    borderColor: 'rgba(197,160,84,0.4)',
+    overflow: 'hidden',
+    ...shadow.card,
+    shadowOpacity: 0.08,
+  },
+  journalSpine: { width: 14, backgroundColor: color.ink, borderRightWidth: 3, borderRightColor: color.goldGlow },
+  journalBody: { flex: 1, padding: space.lg, gap: space.sm },
+  journalHead: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  journalMark: { fontSize: 18, color: color.gold },
+  journalTitle: { fontFamily: font.display, fontSize: 22, color: color.ink },
+  lines: { marginVertical: space.xs },
+  line: { borderBottomWidth: 1, borderBottomColor: 'rgba(138,106,52,0.22)', paddingVertical: 6 },
+  lineText: { fontFamily: font.displayItalic, fontSize: 14, color: color.inkSoft },
+  track: { gap: space.sm },
+  gate: {
+    borderRadius: radius.panel,
+    backgroundColor: color.surface,
+    borderWidth: 1,
+    borderColor: alpha.line,
+    overflow: 'hidden',
+    ...shadow.card,
+    shadowOpacity: 0.08,
+  },
+  gateBody: { padding: space.lg, gap: space.sm },
+  gateCta: { fontFamily: font.bodySemi, fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', color: color.gold },
   sessionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: space.md,
-    padding: space.lg,
+    padding: space.md,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: alpha.line,
     backgroundColor: color.surface,
   },
   sessionUrgent: { borderColor: color.goldGlow, backgroundColor: '#FBF6EA' },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: alpha.lineStrong },
-  dotUrgent: { backgroundColor: color.goldGlow },
+  thumb: { width: 52 },
   urgentText: { color: color.gold },
   chevron: { fontSize: 22, color: color.faint },
-  guideCard: { borderRadius: radius.panel, overflow: 'hidden', ...shadow.card, shadowOpacity: 0.1 },
-  imageCard: { borderRadius: radius.lg, ...shadow.card, shadowOpacity: 0.1 },
   cardTitle: { fontFamily: font.display, fontSize: 17, lineHeight: 22, color: color.ink },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md },
-  quizTile: { flexBasis: '47%', flexGrow: 1, borderRadius: radius.lg, ...shadow.card, shadowOpacity: 0.08 },
-  concepts: { gap: space.md, paddingRight: space.gutter },
-  conceptTile: { width: 168, gap: 6 },
 });

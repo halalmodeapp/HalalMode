@@ -119,6 +119,7 @@ export function SettingsTab({
     t('settings.premium.f2'),
     t('settings.premium.f4'),
     t('profile.travelMode'),
+    t('halalCards.premiumFeature'),
   ];
 
   useEffect(() => setPaused(profilePaused), [profilePaused]);

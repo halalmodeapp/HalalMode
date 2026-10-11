@@ -12,4 +12,8 @@ export interface PlayProps<A extends Activity> {
   /** Writes the next shared state, computed from the current one. */
   onAdvance: (state: ActivityState) => void;
   busy: boolean;
+  /** A free member's preview, played alone: nothing is shared or sent. */
+  solo?: boolean;
+  /** Starts this activity again (a rematch, or a fresh solo run). */
+  onReplay?: () => void;
 }

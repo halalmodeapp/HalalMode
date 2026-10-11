@@ -3,16 +3,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
 import { StyleSheet, Text as RNText, View, type ImageStyle, type TextStyle, type ViewStyle } from 'react-native';
 
-import { ILLUSTRATIONS } from '@/halalCards/illustrations';
-import { stockFor } from '@/halalCards/stockImages';
+import { ILLUSTRATIONS, THUMBNAILS } from '@/halalCards/illustrations';
 import type { ImageSlot } from '@/halalCards/types';
 import { useI18n } from '@/i18n';
 import { color, font, radius, space } from '@/theme/tokens';
 
 /**
- * An illustration slot. Shows, in order of preference: the generated picture
- * once it is registered in `illustrations.ts`, a stand-in stock photograph,
- * and — if neither loads — a drawn placeholder in the same palette.
+ * An illustration slot: the generated picture registered in
+ * `illustrations.ts`, or a drawn placeholder in the same palette for a slot
+ * still waiting for one. Nothing is fetched from the network.
  *
  * Text laid over a picture always sits on a dark gradient, in light ink with a
  * soft shadow, so it stays readable whatever the picture behind it.
@@ -22,16 +21,19 @@ export function Illustration({
   aspectRatio = 4 / 5,
   style,
   rounded = true,
+  thumb = false,
   children,
 }: {
   image: ImageSlot;
   aspectRatio?: number;
   style?: ViewStyle;
   rounded?: boolean;
+  /** Use the small version, for list tiles. */
+  thumb?: boolean;
   /** Laid over the bottom of the picture, on a readable scrim. */
   children?: ReactNode;
 }) {
-  const source = ILLUSTRATIONS[image.id] ?? { uri: stockFor(image.id) };
+  const source = (thumb ? THUMBNAILS[image.id] : undefined) ?? ILLUSTRATIONS[image.id];
 
   return (
     <View
@@ -46,13 +48,15 @@ export function Illustration({
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      <Image
-        source={source}
-        style={StyleSheet.absoluteFill as ImageStyle}
-        contentFit="cover"
-        transition={300}
-        accessibilityIgnoresInvertColors
-      />
+      {source ? (
+        <Image
+          source={source}
+          style={StyleSheet.absoluteFill as ImageStyle}
+          contentFit="cover"
+          transition={200}
+          accessibilityIgnoresInvertColors
+        />
+      ) : null}
       {children ? (
         <>
           <LinearGradient

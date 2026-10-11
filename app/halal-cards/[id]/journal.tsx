@@ -11,6 +11,7 @@ import { GUIDE_HERO } from '@/halalCards/content/images';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
 import { Button } from '@/components/ui/Button';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
 import { useCardsCopy } from '@/halalCards/copy';
@@ -20,19 +21,26 @@ import type { GuideEntry } from '@/halalCards/types';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useI18n } from '@/i18n';
 import { queryKeys } from '@/lib/queryClient';
+import { showNotice } from '@/lib/notice';
 import { alpha, color, font, layout, radius, space } from '@/theme/tokens';
 
 /**
- * The couple's own Relationship Guide: lessons and agreements both of them
- * chose to keep, from any activity or written in their own words.
+ * The couple's Shared Journal: lessons and agreements both of them chose to
+ * keep, from any activity or written in their own words. Removing an entry
+ * asks first, tells the other member, and can be undone.
  */
-export default function GuideScreen() {
+export default function JournalScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const copy = useCardsCopy();
   const reducedMotion = useReducedMotion();
   const [draft, setDraft] = useState('');
+  const [confirm, setConfirm] = useState<string | null>(null);
+  const [undoId, setUndoId] = useState<string | null>(null);
   const connection = useQuery({ queryKey: queryKeys.connection(id), queryFn: () => fetchConnection(id) });
-  const { query, propose, agree, remove } = useGuide(id);
+  const { query, propose, agree, remove, restore } = useGuide(id);
+  const failed = () => showNotice(copy('journal'), copy('actionError'));
+  const removeEntry = (entryId: string) =>
+    remove.mutate(entryId, { onSuccess: () => setUndoId(entryId), onError: failed });
 
   if (query.isPending || connection.isPending) {
     return (
@@ -62,9 +70,22 @@ export default function GuideScreen() {
           <View style={styles.column}>
             <Illustration image={GUIDE_HERO} aspectRatio={4 / 5} style={styles.hero}>
               <OverlayText kind="eyebrow">{copy('brandWith', { name })}</OverlayText>
-              <OverlayText kind="titleLarge">{copy('guide')}</OverlayText>
-              <OverlayText kind="body">{copy('guideBlurb')}</OverlayText>
+              <OverlayText kind="titleLarge">{copy('journal')}</OverlayText>
+              <OverlayText kind="body">{copy('journalBlurb')}</OverlayText>
             </Illustration>
+
+            {undoId ? (
+              <View style={styles.undo}>
+                <Text variant="bodySmall">{copy('removed')}</Text>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => restore.mutate(undoId, { onSuccess: () => setUndoId(null), onError: failed })}
+                  hitSlop={10}
+                >
+                  <Text style={styles.undoAction}>{copy('undo')}</Text>
+                </Pressable>
+              </View>
+            ) : null}
 
             <PlayCard tone="gold">
               {agreed.length ? (
@@ -80,13 +101,19 @@ export default function GuideScreen() {
                       <Text style={styles.entryText}>{entry.text}</Text>
                       {entry.source ? <Text variant="caption">{copy('guideFrom', { source: entry.source })}</Text> : null}
                     </View>
-                    <Pressable accessibilityRole="button" accessibilityLabel={`${copy('guideRemove')}: ${entry.text}`} onPress={() => remove.mutate(entry.id)} hitSlop={8}>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`${copy('guideRemove')}: ${entry.text}`}
+                      onPress={() => setConfirm(entry.id)}
+                      hitSlop={14}
+                      style={styles.removeButton}
+                    >
                       <Text style={styles.remove}>×</Text>
                     </Pressable>
                   </Animated.View>
                 ))
               ) : (
-                <Text variant="body">{copy('guideEmpty')}</Text>
+                <Text variant="body">{copy('journalEmpty')}</Text>
               )}
             </PlayCard>
 
@@ -98,7 +125,7 @@ export default function GuideScreen() {
                     entry={entry}
                     name={name}
                     onAgree={() => agree.mutate(entry.id)}
-                    onRemove={() => remove.mutate(entry.id)}
+                    onRemove={() => removeEntry(entry.id)}
                   />
                 ))}
               </View>
@@ -118,13 +145,30 @@ export default function GuideScreen() {
                 label={copy('guideAdd')}
                 disabled={draft.trim().length < 3}
                 loading={propose.isPending}
-                onPress={() => propose.mutate({ text: draft.trim(), source: null }, { onSuccess: () => setDraft('') })}
+                onPress={() =>
+                  propose.mutate(
+                    { text: draft.trim(), source: null },
+                    { onSuccess: () => setDraft(''), onError: (error) => showNotice(copy('journal'), error instanceof Error ? error.message : copy('actionError')) }
+                  )
+                }
               />
               <Text variant="caption" center>{copy('guideHow')}</Text>
             </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <ConfirmDialog
+        visible={confirm !== null}
+        title={copy('removeTitle')}
+        body={copy('removeBody', { name })}
+        confirmLabel={copy('guideRemove')}
+        cancelLabel={copy('cancelRemove')}
+        onConfirm={() => {
+          if (confirm) removeEntry(confirm);
+          setConfirm(null);
+        }}
+        onCancel={() => setConfirm(null)}
+      />
     </Screen>
   );
 }
@@ -167,7 +211,10 @@ const styles = StyleSheet.create({
   number: { fontFamily: font.display, fontSize: 22, lineHeight: 26, color: color.gold, minWidth: 22 },
   flexText: { flex: 1, gap: 2 },
   entryText: { fontFamily: font.display, fontSize: 16, lineHeight: 23, color: color.ink },
-  remove: { fontSize: 20, color: color.faint, paddingHorizontal: 4 },
+  removeButton: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderRadius: 18 },
+  remove: { fontSize: 22, color: color.faint },
+  undo: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: space.md, borderRadius: radius.md, backgroundColor: color.sand },
+  undoAction: { fontFamily: font.bodySemi, fontSize: 13, color: color.gold },
   pending: { gap: space.md },
   pendingCard: { padding: space.lg, borderRadius: radius.lg, borderWidth: 1, borderColor: alpha.line, borderStyle: 'dashed', gap: space.sm },
   pendingTheirs: { borderStyle: 'solid', borderColor: color.goldGlow, backgroundColor: '#FBF6EA' },

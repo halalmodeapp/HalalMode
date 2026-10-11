@@ -4,11 +4,10 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { fetchConnection } from '@/api/connections';
+import { StaleSessionError } from '@/api/halalCards';
 import { PlayCard, ProgressLine, Waiting } from '@/components/halalCards/CardParts';
 import { Illustration, OverlayText } from '@/components/halalCards/Illustration';
-import { AdventurePlay } from '@/components/halalCards/play/AdventurePlay';
-import { LabPlay } from '@/components/halalCards/play/LabPlay';
-import { QuizPlay } from '@/components/halalCards/play/QuizPlay';
+import { PlayBody } from '@/components/halalCards/play/PlayBody';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
 import { Button } from '@/components/ui/Button';
@@ -16,7 +15,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
 import { useCardsCopy } from '@/halalCards/copy';
-import { progressOf } from '@/halalCards/engine/session';
+import { contentMatches, progressOf } from '@/halalCards/engine/session';
 import { useCardsSession } from '@/halalCards/hooks';
 import { backOr, cardsPaths } from '@/halalCards/navigation';
 import type { ActivityState } from '@/halalCards/types';
@@ -58,8 +57,14 @@ export default function PlayScreen() {
   const busy = answer.isPending || advance.isPending;
   const failed = () => showNotice(copy('brand'), copy('actionError'));
   const onAnswer = (key: string, value: unknown) => answer.mutate({ key, answer: value }, { onError: failed });
-  const onAdvance = (state: ActivityState) => advance.mutate({ state, version: session.version });
+  const onAdvance = (state: ActivityState) =>
+    advance.mutate(
+      { state, version: session.version },
+      { onError: (error) => (error instanceof StaleSessionError ? undefined : failed()) }
+    );
   const playable = session.status === 'active' || session.status === 'completed';
+  const stale = playable && !contentMatches(activity, session);
+  const replay = () => router.replace(cardsPaths.activity(id, activity.id) as never);
 
   return (
     <Screen>
@@ -75,7 +80,7 @@ export default function PlayScreen() {
       />
       <View style={styles.top}>
         <Text variant="micro" center>{`${copy(`kind.${activity.kind}`)} · ${activity.title}`}</Text>
-        {playable ? <ProgressLine value={progressOf(activity, session.state)} /> : null}
+        {playable && !stale ? <ProgressLine value={progressOf(activity, session.state)} /> : null}
       </View>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View style={styles.column}>
@@ -97,25 +102,50 @@ export default function PlayScreen() {
                 <>
                   <Text variant="microAccent">{copy('invitedYou', { name })}</Text>
                   <Text variant="bodySmall">{activity.description}</Text>
+                  {activity.kind === 'adventure' ? <Text variant="caption">{copy('framing.adventure')}</Text> : null}
                   <Button label={copy('accept')} loading={respond.isPending} onPress={() => respond.mutate(true, { onError: failed })} />
                   <Button label={copy('decline')} variant="secondary" onPress={() => respond.mutate(false, { onError: failed })} />
                 </>
               )}
             </PlayCard>
-          ) : session.status === 'declined' || session.status === 'cancelled' ? (
+          ) : session.status === 'declined' || session.status === 'cancelled' || session.status === 'expired' ? (
             <PlayCard dealKey="ended">
-              <Text variant="display">{session.status === 'declined' ? copy('declinedTitle') : copy('cancelledTitle')}</Text>
-              <Text variant="body">
-                {session.status === 'declined' && session.mySeat === 'host' ? copy('declinedBody', { name }) : copy('cancelledBody')}
+              <Text variant="display">
+                {session.status === 'declined' ? copy('declinedTitle') : session.status === 'expired' ? copy('expiredTitle') : copy('cancelledTitle')}
               </Text>
-              <Button label={copy('brand')} onPress={() => router.replace(cardsPaths.hub(id) as never)} />
+              <Text variant="body">
+                {session.status === 'declined' && session.mySeat === 'host'
+                  ? copy('declinedBody', { name })
+                  : session.status === 'expired'
+                    ? copy('expiredBody')
+                    : copy('cancelledBody')}
+              </Text>
+              <Button label={copy('replay')} onPress={replay} />
+              <Button label={copy('backToChat')} variant="secondary" onPress={() => router.replace(cardsPaths.chat(id) as never)} />
             </PlayCard>
-          ) : activity.kind === 'lab' ? (
-            <LabPlay {...{ session, activity, turn, partnerName: name, connectionId: id, onAnswer, onAdvance, busy }} />
-          ) : activity.kind === 'quiz' ? (
-            <QuizPlay {...{ session, activity, turn, partnerName: name, connectionId: id, onAnswer, onAdvance, busy }} />
+          ) : stale ? (
+            <PlayCard dealKey="stale">
+              <Text variant="display">{copy('staleTitle')}</Text>
+              <Text variant="body">{copy('staleBody')}</Text>
+              <Button
+                label={copy('restart')}
+                onPress={() =>
+                  session.status === 'active' ? cancel.mutate(undefined, { onSuccess: replay, onError: failed }) : replay()
+                }
+              />
+            </PlayCard>
           ) : (
-            <AdventurePlay {...{ session, activity, turn, partnerName: name, connectionId: id, onAnswer, onAdvance, busy }} />
+            <PlayBody
+              session={session}
+              activity={activity}
+              turn={turn}
+              partnerName={name}
+              connectionId={id}
+              onAnswer={onAnswer}
+              onAdvance={onAdvance}
+              busy={busy}
+              onReplay={replay}
+            />
           )}
         </View>
       </ScrollView>
@@ -152,5 +182,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.gutter,
     gap: space.lg,
   },
-  leave: { fontFamily: font.body, fontSize: 12, color: color.faint },
+  leave: { fontFamily: font.body, fontSize: 12, color: color.faint, padding: space.xs },
 });

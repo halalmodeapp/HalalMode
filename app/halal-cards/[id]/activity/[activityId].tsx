@@ -18,7 +18,8 @@ import { findActivity } from '@/halalCards/content';
 import { useCardsCopy } from '@/halalCards/copy';
 import { startAdventure } from '@/halalCards/engine/adventure';
 import { initialState } from '@/halalCards/engine/session';
-import { useCardsAccess, useCardsSessions } from '@/halalCards/hooks';
+import { useCardsAccess, useCardsSummary } from '@/halalCards/hooks';
+import { firstTrack, inTrack } from '@/halalCards/present';
 import { backOr, cardsPaths } from '@/halalCards/navigation';
 import type { Activity } from '@/halalCards/types';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -37,7 +38,7 @@ export default function ActivityDetail() {
 
   const connection = useQuery({ queryKey: queryKeys.connection(id), queryFn: () => fetchConnection(id) });
   const access = useCardsAccess(id);
-  const sessions = useCardsSessions(id);
+  const sessions = useCardsSummary(id);
 
   // Halal Mode introduces men and women to each other, so the member's own
   // gender is the other one; it decides which character they play.
@@ -46,7 +47,7 @@ export default function ActivityDetail() {
   const start = useMutation({
     mutationFn: () => {
       if (!activity) throw new Error('Unknown activity.');
-      return startCardsSession(id, activity.id, initialState(activity, myGender));
+      return startCardsSession(id, activity.id, initialState(activity, myGender), activity.version ?? 1);
     },
     onSuccess: (session) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.cardsSessions(id) });
@@ -85,6 +86,11 @@ export default function ActivityDetail() {
   );
   const played = sessions.data?.some((session) => session.activityId === activity.id && session.status === 'completed');
   const canStart = canStartSession({ myTier: tier, access: access.data });
+  const track = access.data?.track ?? 'getting_to_know';
+  const laterNote = inTrack(activity, track) ? null : copy('laterTrack', { track: copy(`track.${firstTrack(activity)}`).toLowerCase() });
+  // A free member previews this activity alone if it allows it, or else the
+  // first workshop, so there is always something to try.
+  const soloTarget = activity.soloPreview ? activity.id : 'lab-rule-zero';
 
   return (
     <Screen>
@@ -102,7 +108,15 @@ export default function ActivityDetail() {
           </View>
           <Text variant="body">{activity.description}</Text>
 
-          {activity.kind === 'adventure' ? <Roles activity={activity} myGender={myGender} partnerName={name} /> : null}
+          {activity.kind === 'adventure' ? (
+            <>
+              <View style={styles.framing}>
+                <Text variant="bodySmall">{copy('framing.adventure')}</Text>
+              </View>
+              <Roles activity={activity} myGender={myGender} partnerName={name} />
+            </>
+          ) : null}
+          {laterNote ? <Pill label={laterNote} tone="gold" /> : null}
 
           <View style={styles.how}>
             <Text variant="micro">{copy('howItWorks')}</Text>
@@ -124,7 +138,7 @@ export default function ActivityDetail() {
           ) : (
             <>
               <Text variant="caption" center>{copy('premiumPreview')}</Text>
-              <PremiumGate partnerName={name} />
+              <PremiumGate partnerName={name} connectionId={id} onTrySolo={soloTarget ? () => router.push(cardsPaths.solo(id, soloTarget) as never) : undefined} />
             </>
           )}
           {played && !open && canStart ? <Text variant="caption" center>{copy('replayHint')}</Text> : null}
@@ -179,6 +193,7 @@ const styles = StyleSheet.create({
   cover: { borderRadius: radius.hero },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs },
   how: { gap: space.xs, paddingVertical: space.sm },
+  framing: { padding: space.md, borderRadius: radius.md, backgroundColor: 'rgba(138,106,52,0.08)' },
   roles: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md },
   role: { flex: 1, minWidth: 150, gap: 4 },
 });

@@ -13,6 +13,7 @@ export const firstRamadan: Adventure = {
   description:
     'Hamza and Noor are four months married when Ramadan arrives — and Hamza’s mother has plans for it. Take turns as each of them. Small choices early on decide whether Eid feels like a homecoming or a truce.',
   minutes: 15,
+  soloPreview: true,
   themes: ['Family and in-laws', 'Ramadan', 'Boundaries', 'Small things'],
   cover: slot('adv-ramadan-cover', 'cover', 'A newlywed couple’s small flat at maghrib, lanterns in the window, a long table being laid for many guests, the young wife pausing with a tray of dates.', 'A young couple preparing a big iftar in a small flat.'),
   roles: {
@@ -21,7 +22,7 @@ export const firstRamadan: Adventure = {
   },
   variables: {
     closeness: { label: 'Closeness', initial: 0, readings: ['Hamza and Noor feel far apart.', 'They are getting by together.', 'They feel like a team.'] },
-    resentment: { label: 'Unspoken resentment', initial: 0, readings: ['Very little is left unsaid.', 'A few things are still unspoken.', 'A lot has been swallowed.'] },
+    resentment: { label: 'Unspoken resentment', initial: 0, concerning: true, readings: ['Very little is left unsaid.', 'A few things are still unspoken.', 'A lot has been swallowed.'] },
     family: { label: 'Family warmth', initial: 0, readings: ['There is strain with the family.', 'The families are cordial.', 'The families feel close.'] },
   },
   start: 'invite',

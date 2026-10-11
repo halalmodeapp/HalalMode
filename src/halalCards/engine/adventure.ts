@@ -220,6 +220,28 @@ export function resolveSealedChoices(
   );
 }
 
+/** After this many mismatched joint choices, the couple may let the story decide. */
+export const JOINT_ESCAPE_AFTER = 2;
+
+export function canLetStoryDecide(adventure: Adventure, state: AdventureState): boolean {
+  const scene = currentScene(adventure, state);
+  const last = latestReveal(state);
+  return !!scene && scene.decision.mode === 'joint' && state.attempt >= JOINT_ESCAPE_AFTER && !!last?.mismatch && last.step === state.step;
+}
+
+/**
+ * Two people who keep choosing differently can hand the call to the story: it
+ * takes one of their last two choices — alternating whose by step, so neither
+ * always wins — as if both had picked it.
+ */
+export function letStoryDecide(adventure: Adventure, state: AdventureState): AdventureState {
+  if (!canLetStoryDecide(adventure, state)) throw new Error('The story cannot decide here.');
+  const picks = latestReveal(state)?.picks ?? {};
+  const pick = (state.step % 2 === 0 ? picks.host : picks.guest) ?? picks.host ?? picks.guest;
+  if (!pick) throw new Error('No earlier choices to decide between.');
+  return resolveSealedChoices(adventure, state, { host: pick, guest: pick });
+}
+
 /** Looks a lesson up anywhere in the story, by id. */
 export function findLesson(adventure: Adventure, lessonId: string): LessonCard | undefined {
   for (const scene of Object.values(adventure.scenes)) {
@@ -236,7 +258,7 @@ export function variableReadings(adventure: Adventure, state: AdventureState) {
     const value = state.vars[name] ?? variable.initial;
     const delta = value - variable.initial;
     const level: 0 | 1 | 2 = delta <= -2 ? 0 : delta >= 2 ? 2 : 1;
-    return { name, label: variable.label, reading: variable.readings[level], level, value };
+    return { name, label: variable.label, reading: variable.readings[level], level, value, concerning: !!variable.concerning };
   });
 }
 
