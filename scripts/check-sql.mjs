@@ -8,7 +8,7 @@
  * What it does NOT do, and cannot: PL/pgSQL bodies are opaque string literals
  * to the parser, so the contents of `language plpgsql` functions are unchecked.
  * Nor is anything semantic verified — a column that does not exist, or a type
- * mismatch, will parse perfectly. Only `supabase db reset` proves those.
+ * mismatch, will parse perfectly. Only `npm run db:test` proves those.
  */
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -20,9 +20,8 @@ const TEST_DIR = 'supabase/tests/database';
 const files = readdirSync(DIR).filter((f) => f.endsWith('.sql')).sort();
 const read = (f) => readFileSync(join(DIR, f), 'utf8');
 
-// The pgTAP suite only runs where Docker runs, which is CI. Parsing it here
-// means a syntax error in a test surfaces on the same command as everything
-// else rather than several minutes into a container build.
+// Parsing the pgTAP suite here means a syntax error in a test surfaces on the
+// same quick command as everything else, before `npm run db:test`.
 const testFiles = readdirSync(TEST_DIR).filter((f) => f.endsWith('.sql')).sort();
 
 await loadModule();

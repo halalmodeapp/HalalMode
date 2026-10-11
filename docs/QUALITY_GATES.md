@@ -11,32 +11,49 @@ This document describes evidence required for a release candidate. It does not c
 | Unit invariants | `npm test` | Daily-round rules, carousel geometry, compatibility privacy, memberships, launch foundations, and question locale fallback. |
 | Client bundle | `npm run export:android` | Android JavaScript bundle/export on Linux CI. |
 | Combined client gate | `npm run verify:client` | Typecheck, lint, then unit invariants. |
-| Database contracts | `npm run db:test:local` | Resets only Docker's local Supabase database, then runs pgTAP. |
+| Database contracts | `npm run db:test` | Replays every migration into a throwaway Postgres 17, then runs the pgTAP contracts. No Docker. |
 
 The GitHub workflow at `.github/workflows/quality.yml` runs the client gate,
 Android export, and the isolated database contract job on pull requests and
-pushes to `main` or `codex/**` branches. The database job uses the committed
-`supabase/config.toml`, starts a fresh Docker stack, and has no linked-project
-or production credential step.
+pushes to `main` or `codex/**` branches. The database job runs the same
+`npm run db:test` as a developer machine and has no linked-project or
+production credential step.
 
 ## Database contract gate: required before production database changes
 
-The repository contains pgTAP tests through migration `0035`. They run in CI
-against an isolated local database. Do not point tests at the linked project.
-
-Run this sequence locally when Docker Desktop or Podman is available:
-
 ```bash
-supabase start
-supabase db reset --local
-supabase test db
-supabase stop
+npm run db:test                 # every contract
+npm run db:test -- 0190 0047    # only files whose names contain these
+npm run db:test -- --verbose    # also print Postgres' own log
 ```
 
-The job fails on any pgTAP failure and never carries production credentials.
-Local runs need Docker Desktop or Podman on `PATH`; without either, the CLI
-will fail before migration execution, which is expected and is not evidence of
-database correctness.
+The harness in `supabase/tests/harness/` needs only Node and `npm ci`; it runs
+the same way on Windows, macOS, Linux and CI, and takes about 20 seconds:
+
+1. Starts a throwaway Postgres 17 from the `embedded-postgres` npm package in a
+   temporary directory, on a free port.
+2. Lays down what a fresh Supabase database provides (`baseline.sql`): the
+   `anon`, `authenticated` and `service_role` roles, the `extensions`, `auth`
+   and `storage` schemas with `auth.uid()`/`auth.jwt()` reading
+   `request.jwt.claims` as PostgREST sets it, Supabase's default grants, and the
+   realtime publication. `pg_cron`, `pg_net` and `supabase_vault` are small
+   stand-in extensions (`extensions/`) that record jobs, requests and secrets
+   without running or sending anything.
+3. Replays `supabase/migrations` in filename order, one file per transaction,
+   exactly as `supabase db reset` does. A failure names the file, line and
+   Postgres error.
+4. Runs each `supabase/tests/database/*.test.sql` in its own session. `tap.sql`
+   implements the part of pgTAP the contracts use, with pgTAP's names and
+   output, so the files still run unchanged under `supabase test db`.
+
+The harness never connects to a Supabase project. Do not point tests at the
+linked project. When a migration needs something new from Supabase's platform
+(another `auth` column, a storage helper, another extension), add it to
+`baseline.sql` or `extensions/` with Supabase's own definition; when a test
+needs more of pgTAP, add it to `tap.sql` with pgTAP's semantics.
+
+`npm run verify:sql` still parses every migration and test with Postgres'
+grammar, which is quicker but proves nothing semantic.
 
 ## Native device matrix
 
@@ -61,9 +78,8 @@ Repeat each relevant path in English and Arabic after a cold restart, at 200% fo
   advisories. `npm audit --omit=dev` still has 11 moderate Expo-tooling
   advisories with no compatible automated fix; see `docs/DEPENDENCY_SECURITY.md`.
 - Stable `testID`s and source-controlled Maestro smoke contracts exist for authentication, daily introductions, recap, and chat; they have not yet run against a configured native build with controlled test accounts.
-- pgTAP passed in GitHub Actions on commit `663737f` against a fresh isolated
-  Supabase stack. This machine still cannot run the same gate locally because
-  Docker Desktop/Podman is unavailable.
+- The pgTAP contracts run locally and in CI with `npm run db:test`; no Docker
+  runtime is needed.
 - The Android/iOS matrix remains incomplete; a stale emulator bundle is not release evidence.
 - The gallery still needs memory/error-state measurement. The daily deck keeps full-size images mounted to avoid card handoff flashes.
 - Chat has cursor paging, direct cache insertion, DELETE-event safety, and a durable text outbox; pgTAP and native reconnect testing remain required before treating it as production proven.

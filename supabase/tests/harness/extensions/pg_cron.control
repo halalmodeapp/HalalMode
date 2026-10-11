@@ -1,0 +1,5 @@
+# Test stand-in for pg_cron: records jobs, never runs them.
+comment = 'pg_cron stand-in for the Docker-free test harness'
+default_version = '1.6'
+relocatable = false
+superuser = true

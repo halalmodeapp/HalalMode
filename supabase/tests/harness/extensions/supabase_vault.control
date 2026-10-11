@@ -1,0 +1,5 @@
+# Test stand-in for supabase_vault: secrets are stored in plain text.
+comment = 'supabase_vault stand-in for the Docker-free test harness'
+default_version = '0.3.1'
+relocatable = false
+superuser = true

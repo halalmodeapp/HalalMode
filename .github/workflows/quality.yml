@@ -32,36 +32,19 @@ jobs:
   database-contracts:
     name: Isolated database contracts
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-      contents: read
-      packages: read
-    env:
-      # Pull Supabase images from GHCR, signed in with the job's own token:
-      # anonymous pulls from Docker Hub and public ECR on shared runners hit
-      # "toomanyrequests: Rate exceeded".
-      SUPABASE_INTERNAL_IMAGE_REGISTRY: ghcr.io
+    timeout-minutes: 15
+    # A throwaway Postgres from npm (supabase/tests/harness): no Docker, no
+    # image pulls, no Supabase project or credentials.
     steps:
       - uses: actions/checkout@v4
 
-      - name: Sign in to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-
-      - uses: supabase/setup-cli@v1
+      - uses: actions/setup-node@v4
         with:
-          version: 2.110.0
+          node-version: 20
+          cache: npm
 
-      - name: Start isolated Supabase services
-        # The contracts need Postgres, Auth and Storage; skip the services
-        # they never touch so there are fewer images to pull.
-        run: supabase start -x studio,imgproxy,edge-runtime,postgres-meta
-
-      - name: Reset local database and run pgTAP contracts
-        run: supabase db reset --local && supabase test db
-
-      - name: Stop isolated Supabase services
-        if: always()
-        run: supabase stop
+      - run: npm ci
+      - run: npm run db:test
 
   edge-functions:
     name: Edge Function typecheck

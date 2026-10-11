@@ -1,8 +1,9 @@
-# Local-only Supabase configuration for migrations and pgTAP contracts.
+# Supabase configuration: the auth settings `supabase config push` applies to
+# the live project, and the settings a local `supabase start` would use.
 #
 # This file intentionally contains no project reference, database password, API
-# key, provider secret, or production URL. `supabase start`, `db reset`, and
-# `test db` target Docker containers on the developer/CI machine only.
+# key, provider secret, or production URL. The database contracts do not use it
+# or Docker: `npm run db:test` runs them (supabase/tests/harness).
 project_id = "halal-mode-local"
 
 [api]
