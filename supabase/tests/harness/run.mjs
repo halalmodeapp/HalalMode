@@ -14,7 +14,7 @@
  * Nothing is written outside a temporary directory, and nothing ever connects
  * to a Supabase project.
  */
-import { copyFileSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -45,12 +45,26 @@ function freePort() {
   });
 }
 
+// Where this platform's binaries keep extension files: share/extension on
+// Windows, share/postgresql/extension on Linux and macOS.
+function findExtensionDir(root) {
+  for (const entry of readdirSync(root, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const dir = join(root, entry.name);
+    if (entry.name === 'extension' && existsSync(join(dir, 'plpgsql.control'))) return dir;
+    const found = findExtensionDir(dir);
+    if (found) return found;
+  }
+  return null;
+}
+
 // The stand-in extensions go where Postgres looks for extension files, inside
 // the platform's binary package.
 async function installStandInExtensions() {
   const platform = process.platform === 'win32' ? 'windows' : process.platform;
   const binaries = await import(`@embedded-postgres/${platform}-${process.arch}`);
-  const extensionDir = resolve(dirname(binaries.postgres), '..', 'share', 'extension');
+  const extensionDir = findExtensionDir(resolve(dirname(binaries.postgres), '..', 'share'));
+  if (!extensionDir) throw new Error('Could not find the Postgres extension directory');
   const source = join(here, 'extensions');
   for (const file of readdirSync(source)) {
     copyFileSync(join(source, file), join(extensionDir, file));
