@@ -33,12 +33,19 @@ jobs:
     name: Isolated database contracts
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: read
     env:
-      # Pull Supabase images from the public ECR mirror: anonymous Docker Hub
-      # pulls from shared runners hit "toomanyrequests: Rate exceeded".
-      SUPABASE_INTERNAL_IMAGE_REGISTRY: public.ecr.aws
+      # Pull Supabase images from GHCR, signed in with the job's own token:
+      # anonymous pulls from Docker Hub and public ECR on shared runners hit
+      # "toomanyrequests: Rate exceeded".
+      SUPABASE_INTERNAL_IMAGE_REGISTRY: ghcr.io
     steps:
       - uses: actions/checkout@v4
+
+      - name: Sign in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
       - uses: supabase/setup-cli@v1
         with:
