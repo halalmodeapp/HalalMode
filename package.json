@@ -18,7 +18,8 @@
     "db:test:local": "supabase db reset --local && supabase test db",
     "verify:sql": "node scripts/check-sql.mjs",
     "deploy:web": "node scripts/deploy-web.mjs",
-    "set-keys": "node scripts/set-keys.mjs"
+    "set-keys": "node scripts/set-keys.mjs",
+    "cards:illustrations": "tsc -p tests/tsconfig.json && node scripts/halal-cards-illustrations.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/beiruti": "^0.4.1",

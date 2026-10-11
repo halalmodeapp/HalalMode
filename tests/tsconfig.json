@@ -18,6 +18,7 @@
     "../src/lib/roundInvariants.ts",
     "../src/lib/countdown.ts",
     "../src/lib/prayerTimes.ts",
+    "../src/halalCards/**/*.ts",
     "../src/matching/config.ts",
     "../src/matching/estimate.ts",
     "../src/matching/fairness.ts",

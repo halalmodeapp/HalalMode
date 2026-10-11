@@ -167,6 +167,7 @@ export default function RootLayout() {
                             options={{ animation: 'fade', gestureEnabled: false }}
                           />
                           <Stack.Screen name="connection/[id]" />
+                          <Stack.Screen name="halal-cards/[id]" />
                           <Stack.Screen
                             name="gallery/[id]"
                             options={{ presentation: 'transparentModal', animation: 'fade' }}

@@ -1,0 +1,118 @@
+import type { AdventureConcept } from '../../types.ts';
+import { slot } from '../images.ts';
+
+/**
+ * Outlined, not yet written. Each becomes a full `Adventure` by writing its
+ * scenes and endings in the shape of firstRamadan.ts; the catalogue shows
+ * these as "coming soon" until then.
+ */
+export const ADVENTURE_CONCEPTS: AdventureConcept[] = [
+  {
+    id: 'concept-different-practice',
+    title: 'Fajr Alarm',
+    themes: ['Different levels of religious practice'],
+    logline: 'Zaid has started praying every prayer at the masjid. Amal prays, but not at Fajr — and she is starting to feel judged in her own home.',
+    turningPoints: ['Zaid invites a friend who comments on Amal’s missed Fajr', 'Amal asks Zaid to stop waking her', 'Ramadan arrives and both want different things from it'],
+    possibleEndings: ['Growing at their own pace together', 'Quiet spiritual loneliness', 'Zaid preaching, Amal hiding', 'A shared practice neither had before'],
+    cover: slot('concept-practice-cover', 'cover', 'A dim bedroom before dawn, a man rolling out a prayer mat while his wife sleeps, an alarm clock glowing 5:02.', 'A man unrolling a prayer mat before dawn as his wife sleeps.'),
+  },
+  {
+    id: 'concept-the-mahr',
+    title: 'The Mahr Conversation',
+    themes: ['Money', 'Family pressure'],
+    logline: 'Two families, one engagement, and a mahr figure that one father insists on and the other finds insulting. The couple are in the middle.',
+    turningPoints: ['The fathers meet without the couple', 'The bride is asked what she wants — finally', 'An aunt leaks the figure to the community'],
+    possibleEndings: ['A mahr the bride chose herself', 'A wedding that happens with a cold start', 'The engagement paused', 'Families who learn to talk directly'],
+    cover: slot('concept-mahr-cover', 'cover', 'Two older men across a formal living room, tea untouched, a young couple watching nervously from the doorway.', 'Two fathers in tense conversation while the couple watch.'),
+  },
+  {
+    id: 'concept-first-baby',
+    title: 'Three in the Morning',
+    themes: ['Children', 'Marriage roles', 'Affection'],
+    logline: 'The baby is six weeks old. Both are exhausted, both feel they do more, and the grandmothers have opinions about everything.',
+    turningPoints: ['A night where neither gets up', 'A grandmother moves in “to help”', 'The first evening alone in two months'],
+    possibleEndings: ['A new team rhythm', 'One parent quietly burning out', 'Grandparent help with boundaries', 'Romance rediscovered'],
+    cover: slot('concept-baby-cover', 'cover', 'A kitchen at 3am, a father warming a bottle and a mother asleep at the table with her head on her arms, a baby monitor glowing.', 'Exhausted new parents in the kitchen at 3am.'),
+  },
+  {
+    id: 'concept-instagram',
+    title: 'Public Couple, Private Couple',
+    themes: ['Social media', 'Boundaries'],
+    logline: 'Rania loves sharing their life online. Tariq wants their marriage private. A post about their first argument goes viral.',
+    turningPoints: ['A brand offers to sponsor “couple content”', 'Tariq’s colleagues find the account', 'A comment section turns on them'],
+    possibleEndings: ['A shared posting agreement', 'Rania sharing less and resenting it', 'Tariq stepping in front of the camera', 'Going private together'],
+    cover: slot('concept-insta-cover', 'cover', 'A couple at a café, the woman holding up a phone to film their coffees, the man covering his face with a menu, laughing.', 'A wife filming coffees while her husband hides behind a menu.'),
+  },
+  {
+    id: 'concept-in-law-house',
+    title: 'The Upstairs Room',
+    themes: ['Family and in-laws', 'Boundaries', 'Marriage roles'],
+    logline: 'Newlyweds move into his parents’ house to save for a deposit. The upstairs room has no lock and his mother has a key to everything.',
+    turningPoints: ['A private conversation overheard', 'A decision about cooking and chores', 'A deadline for moving out slips'],
+    possibleEndings: ['Moving out on good terms', 'A house with clear agreements', 'A wife who never feels at home', 'An unexpected friendship with the mother-in-law'],
+    cover: slot('concept-house-cover', 'cover', 'A family staircase with a young couple’s door at the top slightly ajar, a mother’s hand on the banister below.', 'A family staircase leading to the couple’s room.'),
+  },
+  {
+    id: 'concept-friend-of-opposite',
+    title: 'The Old Friend',
+    themes: ['Jealousy', 'Boundaries', 'Trust'],
+    logline: 'Sami’s colleague from university starts messaging him for career advice. It is innocent. Leila is not sure it feels innocent.',
+    turningPoints: ['A late-night message', 'Leila finds out from someone else', 'An invitation to a work dinner'],
+    possibleEndings: ['Clear boundaries agreed together', 'Secrecy that grows', 'Leila’s fear heard and soothed', 'A trust test that both fail'],
+    cover: slot('concept-friend-cover', 'cover', 'A phone lighting up on a dark bedside table with a notification, a man asleep and a woman awake beside him looking at it.', 'A phone notification glowing at night beside a sleeping husband.'),
+  },
+  {
+    id: 'concept-ignored',
+    title: 'Background Noise',
+    themes: ['Feeling ignored', 'Affection'],
+    logline: 'Two years married. They are not unhappy — just busy. Ibrahim hasn’t noticed that Sumayya stopped telling him about her day.',
+    turningPoints: ['A forgotten anniversary', 'Sumayya opens up to a friend instead', 'A weekend away with no phones'],
+    possibleEndings: ['Small rituals that bring them back', 'Comfortable roommates', 'A wake-up call heard just in time', 'A gentle restart'],
+    cover: slot('concept-ignored-cover', 'cover', 'A couple on a sofa, the husband watching football and the wife talking to him while he nods without looking, an untouched slice of cake.', 'A wife talking while her husband watches TV without looking.'),
+  },
+  {
+    id: 'concept-career-change',
+    title: 'Starting Over at Thirty-Four',
+    themes: ['Careers', 'Money'],
+    logline: 'Musa wants to quit his secure job to study Islamic sciences full-time. It means Khadija would carry the household income for four years.',
+    turningPoints: ['The resignation letter is written', 'Khadija’s parents find out', 'A pregnancy changes the maths'],
+    possibleEndings: ['A shared sacrifice with a plan', 'A dream deferred together', 'Resentment over money', 'Both careers reshaped'],
+    cover: slot('concept-career-cover', 'cover', 'A man at a desk covered in classical Arabic texts at night, his wife in the doorway in work clothes holding car keys.', 'A husband studying Arabic texts as his wife returns from work.'),
+  },
+  {
+    id: 'concept-family-crisis',
+    title: 'The Brother',
+    themes: ['Family pressure', 'Money', 'Boundaries'],
+    logline: 'Naila’s younger brother is in trouble with debt and asks to borrow a large sum. Naila wants to help. Her husband has doubts.',
+    turningPoints: ['The loan is given — or not', 'The brother asks again', 'Family says the husband is heartless'],
+    possibleEndings: ['Help with conditions both chose', 'A loan never repaid and never discussed', 'A family rift', 'The brother gets real help'],
+    cover: slot('concept-brother-cover', 'cover', 'A young man sitting with his head down on his sister’s sofa, the sister holding an envelope, her husband standing in the kitchen doorway.', 'A brother asking his sister for help as her husband watches.'),
+  },
+  {
+    id: 'concept-boundaries-wedding',
+    title: 'Whose Wedding Is It?',
+    themes: ['Family pressure', 'Money', 'Conflict'],
+    logline: 'The couple want a small nikah. Both mothers want five hundred guests. Every choice — venue, food, guest list — becomes a battle.',
+    turningPoints: ['A deposit paid without asking', 'The couple disagree with each other', 'An elder offers to mediate'],
+    possibleEndings: ['A wedding that feels like theirs', 'A beautiful day and a bruised start', 'A secret small nikah first', 'Families brought together by compromise'],
+    cover: slot('concept-wedding-cover', 'cover', 'A young couple sitting on the floor surrounded by wedding planning lists and fabric samples, both mothers looming in the background on phones.', 'An engaged couple buried in wedding plans as both mothers talk on phones.'),
+  },
+  {
+    id: 'concept-relocation-small-town',
+    title: 'A Long Way from the Masjid',
+    themes: ['Relocation', 'Different levels of religious practice'],
+    logline: 'A job takes them to a small town with no masjid, no halal butcher and no Muslim friends. One thrives; one feels lost.',
+    turningPoints: ['The first Eid alone', 'Starting a weekly prayer in their front room', 'An offer to move back'],
+    possibleEndings: ['Building a community from scratch', 'One spouse quietly isolated', 'Moving back stronger', 'A deeper private faith'],
+    cover: slot('concept-town-cover', 'cover', 'A couple standing outside a cottage in a quiet countryside town, one looking around with excitement, the other with uncertainty, a compass in hand.', 'A couple outside a countryside cottage, one excited, one uncertain.'),
+  },
+  {
+    id: 'concept-anger',
+    title: 'The Raised Voice',
+    themes: ['Conflict', 'Communication breakdowns'],
+    logline: 'Adnan grew up in a loud house where shouting meant nothing. Huda grew up in a quiet one where it meant everything. Their first real argument goes badly.',
+    turningPoints: ['A door slammed', 'An apology that doesn’t land', 'A conversation about their childhood homes'],
+    possibleEndings: ['A shared way to fight fair', 'Walking on eggshells', 'Learning each other’s signals', 'Seeking help together'],
+    cover: slot('concept-anger-cover', 'cover', 'A kitchen with a single broken plate on the floor, a husband and wife on opposite sides of the room, one with hands raised apologetically.', 'A couple on opposite sides of a kitchen after an argument.'),
+  },
+];

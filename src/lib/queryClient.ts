@@ -29,4 +29,8 @@ export const queryKeys = {
   savedAnswers: ['saved-answers'] as const,
   messages: (connectionId: string) => ['messages', connectionId] as const,
   notices: ['notices'] as const,
+  cardsAccess: (connectionId: string) => ['halal-cards', 'access', connectionId] as const,
+  cardsSessions: (connectionId: string) => ['halal-cards', 'sessions', connectionId] as const,
+  cardsSession: (sessionId: string) => ['halal-cards', 'session', sessionId] as const,
+  cardsGuide: (connectionId: string) => ['halal-cards', 'guide', connectionId] as const,
 };
