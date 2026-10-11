@@ -100,9 +100,11 @@ where sensitive_consent_at is null
 
 
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000005301","role":"authenticated"}', true);
+-- 0185: with no current live outcome matching has not reached this member
+-- yet, which is "waiting for the first set", never "nobody suits you".
 select is(
   public.get_current_round_state() ->> 'status',
-  'no_suitable_introductions',
+  'waiting_for_first_set',
   'no live outcome is not mislabelled as deferred'
 );
 
@@ -138,7 +140,7 @@ where run_id = '00000000-0000-0000-0000-000000005321'
   and user_id = '00000000-0000-0000-0000-000000005301';
 select is(
   public.get_current_round_state() ->> 'status',
-  'no_suitable_introductions',
+  'waiting_for_first_set',
   'an expired deferred outcome cannot claim the member is still queued'
 );
 delete from halal_mode_private.matching_member_run_outcomes
@@ -152,7 +154,7 @@ insert into halal_mode_private.matching_member_run_outcomes (
 );
 select is(
   public.get_current_round_state() ->> 'status',
-  'no_suitable_introductions',
+  'waiting_for_first_set',
   'a shadow-only outcome cannot affect member-facing state'
 );
 
