@@ -16,9 +16,8 @@ command output, device build, or deployment URL attached to the release record.
 
 ## Database and security
 
-- [ ] Migrations were tested on an isolated local Supabase database with
-      `supabase db reset --local`.
-- [ ] `supabase test db` passed all pgTAP contracts after the reset.
+- [ ] `npm run db:test` replayed every migration into a fresh isolated
+      database and passed all pgTAP contracts.
 - [ ] Remote schema lint has no actionable warnings.
 - [ ] Any migration was dry-run and reviewed for locks, indexes, RLS, RPC
       permissions, storage policies, and rollback/recovery implications.
@@ -56,7 +55,7 @@ command output, device build, or deployment URL attached to the release record.
 These are release blockers for a production claim, not optional polish:
 
 - Maestro or equivalent end-to-end flows built on stable `testID`s.
-- First passing Docker-backed pgTAP CI run for the candidate commit.
+- First passing `npm run db:test` CI run for the candidate commit.
 - Real-device coverage across the four-size matrix.
 - Accessibility tree/screen-reader assertions and Arabic cold-restart checks.
 - Chat pagination/offline outbox/retry tests, gallery memory measurement, and

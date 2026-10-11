@@ -14,8 +14,7 @@
     "verify:client": "npm run typecheck && npm run lint && npm run verify:sql && npm test",
     "export:android": "expo export --platform android --output-dir dist/ci-android",
     "db:push": "supabase db push",
-    "db:reset": "supabase db reset",
-    "db:test:local": "supabase db reset --local && supabase test db",
+    "db:test": "node supabase/tests/harness/run.mjs",
     "verify:sql": "node scripts/check-sql.mjs",
     "deploy:web": "node scripts/deploy-web.mjs",
     "set-keys": "node scripts/set-keys.mjs"
@@ -77,9 +76,11 @@
     "@babel/core": "^7.29.7",
     "@types/react": "~19.2.4",
     "babel-preset-expo": "~57.0.0",
+    "embedded-postgres": "17.9.0-beta.16",
     "eslint": "^9.39.5",
     "eslint-config-expo": "~57.0.0",
     "libpg-query": "^17.0.0",
+    "pg": "8.23.1",
     "supabase": "^2.111.0",
     "typescript": "~6.0.3"
   }

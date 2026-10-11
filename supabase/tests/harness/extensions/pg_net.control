@@ -1,0 +1,5 @@
+# Test stand-in for pg_net: queues requests, never sends them.
+comment = 'pg_net stand-in for the Docker-free test harness'
+default_version = '0.14'
+relocatable = false
+superuser = true

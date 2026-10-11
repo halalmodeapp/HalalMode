@@ -123,8 +123,8 @@ or production verification.
 
 ## What is not release-ready
 
-1. The isolated pgTAP CI job runs on every push and is green. This machine has
-   no working Docker runtime and deliberately does not need one.
+1. The pgTAP contracts run on every push and locally with `npm run db:test`,
+   a Docker-free harness (see docs/QUALITY_GATES.md).
 2. Maestro source contracts and stable test IDs cover key paths, but they have
    not run against a configured native build with controlled test accounts.
 3. The native matrix, Arabic cold-restart behavior, screen reader behavior, and
