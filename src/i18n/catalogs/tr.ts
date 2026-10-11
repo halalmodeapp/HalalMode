@@ -521,6 +521,7 @@ export const tr: TranslationCatalog = {
   'chat.pause': 'Bağlantıyı kapat',
   'halalCards.chatRow': 'Halal Cards · birlikte oynayın',
   'halalCards.premiumFeature': 'Her eşleşmeyle Halal Cards — karşı taraf için ücretsiz',
+  'halalCards.premiumIncludes': "Tüm {{total}} Halal Cards: {{lab}} İlişki Laboratuvarı atölyesi ({{scenarios}} senaryo), her aşama için {{quizzes}} test ve {{stories}} kendi yolunu seç hikâyesi",
   'halalCards.badgeA11y': 'Halal Cards’ta {{count}} bekleyen',
   'chat.placeholder': 'Bir mesaj yazın',
   'chat.recordUnavailable': 'Sesli mesajlar henüz kullanılamıyor',

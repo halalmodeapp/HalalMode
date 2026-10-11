@@ -8,6 +8,7 @@ import { PremiumLogo } from '@/components/brand/PremiumLogo';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Text } from '@/components/ui/Text';
+import { CATALOGUE_COUNTS } from '@/halalCards/content';
 import { useCardsCopy } from '@/halalCards/copy';
 import { USE_MOCKS } from '@/lib/supabase';
 import { useFeatureFlags } from '@/state/featureFlags';
@@ -49,6 +50,7 @@ export function PremiumGate({
           <Text variant="bodySmall">
             {canBuy ? copy('premiumBody', { name: partnerName }) : copy('premiumSoonBody', { name: partnerName })}
           </Text>
+          <Text variant="bodySmall">{copy('premiumIncludes', CATALOGUE_COUNTS)}</Text>
         </View>
         {canBuy ? (
           <Button

@@ -48,4 +48,17 @@ export function findActivity(id: string): Activity | undefined {
   return byId.get(id);
 }
 
+/**
+ * What the catalogue holds, for the Premium and How it works copy. Counted
+ * from the content so the numbers never drift from what members can play.
+ */
+export const CATALOGUE_COUNTS = {
+  total: ALL_ACTIVITIES.length,
+  lab: LAB_LESSONS.length,
+  scenarios: LAB_LESSONS.reduce((sum, lesson) => sum + lesson.steps.filter((step) => step.type === 'scenario').length, 0),
+  quizzes: QUIZZES.length,
+  stories: ADVENTURES.length,
+  free: ALL_ACTIVITIES.filter((activity) => activity.soloPreview).length,
+};
+
 export { LAB_LESSONS, QUIZZES };

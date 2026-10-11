@@ -521,6 +521,7 @@ export const ha: TranslationCatalog = {
   'chat.pause': 'Rufe haɗi',
   'halalCards.chatRow': 'Halal Cards · ku yi wasa tare',
   'halalCards.premiumFeature': 'Halal Cards da kowane wanda kuka dace — kyauta gare shi/ita',
+  'halalCards.premiumIncludes': "Duk Halal Cards {{total}}: bita {{lab}} na Relationship Lab (yanayi {{scenarios}}), tambayoyi {{quizzes}} na kowane mataki, da labarai {{stories}} da kuke zaɓar hanyarsu",
   'halalCards.badgeA11y': '{{count}} na jira a Halal Cards',
   'chat.placeholder': 'Rubuta saƙo',
   'chat.recordUnavailable': 'Saƙon murya bai samu ba tukuna',

@@ -521,6 +521,7 @@ export const hi: TranslationCatalog = {
   'chat.pause': 'कनेक्शन बंद करें',
   'halalCards.chatRow': 'हलाल कार्ड्स · साथ खेलें',
   'halalCards.premiumFeature': 'किसी भी मैच के साथ हलाल कार्ड्स — उनके लिए मुफ़्त',
+  'halalCards.premiumIncludes': "सभी {{total}} हलाल कार्ड्स: रिलेशनशिप लैब की {{lab}} वर्कशॉप ({{scenarios}} परिस्थितियाँ), हर पड़ाव के लिए {{quizzes}} क्विज़ और {{stories}} अपनी राह खुद चुनने वाली कहानियाँ",
   'halalCards.badgeA11y': 'हलाल कार्ड्स में {{count}} इंतज़ार में',
   'chat.placeholder': 'संदेश लिखें',
   'chat.recordUnavailable': 'आवाज़ वाले संदेश अभी उपलब्ध नहीं',

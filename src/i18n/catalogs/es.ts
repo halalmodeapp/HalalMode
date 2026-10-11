@@ -521,6 +521,7 @@ export const es: TranslationCatalog = {
   'chat.pause': 'Cerrar la conexión',
   'halalCards.chatRow': 'Halal Cards · jugad juntos',
   'halalCards.premiumFeature': 'Halal Cards con cualquier conexión — gratis para la otra persona',
+  'halalCards.premiumIncludes': "Las {{total}} Halal Cards: {{lab}} talleres del Relationship Lab ({{scenarios}} situaciones), {{quizzes}} cuestionarios para cada etapa y {{stories}} historias en las que eliges el camino",
   'halalCards.badgeA11y': '{{count}} esperando en Halal Cards',
   'chat.placeholder': 'Escribe un mensaje',
   'chat.recordUnavailable': 'Los mensajes de voz aún no están disponibles',

@@ -521,6 +521,7 @@ export const bn: TranslationCatalog = {
   'chat.pause': 'সংযোগ বন্ধ করুন',
   'halalCards.chatRow': 'হালাল কার্ডস · একসাথে খেলুন',
   'halalCards.premiumFeature': 'যেকোনো ম্যাচের সাথে হালাল কার্ডস — তাঁর জন্য বিনামূল্যে',
+  'halalCards.premiumIncludes': "সব {{total}}টি হালাল কার্ডস: রিলেশনশিপ ল্যাবের {{lab}}টি কর্মশালা ({{scenarios}}টি পরিস্থিতি), প্রতিটি পর্যায়ের জন্য {{quizzes}}টি কুইজ, {{stories}}টি নিজের পথ বেছে নেওয়ার গল্প",
   'halalCards.badgeA11y': 'হালাল কার্ডসে {{count}}টি অপেক্ষায়',
   'chat.placeholder': 'একটি বার্তা লিখুন',
   'chat.recordUnavailable': 'ভয়েস বার্তা এখনো পাওয়া যায় না',

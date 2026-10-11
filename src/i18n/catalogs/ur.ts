@@ -521,6 +521,7 @@ export const ur: TranslationCatalog = {
   'chat.pause': 'کنکشن بند کریں',
   'halalCards.chatRow': 'حلال کارڈز · ساتھ کھیلیں',
   'halalCards.premiumFeature': 'کسی بھی میچ کے ساتھ حلال کارڈز — ان کے لیے مفت',
+  'halalCards.premiumIncludes': "تمام {{total}} حلال کارڈز: ریلیشن شپ لیب کی {{lab}} ورکشاپس ({{scenarios}} منظرنامے)، ہر مرحلے کے لیے {{quizzes}} کوئز اور {{stories}} اپنی راہ خود چننے والی کہانیاں",
   'halalCards.badgeA11y': 'حلال کارڈز میں {{count}} منتظر',
   'chat.placeholder': 'پیغام لکھیں',
   'chat.recordUnavailable': 'آواز کے پیغامات ابھی دستیاب نہیں',

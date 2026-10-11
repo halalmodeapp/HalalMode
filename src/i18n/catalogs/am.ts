@@ -521,6 +521,7 @@ export const am: TranslationCatalog = {
   'chat.pause': 'ግንኙነቱን ዝጋ',
   'halalCards.chatRow': 'ሃላል ካርድስ · አብረው ይጫወቱ',
   'halalCards.premiumFeature': 'ሃላል ካርድስ ከማንኛውም ተዛማጅ ጋር — ለእነሱ በነጻ',
+  'halalCards.premiumIncludes': "ሁሉም {{total}} ሃላል ካርድስ፦ {{lab}} የግንኙነት ላብ ወርክሾፖች ({{scenarios}} ሁኔታዎች)፣ ለእያንዳንዱ ደረጃ {{quizzes}} ጥያቄዎች፣ {{stories}} መንገዳቸውን የሚመርጡባቸው ታሪኮች",
   'halalCards.badgeA11y': 'በሃላል ካርድስ {{count}} እየጠበቁ ነው',
   'chat.placeholder': 'መልእክት ይጻፉ',
   'chat.recordUnavailable': 'የድምጽ መልእክቶች ገና አይገኙም',

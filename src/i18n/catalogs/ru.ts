@@ -521,6 +521,7 @@ export const ru: TranslationCatalog = {
   'chat.pause': 'Закрыть связь',
   'halalCards.chatRow': 'Halal Cards · играйте вместе',
   'halalCards.premiumFeature': 'Halal Cards с любым знакомством — для второго бесплатно',
+  'halalCards.premiumIncludes': "Все {{total}} Halal Cards: {{lab}} мастерские Relationship Lab ({{scenarios}} ситуаций), {{quizzes}} викторин для каждого этапа и {{stories}} историй, где вы выбираете путь",
   'halalCards.badgeA11y': 'В Halal Cards ждут: {{count}}',
   'chat.placeholder': 'Напишите сообщение',
   'chat.recordUnavailable': 'Голосовые сообщения пока недоступны',

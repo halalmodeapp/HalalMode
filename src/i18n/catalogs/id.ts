@@ -521,6 +521,7 @@ export const id: TranslationCatalog = {
   'chat.pause': 'Tutup koneksi',
   'halalCards.chatRow': 'Halal Cards · main bersama',
   'halalCards.premiumFeature': 'Halal Cards dengan siapa pun yang cocok — gratis untuknya',
+  'halalCards.premiumIncludes': "Semua {{total}} Halal Cards: {{lab}} lokakarya Relationship Lab ({{scenarios}} skenario), {{quizzes}} kuis untuk setiap tahap, dan {{stories}} cerita pilih jalanmu sendiri",
   'halalCards.badgeA11y': '{{count}} menunggu di Halal Cards',
   'chat.placeholder': 'Tulis pesan',
   'chat.recordUnavailable': 'Pesan suara belum tersedia',

@@ -12,6 +12,7 @@ import { PermissionExplainer } from '@/components/ui/PermissionExplainer';
 import { Text } from '@/components/ui/Text';
 import { ModerationSheet } from '@/components/safety/ModerationSheet';
 import { BlockedMembersSheet } from '@/components/you/BlockedMembersSheet';
+import { CATALOGUE_COUNTS } from '@/halalCards/content';
 import { useI18n } from '@/i18n';
 import { LanguageSheet } from '@/components/ui/LanguageSheet';
 import { localeName } from '@/i18n/locales';
@@ -120,6 +121,7 @@ export function SettingsTab({
     t('settings.premium.f4'),
     t('profile.travelMode'),
     t('halalCards.premiumFeature'),
+    t('halalCards.premiumIncludes', CATALOGUE_COUNTS),
   ];
 
   useEffect(() => setPaused(profilePaused), [profilePaused]);
