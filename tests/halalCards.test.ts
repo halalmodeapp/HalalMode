@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  ADVENTURE_CONCEPTS,
   ADVENTURES,
   ALL_ACTIVITIES,
   LAB_LESSONS,
@@ -60,7 +59,7 @@ test('the catalogue has what the first build promised', () => {
   assert.deepEqual(LAB_LESSONS.map((lesson) => lesson.rule), ['zero', 'one', 'two', 'three']);
   assert.ok(new Set(QUIZZES.map((quiz) => quiz.format)).size >= 5, 'at least five quiz formats');
   assert.ok(ADVENTURES.length >= 3);
-  assert.ok(ADVENTURE_CONCEPTS.length >= 10);
+  assert.ok(ADVENTURES.length >= 15, 'every outlined adventure is built');
   const ids = ALL_ACTIVITIES.map((activity) => activity.id);
   assert.equal(new Set(ids).size, ids.length, 'activity ids are unique');
   assert.equal(findActivity('lab-rule-one')?.title, 'Sweat the small stuff');

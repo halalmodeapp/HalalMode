@@ -60,9 +60,6 @@ for (const adventure of content.ADVENTURES) {
   }
 }
 
-for (const concept of content.ADVENTURE_CONCEPTS) {
-  add(concept.cover, 'Adventures coming soon', `Cover of the upcoming adventure “${concept.title}” in the “Coming soon” row on the Halal Cards home.`);
-}
 
 const ids = new Set();
 for (const { image } of slots) {

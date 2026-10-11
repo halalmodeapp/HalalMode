@@ -285,6 +285,96 @@ export const marriedCheckIn: Quiz = {
   guide: [{ id: 'ci-g1', text: 'We check in with each other once a month, on purpose.' }],
 };
 
+export const meetingFamilies: Quiz = {
+  id: 'quiz-meeting-families',
+  kind: 'quiz',
+  format: 'same_page',
+  topic: 'family',
+  tracks: ['engaged'],
+  title: 'Meeting the families',
+  tagline: 'Visits, expectations and who you will become to each other’s parents.',
+  description:
+    'Engagement means two families getting to know you. Answer privately, compare, and agree how you want those first visits and relationships to go.',
+  minutes: 7,
+  cover: slot('quiz-families-cover', 'cover', 'A young engaged couple standing at the front door of a family home holding a box of sweets, an older couple opening the door warmly to welcome them.', 'An engaged couple arriving at a family home with sweets.'),
+  cards: [
+    { id: 'mf-call', prompt: 'My future in-laws should call me…', options: ['By my name', 'Daughter / son', 'However feels natural to them', 'I haven’t thought about it'] },
+    { id: 'mf-visits', prompt: 'Before the nikah, we should visit each family…', options: ['Every week', 'A few times a month', 'For occasions', 'As little as possible'] },
+    { id: 'mf-advice', prompt: 'When my parents give advice about our plans, you should…', options: ['Take it seriously', 'Listen politely, then decide with me', 'Let me handle my parents', 'Tell them your view directly'], talk: 'Who handles whose parents?' },
+    { id: 'mf-gifts', prompt: 'Gifts for each other’s families…', options: ['Generous — it shows respect', 'Thoughtful but modest', 'Only on occasions', 'Not expected'] },
+    { id: 'mf-differences', prompt: 'If our families’ customs clash…', options: ['We follow the bride’s family', 'We follow the groom’s family', 'We blend them', 'We make our own'] },
+    { id: 'mf-concern', prompt: 'What worries me most about your family is…', options: ['Nothing — I like them', 'Their expectations of me', 'How involved they’ll be', 'Not fitting in'], talk: 'Say it kindly. Say it now.' },
+  ],
+  guide: [{ id: 'mf-g1', text: 'Each of us handles our own parents, kindly and in agreement.' }],
+};
+
+export const weddingBudget: Quiz = {
+  id: 'quiz-wedding-budget',
+  kind: 'quiz',
+  format: 'scale',
+  topic: 'money',
+  tracks: ['engaged'],
+  title: 'The wedding budget',
+  tagline: 'Where the money goes — and where it doesn’t.',
+  description: 'Place yourselves on each scale before anyone else does it for you. The gaps are where your families will push.',
+  minutes: 6,
+  cover: slot('quiz-budget-cover', 'cover', 'An engaged couple at a café table with a small notebook, a calculator and two cups of coffee, the woman writing numbers, the man pointing at one, smiling.', 'An engaged couple planning a budget at a café.'),
+  cards: [
+    { id: 'wb-total', prompt: 'The whole wedding should cost…', options: ['As little as possible', 'A few months’ savings', 'A year’s savings', 'Whatever it takes'] },
+    { id: 'wb-guests', prompt: 'Guests…', options: ['Under 50', '50–150', '150–300', '300+'] },
+    { id: 'wb-outfits', prompt: 'Spending on outfits and jewellery…', options: ['Minimal', 'Modest', 'Generous', 'Lavish'] },
+    { id: 'wb-families', prompt: 'Families contributing money…', options: ['Not at all', 'A little, if offered', 'Generously', 'They pay for most'] },
+    { id: 'wb-home', prompt: 'Wedding versus first home…', options: ['Home comes first, always', 'Mostly the home', 'An even split', 'The wedding is once in a lifetime'], talk: 'This card shapes your first five years.' },
+  ],
+  guide: [{ id: 'wb-g1', text: 'We set our wedding budget together, before anyone else does.' }],
+};
+
+export const keepingLove: Quiz = {
+  id: 'quiz-keeping-love',
+  kind: 'quiz',
+  format: 'guess_my_answer',
+  topic: 'affection',
+  tracks: ['married'],
+  title: 'Keeping love alive',
+  tagline: 'The small things that keep a marriage warm.',
+  description: 'Answer for yourself and guess for your spouse. The surprises show where a little effort would go a long way.',
+  minutes: 6,
+  cover: slot('quiz-love-cover', 'cover', 'A married couple in their kitchen, the husband handing his wife a cup of tea with a small note on the saucer, both smiling, morning light.', 'A husband handing his wife tea with a little note.'),
+  cards: [
+    { id: 'kl-surprise', prompt: 'A surprise I’d love is…', guessPrompt: 'A surprise {{name}} would love is…', options: ['A handwritten note', 'A day out', 'Breakfast made for me', 'A small gift'] },
+    { id: 'kl-time', prompt: 'Our best time together is…', guessPrompt: 'For {{name}}, our best time together is…', options: ['Long talks', 'Doing something new', 'Quiet evenings in', 'Praying together'] },
+    { id: 'kl-words', prompt: 'Words that mean the most to me…', guessPrompt: 'Words that mean the most to {{name}}…', options: ['“I’m proud of you”', '“Thank you”', '“I love you”', '“I’ve got this”'] },
+    { id: 'kl-reset', prompt: 'After a hard week, I need…', guessPrompt: 'After a hard week, {{name}} needs…', options: ['Rest, alone', 'Time together', 'To get out of the house', 'Help catching up'] },
+    { id: 'kl-ritual', prompt: 'A ritual I’d love us to start…', guessPrompt: 'A ritual {{name}} would love us to start…', options: ['A weekly walk', 'Monthly dinner out', 'Reading Qur’an together', 'A yearly trip, just us'], talk: 'Pick one and put it in the diary.' },
+  ],
+  guide: [{ id: 'kl-g1', text: 'We keep one small ritual that is just ours.' }],
+};
+
+export const parentingTogether: Quiz = {
+  id: 'quiz-parenting',
+  kind: 'quiz',
+  format: 'same_page',
+  topic: 'future',
+  tracks: ['married'],
+  title: 'Parenting together',
+  tagline: 'How we will raise them, before they are raising us.',
+  description: 'Children change everything. Answer privately and compare your instincts about discipline, faith, screens and family help.',
+  minutes: 7,
+  cover: slot('quiz-parenting-cover', 'cover', 'A married couple sitting on a rug with a toddler stacking wooden blocks, the parents smiling at each other over the child’s head, soft afternoon light.', 'A couple playing with their toddler on a rug.'),
+  cards: [
+    { id: 'pt-discipline', prompt: 'Discipline should mostly be…', options: ['Firm rules, clear consequences', 'Calm explanation', 'Gentle, with a few firm lines', 'Whatever works on the day'] },
+    { id: 'pt-faith', prompt: 'Teaching our children the deen…', options: ['Mostly at home, by us', 'Madrasah and home together', 'Islamic school', 'By example more than lessons'] },
+    { id: 'pt-screens', prompt: 'Screens before age five…', options: ['None', 'Very little', 'Some, with limits', 'Not a big concern'] },
+    { id: 'pt-roles', prompt: 'Night wakings and nappies…', options: ['Shared equally', 'Mostly one of us, by agreement', 'Whoever is less tired', 'Grandparents help a lot'] },
+    { id: 'pt-disagree', prompt: 'If we disagree on a parenting call in front of the kids…', options: ['Back each other, discuss later', 'Talk it through in front of them', 'The parent who started decides', 'Pause and step away together'], talk: 'This one comes up sooner than you think.' },
+    { id: 'pt-grand', prompt: 'Grandparents’ say in how we parent…', options: ['A lot — they know best', 'Advice welcome, we decide', 'Only if we ask', 'Very little'] },
+  ],
+  guide: [
+    { id: 'pt-g1', text: 'In front of the children, we back each other and discuss in private.' },
+    { id: 'pt-g2', text: 'Grandparents advise; we decide.' },
+  ],
+};
+
 export const QUIZZES: Quiz[] = [
   knowMe,
   guessMyAnswer,
@@ -298,4 +388,8 @@ export const QUIZZES: Quiz[] = [
   nikahPlans,
   firstYear,
   marriedCheckIn,
+  meetingFamilies,
+  weddingBudget,
+  keepingLove,
+  parentingTogether,
 ];

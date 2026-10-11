@@ -169,17 +169,3 @@ export async function restoreGuideEntry(entryId: string): Promise<void> {
   const { error } = await requireSupabase().rpc('restore_halal_cards_guide_entry', { p_entry_id: entryId });
   if (error) throw error;
 }
-
-export async function fetchConceptVotes(): Promise<string[]> {
-  if (USE_MOCKS) return mock.votes();
-  const { data, error } = await requireSupabase().rpc('get_my_halal_cards_concept_votes');
-  if (error) throw error;
-  return (data ?? []) as string[];
-}
-
-export async function toggleConceptVote(conceptId: string): Promise<boolean> {
-  if (USE_MOCKS) return mock.toggleVote(conceptId);
-  const { data, error } = await requireSupabase().rpc('toggle_halal_cards_concept_vote', { p_concept_id: conceptId });
-  if (error) throw error;
-  return data === true;
-}

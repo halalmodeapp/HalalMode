@@ -30,10 +30,6 @@ const en = {
   'decks': '{{count}} decks',
   'stories': '{{count}} stories',
   'explore': 'Explore',
-  'comingSoon': 'Coming soon',
-  'conceptsBlurb': 'Adventures being written now. Tap the ones you want first.',
-  'notifyMe': 'I want this one',
-  'notifyOn': 'Noted ✓',
   'minutes': '{{count}} min',
   'kind.lab': 'Relationship Lab',
   'kind.quiz': 'Quiz',
@@ -77,6 +73,7 @@ const en = {
 
   'inProgress': 'In progress',
   'played': 'Played together',
+  'completed': 'Completed',
   'invitedYou': '{{name}} invited you to play',
   'accept': 'Play',
   'decline': 'Not now',

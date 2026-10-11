@@ -52,7 +52,6 @@ const OPEN_CONNECTIONS = new Set(['conn-1']);
 const unlocked = new Set<string>(['conn-1']);
 const tracks = new Map<string, CardsTrack>();
 const sessions = new Map<string, MockSession>();
-const votes = new Set<string>();
 const guideEntries: (GuideEntry & { agreeAt?: number; removed?: boolean })[] = [];
 let counter = 0;
 const now = () => new Date().toISOString();
@@ -422,15 +421,5 @@ export const halalCardsMock = {
     await delay();
     const entry = guideEntries.find((item) => item.id === entryId);
     if (entry) entry.removed = false;
-  },
-  async votes(): Promise<string[]> {
-    await delay();
-    return [...votes];
-  },
-  async toggleVote(conceptId: string): Promise<boolean> {
-    await delay();
-    if (votes.delete(conceptId)) return false;
-    votes.add(conceptId);
-    return true;
   },
 };

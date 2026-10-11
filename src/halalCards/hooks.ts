@@ -9,7 +9,6 @@ import {
   fetchCardsAttention,
   fetchCardsSession,
   fetchCardsSummary,
-  fetchConceptVotes,
   fetchGuide,
   proposeGuideEntry,
   removeGuideEntry,
@@ -18,7 +17,6 @@ import {
   setCardsTrack,
   StaleSessionError,
   submitCardsAnswer,
-  toggleConceptVote,
 } from '@/api/halalCards';
 import { findActivity } from '@/halalCards/content';
 import { awaitingOf, currentTurn, isFinished, resolveStory, type Turn } from '@/halalCards/engine/session';
@@ -187,19 +185,4 @@ export function useGuide(connectionId: string) {
   const restore = useMutation({ mutationFn: restoreGuideEntry, onSuccess: refresh });
 
   return { query, propose, agree, remove, restore };
-}
-
-export function useConceptVotes() {
-  const queryClient = useQueryClient();
-  const query = useQuery({ queryKey: queryKeys.cardsVotes, queryFn: fetchConceptVotes, staleTime: 60_000 });
-  const toggle = useMutation({
-    mutationFn: toggleConceptVote,
-    onMutate: (conceptId) => {
-      queryClient.setQueryData<string[]>(queryKeys.cardsVotes, (current = []) =>
-        current.includes(conceptId) ? current.filter((id) => id !== conceptId) : [...current, conceptId]
-      );
-    },
-    onSettled: () => void queryClient.invalidateQueries({ queryKey: queryKeys.cardsVotes }),
-  });
-  return { query, toggle };
 }

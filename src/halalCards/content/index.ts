@@ -1,17 +1,19 @@
 import type { Activity, Adventure } from '../types.ts';
 import { backgroundNoise } from './adventures/backgroundNoise.ts';
-import { ADVENTURE_CONCEPTS } from './adventures/concepts.ts';
 import { fajrAlarm } from './adventures/fajrAlarm.ts';
 import { firstRamadan } from './adventures/firstRamadan.ts';
+import { longWay } from './adventures/longWay.ts';
 import { mahrConversation } from './adventures/mahrConversation.ts';
 import { oldFriend } from './adventures/oldFriend.ts';
 import { publicPrivate } from './adventures/publicPrivate.ts';
+import { raisedVoice } from './adventures/raisedVoice.ts';
 import { readAt1142 } from './adventures/readAt1142.ts';
 import { startingOver } from './adventures/startingOver.ts';
 import { theBrother } from './adventures/theBrother.ts';
 import { theOffer } from './adventures/theOffer.ts';
 import { threeInTheMorning } from './adventures/threeInTheMorning.ts';
 import { upstairsRoom } from './adventures/upstairsRoom.ts';
+import { whoseWedding } from './adventures/whoseWedding.ts';
 import { LAB_LESSONS } from './lab.ts';
 import { QUIZZES } from './quizzes.ts';
 
@@ -33,6 +35,9 @@ export const ADVENTURES: Adventure[] = [
   backgroundNoise,
   startingOver,
   theBrother,
+  whoseWedding,
+  longWay,
+  raisedVoice,
 ];
 
 export const ALL_ACTIVITIES: Activity[] = [...LAB_LESSONS, ...QUIZZES, ...ADVENTURES];
@@ -43,4 +48,4 @@ export function findActivity(id: string): Activity | undefined {
   return byId.get(id);
 }
 
-export { ADVENTURE_CONCEPTS, LAB_LESSONS, QUIZZES };
+export { LAB_LESSONS, QUIZZES };

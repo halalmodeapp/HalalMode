@@ -6,9 +6,9 @@ import { Illustration, OverlayText } from '@/components/halalCards/Illustration'
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
-import { ADVENTURE_CONCEPTS, ADVENTURES, LAB_LESSONS, QUIZZES } from '@/halalCards/content';
+import { ADVENTURES, LAB_LESSONS, QUIZZES } from '@/halalCards/content';
 import { useCardsCopy } from '@/halalCards/copy';
-import { useCardsAccess, useConceptVotes } from '@/halalCards/hooks';
+import { useCardsAccess, useCardsSummary } from '@/halalCards/hooks';
 import { backOr, cardsPaths } from '@/halalCards/navigation';
 import { inTrack, showFormatEyebrow } from '@/halalCards/present';
 import type { Activity, ActivityKind } from '@/halalCards/types';
@@ -25,8 +25,11 @@ export default function SectionScreen() {
   const copy = useCardsCopy();
   const reducedMotion = useReducedMotion();
   const access = useCardsAccess(id);
-  const votes = useConceptVotes();
   const track = access.data?.track ?? 'getting_to_know';
+  // Played to the end at least once: shown faded, with a tick, so a couple
+  // can see at a glance what they have finished.
+  const summary = useCardsSummary(id);
+  const completed = new Set((summary.data ?? []).filter((item) => item.status === 'completed').map((item) => item.activityId));
   const activities: Activity[] = kind === 'lab' ? LAB_LESSONS : kind === 'quiz' ? QUIZZES : ADVENTURES;
   // Engaged and married content waits, unseen, until a couple unlocks that
   // stage together — a later feature. Only what suits them now is listed.
@@ -55,13 +58,15 @@ export default function SectionScreen() {
                     <Pressable
                       accessibilityRole="button"
                       onPress={() => open(activity)}
-                      style={({ pressed }) => [styles.tile, pressed && styles.pressed]}
+                      accessibilityLabel={completed.has(activity.id) ? `${activity.title}, ${copy('completed')}` : activity.title}
+                      style={({ pressed }) => [styles.tile, completed.has(activity.id) && styles.tileDone, pressed && styles.pressed]}
                     >
                       <Illustration image={activity.cover} aspectRatio={4 / 5} thumb>
                         {quiz && showFormatEyebrow(quiz, label) ? <OverlayText kind="eyebrow" numberOfLines={1}>{label}</OverlayText> : null}
                         <OverlayText kind="title" numberOfLines={3}>{activity.title}</OverlayText>
                         <OverlayText kind="body">{copy('minutes', { count: activity.minutes })}</OverlayText>
                       </Illustration>
+                      {completed.has(activity.id) ? <DoneMark label={copy('completed')} /> : null}
                     </Pressable>
                   </Animated.View>
                 );
@@ -73,7 +78,8 @@ export default function SectionScreen() {
                 <Pressable
                   accessibilityRole="button"
                   onPress={() => open(activity)}
-                  style={({ pressed }) => [styles.tile, pressed && styles.pressed]}
+                  accessibilityLabel={completed.has(activity.id) ? `${activity.title}, ${copy('completed')}` : activity.title}
+                  style={({ pressed }) => [styles.tile, completed.has(activity.id) && styles.tileDone, pressed && styles.pressed]}
                 >
                   <Illustration image={activity.cover} aspectRatio={kind === 'adventure' ? 4 / 5 : 16 / 10} thumb>
                     <OverlayText kind="eyebrow">
@@ -86,43 +92,28 @@ export default function SectionScreen() {
                     <OverlayText kind={kind === 'adventure' ? 'titleLarge' : 'title'}>{activity.title}</OverlayText>
                     <OverlayText kind="body">{activity.tagline}</OverlayText>
                   </Illustration>
+                  {completed.has(activity.id) ? <DoneMark label={copy('completed')} /> : null}
                 </Pressable>
               </Animated.View>
             ))
           )}
 
-          {kind === 'adventure' ? (
-            <View style={styles.soon}>
-              <Text variant="displaySmall">{copy('comingSoon')}</Text>
-              <Text variant="bodySmall">{copy('conceptsBlurb')}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.concepts}>
-                {ADVENTURE_CONCEPTS.map((concept) => {
-                  const voted = votes.query.data?.includes(concept.id) ?? false;
-                  return (
-                    <Pressable
-                      key={concept.id}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: voted }}
-                      onPress={() => votes.toggle.mutate(concept.id)}
-                      style={({ pressed }) => [styles.concept, pressed && styles.pressed]}
-                    >
-                      <Illustration image={concept.cover} aspectRatio={4 / 5} thumb>
-                        <OverlayText kind="eyebrow">{copy('comingSoon')}</OverlayText>
-                        <OverlayText kind="title" numberOfLines={2}>{concept.title}</OverlayText>
-                      </Illustration>
-                      <Text variant="caption" numberOfLines={3}>{concept.logline}</Text>
-                      <View style={[styles.vote, voted && styles.voteOn]}>
-                        <Text style={[styles.voteText, voted && styles.voteTextOn]}>{voted ? copy('notifyOn') : copy('notifyMe')}</Text>
-                      </View>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
-            </View>
-          ) : null}
         </View>
       </ScrollView>
     </Screen>
+  );
+}
+
+/** A darker veil and a tick in the corner for something finished. */
+function DoneMark({ label }: { label: string }) {
+  return (
+    <>
+      <View style={[StyleSheet.absoluteFill, styles.doneShade]} />
+      <View style={styles.doneBadge}>
+        <Text style={styles.doneTick}>✓</Text>
+        <Text style={styles.doneText}>{label}</Text>
+      </View>
+    </>
   );
 }
 
@@ -137,21 +128,25 @@ const styles = StyleSheet.create({
   },
   head: { gap: space.sm, marginBottom: space.sm },
   pressed: { opacity: 0.85, transform: [{ scale: 0.99 }] },
-  tile: { borderRadius: radius.lg, ...shadow.card, shadowOpacity: 0.1 },
+  tile: { borderRadius: radius.lg, overflow: 'hidden', ...shadow.card, shadowOpacity: 0.1 },
+  tileDone: { opacity: 0.82 },
+  doneShade: { backgroundColor: 'rgba(10,10,10,0.38)', borderRadius: radius.lg, pointerEvents: 'none' },
+  doneBadge: {
+    position: 'absolute',
+    top: space.sm,
+    right: space.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+    backgroundColor: color.goldGlow,
+    borderWidth: 1,
+    borderColor: alpha.onDarkLine,
+  },
+  doneTick: { fontFamily: font.bodyBold, fontSize: 12, color: '#3A2C10' },
+  doneText: { fontFamily: font.bodySemi, fontSize: 10.5, letterSpacing: 0.6, textTransform: 'uppercase', color: '#3A2C10' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md },
   quizTile: { flexBasis: '47%', flexGrow: 1 },
-  soon: { gap: space.sm, marginTop: space.lg },
-  concepts: { gap: space.md, paddingRight: space.gutter },
-  concept: { width: 172, gap: 6 },
-  vote: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: alpha.lineButton,
-  },
-  voteOn: { backgroundColor: color.goldGlow, borderColor: color.goldGlow },
-  voteText: { fontFamily: font.bodySemi, fontSize: 11, color: color.inkSoft },
-  voteTextOn: { color: '#3A2C10' },
 });
