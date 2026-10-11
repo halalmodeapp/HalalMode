@@ -61,6 +61,11 @@ from (
 ) member
 cross join halal_mode_private.legal_document_registry document
 where document.is_current;
+-- 0180: religion and ethnicity also need explicit sensitive-data consent.
+update profiles set sensitive_consent_at = now()
+where sensitive_consent_at is null
+  and id in (select user_id from halal_mode_private.member_legal_consent_history);
+
 
 -- A submitted historic round gives M2 a deliberate permanent pass on F2.
 insert into rounds (id, user_id, tier, opens_at, expires_at, submitted_at) values

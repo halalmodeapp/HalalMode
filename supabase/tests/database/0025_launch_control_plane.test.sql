@@ -26,8 +26,11 @@ select is(
   7,
   'all launch-controlled features, including reciprocal matching, have explicit flags'
 );
+-- Flags launched on purpose since: push notifications (0146), and sample
+-- members and tester tools, which reach only listed testers (0148, 0159).
 select ok(
-  (select bool_and(not enabled and rollout_percentage = 0) from halal_mode_private.release_flags),
+  (select bool_and(not enabled and rollout_percentage = 0) from halal_mode_private.release_flags
+   where key not in ('push_notifications', 'demo_introductions', 'tester_tools')),
   'high-risk flags fail closed'
 );
 

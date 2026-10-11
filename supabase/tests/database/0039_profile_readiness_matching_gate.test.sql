@@ -11,8 +11,9 @@ select ok(
   'the service scheduler retains authority to generate rounds'
 );
 select ok(
-  position('length(trim(bio)) >= 40' in pg_get_functiondef('public.profile_is_ready_for_matching(uuid)'::regprocedure)) > 0
-    and position('cardinality(photos) >= 1' in pg_get_functiondef('public.profile_is_ready_for_matching(uuid)'::regprocedure)) > 0,
+  -- 0173 raised the bio minimum and 0183 settled it at 50 characters.
+  position('length(trim(p.bio)) >= 50' in pg_get_functiondef('public.profile_is_ready_for_matching(uuid)'::regprocedure)) > 0
+    and position('cardinality(p.photos) >= 1' in pg_get_functiondef('public.profile_is_ready_for_matching(uuid)'::regprocedure)) > 0,
   'readiness requires a substantive bio and photo'
 );
 select ok(

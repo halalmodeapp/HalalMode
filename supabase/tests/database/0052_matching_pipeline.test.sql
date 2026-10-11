@@ -55,6 +55,11 @@ from (values
 ) member(id)
 cross join halal_mode_private.legal_document_registry document
 where document.is_current;
+-- 0180: religion and ethnicity also need explicit sensitive-data consent.
+update profiles set sensitive_consent_at = now()
+where sensitive_consent_at is null
+  and id in (select user_id from halal_mode_private.member_legal_consent_history);
+
 
 insert into connections (user_a, user_b) values
   ('00000000-0000-0000-0000-000000005203', '00000000-0000-0000-0000-000000005211'),

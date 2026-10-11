@@ -50,6 +50,8 @@ select ok(
   'the consent requirement helper is private'
 );
 
+-- Blocking and reporting are left out: 0165 keeps safety actions available
+-- to a member who has not yet accepted updated terms.
 select is(
   (
     with intended(signature) as (values
@@ -65,8 +67,6 @@ select is(
       ('public.send_message(uuid,text,text)'),
       ('public.mark_connection_messages_read(uuid)'),
       ('public.get_connection_messages(uuid,timestamp with time zone,uuid,integer)'),
-      ('public.report_connection_member(uuid,text)'),
-      ('public.block_connection_member(uuid)'),
       ('public.get_my_blocked_members()'),
       ('public.unblock_my_member(uuid)')
     )
@@ -76,7 +76,7 @@ select is(
       in pg_get_functiondef(signature::regprocedure)
     ) > 0
   ),
-  16,
+  14,
   'every intended member-facing RPC checks current legal consent first'
 );
 
@@ -192,6 +192,11 @@ insert into halal_mode_private.member_legal_consent_history (
 select '00000000-0000-0000-0000-000000000471', document_type, version, 'reacceptance'
 from halal_mode_private.legal_document_registry
 where is_current;
+-- 0180: religion and ethnicity also need explicit sensitive-data consent.
+update profiles set sensitive_consent_at = now()
+where sensitive_consent_at is null
+  and id in (select user_id from halal_mode_private.member_legal_consent_history);
+
 
 select set_config(
   'request.jwt.claims',

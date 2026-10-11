@@ -56,6 +56,11 @@ from (
 ) member
 cross join halal_mode_private.legal_document_registry document
 where document.is_current;
+-- 0180: religion and ethnicity also need explicit sensitive-data consent.
+update profiles set sensitive_consent_at = now()
+where sensitive_consent_at is null
+  and id in (select user_id from halal_mode_private.member_legal_consent_history);
+
 
 -- A/B will reach the repeat limit on this live appearance. C/D has declined
 -- far enough from its first score to support a score-collapse retirement.
@@ -321,6 +326,11 @@ insert into halal_mode_private.member_legal_consent_history (
 )
 select '00000000-0000-0000-0000-000000005899', document_type, version, 'onboarding'
 from halal_mode_private.legal_document_registry where is_current;
+-- 0180: religion and ethnicity also need explicit sensitive-data consent.
+update profiles set sensitive_consent_at = now()
+where sensitive_consent_at is null
+  and id in (select user_id from halal_mode_private.member_legal_consent_history);
+
 
 select throws_ok(
   format(

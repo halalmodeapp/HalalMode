@@ -105,7 +105,7 @@ insert into private_preferences (
 ) values
   ('00000000-0000-0000-0000-000000140001', 25, 35, 150, 190, array['Athletic'], array['Saudi Arabia'], 100, array['very_practicing']::religious_practice[], array['within_6_months']::marriage_timeline[], array['wants_children_soon']::family_goals[], array['sunni']::sect[], '{}', 180, 'Athletic', now()),
   ('00000000-0000-0000-0000-000000140002', 25, 50, 150, 190, array['Average'], array['Saudi Arabia'], 100, array['practicing']::religious_practice[], array['within_1_year']::marriage_timeline[], array['open_to_children']::family_goals[], array['sunni']::sect[], '{}', 175, 'Average', now()),
-  ('00000000-0000-0000-0000-000000140003', 25, 35, 150, 190, array['Slim'], array['Saudi Arabia'], 100, array['moderate']::religious_practice[], array['within_1_year']::marriage_timeline[], array['wants_children_later']::family_goals[], array['shia']::sect[], '{"age":true,"distance":true}', 178, 'Lean', now()),
+  ('00000000-0000-0000-0000-000000140003', 25, 35, 150, 190, array['Slim'], array['Saudi Arabia'], 100, array['moderate']::religious_practice[], array['within_1_year']::marriage_timeline[], array['wants_children_later']::family_goals[], array['shia']::sect[], '{"age":true,"distance":true}', 178, 'Slim', now()),
   ('00000000-0000-0000-0000-000000140004', 18, 70, 150, 200, '{}', array['Saudi Arabia'], 100, '{}', '{}', '{}', '{}', '{}', 165, 'Average', now()),
   ('00000000-0000-0000-0000-000000140005', 18, 70, 150, 200, '{}', array['Saudi Arabia'], 100, '{}', '{}', '{}', '{}', '{}', 168, 'Slim', now()),
   ('00000000-0000-0000-0000-000000140006', 18, 70, 150, 200, '{}', array['Saudi Arabia'], 100, '{}', '{}', '{}', '{}', '{}', 170, 'Athletic', now());
@@ -120,6 +120,11 @@ from (
 ) member
 cross join halal_mode_private.legal_document_registry document
 where document.is_current;
+-- 0180: religion and ethnicity also need explicit sensitive-data consent.
+update profiles set sensitive_consent_at = now()
+where sensitive_consent_at is null
+  and id in (select user_id from halal_mode_private.member_legal_consent_history);
+
 
 insert into halal_mode_private.pair_exposure (
   user_low, user_high, times_shown, first_reciprocal_score,
@@ -298,6 +303,11 @@ from (
 ) member
 cross join halal_mode_private.legal_document_registry document
 where document.is_current;
+-- 0180: religion and ethnicity also need explicit sensitive-data consent.
+update profiles set sensitive_consent_at = now()
+where sensitive_consent_at is null
+  and id in (select user_id from halal_mode_private.member_legal_consent_history);
+
 
 create temporary table set_large_context as
 select public.matching_run_start_service(

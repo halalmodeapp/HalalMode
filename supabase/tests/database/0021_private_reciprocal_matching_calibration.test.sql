@@ -64,6 +64,11 @@ where p.id in (
     '00000000-0000-0000-0000-000000000213'
   )
   and d.is_current;
+-- 0180: religion and ethnicity also need explicit sensitive-data consent.
+update profiles set sensitive_consent_at = now()
+where sensitive_consent_at is null
+  and id in (select user_id from halal_mode_private.member_legal_consent_history);
+
 insert into selection_scores (user_id, score) values
   ('00000000-0000-0000-0000-000000000211', 0.9000),
   ('00000000-0000-0000-0000-000000000212', 0.9000),

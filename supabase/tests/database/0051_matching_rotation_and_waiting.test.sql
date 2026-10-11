@@ -65,8 +65,9 @@ select is(
 -- the newest is the active one, and that it is the only one claiming to be.
 select is(
   halal_mode_private.active_matching_config_version(),
-  (select max(version) from halal_mode_private.matching_config),
-  'the newest configuration is the sole active version'
+  -- Newer rows can be inactive shadow candidates (Matcher V3, 20260813102643).
+  (select max(version) from halal_mode_private.matching_config where activated_at is not null),
+  'the newest activated configuration is the active version'
 );
 
 select is(

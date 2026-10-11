@@ -13,8 +13,9 @@ select is(
   'Premium members receive ten introductions'
 );
 select is(
-  (select keeps from tier_limits('premium')), 3,
-  'Premium members can keep three introductions'
+  -- 0150: Premium may send interest to the whole set of ten.
+  (select keeps from tier_limits('premium')), 10,
+  'Premium members can keep all ten introductions'
 );
 select is(
   (select open_connections from tier_limits('premium')), 10,
