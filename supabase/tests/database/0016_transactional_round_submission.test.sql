@@ -51,6 +51,11 @@ where p.id in (
     '00000000-0000-0000-0000-0000000000d4'
   )
   and d.is_current;
+-- 0180: religion and ethnicity also need explicit sensitive-data consent.
+update profiles set sensitive_consent_at = now()
+where sensitive_consent_at is null
+  and id in (select user_id from halal_mode_private.member_legal_consent_history);
+
 
 insert into selection_scores (user_id) values
   ('00000000-0000-0000-0000-0000000000a1'),
@@ -81,8 +86,9 @@ do $$ begin
 end $$;
 
 select throws_ok(
+  -- 0165: the public RPC rejects a set that is not the caller's own and open.
   $$ select submit_round_selections('00000000-0000-0000-0000-000000001002', '{}'::uuid[]) $$,
-  'P0002', 'Round not found',
+  '42501', 'This set is not open yet',
   'a member cannot submit another member round'
 );
 select throws_ok(
@@ -91,8 +97,10 @@ select throws_ok(
   'a foreign introduction is rejected'
 );
 select throws_ok(
-  $$ select submit_round_selections('00000000-0000-0000-0000-000000001001', array['00000000-0000-0000-0000-000000002001','00000000-0000-0000-0000-000000002003']::uuid[]) $$,
-  '22023', 'At most 1 selections allowed on this tier',
+  -- Free members may keep three since 0150; the limit is checked before the
+  -- ids are matched to the round, so four distinct ids are enough.
+  $$ select submit_round_selections('00000000-0000-0000-0000-000000001001', array['00000000-0000-0000-0000-000000002001','00000000-0000-0000-0000-000000002003','00000000-0000-0000-0000-000000002098','00000000-0000-0000-0000-000000002099']::uuid[]) $$,
+  '22023', 'At most 3 selections allowed on this tier',
   'tier keep limit is enforced before writes'
 );
 select is(

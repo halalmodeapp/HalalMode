@@ -21,8 +21,14 @@ select throws_ok(
   'Current legal documents must be accepted',
   'stale document versions are rejected against the registry'
 );
+-- Read the versions from the registry so a new document release does not
+-- break this contract.
 select lives_ok(
-  $$ select complete_onboarding('Consent Member', 'Consent', '1990-01-01', 'female', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, '2026-07-29', '2026-07-29') $$,
+  format(
+    $$ select complete_onboarding('Consent Member', 'Consent', '1990-01-01', 'female', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, %L, %L) $$,
+    (select version from halal_mode_private.legal_document_registry where document_type = 'terms' and is_current),
+    (select version from halal_mode_private.legal_document_registry where document_type = 'privacy' and is_current)
+  ),
   'current registry versions create the profile and immutable history'
 );
 

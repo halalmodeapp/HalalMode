@@ -45,6 +45,28 @@ insert into private_preferences (
 select ('00000000-0000-0000-0000-' || lpad(n::text, 12, '0'))::uuid,
        18, 50, array['Saudi Arabia'], 100, now()
 from generate_series(5801, 5806) n;
+-- 0173-0184: readiness now also asks for languages, education, children,
+-- dress (women), ethnicity, heritage, height, body type and a 50-character
+-- bio. Complete those for every member who was ready under the old rules.
+update profiles p set
+  bio = case when length(trim(p.bio)) between 40 and 49 then p.bio || repeat('.', 10) else p.bio end,
+  languages_spoken = case when cardinality(p.languages_spoken) = 0 then array['Arabic'] else p.languages_spoken end,
+  education = coalesce(nullif(trim(p.education), ''), 'Bachelors'),
+  has_children = coalesce(p.has_children, 'no'),
+  family_goals_answered_at = coalesce(p.family_goals_answered_at, now()),
+  religious_dress = case when p.gender::text = 'female' then coalesce(p.religious_dress, 'hijab') else p.religious_dress end,
+  ethnicities = case when cardinality(p.ethnicities) = 0 then array['arab'] else p.ethnicities end,
+  heritage_countries = case when cardinality(p.heritage_countries) = 0 then array['SA'] else p.heritage_countries end
+where cardinality(p.photos) >= 1
+  and length(trim(p.bio)) >= 40
+  and exists (
+    select 1 from private_preferences pp
+    where pp.user_id = p.id and pp.matching_preferences_completed_at is not null
+  );
+update private_preferences
+set own_height_cm = coalesce(own_height_cm, 170), own_build = coalesce(own_build, 'Average')
+where matching_preferences_completed_at is not null;
+
 
 insert into halal_mode_private.member_legal_consent_history (
   user_id, document_type, version, acceptance_context
@@ -56,6 +78,11 @@ from (
 ) member
 cross join halal_mode_private.legal_document_registry document
 where document.is_current;
+-- 0180: religion and ethnicity also need explicit sensitive-data consent.
+update profiles set sensitive_consent_at = now()
+where sensitive_consent_at is null
+  and id in (select user_id from halal_mode_private.member_legal_consent_history);
+
 
 -- A/B will reach the repeat limit on this live appearance. C/D has declined
 -- far enough from its first score to support a score-collapse retirement.
@@ -316,11 +343,38 @@ insert into private_preferences (
   '00000000-0000-0000-0000-000000005899', 18, 50,
   array['Saudi Arabia'], 100, now()
 );
+-- 0173-0184: readiness now also asks for languages, education, children,
+-- dress (women), ethnicity, heritage, height, body type and a 50-character
+-- bio. Complete those for every member who was ready under the old rules.
+update profiles p set
+  bio = case when length(trim(p.bio)) between 40 and 49 then p.bio || repeat('.', 10) else p.bio end,
+  languages_spoken = case when cardinality(p.languages_spoken) = 0 then array['Arabic'] else p.languages_spoken end,
+  education = coalesce(nullif(trim(p.education), ''), 'Bachelors'),
+  has_children = coalesce(p.has_children, 'no'),
+  family_goals_answered_at = coalesce(p.family_goals_answered_at, now()),
+  religious_dress = case when p.gender::text = 'female' then coalesce(p.religious_dress, 'hijab') else p.religious_dress end,
+  ethnicities = case when cardinality(p.ethnicities) = 0 then array['arab'] else p.ethnicities end,
+  heritage_countries = case when cardinality(p.heritage_countries) = 0 then array['SA'] else p.heritage_countries end
+where cardinality(p.photos) >= 1
+  and length(trim(p.bio)) >= 40
+  and exists (
+    select 1 from private_preferences pp
+    where pp.user_id = p.id and pp.matching_preferences_completed_at is not null
+  );
+update private_preferences
+set own_height_cm = coalesce(own_height_cm, 170), own_build = coalesce(own_build, 'Average')
+where matching_preferences_completed_at is not null;
+
 insert into halal_mode_private.member_legal_consent_history (
   user_id, document_type, version, acceptance_context
 )
 select '00000000-0000-0000-0000-000000005899', document_type, version, 'onboarding'
 from halal_mode_private.legal_document_registry where is_current;
+-- 0180: religion and ethnicity also need explicit sensitive-data consent.
+update profiles set sensitive_consent_at = now()
+where sensitive_consent_at is null
+  and id in (select user_id from halal_mode_private.member_legal_consent_history);
+
 
 select throws_ok(
   format(

@@ -79,14 +79,16 @@ select ok(
   'both RPCs derive the subject from the introduction id'
 );
 
+-- 0165: someone returning to stop harassment must not first have to accept
+-- updated terms, so safety actions are deliberately outside the consent gate.
 select ok(
-  position('require_current_legal_consents(v_viewer)' in pg_get_functiondef(
+  position('require_current_legal_consents' in pg_get_functiondef(
     'public.report_introduction_member(uuid,text)'::regprocedure
-  )) > 0
-  and position('require_current_legal_consents(v_viewer)' in pg_get_functiondef(
+  )) = 0
+  and position('require_current_legal_consents' in pg_get_functiondef(
     'public.block_introduction_member(uuid)'::regprocedure
-  )) > 0,
-  'both RPCs preserve the current legal-consent boundary'
+  )) = 0,
+  'both RPCs stay available without accepting updated terms'
 );
 
 select ok(
@@ -143,6 +145,28 @@ values
   ('00000000-0000-0000-0000-000000000481', now()),
   ('00000000-0000-0000-0000-000000000482', now()),
   ('00000000-0000-0000-0000-000000000483', now());
+-- 0173-0184: readiness now also asks for languages, education, children,
+-- dress (women), ethnicity, heritage, height, body type and a 50-character
+-- bio. Complete those for every member who was ready under the old rules.
+update profiles p set
+  bio = case when length(trim(p.bio)) between 40 and 49 then p.bio || repeat('.', 10) else p.bio end,
+  languages_spoken = case when cardinality(p.languages_spoken) = 0 then array['Arabic'] else p.languages_spoken end,
+  education = coalesce(nullif(trim(p.education), ''), 'Bachelors'),
+  has_children = coalesce(p.has_children, 'no'),
+  family_goals_answered_at = coalesce(p.family_goals_answered_at, now()),
+  religious_dress = case when p.gender::text = 'female' then coalesce(p.religious_dress, 'hijab') else p.religious_dress end,
+  ethnicities = case when cardinality(p.ethnicities) = 0 then array['arab'] else p.ethnicities end,
+  heritage_countries = case when cardinality(p.heritage_countries) = 0 then array['SA'] else p.heritage_countries end
+where cardinality(p.photos) >= 1
+  and length(trim(p.bio)) >= 40
+  and exists (
+    select 1 from private_preferences pp
+    where pp.user_id = p.id and pp.matching_preferences_completed_at is not null
+  );
+update private_preferences
+set own_height_cm = coalesce(own_height_cm, 170), own_build = coalesce(own_build, 'Average')
+where matching_preferences_completed_at is not null;
+
 
 insert into halal_mode_private.member_legal_consent_history
   (user_id, document_type, version, acceptance_context)
@@ -154,6 +178,11 @@ where p.id in (
   '00000000-0000-0000-0000-000000000482',
   '00000000-0000-0000-0000-000000000483'
 ) and d.is_current;
+-- 0180: religion and ethnicity also need explicit sensitive-data consent.
+update profiles set sensitive_consent_at = now()
+where sensitive_consent_at is null
+  and id in (select user_id from halal_mode_private.member_legal_consent_history);
+
 
 insert into rounds (id, user_id, tier, expires_at) values
   (

@@ -24,6 +24,11 @@ where p.id in (
   '00000000-0000-0000-0000-000000000281',
   '00000000-0000-0000-0000-000000000282'
 ) and d.is_current;
+-- 0180: religion and ethnicity also need explicit sensitive-data consent.
+update profiles set sensitive_consent_at = now()
+where sensitive_consent_at is null
+  and id in (select user_id from halal_mode_private.member_legal_consent_history);
+
 insert into connections (id, user_a, user_b, stage) values
   ('00000000-0000-0000-0000-000000000283', '00000000-0000-0000-0000-000000000281', '00000000-0000-0000-0000-000000000282', 'open');
 do $$ begin

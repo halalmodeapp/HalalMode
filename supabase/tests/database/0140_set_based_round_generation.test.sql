@@ -105,10 +105,32 @@ insert into private_preferences (
 ) values
   ('00000000-0000-0000-0000-000000140001', 25, 35, 150, 190, array['Athletic'], array['Saudi Arabia'], 100, array['very_practicing']::religious_practice[], array['within_6_months']::marriage_timeline[], array['wants_children_soon']::family_goals[], array['sunni']::sect[], '{}', 180, 'Athletic', now()),
   ('00000000-0000-0000-0000-000000140002', 25, 50, 150, 190, array['Average'], array['Saudi Arabia'], 100, array['practicing']::religious_practice[], array['within_1_year']::marriage_timeline[], array['open_to_children']::family_goals[], array['sunni']::sect[], '{}', 175, 'Average', now()),
-  ('00000000-0000-0000-0000-000000140003', 25, 35, 150, 190, array['Slim'], array['Saudi Arabia'], 100, array['moderate']::religious_practice[], array['within_1_year']::marriage_timeline[], array['wants_children_later']::family_goals[], array['shia']::sect[], '{"age":true,"distance":true}', 178, 'Lean', now()),
+  ('00000000-0000-0000-0000-000000140003', 25, 35, 150, 190, array['Slim'], array['Saudi Arabia'], 100, array['moderate']::religious_practice[], array['within_1_year']::marriage_timeline[], array['wants_children_later']::family_goals[], array['shia']::sect[], '{"age":true,"distance":true}', 178, 'Slim', now()),
   ('00000000-0000-0000-0000-000000140004', 18, 70, 150, 200, '{}', array['Saudi Arabia'], 100, '{}', '{}', '{}', '{}', '{}', 165, 'Average', now()),
   ('00000000-0000-0000-0000-000000140005', 18, 70, 150, 200, '{}', array['Saudi Arabia'], 100, '{}', '{}', '{}', '{}', '{}', 168, 'Slim', now()),
   ('00000000-0000-0000-0000-000000140006', 18, 70, 150, 200, '{}', array['Saudi Arabia'], 100, '{}', '{}', '{}', '{}', '{}', 170, 'Athletic', now());
+-- 0173-0184: readiness now also asks for languages, education, children,
+-- dress (women), ethnicity, heritage, height, body type and a 50-character
+-- bio. Complete those for every member who was ready under the old rules.
+update profiles p set
+  bio = case when length(trim(p.bio)) between 40 and 49 then p.bio || repeat('.', 10) else p.bio end,
+  languages_spoken = case when cardinality(p.languages_spoken) = 0 then array['Arabic'] else p.languages_spoken end,
+  education = coalesce(nullif(trim(p.education), ''), 'Bachelors'),
+  has_children = coalesce(p.has_children, 'no'),
+  family_goals_answered_at = coalesce(p.family_goals_answered_at, now()),
+  religious_dress = case when p.gender::text = 'female' then coalesce(p.religious_dress, 'hijab') else p.religious_dress end,
+  ethnicities = case when cardinality(p.ethnicities) = 0 then array['arab'] else p.ethnicities end,
+  heritage_countries = case when cardinality(p.heritage_countries) = 0 then array['SA'] else p.heritage_countries end
+where cardinality(p.photos) >= 1
+  and length(trim(p.bio)) >= 40
+  and exists (
+    select 1 from private_preferences pp
+    where pp.user_id = p.id and pp.matching_preferences_completed_at is not null
+  );
+update private_preferences
+set own_height_cm = coalesce(own_height_cm, 170), own_build = coalesce(own_build, 'Average')
+where matching_preferences_completed_at is not null;
+
 
 insert into halal_mode_private.member_legal_consent_history (
   user_id, document_type, version, acceptance_context
@@ -120,6 +142,11 @@ from (
 ) member
 cross join halal_mode_private.legal_document_registry document
 where document.is_current;
+-- 0180: religion and ethnicity also need explicit sensitive-data consent.
+update profiles set sensitive_consent_at = now()
+where sensitive_consent_at is null
+  and id in (select user_id from halal_mode_private.member_legal_consent_history);
+
 
 insert into halal_mode_private.pair_exposure (
   user_low, user_high, times_shown, first_reciprocal_score,
@@ -287,6 +314,28 @@ select
   ('00000000-0000-0000-0000-' || lpad(n::text, 12, '0'))::uuid,
   18, 70, array['Saudi Arabia'], 1000, now()
 from generate_series(141001, 141088) n;
+-- 0173-0184: readiness now also asks for languages, education, children,
+-- dress (women), ethnicity, heritage, height, body type and a 50-character
+-- bio. Complete those for every member who was ready under the old rules.
+update profiles p set
+  bio = case when length(trim(p.bio)) between 40 and 49 then p.bio || repeat('.', 10) else p.bio end,
+  languages_spoken = case when cardinality(p.languages_spoken) = 0 then array['Arabic'] else p.languages_spoken end,
+  education = coalesce(nullif(trim(p.education), ''), 'Bachelors'),
+  has_children = coalesce(p.has_children, 'no'),
+  family_goals_answered_at = coalesce(p.family_goals_answered_at, now()),
+  religious_dress = case when p.gender::text = 'female' then coalesce(p.religious_dress, 'hijab') else p.religious_dress end,
+  ethnicities = case when cardinality(p.ethnicities) = 0 then array['arab'] else p.ethnicities end,
+  heritage_countries = case when cardinality(p.heritage_countries) = 0 then array['SA'] else p.heritage_countries end
+where cardinality(p.photos) >= 1
+  and length(trim(p.bio)) >= 40
+  and exists (
+    select 1 from private_preferences pp
+    where pp.user_id = p.id and pp.matching_preferences_completed_at is not null
+  );
+update private_preferences
+set own_height_cm = coalesce(own_height_cm, 170), own_build = coalesce(own_build, 'Average')
+where matching_preferences_completed_at is not null;
+
 
 insert into halal_mode_private.member_legal_consent_history (
   user_id, document_type, version, acceptance_context
@@ -298,6 +347,11 @@ from (
 ) member
 cross join halal_mode_private.legal_document_registry document
 where document.is_current;
+-- 0180: religion and ethnicity also need explicit sensitive-data consent.
+update profiles set sensitive_consent_at = now()
+where sensitive_consent_at is null
+  and id in (select user_id from halal_mode_private.member_legal_consent_history);
+
 
 create temporary table set_large_context as
 select public.matching_run_start_service(

@@ -17,13 +17,13 @@ select ok(
   'queue outcomes cannot be inspected by clients'
 );
 select ok(
-  position('get_current_round()' in pg_get_functiondef('public.get_current_round_state()'::regprocedure)) > 0
-  and position('member_has_current_legal_consents' in pg_get_functiondef('public.get_current_round_state()'::regprocedure)) > 0,
+  position('get_current_round()' in pg_get_functiondef('halal_mode_private.get_current_round_state_before_answer_gate()'::regprocedure)) > 0
+  and position('member_has_current_legal_consents' in pg_get_functiondef('halal_mode_private.get_current_round_state_before_answer_gate()'::regprocedure)) > 0,
   'ready cards and legal consent retain their reviewed sources'
 );
 select ok(
-  position('passes_criteria' in pg_get_functiondef('public.get_current_round_state()'::regprocedure)) = 0
-  and position('selection_scores' in pg_get_functiondef('public.get_current_round_state()'::regprocedure)) = 0,
+  position('passes_criteria' in pg_get_functiondef('halal_mode_private.get_current_round_state_before_answer_gate()'::regprocedure)) = 0
+  and position('selection_scores' in pg_get_functiondef('halal_mode_private.get_current_round_state_before_answer_gate()'::regprocedure)) = 0,
   'empty-state explanations do not inspect candidates or private scores'
 );
 
@@ -61,6 +61,28 @@ insert into profiles (
 insert into private_preferences (user_id, matching_preferences_completed_at) values
   ('00000000-0000-0000-0000-000000005301', now()),
   ('00000000-0000-0000-0000-000000005303', now());
+-- 0173-0184: readiness now also asks for languages, education, children,
+-- dress (women), ethnicity, heritage, height, body type and a 50-character
+-- bio. Complete those for every member who was ready under the old rules.
+update profiles p set
+  bio = case when length(trim(p.bio)) between 40 and 49 then p.bio || repeat('.', 10) else p.bio end,
+  languages_spoken = case when cardinality(p.languages_spoken) = 0 then array['Arabic'] else p.languages_spoken end,
+  education = coalesce(nullif(trim(p.education), ''), 'Bachelors'),
+  has_children = coalesce(p.has_children, 'no'),
+  family_goals_answered_at = coalesce(p.family_goals_answered_at, now()),
+  religious_dress = case when p.gender::text = 'female' then coalesce(p.religious_dress, 'hijab') else p.religious_dress end,
+  ethnicities = case when cardinality(p.ethnicities) = 0 then array['arab'] else p.ethnicities end,
+  heritage_countries = case when cardinality(p.heritage_countries) = 0 then array['SA'] else p.heritage_countries end
+where cardinality(p.photos) >= 1
+  and length(trim(p.bio)) >= 40
+  and exists (
+    select 1 from private_preferences pp
+    where pp.user_id = p.id and pp.matching_preferences_completed_at is not null
+  );
+update private_preferences
+set own_height_cm = coalesce(own_height_cm, 170), own_build = coalesce(own_build, 'Average')
+where matching_preferences_completed_at is not null;
+
 insert into halal_mode_private.member_legal_consent_history (
   user_id, document_type, version, acceptance_context
 )
@@ -71,6 +93,11 @@ from (values
 ) member(id)
 cross join halal_mode_private.legal_document_registry document
 where document.is_current;
+-- 0180: religion and ethnicity also need explicit sensitive-data consent.
+update profiles set sensitive_consent_at = now()
+where sensitive_consent_at is null
+  and id in (select user_id from halal_mode_private.member_legal_consent_history);
+
 
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000005301","role":"authenticated"}', true);
 select is(
