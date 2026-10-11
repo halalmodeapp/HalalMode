@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import {
   ADVENTURES,
@@ -40,6 +41,7 @@ import { sessionCue } from '../src/halalCards/status';
 import { canStartSession } from '../src/halalCards/access';
 import { activityStrings, placeholdersOf, translateActivity } from '../src/halalCards/i18n';
 import type { Adventure, AdventureState, CardsSession, Quiz } from '../src/halalCards/types';
+import { SITE_COUNTS_PATH, siteCountsScript } from '../src/halalCards/siteCounts';
 
 function session(partial: Partial<CardsSession> & Pick<CardsSession, 'state' | 'activityId'>): CardsSession {
   return {
@@ -520,4 +522,10 @@ test('every translation file present is complete and keeps its placeholders', as
       assert.deepEqual(placeholdersOf(text!), placeholdersOf(english), `${file}: ${key} keeps its placeholders`);
     }
   }
+});
+
+test('the website states the catalogue as it is', () => {
+  // halalmo.de reads its Halal Cards numbers from this generated file.
+  const onDisk = readFileSync(SITE_COUNTS_PATH, 'utf8').replace(/\r\n/g, '\n');
+  assert.equal(onDisk, siteCountsScript(), `${SITE_COUNTS_PATH} is out of date: run npm run cards:strings`);
 });

@@ -11,6 +11,9 @@ import { cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 const branch = process.argv[2] === 'preview' ? 'app-preview' : 'main';
 const run = (command) => execSync(command, { stdio: 'inherit' });
 
+// The website's Halal Cards numbers come from the catalogue being shipped.
+run('npm run cards:strings');
+
 rmSync('dist/web', { recursive: true, force: true });
 rmSync('dist/pages', { recursive: true, force: true });
 // --clear: environment values are baked into cached build output, so a

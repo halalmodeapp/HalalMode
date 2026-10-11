@@ -34,8 +34,8 @@
       feature3Title: 'Earn the conversation.',
       feature3Body: 'You both answer meaningful icebreakers before you can chat freely, and you only see their answers once you’ve answered too.',
       feature4Title: 'Halal Cards: learn together, and have fun.',
-      feature4Body: 'The Relationship Lab is a set of short workshops: you each answer real-life scenarios privately, then see where every choice leads and talk it through. There are relationship quizzes and choose-your-own-adventure stories too — for learning, getting to know each other, and fun.',
-      feature4Free: 'Two are free to try on your own: a Lab workshop and a story. Halal Mode Premium opens all 35 — 4 Lab workshops with 13 scenarios, 16 quizzes for every stage and 15 stories — to play with any match, who plays free.'
+      feature4Body: 'The Relationship Lab is a set of short workshops: you each answer real-life scenarios privately, then see where every choice leads and talk it through. There are also relationship quizzes and choose-your-own-adventure stories. It is all for learning, getting to know each other, and fun.',
+      feature4Free: '{{free}} are free to try on your own. Halal Mode Premium opens all {{total}}: {{lab}} Lab workshops with {{scenarios}} scenarios, {{quizzes}} quizzes for every stage and {{stories}} stories. Play them with any match, and they play free.'
     },
     ar: {
       language: 'اختر اللغة', navHow: 'كيف يشتغل', heroTitle: 'الزواج يستاهل جدّية.',
@@ -61,8 +61,8 @@
       feature3Title: 'خلّوا الحوار يبدأ بمعنى.',
       feature3Body: 'كل واحد منكم يجاوب على أسئلة تعارف لها معنى قبل ما تفتح المحادثة. وما تشوف إجابات الطرف الثاني إلا بعد ما تجاوب أنت أيضًا.',
       feature4Title: 'بطاقات حلال: تعلّموا مع بعض، واستمتعوا.',
-      feature4Body: 'مختبر العلاقات ورش قصيرة: كل واحد منكم يجاوب بسرّية على مواقف من الحياة الحقيقية، بعدها تشوفون وين يوصل كل اختيار وتتكلمون عنه. وفيه كمان اختبارات عن العلاقة وقصص تختارون أنتم مسارها — للتعلّم، وللتعارف، وللمتعة.',
-      feature4Free: 'تقدر تجرّب اثنين مجانًا لوحدك: ورشة من المختبر وقصة. وحلال مود Premium يفتح لك الـ35 كلها — 4 ورش فيها 13 موقفًا، و16 اختبارًا لكل مرحلة، و15 قصة — تلعبونها مع أي تعارف، والطرف الثاني يلعب مجانًا.'
+      feature4Body: 'مختبر العلاقات ورش قصيرة: كل واحد منكم يجاوب بسرّية على مواقف من الحياة الحقيقية، بعدها تشوفون وين يوصل كل اختيار وتتكلمون عنه. وفيه كمان اختبارات عن العلاقة وقصص تختارون أنتم مسارها. كلها للتعلّم، وللتعارف، وللمتعة.',
+      feature4Free: 'تقدر تجرّب بعضها مجانًا لوحدك ({{free}}). وحلال مود Premium يفتحها كلها ({{total}}): ورش المختبر ({{lab}}) بمواقفها ({{scenarios}})، واختبارات لكل مرحلة ({{quizzes}})، وقصص ({{stories}}). العبوها مع أي تعارف، والطرف الثاني يلعب مجانًا.'
     },
     ur: {
       language: 'زبان چنیں', navHow: 'یہ کیسے کام کرتا ہے', heroTitle: 'شادی، سنجیدگی کے ساتھ۔',
@@ -88,8 +88,8 @@
       feature3Title: 'بات چیت سے پہلے ایک دوسرے کو سمجھیں۔',
       feature3Body: 'کھل کر بات کرنے سے پہلے آپ دونوں تعارف کے چند اچھے سوالوں کے جواب دیتے ہیں۔ دوسرے کے جواب تبھی نظر آتے ہیں جب آپ بھی جواب دے چکے ہوں۔',
       feature4Title: 'حلال کارڈز: ساتھ سیکھیں، اور مزہ کریں۔',
-      feature4Body: 'ریلیشن شپ لیب مختصر ورکشاپس کا مجموعہ ہے: آپ دونوں الگ الگ حقیقی زندگی کے منظرناموں کا جواب دیتے ہیں، پھر دیکھتے ہیں کہ ہر انتخاب کہاں لے جاتا ہے اور اس پر بات کرتے ہیں۔ ساتھ میں رشتے کے کوئز اور اپنی راہ خود چننے والی کہانیاں بھی ہیں — سیکھنے، ایک دوسرے کو جاننے اور مزے کے لیے۔',
-      feature4Free: 'دو چیزیں اکیلے مفت آزما سکتے ہیں: لیب کی ایک ورکشاپ اور ایک کہانی۔ حلال موڈ Premium تمام 35 کھول دیتا ہے — 13 منظرناموں والی 4 ورکشاپس، ہر مرحلے کے لیے 16 کوئز اور 15 کہانیاں — کسی بھی میچ کے ساتھ کھیلیں، ان کے لیے مفت۔'
+      feature4Body: 'ریلیشن شپ لیب مختصر ورکشاپس کا مجموعہ ہے: آپ دونوں الگ الگ حقیقی زندگی کے منظرناموں کا جواب دیتے ہیں، پھر دیکھتے ہیں کہ ہر انتخاب کہاں لے جاتا ہے اور اس پر بات کرتے ہیں۔ ساتھ میں رشتے کے کوئز اور اپنی راہ خود چننے والی کہانیاں بھی ہیں۔ یہ سب سیکھنے، ایک دوسرے کو جاننے اور مزے کے لیے ہے۔',
+      feature4Free: '{{free}} چیزیں اکیلے مفت آزما سکتے ہیں۔ حلال موڈ Premium تمام {{total}} کھول دیتا ہے: {{scenarios}} منظرناموں والی {{lab}} ورکشاپس، ہر مرحلے کے لیے {{quizzes}} کوئز اور {{stories}} کہانیاں۔ کسی بھی میچ کے ساتھ کھیلیں، ان کے لیے مفت۔'
     },
     hi: {
       language: 'भाषा चुनें', navHow: 'यह कैसे काम करता है', heroTitle: 'शादी को संजीदगी से लें।',
@@ -115,8 +115,8 @@
       feature3Title: 'बातचीत की शुरुआत मायने रखे।',
       feature3Body: 'खुलकर चैट करने से पहले आप दोनों कुछ अच्छे सवालों के जवाब देते हैं। उनके जवाब तभी दिखेंगे जब आप भी जवाब दे चुके होंगे।',
       feature4Title: 'हलाल कार्ड्स: साथ सीखें, और मज़े करें।',
-      feature4Body: 'रिलेशनशिप लैब छोटी-छोटी वर्कशॉप का सेट है: आप दोनों अलग-अलग असल ज़िंदगी की परिस्थितियों का जवाब देते हैं, फिर देखते हैं कि हर फ़ैसला कहाँ ले जाता है और उस पर बात करते हैं। साथ में रिश्तों पर क्विज़ और अपनी राह खुद चुनने वाली कहानियाँ भी हैं — सीखने, एक-दूसरे को जानने और मज़े के लिए।',
-      feature4Free: 'दो चीज़ें आप अकेले मुफ़्त आज़मा सकते हैं: लैब की एक वर्कशॉप और एक कहानी। हलाल मोड Premium सभी 35 खोल देता है — 13 परिस्थितियों वाली 4 वर्कशॉप, हर पड़ाव के लिए 16 क्विज़ और 15 कहानियाँ — किसी भी मैच के साथ खेलें, उनके लिए मुफ़्त।'
+      feature4Body: 'रिलेशनशिप लैब छोटी-छोटी वर्कशॉप का सेट है: आप दोनों अलग-अलग असल ज़िंदगी की परिस्थितियों का जवाब देते हैं, फिर देखते हैं कि हर फ़ैसला कहाँ ले जाता है और उस पर बात करते हैं। साथ में रिश्तों पर क्विज़ और अपनी राह खुद चुनने वाली कहानियाँ भी हैं। यह सब सीखने, एक-दूसरे को जानने और मज़े के लिए है।',
+      feature4Free: '{{free}} चीज़ें आप अकेले मुफ़्त आज़मा सकते हैं। हलाल मोड Premium सभी {{total}} खोल देता है: {{scenarios}} परिस्थितियों वाली {{lab}} वर्कशॉप, हर पड़ाव के लिए {{quizzes}} क्विज़ और {{stories}} कहानियाँ। किसी भी मैच के साथ खेलें, उनके लिए मुफ़्त।'
     },
     id: {
       language: 'Pilih bahasa', navHow: 'Cara kerjanya', heroTitle: 'Menikah, dengan niat yang jelas.',
@@ -142,8 +142,8 @@
       feature3Title: 'Mulai obrolan dengan sungguh-sungguh.',
       feature3Body: 'Kalian berdua menjawab pertanyaan perkenalan yang bermakna sebelum bisa mengobrol bebas. Jawaban mereka baru terlihat setelah kamu menjawab juga.',
       feature4Title: 'Halal Cards: belajar bersama, dan bersenang-senang.',
-      feature4Body: 'Relationship Lab adalah rangkaian lokakarya singkat: kalian masing-masing menjawab skenario kehidupan nyata secara pribadi, lalu melihat ke mana setiap pilihan membawa dan membicarakannya. Ada juga kuis hubungan dan cerita pilih jalanmu sendiri — untuk belajar, saling mengenal, dan bersenang-senang.',
-      feature4Free: 'Dua bisa dicoba gratis sendiri: satu lokakarya Lab dan satu cerita. Halal Mode Premium membuka semua 35 — 4 lokakarya Lab dengan 13 skenario, 16 kuis untuk setiap tahap, dan 15 cerita — untuk dimainkan dengan siapa pun yang cocok, gratis untuknya.'
+      feature4Body: 'Relationship Lab adalah rangkaian lokakarya singkat: kalian masing-masing menjawab skenario kehidupan nyata secara pribadi, lalu melihat ke mana setiap pilihan membawa dan membicarakannya. Ada juga kuis hubungan dan cerita pilih jalanmu sendiri. Semuanya untuk belajar, saling mengenal, dan bersenang-senang.',
+      feature4Free: '{{free}} bisa dicoba gratis sendiri. Halal Mode Premium membuka semua {{total}}: {{lab}} lokakarya Lab dengan {{scenarios}} skenario, {{quizzes}} kuis untuk setiap tahap, dan {{stories}} cerita. Mainkan dengan siapa pun yang cocok, gratis untuknya.'
     },
     ms: {
       language: 'Pilih bahasa', navHow: 'Cara ia berfungsi', heroTitle: 'Perkahwinan, dengan niat yang jelas.',
@@ -169,8 +169,8 @@
       feature3Title: 'Mulakan perbualan dengan lebih bermakna.',
       feature3Body: 'Anda berdua jawab soalan perkenalan yang bermakna sebelum boleh berbual bebas. Jawapan mereka hanya dapat dilihat selepas anda menjawab juga.',
       feature4Title: 'Halal Cards: belajar bersama, dan berseronok.',
-      feature4Body: 'Relationship Lab ialah siri bengkel ringkas: anda berdua menjawab senario kehidupan sebenar secara peribadi, kemudian melihat ke mana setiap pilihan membawa dan membincangkannya. Ada juga kuiz hubungan dan cerita pilih jalan sendiri — untuk belajar, mengenali satu sama lain, dan berseronok.',
-      feature4Free: 'Dua boleh dicuba percuma sendiri: satu bengkel Lab dan satu cerita. Halal Mode Premium membuka kesemua 35 — 4 bengkel Lab dengan 13 senario, 16 kuiz untuk setiap peringkat dan 15 cerita — untuk dimainkan dengan sesiapa padanan anda, percuma untuknya.'
+      feature4Body: 'Relationship Lab ialah siri bengkel ringkas: anda berdua menjawab senario kehidupan sebenar secara peribadi, kemudian melihat ke mana setiap pilihan membawa dan membincangkannya. Ada juga kuiz hubungan dan cerita pilih jalan sendiri. Semuanya untuk belajar, mengenali satu sama lain, dan berseronok.',
+      feature4Free: '{{free}} boleh dicuba percuma sendiri. Halal Mode Premium membuka kesemua {{total}}: {{lab}} bengkel Lab dengan {{scenarios}} senario, {{quizzes}} kuiz untuk setiap peringkat dan {{stories}} cerita. Mainkan dengan sesiapa padanan anda, percuma untuknya.'
     },
     bn: {
       language: 'ভাষা বেছে নিন', navHow: 'যেভাবে কাজ করে', heroTitle: 'বিয়েকে গুরুত্ব দিয়ে।',
@@ -196,8 +196,8 @@
       feature3Title: 'কথা শুরু হোক বুঝেশুনে।',
       feature3Body: 'খোলামেলা চ্যাটের আগে আপনারা দুজনই কিছু অর্থপূর্ণ পরিচয়মূলক প্রশ্নের উত্তর দেবেন। নিজের উত্তর দেওয়ার পরেই অন্যজনের উত্তর দেখতে পাবেন।',
       feature4Title: 'হালাল কার্ডস: একসাথে শিখুন, আর মজা করুন।',
-      feature4Body: 'রিলেশনশিপ ল্যাব হলো ছোট ছোট কর্মশালা: আপনারা দুজনই আলাদাভাবে বাস্তব জীবনের পরিস্থিতির উত্তর দেন, তারপর দেখেন প্রতিটি সিদ্ধান্ত কোথায় নিয়ে যায় এবং তা নিয়ে কথা বলেন। সাথে আছে সম্পর্ক নিয়ে কুইজ আর নিজের পথ বেছে নেওয়ার গল্প — শেখা, একে অপরকে জানা আর মজার জন্য।',
-      feature4Free: 'দুটি একা বিনামূল্যে চেষ্টা করতে পারেন: ল্যাবের একটি কর্মশালা আর একটি গল্প। হালাল মোড Premium খুলে দেয় সব 35টি — 13টি পরিস্থিতিসহ 4টি কর্মশালা, প্রতিটি পর্যায়ের জন্য 16টি কুইজ আর 15টি গল্প — যেকোনো ম্যাচের সাথে খেলুন, তাঁর জন্য বিনামূল্যে।'
+      feature4Body: 'রিলেশনশিপ ল্যাব হলো ছোট ছোট কর্মশালা: আপনারা দুজনই আলাদাভাবে বাস্তব জীবনের পরিস্থিতির উত্তর দেন, তারপর দেখেন প্রতিটি সিদ্ধান্ত কোথায় নিয়ে যায় এবং তা নিয়ে কথা বলেন। সাথে আছে সম্পর্ক নিয়ে কুইজ আর নিজের পথ বেছে নেওয়ার গল্প। সবই শেখা, একে অপরকে জানা আর মজার জন্য।',
+      feature4Free: '{{free}}টি একা বিনামূল্যে চেষ্টা করতে পারেন। হালাল মোড Premium খুলে দেয় সব {{total}}টি: {{scenarios}}টি পরিস্থিতিসহ {{lab}}টি কর্মশালা, প্রতিটি পর্যায়ের জন্য {{quizzes}}টি কুইজ আর {{stories}}টি গল্প। যেকোনো ম্যাচের সাথে খেলুন, তাঁর জন্য বিনামূল্যে।'
     },
     fr: {
       language: 'Choisir la langue', navHow: 'Comment ça marche', heroTitle: 'Le mariage mérite qu’on s’y attarde.',
@@ -223,8 +223,8 @@
       feature3Title: 'Une conversation qui se mérite.',
       feature3Body: 'Avant de discuter librement, vous répondez tous les deux à des questions pour faire connaissance. Vous ne voyez ses réponses qu’après avoir donné les vôtres.',
       feature4Title: 'Halal Cards : apprendre ensemble, et s’amuser.',
-      feature4Body: 'Le Relationship Lab, ce sont de courts ateliers : chacun répond en privé à des situations de la vie réelle, puis vous découvrez où mène chaque choix et vous en parlez. Il y a aussi des quiz sur le couple et des histoires dont vous choisissez la suite — pour apprendre, faire connaissance et s’amuser.',
-      feature4Free: 'Deux sont à essayer gratuitement, seul : un atelier du Lab et une histoire. Halal Mode Premium ouvre les 35 — 4 ateliers avec 13 situations, 16 quiz pour chaque étape et 15 histoires — à jouer avec n’importe quel contact, gratuitement pour l’autre.'
+      feature4Body: 'Le Relationship Lab, ce sont de courts ateliers : chacun répond en privé à des situations de la vie réelle, puis vous découvrez où mène chaque choix et vous en parlez. Il y a aussi des quiz sur le couple et des histoires dont vous choisissez la suite. Le tout pour apprendre, faire connaissance et s’amuser.',
+      feature4Free: '{{free}} sont à essayer gratuitement, seul. Halal Mode Premium ouvre les {{total}} : {{lab}} ateliers avec {{scenarios}} situations, {{quizzes}} quiz pour chaque étape et {{stories}} histoires. Jouez-y avec n’importe quel contact, gratuitement pour l’autre.'
     },
     tr: {
       language: 'Dil seç', navHow: 'Nasıl çalışır', heroTitle: 'Evliliği ciddiye alıyoruz.',
@@ -250,8 +250,8 @@
       feature3Title: 'Sohbetin bir anlamı olsun.',
       feature3Body: 'Serbestçe sohbet etmeden önce ikiniz de tanışmaya yardımcı soruları yanıtlarsınız. Karşı tarafın cevaplarını ancak kendi cevaplarını verdikten sonra görürsün.',
       feature4Title: 'Halal Cards: birlikte öğrenin, keyif alın.',
-      feature4Body: 'İlişki Laboratuvarı kısa atölyelerden oluşur: ikiniz de gerçek hayattan senaryoları ayrı ayrı yanıtlarsınız, sonra her seçimin nereye götürdüğünü görür ve konuşursunuz. İlişki testleri ve kendi yolunu seç hikâyeleri de var — öğrenmek, birbirinizi tanımak ve eğlenmek için.',
-      feature4Free: 'İkisini tek başınıza ücretsiz deneyebilirsiniz: bir Laboratuvar atölyesi ve bir hikâye. Halal Mode Premium 35’inin hepsini açar — 13 senaryolu 4 atölye, her aşama için 16 test ve 15 hikâye — her eşleşmeyle oynayın, karşı taraf için ücretsiz.'
+      feature4Body: 'İlişki Laboratuvarı kısa atölyelerden oluşur: ikiniz de gerçek hayattan senaryoları ayrı ayrı yanıtlarsınız, sonra her seçimin nereye götürdüğünü görür ve konuşursunuz. İlişki testleri ve kendi yolunu seç hikâyeleri de var. Hepsi öğrenmek, birbirinizi tanımak ve eğlenmek için.',
+      feature4Free: '{{free}} tanesini tek başınıza ücretsiz deneyebilirsiniz. Halal Mode Premium {{total}} etkinliğin hepsini açar: {{scenarios}} senaryolu {{lab}} atölye, her aşama için {{quizzes}} test ve {{stories}} hikâye. Her eşleşmeyle oynayın, karşı taraf için ücretsiz.'
     },
     fa: {
       language: 'انتخاب زبان', navHow: 'چطور کار می‌کند', heroTitle: 'ازدواج را جدی بگیریم.',
@@ -277,8 +277,8 @@
       feature3Title: 'گفت‌وگو را با شناخت شروع کنید.',
       feature3Body: 'پیش از گفت‌وگوی آزاد، هر دو به چند سؤال آشناییِ معنادار جواب می‌دهید. جواب‌های طرف مقابل را هم فقط بعد از پاسخ دادن خودتان می‌بینید.',
       feature4Title: 'کارت‌های حلال: با هم یاد بگیرید، و لذت ببرید.',
-      feature4Body: 'آزمایشگاه رابطه مجموعه‌ای از کارگاه‌های کوتاه است: هر کدام جداگانه به موقعیت‌هایی از زندگی واقعی جواب می‌دهید، بعد می‌بینید هر انتخاب به کجا می‌رسد و درباره‌اش حرف می‌زنید. آزمونک‌های رابطه و داستان‌هایی که مسیرشان را خودتان انتخاب می‌کنید هم هست — برای یادگرفتن، شناختن هم و سرگرمی.',
-      feature4Free: 'دو مورد را می‌توانید رایگان و به‌تنهایی امتحان کنید: یک کارگاه و یک داستان. حلال مود Premium همهٔ 35 مورد را باز می‌کند — 4 کارگاه با 13 موقعیت، 16 آزمونک برای هر مرحله و 15 داستان — برای بازی با هر آشنایی، برای طرف مقابل رایگان.'
+      feature4Body: 'آزمایشگاه رابطه مجموعه‌ای از کارگاه‌های کوتاه است: هر کدام جداگانه به موقعیت‌هایی از زندگی واقعی جواب می‌دهید، بعد می‌بینید هر انتخاب به کجا می‌رسد و درباره‌اش حرف می‌زنید. آزمونک‌های رابطه و داستان‌هایی که مسیرشان را خودتان انتخاب می‌کنید هم هست. همه برای یادگرفتن، شناختن هم و سرگرمی.',
+      feature4Free: '{{free}} مورد را می‌توانید رایگان و به‌تنهایی امتحان کنید. حلال مود Premium همهٔ {{total}} مورد را باز می‌کند: {{lab}} کارگاه با {{scenarios}} موقعیت، {{quizzes}} آزمونک برای هر مرحله و {{stories}} داستان. با هر آشنایی بازی کنید، برای طرف مقابل رایگان.'
     },
     ha: {
       language: 'Zaɓi harshe', navHow: 'Yadda yake aiki', heroTitle: 'Aure abu ne mai muhimmanci.',
@@ -304,8 +304,8 @@
       feature3Title: 'Ku fara hira da fahimtar juna.',
       feature3Body: 'Kafin ku yi hira yadda kuke so, ku duka za ku amsa tambayoyin sanin juna masu ma’ana. Sai kun amsa naku kafin ku ga amsoshin ɗayan.',
       feature4Title: 'Halal Cards: ku koya tare, ku kuma ji daɗi.',
-      feature4Body: 'Relationship Lab jerin gajerun bita ne: kowannenku yana amsa yanayin rayuwa ta gaske a ɓoye, sannan ku ga inda kowane zaɓi zai kai ku tattauna. Akwai kuma tambayoyi game da dangantaka da labarai da kuke zaɓar hanyarsu — don koyo, sanin juna, da nishaɗi.',
-      feature4Free: 'Za ku iya gwada guda biyu kyauta da kanku: bita ɗaya ta Lab da labari ɗaya. Halal Mode Premium yana buɗe duka 35 — bita 4 masu yanayi 13, tambayoyi 16 na kowane mataki da labarai 15 — don yin wasa da kowane wanda kuka dace, kyauta gare shi/ita.'
+      feature4Body: 'Relationship Lab jerin gajerun bita ne: kowannenku yana amsa yanayin rayuwa ta gaske a ɓoye, sannan ku ga inda kowane zaɓi zai kai ku tattauna. Akwai kuma tambayoyi game da dangantaka da labarai da kuke zaɓar hanyarsu. Duka don koyo ne, sanin juna, da nishaɗi.',
+      feature4Free: 'Za ku iya gwada guda {{free}} kyauta da kanku. Halal Mode Premium yana buɗe duka {{total}}: bita {{lab}} masu yanayi {{scenarios}}, tambayoyi {{quizzes}} na kowane mataki da labarai {{stories}}. Ku yi wasa da kowane wanda kuka dace, kyauta gare shi/ita.'
     },
     am: {
       language: 'ቋንቋ ይምረጡ', navHow: 'እንዴት ይሰራል', heroTitle: 'ጋብቻ ቁም ነገር ነው።',
@@ -331,8 +331,8 @@
       feature3Title: 'ውይይቱ በትርጉም ይጀምር።',
       feature3Body: 'በነፃ መወያየት ከመጀመራችሁ በፊት ሁለታችሁም የሚያስተዋውቁ ጥያቄዎችን ትመልሳላችሁ። የሌላውን መልስ የምታዩት የራሳችሁን ከመለሳችሁ በኋላ ብቻ ነው።',
       feature4Title: 'ሃላል ካርድስ፦ አብራችሁ ተማሩ፣ ተደሰቱም።',
-      feature4Body: 'የግንኙነት ላብ አጫጭር ወርክሾፖች ስብስብ ነው፦ እያንዳንዳችሁ ከእውነተኛ ሕይወት የተወሰዱ ሁኔታዎችን በግል ትመልሳላችሁ፣ ከዚያ እያንዳንዱ ምርጫ ወዴት እንደሚያመራ አይታችሁ ትወያያላችሁ። ስለ ግንኙነት ጥያቄዎችና መንገዳቸውን የምትመርጡባቸው ታሪኮችም አሉ — ለመማር፣ እርስ በርስ ለመተዋወቅና ለመዝናናት።',
-      feature4Free: 'ሁለቱን ብቻችሁን በነጻ መሞከር ትችላላችሁ፦ አንድ የላብ ወርክሾፕና አንድ ታሪክ። ሃላል ሞድ Premium ሁሉንም 35 ይከፍታል — 13 ሁኔታዎች ያሏቸው 4 ወርክሾፖች፣ ለእያንዳንዱ ደረጃ 16 ጥያቄዎችና 15 ታሪኮች — ከማንኛውም ተዛማጅ ጋር ተጫወቱ፣ ለእነሱ በነጻ።'
+      feature4Body: 'የግንኙነት ላብ አጫጭር ወርክሾፖች ስብስብ ነው፦ እያንዳንዳችሁ ከእውነተኛ ሕይወት የተወሰዱ ሁኔታዎችን በግል ትመልሳላችሁ፣ ከዚያ እያንዳንዱ ምርጫ ወዴት እንደሚያመራ አይታችሁ ትወያያላችሁ። ስለ ግንኙነት ጥያቄዎችና መንገዳቸውን የምትመርጡባቸው ታሪኮችም አሉ። ሁሉም ለመማር፣ እርስ በርስ ለመተዋወቅና ለመዝናናት ነው።',
+      feature4Free: '{{free}}ቱን ብቻችሁን በነጻ መሞከር ትችላላችሁ። ሃላል ሞድ Premium ሁሉንም {{total}} ይከፍታል፦ {{scenarios}} ሁኔታዎች ያሏቸው {{lab}} ወርክሾፖች፣ ለእያንዳንዱ ደረጃ {{quizzes}} ጥያቄዎችና {{stories}} ታሪኮች። ከማንኛውም ተዛማጅ ጋር ተጫወቱ፣ ለእነሱ በነጻ።'
     },
     so: {
       language: 'Dooro luqadda', navHow: 'Sida ay u shaqayso', heroTitle: 'Guurka si dhab ah ayaan u qaadannaa.',
@@ -358,8 +358,8 @@
       feature3Title: 'Wadahadalka ha yeesho macne.',
       feature3Body: 'Labadiinuba waxaad ka jawaabaysaan su’aalo isbarasho oo macno leh ka hor inta aadan si xor ah u sheekaysan. Jawaabaha qofka kale waxaad arki kartaa markaad adigu ka jawaabto.',
       feature4Title: 'Halal Cards: wada barta, oo ku raaxaysta.',
-      feature4Body: 'Relationship Lab waa aqoon-is-weydaarsiyo gaagaaban: mid kastaa si gaar ah ayuu uga jawaabaa xaalado nolosha dhabta ah, kadibna waxaad arkaysaan meesha doorasho kastaa horseeddo oo aad ka wada hadlaysaan. Waxaa kale oo jira kediska xiriirka iyo sheekooyin aad adigu jidkooda dooranayso — waxbarasho, is-barasho iyo madadaalo.',
-      feature4Free: 'Laba ayaad keligaa bilaash ku tijaabin kartaa: hal aqoon-is-weydaarsi oo Lab ah iyo hal sheeko. Halal Mode Premium wuxuu furaa dhammaan 35 — 4 aqoon-is-weydaarsi oo leh 13 xaaladood, 16 kediska oo heer kasta ah iyo 15 sheeko — si aad ula ciyaarto qof kasta oo aad isku aaddan tihiin, bilaash isaga/iyada.'
+      feature4Body: 'Relationship Lab waa aqoon-is-weydaarsiyo gaagaaban: mid kastaa si gaar ah ayuu uga jawaabaa xaalado nolosha dhabta ah, kadibna waxaad arkaysaan meesha doorasho kastaa horseeddo oo aad ka wada hadlaysaan. Waxaa kale oo jira kediska xiriirka iyo sheekooyin aad adigu jidkooda dooranayso. Dhammaan waa waxbarasho, is-barasho iyo madadaalo.',
+      feature4Free: '{{free}} ayaad keligaa bilaash ku tijaabin kartaa. Halal Mode Premium wuxuu furaa dhammaan {{total}}: {{lab}} aqoon-is-weydaarsi oo leh {{scenarios}} xaaladood, {{quizzes}} kediska oo heer kasta ah iyo {{stories}} sheeko. La ciyaar qof kasta oo aad isku aaddan tihiin, bilaash isaga/iyada.'
     },
     es: {
       language: 'Elegir idioma', navHow: 'Cómo funciona', heroTitle: 'El matrimonio merece atención.',
@@ -385,8 +385,8 @@
       feature3Title: 'Que la conversación tenga sentido.',
       feature3Body: 'Antes de chatear libremente, los dos respondéis preguntas para conoceros mejor. Solo verás sus respuestas cuando hayas dado las tuyas.',
       feature4Title: 'Halal Cards: aprended juntos, y pasadlo bien.',
-      feature4Body: 'El Relationship Lab es una serie de talleres cortos: cada uno responde en privado a situaciones de la vida real y luego veis adónde lleva cada decisión y lo habláis. También hay cuestionarios sobre la relación e historias en las que elegís el camino — para aprender, conoceros y divertiros.',
-      feature4Free: 'Dos se pueden probar gratis a solas: un taller del Lab y una historia. Halal Mode Premium abre las 35 — 4 talleres con 13 situaciones, 16 cuestionarios para cada etapa y 15 historias — para jugar con cualquier conexión, gratis para la otra persona.'
+      feature4Body: 'El Relationship Lab es una serie de talleres cortos: cada uno responde en privado a situaciones de la vida real y luego veis adónde lleva cada decisión y lo habláis. También hay cuestionarios sobre la relación e historias en las que elegís el camino. Todo para aprender, conoceros y divertiros.',
+      feature4Free: '{{free}} se pueden probar gratis a solas. Halal Mode Premium abre las {{total}}: {{lab}} talleres con {{scenarios}} situaciones, {{quizzes}} cuestionarios para cada etapa y {{stories}} historias. Jugad con cualquier conexión, gratis para la otra persona.'
     },
     ru: {
       language: 'Выбрать язык', navHow: 'Как это работает', heroTitle: 'К браку — серьёзно.',
@@ -412,8 +412,8 @@
       feature3Title: 'Сначала узнайте друг друга.',
       feature3Body: 'Прежде чем свободно общаться, вы оба ответите на важные вопросы для знакомства. Ответы другого человека откроются только после ваших.',
       feature4Title: 'Halal Cards: учитесь вместе и получайте удовольствие.',
-      feature4Body: 'Relationship Lab — это короткие мастерские: каждый отвечает наедине на ситуации из реальной жизни, а потом вы видите, к чему ведёт каждый выбор, и обсуждаете. Есть также викторины об отношениях и истории, в которых вы сами выбираете путь, — чтобы учиться, узнавать друг друга и веселиться.',
-      feature4Free: 'Две можно бесплатно попробовать в одиночку: одну мастерскую и одну историю. Halal Mode Premium открывает все 35 — 4 мастерские с 13 ситуациями, 16 викторин для каждого этапа и 15 историй — чтобы играть с любым знакомством, для второго бесплатно.'
+      feature4Body: 'Relationship Lab состоит из коротких мастерских: каждый отвечает наедине на ситуации из реальной жизни, а потом вы видите, к чему ведёт каждый выбор, и обсуждаете. Есть также викторины об отношениях и истории, в которых вы сами выбираете путь. Всё это, чтобы учиться, узнавать друг друга и веселиться.',
+      feature4Free: '{{free}} можно бесплатно попробовать в одиночку. Halal Mode Premium открывает все {{total}}: мастерские ({{lab}}) с ситуациями ({{scenarios}}), викторины для каждого этапа ({{quizzes}}) и истории ({{stories}}). Играйте с любым знакомством, для второго бесплатно.'
     },
     'zh-Hans': {
       language: '选择语言', navHow: '使用方式', heroTitle: '认真对待婚姻。',
@@ -439,8 +439,8 @@
       feature3Title: '先用心认识，再自由聊天。',
       feature3Body: '你们都要先回答几个有意义的破冰问题，之后才能自由聊天。只有回答后，你才能看到对方的答案。',
       feature4Title: 'Halal Cards：一起学习，一起开心。',
-      feature4Body: '关系实验室是一组简短的工作坊：你们各自私下回答真实生活中的情景，然后看到每个选择会带来什么，并一起聊聊。还有关系测验和自选路线故事——为了学习、彼此了解，也为了开心。',
-      feature4Free: '有两项可以免费独自体验：一个实验室工作坊和一个故事。Halal Mode Premium 解锁全部 35 项——4 个工作坊共 13 个情景、16 个覆盖各个阶段的测验和 15 个故事——可与任何配对一起玩，对方免费。'
+      feature4Body: '关系实验室是一组简短的工作坊：你们各自私下回答真实生活中的情景，然后看到每个选择会带来什么，并一起聊聊。还有关系测验和自选路线故事。都是为了学习、彼此了解，也为了开心。',
+      feature4Free: '有 {{free}} 项可以免费独自体验。Halal Mode Premium 解锁全部 {{total}} 项：{{lab}} 个工作坊共 {{scenarios}} 个情景、{{quizzes}} 个覆盖各个阶段的测验和 {{stories}} 个故事。可与任何配对一起玩，对方免费。'
     }
   };
 
@@ -451,8 +451,13 @@
     if (Object.prototype.hasOwnProperty.call(copy, saved)) language = saved;
   } catch (_) {}
 
+  // Halal Cards numbers ({{total}}, {{lab}}, …) come from halal-cards-counts.js,
+  // generated from the app's catalogue so the site never states stale counts.
+  const counts = window.HalalCardsCounts || {};
+
   function t(key) {
-    return copy[language][key] || copy.en[key] || '';
+    const text = copy[language][key] || copy.en[key] || '';
+    return text.replace(/\{\{(\w+)\}\}/g, (match, name) => (name in counts ? String(counts[name]) : match));
   }
 
   function updateSound() {

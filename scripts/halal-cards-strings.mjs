@@ -3,6 +3,7 @@
  * translations already made.
  *
  *   docs/halal-cards-strings.en.json — every member-facing string, keyed
+ *   site/halal-cards-counts.js — the catalogue's numbers, for halalmo.de
  *
  * A translation is src/halalCards/translations/<locale>.json with the same
  * shape and keys. This script reports, per translation: missing keys, extra
@@ -18,6 +19,7 @@ const require = createRequire(import.meta.url);
 const content = require('../.test-build/src/halalCards/content/index.js');
 const i18n = require('../.test-build/src/halalCards/i18n.js');
 const copy = require('../.test-build/src/halalCards/copyStrings.js');
+const siteCounts = require('../.test-build/src/halalCards/siteCounts.js');
 
 const strings = { copy: copy.ENGLISH_COPY, content: {} };
 for (const activity of content.ALL_ACTIVITIES) Object.assign(strings.content, i18n.activityStrings(activity));
@@ -26,6 +28,10 @@ writeFileSync('docs/halal-cards-strings.en.json', `${JSON.stringify(strings, nul
 const total = Object.keys(strings.copy).length + Object.keys(strings.content).length;
 const words = [...Object.values(strings.copy), ...Object.values(strings.content)].join(' ').split(/\s+/).length;
 console.log(`Wrote ${total} strings (about ${words.toLocaleString()} words).`);
+
+// The website states how much Halal Cards holds; keep its numbers in step.
+writeFileSync(siteCounts.SITE_COUNTS_PATH, siteCounts.siteCountsScript());
+console.log(`Wrote ${siteCounts.SITE_COUNTS_PATH}: ${JSON.stringify(content.CATALOGUE_COUNTS)}`);
 
 const dir = 'src/halalCards/translations';
 let broken = 0;

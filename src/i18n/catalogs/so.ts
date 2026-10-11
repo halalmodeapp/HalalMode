@@ -520,7 +520,7 @@ export const so: TranslationCatalog = {
   'chat.callA11y': 'Wac {{name}}',
   'chat.pause': 'Xir xiriirka',
   'halalCards.chatRow': 'Halal Cards · wada ciyaara',
-  'halalCards.premiumFeature': 'Halal Cards la qof kasta oo aad isku aaddan tihiin — bilaash isaga/iyada',
+  'halalCards.premiumFeature': "Halal Cards la qof kasta oo aad isku aaddan tihiin, bilaash isaga/iyada",
   'halalCards.premiumIncludes': "Dhammaan {{total}}-ka Halal Cards: {{lab}} aqoon-is-weydaarsi oo Relationship Lab ah ({{scenarios}} xaaladood), {{quizzes}} kediska oo heer kasta ah iyo {{stories}} sheeko aad jidkooda dooranaysaan",
   'halalCards.badgeA11y': '{{count}} ayaa ku sugaya Halal Cards',
   'chat.placeholder': 'Qor fariin',

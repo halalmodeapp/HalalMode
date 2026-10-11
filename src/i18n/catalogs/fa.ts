@@ -520,7 +520,7 @@ export const fa: TranslationCatalog = {
   'chat.callA11y': 'تماس با {{name}}',
   'chat.pause': 'بستن پیوند',
   'halalCards.chatRow': 'کارت‌های حلال · با هم بازی کنید',
-  'halalCards.premiumFeature': 'کارت‌های حلال با هر آشنایی — برای طرف مقابل رایگان',
+  'halalCards.premiumFeature': "کارت‌های حلال با هر آشنایی، برای طرف مقابل رایگان",
   'halalCards.premiumIncludes': "همهٔ {{total}} کارت حلال: {{lab}} کارگاه آزمایشگاه رابطه ({{scenarios}} موقعیت)، {{quizzes}} آزمونک برای هر مرحله و {{stories}} داستان با انتخاب مسیر",
   'halalCards.badgeA11y': '{{count}} مورد در کارت‌های حلال منتظر است',
   'chat.placeholder': 'پیامی بنویسید',

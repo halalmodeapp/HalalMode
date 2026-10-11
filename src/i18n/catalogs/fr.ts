@@ -520,7 +520,7 @@ export const fr: TranslationCatalog = {
   'chat.callA11y': 'Appeler {{name}}',
   'chat.pause': 'Fermer la connexion',
   'halalCards.chatRow': 'Halal Cards · jouer ensemble',
-  'halalCards.premiumFeature': 'Halal Cards avec chaque contact — gratuit pour l’autre',
+  'halalCards.premiumFeature': "Halal Cards avec chaque contact, gratuit pour l’autre",
   'halalCards.premiumIncludes': "Les {{total}} Halal Cards : {{lab}} ateliers du Relationship Lab ({{scenarios}} situations), {{quizzes}} quiz pour chaque étape et {{stories}} histoires dont vous choisissez la suite",
   'halalCards.badgeA11y': '{{count}} en attente dans Halal Cards',
   'chat.placeholder': 'Écrire un message',

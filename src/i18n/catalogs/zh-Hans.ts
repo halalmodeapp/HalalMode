@@ -520,7 +520,7 @@ export const zhHans: TranslationCatalog = {
   'chat.callA11y': '呼叫 {{name}}',
   'chat.pause': '关闭连接',
   'halalCards.chatRow': 'Halal Cards · 一起玩',
-  'halalCards.premiumFeature': '与任何配对一起玩 Halal Cards——对方免费',
+  'halalCards.premiumFeature': "与任何配对一起玩 Halal Cards，对方免费",
   'halalCards.premiumIncludes': "全部 {{total}} 项 Halal Cards：{{lab}} 个关系实验室工作坊（{{scenarios}} 个情景）、{{quizzes}} 个覆盖各个阶段的测验、{{stories}} 个自选路线故事",
   'halalCards.badgeA11y': 'Halal Cards 中有 {{count}} 项待处理',
   'chat.placeholder': '写一条消息',
