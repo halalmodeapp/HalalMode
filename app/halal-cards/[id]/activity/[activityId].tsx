@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
 import { canStartSession } from '@/halalCards/access';
-import { findActivity } from '@/halalCards/content';
+import { useCardsContent } from '@/halalCards/localized';
 import { useCardsCopy } from '@/halalCards/copy';
 import { startAdventure } from '@/halalCards/engine/adventure';
 import { initialState } from '@/halalCards/engine/session';
@@ -34,6 +34,7 @@ export default function ActivityDetail() {
   const { tier } = useSession();
   const queryClient = useQueryClient();
   const reducedMotion = useReducedMotion();
+  const { findActivity } = useCardsContent();
   const activity = findActivity(activityId);
 
   const connection = useQuery({ queryKey: queryKeys.connection(id), queryFn: () => fetchConnection(id) });

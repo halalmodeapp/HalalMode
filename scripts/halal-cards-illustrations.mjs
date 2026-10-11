@@ -3,7 +3,8 @@
  * never drift from what the app shows:
  *
  *   docs/HALAL_CARDS_ILLUSTRATIONS.md   — for a person generating images
- *   docs/halal-cards-illustrations.json — for an agent (Codex) doing the same
+ *   docs/halal-cards-illustrations.json — for an agent (Codex): only the
+ *                                       slots still without a picture
  *
  * Run with `npm run cards:illustrations` (it compiles the content first).
  */
@@ -90,13 +91,13 @@ const brief = {
   rules: images.ILLUSTRATION_RULES,
   slots: entries,
 };
-writeFileSync('docs/halal-cards-illustrations.json', `${JSON.stringify(brief, null, 2)}\n`);
-
-// Only the slots still without a picture, for handing to an image agent.
+// The agent's file lists only slots that still need a picture, so a finished
+// image never gets generated twice. The Markdown below keeps every slot.
 const missing = entries.filter((entry) => !existsSync(entry.file));
 writeFileSync(
-  'docs/halal-cards-illustrations-todo.json',
-  `${JSON.stringify({ ...brief, instructions: `${brief.instructions} These are only the slots that do not have a picture yet.`, slots: missing }, null, 2)}\n`
+  'docs/halal-cards-illustrations.json',
+  `${JSON.stringify({ ...brief, instructions: `${brief.instructions} Only slots without a picture are listed; regenerate this file after adding pictures.`, slots: missing }, null, 2)}
+`
 );
 
 const ROLE = { cover: 'Cover', scene: 'Scene', turning_point: 'Turning point', outcome: 'Outcome' };
@@ -105,7 +106,8 @@ let md = `# Halal Cards — illustration brief
 Every picture in Halal Cards has a slot. A slot without its own illustration
 shows a drawn placeholder. This file is generated from the content —
 regenerate it with \`npm run cards:illustrations\` after adding or changing
-scenes. A machine-readable copy is in \`docs/halal-cards-illustrations.json\`.
+scenes. \`docs/halal-cards-illustrations.json\` lists, for an agent, only the
+slots that still need a picture.
 
 **${entries.length} illustrations** in total.
 

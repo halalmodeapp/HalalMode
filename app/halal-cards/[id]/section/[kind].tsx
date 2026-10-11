@@ -6,7 +6,7 @@ import { Illustration, OverlayText } from '@/components/halalCards/Illustration'
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
-import { ADVENTURES, LAB_LESSONS, QUIZZES } from '@/halalCards/content';
+import { useCardsContent } from '@/halalCards/localized';
 import { useCardsCopy } from '@/halalCards/copy';
 import { useCardsAccess, useCardsSummary } from '@/halalCards/hooks';
 import { backOr, cardsPaths } from '@/halalCards/navigation';
@@ -30,6 +30,7 @@ export default function SectionScreen() {
   // can see at a glance what they have finished.
   const summary = useCardsSummary(id);
   const completed = new Set((summary.data ?? []).filter((item) => item.status === 'completed').map((item) => item.activityId));
+  const { LAB_LESSONS, QUIZZES, ADVENTURES } = useCardsContent();
   const activities: Activity[] = kind === 'lab' ? LAB_LESSONS : kind === 'quiz' ? QUIZZES : ADVENTURES;
   // Engaged and married content waits, unseen, until a couple unlocks that
   // stage together — a later feature. Only what suits them now is listed.

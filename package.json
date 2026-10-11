@@ -19,7 +19,8 @@
     "verify:sql": "node scripts/check-sql.mjs",
     "deploy:web": "node scripts/deploy-web.mjs",
     "set-keys": "node scripts/set-keys.mjs",
-    "cards:illustrations": "tsc -p tests/tsconfig.json && node scripts/halal-cards-illustrations.mjs"
+    "cards:illustrations": "tsc -p tests/tsconfig.json && node scripts/halal-cards-illustrations.mjs",
+    "cards:strings": "tsc -p tests/tsconfig.json && node scripts/halal-cards-strings.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/beiruti": "^0.4.1",

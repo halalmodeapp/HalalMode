@@ -10,7 +10,7 @@ import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { ErrorState } from '@/components/ui/AsyncState';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
-import { findActivity } from '@/halalCards/content';
+import { useCardsContent } from '@/halalCards/localized';
 import { useCardsCopy } from '@/halalCards/copy';
 import { currentTurn, progressOf } from '@/halalCards/engine/session';
 import { backOr, cardsPaths } from '@/halalCards/navigation';
@@ -25,6 +25,7 @@ import { layout, space } from '@/theme/tokens';
 export default function SoloScreen() {
   const { id, activityId } = useLocalSearchParams<{ id: string; activityId: string }>();
   const copy = useCardsCopy();
+  const { findActivity } = useCardsContent();
   const found = findActivity(activityId);
   const activity = found && found.soloPreview ? found : undefined;
   const connection = useQuery({ queryKey: queryKeys.connection(id), queryFn: () => fetchConnection(id) });

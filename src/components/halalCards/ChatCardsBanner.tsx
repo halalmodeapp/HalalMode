@@ -5,12 +5,13 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { respondCardsInvite } from '@/api/halalCards';
 import { Text } from '@/components/ui/Text';
-import { findActivity } from '@/halalCards/content';
+import { useCardsContent } from '@/halalCards/localized';
 import { useCardsCopy } from '@/halalCards/copy';
 import { useCardsSummary } from '@/halalCards/hooks';
 import { cardsPaths } from '@/halalCards/navigation';
 import { CUE_PRIORITY, sessionCue } from '@/halalCards/status';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { hasCardsTranslation } from '@/halalCards/translations';
 import { LeftToRight, useI18n } from '@/i18n';
 import { queryKeys } from '@/lib/queryClient';
 import { showNotice } from '@/lib/notice';
@@ -23,10 +24,11 @@ import { alpha, color, font, radius, space } from '@/theme/tokens';
  */
 export function ChatCardsBanner({ connectionId, partnerName }: { connectionId: string; partnerName: string }) {
   const copy = useCardsCopy();
-  const { isRTL } = useI18n();
+  const { isRTL, language } = useI18n();
   const reducedMotion = useReducedMotion();
   const queryClient = useQueryClient();
   const sessions = useCardsSummary(connectionId);
+  const { findActivity } = useCardsContent();
 
   const respond = useMutation({
     // Accepting from the chat: the session starts on its first card, owed by both.
@@ -56,8 +58,7 @@ export function ChatCardsBanner({ connectionId, partnerName }: { connectionId: s
         ? copy('yourTurn')
         : copy('waitingAccept', { name: partnerName });
 
-  return (
-    <LeftToRight>
+  const card = (
     <Animated.View entering={reducedMotion ? undefined : FadeInDown.springify().damping(18)} style={styles.card}>
       <View style={[styles.row, isRTL && styles.rowReverse]}>
         <View style={styles.mark}>
@@ -93,8 +94,8 @@ export function ChatCardsBanner({ connectionId, partnerName }: { connectionId: s
         </Pressable>
       ) : null}
     </Animated.View>
-    </LeftToRight>
   );
+  return hasCardsTranslation(language) ? card : <LeftToRight>{card}</LeftToRight>;
 }
 
 const styles = StyleSheet.create({

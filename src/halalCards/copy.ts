@@ -2,260 +2,31 @@ import { useCallback } from 'react';
 
 import { useI18n } from '@/i18n';
 import type { AppLocale } from '@/i18n/locales';
+import { ENGLISH_COPY, ENGLISH_ONLY_NOTE, type CardsCopyKey } from './copyStrings';
+import { CARDS_TRANSLATIONS } from './translations';
+
+export { ENGLISH_COPY, type CardsCopyKey };
 
 /**
- * Halal Cards' own interface copy. Kept beside the content because, like the
- * content, it is English-first: Halal Cards renders in English, left to right,
- * until its stories and lessons are translated (see `LeftToRight`), and a
- * translation then fills `translations` below — any missing line falls back
- * to English. Entry points outside Halal Cards (the chat row, the Premium
- * card, notifications) are in the app catalogues in every language.
+ * Halal Cards' interface copy. A language Halal Cards has been translated into
+ * (src/halalCards/translations) gets its own copy, laid out in its own
+ * direction; any other language sees English, left to right, with one note in
+ * its own language saying so. Missing lines always fall back to English.
  */
-const en = {
-  'brand': 'Halal Cards',
-  'brandWith': 'with {{name}}',
-  'hubIntro': 'Understand each other, learn why relationships work and fail, and practise healthier patterns — together.',
-  'englishNote': 'Halal Cards is in English for now.',
-
-  'lab': 'Relationship Lab',
-  'labBlurb': 'A workshop in scenarios. Choose, see what follows, then talk.',
-  'labGate': 'Four short workshops on why marriages work and why they struggle. Each is a run of real-life situations: you both choose in private, see where each choice leads, then talk.',
-  'quizzes': 'Relationship Quizzes',
-  'quizzesBlurb': 'Lighter, quicker, and revealing. Answer privately, reveal together.',
-  'quizzesGate': 'Quick, playful card decks for getting to know each other — guessing games, would-you-rathers and same-page checks on money, family and the future.',
-  'adventures': 'Relationship Adventures',
-  'adventuresBlurb': 'Turn-based stories where every choice changes the ending.',
-  'adventuresGate': 'Choose-your-own-path stories about a married couple. Take turns deciding, sometimes in secret, sometimes together — and see where it leads.',
-  'lessons': '{{count}} workshops',
-  'decks': '{{count}} decks',
-  'stories': '{{count}} stories',
-  'explore': 'Explore',
-  'minutes': '{{count}} min',
-  'kind.lab': 'Relationship Lab',
-  'kind.quiz': 'Quiz',
-  'kind.adventure': 'Adventure',
-  'format.know_me': 'Take turns guessing',
-  'format.guess_my_answer': 'Answer and guess',
-  'format.same_page': 'Same page?',
-  'format.more_likely': 'Point at one of you',
-  'format.would_you_rather': 'Would you rather',
-  'format.scale': 'On a scale',
-
-  'trackTitle': 'Where are you two?',
-  'trackHint': 'Cards are chosen to suit where you are. Either of you can change this.',
-  'track.getting_to_know': 'Getting to know',
-  'track.engaged': 'Engaged',
-  'track.married': 'Married',
-  'laterTrack': 'For when you’re {{track}}',
-
-  'journal': 'Shared Journal',
-  'journalBlurb': 'Your agreements and lessons, kept together.',
-  'journalCount': '{{count}} agreed',
-  'journalPending': '{{count}} waiting',
-  'journalNew': 'Start your journal',
-  'journalEmpty': 'Nothing yet. As you play, save the lessons and agreements you both want to keep — or write your own.',
-  'guideAddPlaceholder': 'Write an agreement in your own words',
-  'guideAdd': 'Suggest',
-  'guideTheyProposed': '{{name}} suggested this. Do you agree?',
-  'guideYouProposed': 'Waiting for {{name}} to agree',
-  'guideAgree': 'Agree',
-  'guideRemove': 'Remove',
-  'removeTitle': 'Remove from your journal?',
-  'removeBody': '{{name}} will be told. You can undo this.',
-  'removed': 'Removed from your journal',
-  'cancelRemove': 'Keep it',
-  'undo': 'Undo',
-  'guideSave': 'Save to our journal',
-  'guideSaved': 'Suggested to {{name}}',
-  'guideAgreed': 'In your journal',
-  'guideHow': 'An entry joins your journal once you have both agreed to it.',
-  'guideFrom': 'From {{source}}',
-
-  'inProgress': 'In progress',
-  'played': 'Played together',
-  'completed': 'Completed',
-  'invitedYou': '{{name}} invited you to play',
-  'accept': 'Play',
-  'decline': 'Not now',
-  'resume': 'Resume',
-  'yourTurn': 'Your turn',
-  'inPlay': 'Ready to carry on',
-  'theirTurn': 'Waiting for {{name}}',
-  'waitingAccept': 'Waiting for {{name}} to accept',
-  'invite': 'Invite {{name}}',
-  'replay': 'Play again',
-  'viewResults': 'See results',
-  'playAnother': 'Play another',
-  'backToChat': 'Back to chat',
-
-  'premiumTitle': 'Halal Cards is part of Premium',
-  'premiumBody': 'If either of you has Premium, you can unlock Halal Cards for this connection and invite {{name}} to play — they never need to subscribe.',
-  'premiumCta': 'See Premium',
-  'premiumSoon': 'Premium opens soon',
-  'premiumSoonBody': 'Until then, try a preview on your own — or ask {{name}}, in case they can start one.',
-  'askPartner': 'Ask {{name}} to start one',
-  'askSent': 'Asked in your chat ✓',
-  'askMessage': 'I’d love to try Halal Cards with you — could you start one when you get a chance? 🙂',
-  'premiumPreview': 'Browse everything. Playing together needs Premium for one of you.',
-  'unlockedByYou': 'You unlocked Halal Cards for the two of you.',
-  'canUnlock': 'Your Premium unlocks Halal Cards for both of you the moment you invite {{name}}.',
-  'unlockedForYou': 'Unlocked for the two of you — free to play.',
-
-  'trySolo': 'Try a preview on your own',
-  'soloBadge': 'Solo preview · nothing is shared',
-  'soloOtherPaths': 'The other paths',
-  'soloDone': 'Preview finished',
-  'soloDoneBody': 'Enjoyed it? With Premium for either of you, play it together with {{name}} — every reveal is better with two.',
-  'soloBoth': 'You play both {{a}} and {{b}} in this preview.',
-  'soloThem': 'Now as {{role}}',
-
-  'howItWorks': 'How it works',
-  'how.lab': 'Each scenario is answered privately by both of you. Then you see what each choice would set in motion — and talk.',
-  'how.quiz': 'Answer each card privately. Nothing is shown until you have both answered.',
-  'how.adventure': 'Take turns as {{a}} and {{b}}. Some moments you decide alone, some in secret at the same time, some together. Earlier choices change later scenes.',
-  'framing.adventure': 'This story follows a married couple. You each step into one of their shoes — a way to imagine marriage together, not a role between you two.',
-  'youPlay': 'You play {{name}}',
-  'theyPlay': '{{name}} plays {{role}}',
-
-  'inviteSent': 'Invitation sent',
-  'inviteSentBody': 'It is in your chat with {{name}}, and they’ll get a notification. You start as soon as they accept.',
-  'cancelInvite': 'Withdraw invitation',
-  'declinedTitle': 'Not this time',
-  'declinedBody': '{{name}} said not now. You can invite them to something else whenever you like.',
-  'cancelledTitle': 'This session has ended',
-  'cancelledBody': 'Either of you can start it again from Halal Cards.',
-  'expiredTitle': 'This invitation expired',
-  'expiredBody': 'Invitations last a week. You can send a fresh one any time.',
-  'leave': 'End',
-  'leaveTitle': 'End this session?',
-  'leaveBody': 'It stops for both of you. Anything saved to your journal stays.',
-  'leaveConfirm': 'End it',
-  'keepPlaying': 'Keep playing',
-  'staleTitle': 'This activity was updated',
-  'staleBody': 'It changed since you started, so this game can’t carry on. Start it again to play the new version.',
-  'restart': 'Start again',
-
-  'next': 'Next',
-  'continue': 'Continue',
-  'finish': 'Finish',
-  'lockIn': 'Lock in my answer',
-  'choose': 'Choose',
-  'waitingFor': 'Waiting for {{name}} to answer…',
-  'privateNote': 'Private until you have both answered.',
-  'revealing': 'Revealing…',
-  'you': 'You',
-  'talk': 'Talk about it',
-  'followUps': 'Keep going',
-  'sameChoice': 'You both chose the same.',
-  'bothHelp': 'Different choices — both likely to help.',
-  'split': 'You chose differently. Worth asking why.',
-  'bothStruggle': 'Both tempting — and both likely to make it harder.',
-  'tone.helps': 'Tends to help',
-  'tone.mixed': 'Could go either way',
-  'tone.harms': 'Can make it harder',
-  'toneNote': 'Only you see this note.',
-  'insight': 'Why it works',
-  'lessonDone': 'Workshop complete',
-  'lessonDoneBody': 'What you learned together:',
-  'catchUp': '{{name}} moved on — here’s what you missed',
-  'discuss': 'Discuss in chat',
-  'discussSent': 'Sent to your chat ✓',
-  'discuss.same': 'Halal Cards · {{title}}: we both chose “{{mine}}”. Why that one for you?',
-  'discuss.differ': 'Halal Cards · {{title}}: I chose “{{mine}}” and you chose “{{theirs}}”. Can we talk about it?',
-  'discuss.story': 'Halal Cards · {{title}}: “{{beat}}” What did you make of that moment?',
-  'actionError': 'That did not go through. Please try again.',
-
-  'aboutYou': 'About you',
-  'yourGuess': 'Your guess about {{name}}',
-  'theyAnswerYouGuess': '{{name}} answers. You guess.',
-  'youAnswerTheyGuess': 'You answer. {{name}} guesses.',
-  'guessedRight': 'Guessed right',
-  'guessedWrong': 'Not quite',
-  'samePage': 'Same page',
-  'different': 'Different — talk about it',
-  'close': 'Close',
-  'apart': '{{count}} steps apart',
-  'pointedAt': 'pointed at',
-  'agreeWho': 'You agree!',
-  'disagreeWho': 'You disagree — defend yourselves.',
-  'said': 'said',
-  'guessed': 'guessed',
-  'quizDone': 'Quiz complete',
-  'quizMostlySame': 'You landed in the same place on most of these.',
-  'quizMixed': 'Some answers matched and some didn’t — the differences are the good bit.',
-  'quizMostlyDifferent': 'You see many of these differently. Far better to know that now.',
-  'quizGuessesGood': 'You read each other well.',
-  'quizGuessesSurprising': 'Plenty of surprises — you’re still discovering each other.',
-  'worthTalking': 'Worth talking about',
-  'allAnswers': 'All your answers',
-  'me': 'Me',
-  'myPartner': 'My partner',
-
-  'role': 'You are {{name}}',
-  'turningPoint': 'Turning point',
-  'theirMove': '{{role}}’s move — {{name}} is deciding',
-  'yourMove': 'Your move as {{role}}',
-  'jointNote': 'Choose together — you both need to pick the same answer.',
-  'privateChoice': 'Choose in secret. Both choices count.',
-  'chose': 'chose',
-  'mismatch': 'You chose differently. Talk it through, then choose again.',
-  'letStoryDecide': 'Let the story decide',
-  'letStoryDecideNote': 'Still choosing differently? Talk it through — or hand this one to the story.',
-  'whatHappened': 'What happened',
-  'howYouGotHere': 'How your choices led here',
-  'pattern': 'The pattern',
-  'hiddenStates': 'Beneath the surface',
-  'couldHaveChanged': 'What could have changed it',
-  'takeaway': 'Take this with you',
-  'endingReached': 'One of {{total}} endings',
-  'replayHint': 'Choose differently next time to find new scenes and endings.',
-  'mood.steady': 'Steady',
-  'mood.tender': 'Tender',
-  'mood.fragile': 'Fragile',
-  'mood.strained': 'Strained',
-  'mood.bittersweet': 'Bittersweet',
-  'mood.renewed': 'Renewed',
-
-  'chatOpenA11y': 'Open Halal Cards with {{name}}',
-  'errorTitle': 'Halal Cards could not load',
-  'errorBody': 'Please check your connection and try again.',
-  'loading': 'Shuffling the cards',
-} as const;
-
-export type CardsCopyKey = keyof typeof en;
-
-const translations: Partial<Record<AppLocale, Partial<Record<CardsCopyKey, string>>>> = {
-  ar: { englishNote: 'بطاقات حلال متاحة بالإنجليزية حاليًا.' },
-  ur: { englishNote: 'حلال کارڈز فی الحال انگریزی میں ہیں۔' },
-  fa: { englishNote: 'کارت‌های حلال فعلاً به انگلیسی است.' },
-  hi: { englishNote: 'हलाल कार्ड्स अभी अंग्रेज़ी में हैं।' },
-  id: { englishNote: 'Halal Cards untuk saat ini tersedia dalam bahasa Inggris.' },
-  ms: { englishNote: 'Halal Cards buat masa ini dalam bahasa Inggeris.' },
-  bn: { englishNote: 'হালাল কার্ডস আপাতত ইংরেজিতে।' },
-  fr: { englishNote: 'Halal Cards est en anglais pour le moment.' },
-  tr: { englishNote: 'Halal Cards şimdilik İngilizce.' },
-  ha: { englishNote: 'Halal Cards yana cikin Turanci a yanzu.' },
-  am: { englishNote: 'ሃላል ካርድስ ለጊዜው በእንግሊዝኛ ነው።' },
-  so: { englishNote: 'Halal Cards hadda waa Ingiriisi.' },
-  es: { englishNote: 'Halal Cards está en inglés por ahora.' },
-  ru: { englishNote: 'Halal Cards пока доступен на английском.' },
-  'zh-Hans': { englishNote: 'Halal Cards 目前仅提供英文版。' },
-};
-
 export function cardsCopy(language: AppLocale, key: CardsCopyKey, params?: Record<string, string | number>): string {
-  let message: string = translations[language]?.[key] ?? en[key];
+  const translated = CARDS_TRANSLATIONS[language]?.copy[key];
+  let message: string =
+    translated ?? (key === 'englishNote' ? ENGLISH_ONLY_NOTE[language] : undefined) ?? ENGLISH_COPY[key];
   for (const [name, value] of Object.entries(params ?? {})) {
     message = message.replaceAll(`{{${name}}}`, String(value));
   }
   return message;
 }
 
-/** The note line is in the member's language; everything else follows the content. */
 export function useCardsCopy() {
   const { language } = useI18n();
   return useCallback(
-    (key: CardsCopyKey, params?: Record<string, string | number>) =>
-      cardsCopy(key === 'englishNote' ? language : 'en', key, params),
+    (key: CardsCopyKey, params?: Record<string, string | number>) => cardsCopy(language, key, params),
     [language]
   );
 }

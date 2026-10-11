@@ -3,7 +3,8 @@
 Every picture in Halal Cards has a slot. A slot without its own illustration
 shows a drawn placeholder. This file is generated from the content —
 regenerate it with `npm run cards:illustrations` after adding or changing
-scenes. A machine-readable copy is in `docs/halal-cards-illustrations.json`.
+scenes. `docs/halal-cards-illustrations.json` lists, for an agent, only the
+slots that still need a picture.
 
 **309 illustrations** in total.
 

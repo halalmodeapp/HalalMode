@@ -13,7 +13,9 @@ import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
 import { canStartSession } from '@/halalCards/access';
-import { ADVENTURES, findActivity, LAB_LESSONS, QUIZZES } from '@/halalCards/content';
+import { ADVENTURES, LAB_LESSONS, QUIZZES } from '@/halalCards/content';
+import { useCardsContent } from '@/halalCards/localized';
+import { hasCardsTranslation } from '@/halalCards/translations';
 import { HUB_HERO, SECTION_TINTS, SECTION_TITLE_CARDS } from '@/halalCards/content/images';
 import { ILLUSTRATIONS } from '@/halalCards/illustrations';
 import { useCardsCopy } from '@/halalCards/copy';
@@ -59,6 +61,7 @@ export default function HalalCardsHub() {
   const access = useCardsAccess(id);
   const sessions = useCardsSummary(id, { poll: 20_000 });
   const guide = useGuide(id);
+  const { findActivity } = useCardsContent();
 
   if (connection.isPending) {
     return (
@@ -111,7 +114,7 @@ export default function HalalCardsHub() {
         </View>
 
         <View style={styles.column}>
-          {language !== 'en' ? <Text variant="caption" center>{copy('englishNote')}</Text> : null}
+          {language !== 'en' && !hasCardsTranslation(language) ? <Text variant="caption" center>{copy('englishNote')}</Text> : null}
 
           {canStart ? (
             <Text variant="caption" center>

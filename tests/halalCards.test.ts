@@ -38,6 +38,7 @@ import {
 import { soloActingSeat, soloAdvance, soloAnswer, soloStart, soloView } from '../src/halalCards/solo';
 import { sessionCue } from '../src/halalCards/status';
 import { canStartSession } from '../src/halalCards/access';
+import { activityStrings, placeholdersOf, translateActivity } from '../src/halalCards/i18n';
 import type { Adventure, AdventureState, CardsSession, Quiz } from '../src/halalCards/types';
 
 function session(partial: Partial<CardsSession> & Pick<CardsSession, 'state' | 'activityId'>): CardsSession {
@@ -472,4 +473,51 @@ test('session cues come from the light summary', () => {
 
 test('a failed story resolve retries with growing waits', () => {
   assert.deepEqual([0, 1, 2, 3, 10].map(resolveRetryDelay), [1000, 2000, 4000, 8000, 30000]);
+});
+
+// ---------------------------------------------------------------------------
+// Translation
+// ---------------------------------------------------------------------------
+
+test('every activity string has a stable key, and translating swaps only words', () => {
+  const adventure = ADVENTURES.find((item) => item.id === 'adv-fajr-alarm')!;
+  const strings = activityStrings(adventure);
+  assert.equal(strings['adv-fajr-alarm.title'], 'Fajr Alarm');
+  assert.ok(strings['adv-fajr-alarm.scenes.alarm.decision.choices.wake.label']);
+  assert.ok(strings['adv-fajr-alarm.cover.alt'], 'screen-reader text is translated');
+  assert.equal(strings['adv-fajr-alarm.cover.prompt'], undefined, 'image prompts stay English for the image model');
+  assert.equal(Object.keys(strings).some((key) => key.endsWith('.id')), false, 'ids are never translated');
+
+  const translated = translateActivity(adventure, {
+    'adv-fajr-alarm.title': 'منبه الفجر',
+    'adv-fajr-alarm.scenes.alarm.decision.choices.wake.label': 'أيقظها بلطف',
+  });
+  assert.equal(translated.title, 'منبه الفجر');
+  assert.equal(translated.scenes.alarm!.decision.choices[0]!.label, 'أيقظها بلطف');
+  assert.equal(translated.scenes.alarm!.decision.choices[0]!.id, 'wake', 'structure is untouched');
+  assert.equal(translated.tagline, adventure.tagline, 'missing keys stay English');
+  assert.deepEqual(validateAdventure(translated), []);
+});
+
+test('quiz options and lab points are keyed by position; placeholders are detectable', () => {
+  const quiz = QUIZZES.find((item) => item.id === 'quiz-know-me')!;
+  const strings = activityStrings(quiz);
+  assert.equal(strings['quiz-know-me.cards.km-comfort.options.0'], quiz.cards[0]!.options[0]);
+  assert.deepEqual(placeholdersOf(strings['quiz-know-me.cards.km-comfort.guessPrompt']!), ['name']);
+});
+
+test('every translation file present is complete and keeps its placeholders', async () => {
+  const fs = await import('node:fs');
+  const dir = 'src/halalCards/translations';
+  const files = fs.readdirSync(dir).filter((name) => name.endsWith('.json'));
+  const source: Record<string, string> = {};
+  for (const activity of ALL_ACTIVITIES) Object.assign(source, activityStrings(activity));
+  for (const file of files) {
+    const translation = JSON.parse(fs.readFileSync(`${dir}/${file}`, 'utf8')) as { content: Record<string, string> };
+    for (const [key, english] of Object.entries(source)) {
+      const text = translation.content[key];
+      assert.ok(text && text.trim(), `${file}: ${key} is translated`);
+      assert.deepEqual(placeholdersOf(text!), placeholdersOf(english), `${file}: ${key} keeps its placeholders`);
+    }
+  }
 });

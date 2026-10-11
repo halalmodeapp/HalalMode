@@ -18,7 +18,7 @@ import {
   StaleSessionError,
   submitCardsAnswer,
 } from '@/api/halalCards';
-import { findActivity } from '@/halalCards/content';
+import { useCardsContent } from '@/halalCards/localized';
 import { awaitingOf, currentTurn, isFinished, resolveStory, type Turn } from '@/halalCards/engine/session';
 import type { ActivityState, CardsSession, CardsTrack } from '@/halalCards/types';
 import { resolveRetryDelay } from '@/halalCards/present';
@@ -83,6 +83,7 @@ export function useCardsSession(connectionId: string, sessionId: string) {
   });
 
   const session = query.data;
+  const { findActivity } = useCardsContent();
   const activity = session ? findActivity(session.activityId) : undefined;
   const turn: Turn | undefined = useMemo(
     () => (session && activity && session.status === 'active' ? currentTurn(activity, session) : undefined),
