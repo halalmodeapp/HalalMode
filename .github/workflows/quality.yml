@@ -33,6 +33,10 @@ jobs:
     name: Isolated database contracts
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      # Pull Supabase images from the public ECR mirror: anonymous Docker Hub
+      # pulls from shared runners hit "toomanyrequests: Rate exceeded".
+      SUPABASE_INTERNAL_IMAGE_REGISTRY: public.ecr.aws
     steps:
       - uses: actions/checkout@v4
 
@@ -41,7 +45,9 @@ jobs:
           version: 2.110.0
 
       - name: Start isolated Supabase services
-        run: supabase start
+        # The contracts need Postgres, Auth and Storage; skip the services
+        # they never touch so there are fewer images to pull.
+        run: supabase start -x studio,imgproxy,edge-runtime,postgres-meta
 
       - name: Reset local database and run pgTAP contracts
         run: supabase db reset --local && supabase test db

@@ -2,7 +2,9 @@ const { defineConfig } = require('eslint/config');
 const expoConfig = require('eslint-config-expo/flat');
 
 module.exports = defineConfig([
-  { ignores: ['dist/**', '.expo/**', '.test-build/**', 'supabase/functions/**'] },
+  // site/ is the static halalmo.de website (its own package, plain browser
+  // scripts and an esbuild bundle), not app code.
+  { ignores: ['dist/**', '.expo/**', '.test-build/**', 'supabase/functions/**', 'site/**'] },
   expoConfig,
   {
     rules: {

@@ -290,7 +290,8 @@ region is large enough for the comparison to be meaningful on its own.
 - The pre-change baseline is preserved on local branch `matcher-v2` at commit
   `573234b`; it has not been deleted or rewritten.
 - Matcher V3 is implemented behind the inactive config row seeded by migration
-  `20260813102643_matcher_v3_anchor_first_config.sql`. Its run label is
+  `20260813102643_matcher_v3_anchor_first_config.sql` (its statements now run
+  at the top of `0140_know_when_it_breaks.sql`, see DECISIONS.md). Its run label is
   `anchored_maxmin_v2`; the active config and release flag remain on Matcher V2.
 - V3 now carries directional estimates into allocation and anchors predicted
   mutual first-choice edges before the constrained-first fill.

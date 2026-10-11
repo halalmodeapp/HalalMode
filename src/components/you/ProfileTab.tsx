@@ -27,7 +27,6 @@ import {
   deleteProfilePhoto,
   PROFILE_PHOTO_BUCKET,
   VOICE_INTRODUCTION_BUCKET,
-  type ProfilePhotoMimeType,
   reorderProfilePhotos,
   uploadProfilePhoto,
   uploadVoiceIntroduction,
