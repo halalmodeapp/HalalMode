@@ -8,7 +8,7 @@
  * Run with `npm run cards:illustrations` (it compiles the content first).
  */
 import { createRequire } from 'node:module';
-import { writeFileSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 
 const require = createRequire(import.meta.url);
 const content = require('../.test-build/src/halalCards/content/index.js');
@@ -29,6 +29,9 @@ const MOOD = {
 
 add(images.HUB_HERO, 'Screens', 'Halal Cards home — the large picture at the top, behind the “Halal Cards” title.');
 add(images.GUIDE_HERO, 'Screens', 'Relationship Guide — the picture on the home-screen Guide card and at the top of the Guide screen.');
+add(images.SECTION_TITLE_CARDS.lab, 'Screens', 'Halal Cards home — the red title card for section 1, Relationship Lab. Tinted red so the section reads as its own chapter.');
+add(images.SECTION_TITLE_CARDS.quiz, 'Screens', 'Halal Cards home — the yellow title card for section 2, Relationship Quizzes. Tinted yellow so the section reads as its own chapter.');
+add(images.SECTION_TITLE_CARDS.adventure, 'Screens', 'Halal Cards home — the blue title card for section 3, Relationship Adventures. Tinted blue/cyan so the section reads as its own chapter.');
 
 for (const lesson of content.LAB_LESSONS) {
   const section = `Relationship Lab — ${lesson.ruleLabel}: ${lesson.title}`;
@@ -92,6 +95,13 @@ const brief = {
 };
 writeFileSync('docs/halal-cards-illustrations.json', `${JSON.stringify(brief, null, 2)}\n`);
 
+// Only the slots still without a picture, for handing to an image agent.
+const missing = entries.filter((entry) => !existsSync(entry.file));
+writeFileSync(
+  'docs/halal-cards-illustrations-todo.json',
+  `${JSON.stringify({ ...brief, instructions: `${brief.instructions} These are only the slots that do not have a picture yet.`, slots: missing }, null, 2)}\n`
+);
+
 const ROLE = { cover: 'Cover', scene: 'Scene', turning_point: 'Turning point', outcome: 'Outcome' };
 let md = `# Halal Cards — illustration brief
 
@@ -150,4 +160,4 @@ for (const entry of entries) {
 }
 
 writeFileSync('docs/HALAL_CARDS_ILLUSTRATIONS.md', md);
-console.log(`Wrote ${entries.length} illustration slots.`);
+console.log(`Wrote ${entries.length} illustration slots; ${missing.length} still need a picture.`);

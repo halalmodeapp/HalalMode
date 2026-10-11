@@ -11,23 +11,33 @@ import { PremiumGate } from '@/components/halalCards/PremiumGate';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
 import { Screen } from '@/components/ui/Screen';
-import { Segmented } from '@/components/ui/Segmented';
 import { Text } from '@/components/ui/Text';
 import { canStartSession } from '@/halalCards/access';
 import { ADVENTURES, findActivity, LAB_LESSONS, QUIZZES } from '@/halalCards/content';
-import { HUB_HERO } from '@/halalCards/content/images';
+import { HUB_HERO, SECTION_TINTS, SECTION_TITLE_CARDS } from '@/halalCards/content/images';
+import { ILLUSTRATIONS } from '@/halalCards/illustrations';
 import { useCardsCopy } from '@/halalCards/copy';
-import { useCardsAccess, useCardsSummary, useGuide, useSetCardsTrack } from '@/halalCards/hooks';
+import { useCardsAccess, useCardsSummary, useGuide } from '@/halalCards/hooks';
 import { backOr, cardsPaths } from '@/halalCards/navigation';
+import { inTrack } from '@/halalCards/present';
 import { CUE_PRIORITY, sessionCue, type SessionCue } from '@/halalCards/status';
-import { CARDS_TRACKS, type Activity, type ActivityKind, type CardsSummary, type ImageSlot } from '@/halalCards/types';
+import { type Activity, type ActivityKind, type CardsSummary, type ImageSlot } from '@/halalCards/types';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useI18n } from '@/i18n';
 import { queryKeys } from '@/lib/queryClient';
 import { useSession } from '@/state/session';
 import { alpha, color, font, layout, radius, shadow, space } from '@/theme/tokens';
 
-/** The picture that stands for each section on its gate card. */
+/**
+ * Each section's title card: its own tinted illustration once drawn, until
+ * then a picture from inside it under the section's colour wash.
+ */
+function sectionCard(kind: ActivityKind): { image: ImageSlot; tint?: string } {
+  const card = SECTION_TITLE_CARDS[kind];
+  return ILLUSTRATIONS[card.id] ? { image: card } : { image: SECTION_IMAGE[kind], tint: SECTION_TINTS[kind] };
+}
+
+/** A picture from inside each section, for its title card until one is drawn. */
 const SECTION_IMAGE: Record<ActivityKind, ImageSlot> = {
   lab: LAB_LESSONS[1]!.cover,
   quiz: QUIZZES[0]!.cover,
@@ -49,7 +59,6 @@ export default function HalalCardsHub() {
   const access = useCardsAccess(id);
   const sessions = useCardsSummary(id, { poll: 20_000 });
   const guide = useGuide(id);
-  const setTrack = useSetCardsTrack(id);
 
   if (connection.isPending) {
     return (
@@ -68,7 +77,6 @@ export default function HalalCardsHub() {
 
   const name = connection.data.profile.firstName;
   const canStart = canStartSession({ myTier: tier, access: access.data });
-  const track = access.data?.track ?? 'getting_to_know';
   const rows = (sessions.data ?? [])
     .map((session) => ({ session, activity: findActivity(session.activityId), cue: sessionCue(session) }))
     .filter((item): item is { session: CardsSummary; activity: Activity; cue: SessionCue } => !!item.activity);
@@ -81,7 +89,7 @@ export default function HalalCardsHub() {
   const enter = (index: number) => (reducedMotion ? undefined : FadeInDown.delay(60 * index).springify().damping(18));
   const counts: Record<ActivityKind, string> = {
     lab: copy('lessons', { count: LAB_LESSONS.length }),
-    quiz: copy('decks', { count: QUIZZES.length }),
+    quiz: copy('decks', { count: QUIZZES.filter((quiz) => inTrack(quiz, access.data?.track ?? 'getting_to_know')).length }),
     adventure: copy('stories', { count: ADVENTURES.length }),
   };
 
@@ -161,26 +169,19 @@ export default function HalalCardsHub() {
             </Pressable>
           </Animated.View>
 
-          <View style={styles.track}>
-            <Text variant="label">{copy('trackTitle')}</Text>
-            <Segmented
-              value={track}
-              onChange={(value) => setTrack.mutate(value)}
-              options={CARDS_TRACKS.map((value) => ({ value, label: copy(`track.${value}`) }))}
-            />
-            <Text variant="caption">{copy('trackHint')}</Text>
-          </View>
-
           {(['lab', 'quiz', 'adventure'] as const).map((kind, index) => (
-            <Animated.View key={kind} entering={enter(index + 2)}>
+            <Animated.View key={kind} entering={enter(index + 2)} style={styles.gateBlock}>
+              <View style={styles.gateHeading}>
+                <Text style={[styles.gateNumber, { color: SECTION_TINTS[kind] }]}>{index + 1}</Text>
+                <Text style={styles.gateTitle}>{copy(SECTION_TITLE[kind])}</Text>
+              </View>
               <Pressable
                 accessibilityRole="button"
                 onPress={() => router.push(cardsPaths.section(id, kind) as never)}
                 style={({ pressed }) => [styles.gate, pressed && styles.pressed]}
               >
-                <Illustration image={SECTION_IMAGE[kind]} aspectRatio={16 / 9} rounded={false} thumb>
+                <Illustration {...sectionCard(kind)} aspectRatio={16 / 9} rounded={false} thumb>
                   <OverlayText kind="eyebrow">{counts[kind]}</OverlayText>
-                  <OverlayText kind="title">{copy(SECTION_TITLE[kind])}</OverlayText>
                 </Illustration>
                 <View style={styles.gateBody}>
                   <Text variant="body">{copy(SECTION_GATE[kind])}</Text>
@@ -291,7 +292,10 @@ const styles = StyleSheet.create({
   lines: { marginVertical: space.xs },
   line: { borderBottomWidth: 1, borderBottomColor: 'rgba(138,106,52,0.22)', paddingVertical: 6 },
   lineText: { fontFamily: font.displayItalic, fontSize: 14, color: color.inkSoft },
-  track: { gap: space.sm },
+  gateBlock: { gap: space.md },
+  gateHeading: { flexDirection: 'row', alignItems: 'baseline', gap: space.md },
+  gateNumber: { fontFamily: font.display, fontSize: 44, lineHeight: 48, color: color.goldGlow },
+  gateTitle: { flex: 1, fontFamily: font.display, fontSize: 28, lineHeight: 33, color: color.ink, letterSpacing: -0.3 },
   gate: {
     borderRadius: radius.panel,
     backgroundColor: color.surface,

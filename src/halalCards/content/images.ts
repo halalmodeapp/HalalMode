@@ -177,3 +177,34 @@ export const GUIDE_HERO = slot(
   'A husband and wife writing together in a handsome cloth-bound book at a wooden table, his hand steadying the page while she writes, a Qur’an on a stand, a teapot and a sprig of jasmine nearby, soft lamp light.',
   'A married couple writing together in a shared book.'
 );
+
+/**
+ * Title cards for the three sections on the Halal Cards home, each washed in
+ * its own colour so they read as chapters rather than three more pictures.
+ */
+export const SECTION_TINTS = {
+  lab: '#B5472F',
+  quiz: '#D9A21B',
+  adventure: '#2E8C9E',
+} as const;
+
+export const SECTION_TITLE_CARDS = {
+  lab: slot(
+    'section-lab',
+    'cover',
+    'Title card for “Relationship Lab”. A married couple sitting across a small table with an open notebook, sketching a simple diagram of two overlapping circles between them, thoughtful and engaged. The whole image is tinted in a warm, muted brick-red and terracotta palette — reds dominate the background, clothing accents and shadows, with cream highlights — so it reads unmistakably as the red chapter.',
+    'A couple working through a notebook together, in warm red tones.'
+  ),
+  quiz: slot(
+    'section-quiz',
+    'cover',
+    'Title card for “Relationship Quizzes”. A husband and wife on a sofa each holding a card close to their chest, grinning at each other as if about to reveal their answers, playful and light. The whole image is tinted in a warm, muted saffron and ochre-yellow palette — yellows and golds dominate the background, cushions and shadows, with cream highlights — so it reads unmistakably as the yellow chapter.',
+    'A couple about to reveal their cards, in warm yellow tones.'
+  ),
+  adventure: slot(
+    'section-adventure',
+    'cover',
+    'Title card for “Relationship Adventures”. A married couple standing together at the start of a winding path that forks ahead toward a distant city skyline and hills, one pointing ahead, the other holding a map, a sense of story and journey. The whole image is tinted in a muted teal, dusty cyan and soft blue palette — blues dominate the sky, path and shadows, with cream highlights — so it reads unmistakably as the blue chapter.',
+    'A couple at a fork in a path, in cool blue tones.'
+  ),
+};

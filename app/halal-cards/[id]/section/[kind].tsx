@@ -10,7 +10,7 @@ import { ADVENTURE_CONCEPTS, ADVENTURES, LAB_LESSONS, QUIZZES } from '@/halalCar
 import { useCardsCopy } from '@/halalCards/copy';
 import { useCardsAccess, useConceptVotes } from '@/halalCards/hooks';
 import { backOr, cardsPaths } from '@/halalCards/navigation';
-import { firstTrack, inTrack, showFormatEyebrow } from '@/halalCards/present';
+import { inTrack, showFormatEyebrow } from '@/halalCards/present';
 import type { Activity, ActivityKind } from '@/halalCards/types';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { alpha, color, font, layout, radius, shadow, space } from '@/theme/tokens';
@@ -28,12 +28,12 @@ export default function SectionScreen() {
   const votes = useConceptVotes();
   const track = access.data?.track ?? 'getting_to_know';
   const activities: Activity[] = kind === 'lab' ? LAB_LESSONS : kind === 'quiz' ? QUIZZES : ADVENTURES;
-  const ordered = [...activities].sort((a, b) => Number(!inTrack(a, track)) - Number(!inTrack(b, track)));
+  // Engaged and married content waits, unseen, until a couple unlocks that
+  // stage together — a later feature. Only what suits them now is listed.
+  const ordered = activities.filter((activity) => inTrack(activity, track));
   const enter = (index: number) => (reducedMotion ? undefined : FadeInDown.delay(50 * index).springify().damping(18));
   const open = (activity: Activity) => router.push(cardsPaths.activity(id, activity.id) as never);
 
-  const lockNote = (activity: Activity) =>
-    inTrack(activity, track) ? null : copy('laterTrack', { track: copy(`track.${firstTrack(activity)}`).toLowerCase() });
 
   return (
     <Screen>
@@ -55,12 +55,12 @@ export default function SectionScreen() {
                     <Pressable
                       accessibilityRole="button"
                       onPress={() => open(activity)}
-                      style={({ pressed }) => [styles.tile, !inTrack(activity, track) && styles.later, pressed && styles.pressed]}
+                      style={({ pressed }) => [styles.tile, pressed && styles.pressed]}
                     >
                       <Illustration image={activity.cover} aspectRatio={4 / 5} thumb>
                         {quiz && showFormatEyebrow(quiz, label) ? <OverlayText kind="eyebrow" numberOfLines={1}>{label}</OverlayText> : null}
                         <OverlayText kind="title" numberOfLines={3}>{activity.title}</OverlayText>
-                        <OverlayText kind="body">{lockNote(activity) ?? copy('minutes', { count: activity.minutes })}</OverlayText>
+                        <OverlayText kind="body">{copy('minutes', { count: activity.minutes })}</OverlayText>
                       </Illustration>
                     </Pressable>
                   </Animated.View>
@@ -73,7 +73,7 @@ export default function SectionScreen() {
                 <Pressable
                   accessibilityRole="button"
                   onPress={() => open(activity)}
-                  style={({ pressed }) => [styles.tile, !inTrack(activity, track) && styles.later, pressed && styles.pressed]}
+                  style={({ pressed }) => [styles.tile, pressed && styles.pressed]}
                 >
                   <Illustration image={activity.cover} aspectRatio={kind === 'adventure' ? 4 / 5 : 16 / 10} thumb>
                     <OverlayText kind="eyebrow">
@@ -84,7 +84,7 @@ export default function SectionScreen() {
                           : ''}
                     </OverlayText>
                     <OverlayText kind={kind === 'adventure' ? 'titleLarge' : 'title'}>{activity.title}</OverlayText>
-                    <OverlayText kind="body">{lockNote(activity) ?? activity.tagline}</OverlayText>
+                    <OverlayText kind="body">{activity.tagline}</OverlayText>
                   </Illustration>
                 </Pressable>
               </Animated.View>
@@ -138,7 +138,6 @@ const styles = StyleSheet.create({
   head: { gap: space.sm, marginBottom: space.sm },
   pressed: { opacity: 0.85, transform: [{ scale: 0.99 }] },
   tile: { borderRadius: radius.lg, ...shadow.card, shadowOpacity: 0.1 },
-  later: { opacity: 0.6 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md },
   quizTile: { flexBasis: '47%', flexGrow: 1 },
   soon: { gap: space.sm, marginTop: space.lg },

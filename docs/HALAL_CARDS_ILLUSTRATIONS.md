@@ -5,7 +5,7 @@ shows a drawn placeholder. This file is generated from the content —
 regenerate it with `npm run cards:illustrations` after adding or changing
 scenes. A machine-readable copy is in `docs/halal-cards-illustrations.json`.
 
-**120 illustrations** in total.
+**123 illustrations** in total.
 
 ## How to add a picture
 
@@ -181,6 +181,63 @@ SCENE DESIGN
 Illustrate the following scenario:
 
 A husband and wife writing together in a handsome cloth-bound book at a wooden table, his hand steadying the page while she writes, a Qur’an on a stand, a teapot and a sprig of jasmine nearby, soft lamp light.
+
+Format: 1600 × 2000 px (4:5, portrait). Also shown cropped to 16:10 in lists — keep the characters in the middle third, and keep the lower quarter simple and uncluttered (the app lays the title over it).
+Create one single illustration of this scene — the reference image is a sheet of examples, so do not copy its grid or panels.
+```
+
+### `section-lab` · Cover
+
+- **Where it appears:** Halal Cards home — the red title card for section 1, Relationship Lab. Tinted red so the section reads as its own chapter.
+- **Save as:** `assets/halal-cards/section-lab.webp`
+- **Size:** 1600 × 2000 px (4:5, portrait)
+- **Alt text:** A couple working through a notebook together, in warm red tones.
+
+**Scene design**
+
+```text
+SCENE DESIGN
+Illustrate the following scenario:
+
+Title card for “Relationship Lab”. A married couple sitting across a small table with an open notebook, sketching a simple diagram of two overlapping circles between them, thoughtful and engaged. The whole image is tinted in a warm, muted brick-red and terracotta palette — reds dominate the background, clothing accents and shadows, with cream highlights — so it reads unmistakably as the red chapter.
+
+Format: 1600 × 2000 px (4:5, portrait). Also shown cropped to 16:10 in lists — keep the characters in the middle third, and keep the lower quarter simple and uncluttered (the app lays the title over it).
+Create one single illustration of this scene — the reference image is a sheet of examples, so do not copy its grid or panels.
+```
+
+### `section-quiz` · Cover
+
+- **Where it appears:** Halal Cards home — the yellow title card for section 2, Relationship Quizzes. Tinted yellow so the section reads as its own chapter.
+- **Save as:** `assets/halal-cards/section-quiz.webp`
+- **Size:** 1600 × 2000 px (4:5, portrait)
+- **Alt text:** A couple about to reveal their cards, in warm yellow tones.
+
+**Scene design**
+
+```text
+SCENE DESIGN
+Illustrate the following scenario:
+
+Title card for “Relationship Quizzes”. A husband and wife on a sofa each holding a card close to their chest, grinning at each other as if about to reveal their answers, playful and light. The whole image is tinted in a warm, muted saffron and ochre-yellow palette — yellows and golds dominate the background, cushions and shadows, with cream highlights — so it reads unmistakably as the yellow chapter.
+
+Format: 1600 × 2000 px (4:5, portrait). Also shown cropped to 16:10 in lists — keep the characters in the middle third, and keep the lower quarter simple and uncluttered (the app lays the title over it).
+Create one single illustration of this scene — the reference image is a sheet of examples, so do not copy its grid or panels.
+```
+
+### `section-adventure` · Cover
+
+- **Where it appears:** Halal Cards home — the blue title card for section 3, Relationship Adventures. Tinted blue/cyan so the section reads as its own chapter.
+- **Save as:** `assets/halal-cards/section-adventure.webp`
+- **Size:** 1600 × 2000 px (4:5, portrait)
+- **Alt text:** A couple at a fork in a path, in cool blue tones.
+
+**Scene design**
+
+```text
+SCENE DESIGN
+Illustrate the following scenario:
+
+Title card for “Relationship Adventures”. A married couple standing together at the start of a winding path that forks ahead toward a distant city skyline and hills, one pointing ahead, the other holding a map, a sense of story and journey. The whole image is tinted in a muted teal, dusty cyan and soft blue palette — blues dominate the sky, path and shadows, with cream highlights — so it reads unmistakably as the blue chapter.
 
 Format: 1600 × 2000 px (4:5, portrait). Also shown cropped to 16:10 in lists — keep the characters in the middle third, and keep the lower quarter simple and uncluttered (the app lays the title over it).
 Create one single illustration of this scene — the reference image is a sheet of examples, so do not copy its grid or panels.

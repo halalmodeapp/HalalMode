@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Platform, StyleSheet, Text as RNText, View, type ImageStyle, type TextStyle, type ViewStyle } from 'react-native';
 
 import { ILLUSTRATIONS, THUMBNAILS } from '@/halalCards/illustrations';
@@ -22,6 +22,7 @@ export function Illustration({
   style,
   rounded = true,
   thumb = false,
+  tint,
   children,
 }: {
   image: ImageSlot;
@@ -30,10 +31,16 @@ export function Illustration({
   rounded?: boolean;
   /** Use the small version, for list tiles. */
   thumb?: boolean;
+  /** A colour wash over the picture, for section title cards. */
+  tint?: string;
   /** Laid over the bottom of the picture, on a readable scrim. */
   children?: ReactNode;
 }) {
-  const source = (thumb ? THUMBNAILS[image.id] : undefined) ?? ILLUSTRATIONS[image.id];
+  // A thumbnail that fails to load (say, a dev server started before it
+  // existed) falls back to the full picture rather than leaving a blank tile.
+  const [thumbFailed, setThumbFailed] = useState(false);
+  const small = thumb && !thumbFailed ? THUMBNAILS[image.id] : undefined;
+  const source = small ?? ILLUSTRATIONS[image.id];
 
   return (
     <View
@@ -54,9 +61,11 @@ export function Illustration({
           style={StyleSheet.absoluteFill as ImageStyle}
           contentFit="cover"
           transition={200}
+          onError={small ? () => setThumbFailed(true) : undefined}
           accessibilityIgnoresInvertColors
         />
       ) : null}
+      {tint ? <View style={[StyleSheet.absoluteFill, styles.tint, { backgroundColor: tint }]} /> : null}
       {children ? (
         <>
           <LinearGradient
@@ -97,6 +106,8 @@ const styles = StyleSheet.create({
   rounded: { borderRadius: radius.lg },
   scrim: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '78%', pointerEvents: 'none' },
   overlay: { padding: space.lg, gap: 4 },
+  // Multiply keeps the drawing's lines and shading under the colour.
+  tint: { opacity: 0.62, mixBlendMode: 'multiply', pointerEvents: 'none' },
 });
 
 const overlayText = StyleSheet.create<Record<string, TextStyle>>({
