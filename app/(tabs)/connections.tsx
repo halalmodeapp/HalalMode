@@ -15,6 +15,7 @@ import { useSession } from '@/state/session';
 import { alpha, color, radius, space } from '@/theme/tokens';
 import { TIER_LIMITS, type Connection, type ConnectionStage } from '@/types';
 import { RTL_LAYOUT } from '@/lib/rtl';
+import { useCardsAttention } from '@/halalCards/hooks';
 
 /** Where a tap on each stage should land. */
 const STAGE_ROUTE: Record<ConnectionStage, string> = {
@@ -78,6 +79,7 @@ export default function ConnectionsScreen() {
 
 function ConnectionRow({ connection }: { connection: Connection }) {
   const { isRTL, t } = useI18n();
+  const cardsWaiting = useCardsAttention().data?.[connection.id] ?? 0;
   const [now, setNow] = useState(0);
   useEffect(() => setNow(Date.now()), []);
   const days = Math.max(
@@ -118,6 +120,11 @@ function ConnectionRow({ connection }: { connection: Connection }) {
         <Text style={styles.stage}>{t(`connections.stage.${stageKey(connection.stage)}`)}</Text>
       </View>
 
+      {cardsWaiting ? (
+        <View style={styles.cardsBadge} accessibilityLabel={t('halalCards.badgeA11y', { count: cardsWaiting })}>
+          <Text style={styles.cardsBadgeText}>{`✦ ${cardsWaiting}`}</Text>
+        </View>
+      ) : null}
       {connection.unread ? <View style={styles.unreadDot} /> : null}
     </Pressable>
   );
@@ -164,6 +171,15 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: color.gold,
   },
+  cardsBadge: {
+    paddingHorizontal: 7,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: color.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardsBadgeText: { fontSize: 10.5, fontWeight: '700', color: color.goldOnDark },
   unreadDot: {
     width: 7,
     height: 7,

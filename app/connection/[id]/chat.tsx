@@ -23,6 +23,7 @@ import {
   sendMessage,
 } from '@/api/connections';
 import { AudioGreeting } from '@/components/introductions/AudioGreeting';
+import { ChatCardsBanner } from '@/components/halalCards/ChatCardsBanner';
 import { SafetyControl } from '@/components/safety/SafetyControl';
 import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
 import { Screen } from '@/components/ui/Screen';
@@ -31,6 +32,9 @@ import { Text } from '@/components/ui/Text';
 import { showNotice } from '@/lib/notice';
 import { shuffledOpeners } from '@/data/openers';
 import { useI18n } from '@/i18n';
+import { cardsCopy } from '@/halalCards/copy';
+import { useCardsAttention } from '@/halalCards/hooks';
+import { cardsPaths } from '@/halalCards/navigation';
 import { queryKeys } from '@/lib/queryClient';
 import { trackProductEvent } from '@/lib/analytics';
 import { enqueueMessage, getPendingMessages, removePendingMessage } from '@/lib/messageOutbox';
@@ -50,7 +54,7 @@ type ConversationItem =
 
 export default function ChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { isRTL, t } = useI18n();
+  const { isRTL, language, t } = useI18n();
   const { user } = useAuth();
   const { inChatVoiceNotes, liveCalling } = useFeatureFlags();
   const queryClient = useQueryClient();
@@ -64,6 +68,7 @@ export default function ChatScreen() {
   const [pendingCount, setPendingCount] = useState(0);
   const [retryFailed, setRetryFailed] = useState(false);
   const outboxMemberId = USE_MOCKS ? 'mock' : user?.id;
+  const cardsWaiting = useCardsAttention().data?.[id] ?? 0;
 
   const refreshPendingCount = useCallback(async () => {
     if (!outboxMemberId) {
@@ -306,8 +311,8 @@ export default function ChatScreen() {
           />
 
           <View style={styles.headerText}>
-            <Text variant="label">{connection.profile.firstName}</Text>
-            <Text variant="caption">
+            <Text variant="label" numberOfLines={1}>{connection.profile.firstName}</Text>
+            <Text variant="caption" numberOfLines={1}>
               {t('chat.headerMeta', { days, count: answered })}
             </Text>
           </View>
@@ -338,9 +343,25 @@ export default function ChatScreen() {
             onPress={confirmClose}
             style={styles.pauseButton}
           >
-            <Text style={styles.pauseLabel}>{t('chat.pause')}</Text>
+            <Text style={styles.pauseLabel} numberOfLines={2}>{t('chat.pause')}</Text>
           </Pressable>
         </View>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={cardsCopy(language, 'chatOpenA11y', { name: connection.profile.firstName })}
+          onPress={() => router.push(cardsPaths.hub(id) as never)}
+          style={({ pressed }) => [styles.cardsRow, isRTL && styles.rowRTL, pressed && styles.cardsRowPressed]}
+        >
+          <Text style={styles.cardsGlyph}>✦</Text>
+          <Text style={styles.cardsLabel} numberOfLines={1}>{t('halalCards.chatRow')}</Text>
+          {cardsWaiting ? (
+            <View style={styles.cardsBadge} accessibilityLabel={t('halalCards.badgeA11y', { count: cardsWaiting })}>
+              <Text style={styles.cardsBadgeText}>{cardsWaiting}</Text>
+            </View>
+          ) : null}
+          <Text style={styles.cardsChevron}>{isRTL ? '‹' : '›'}</Text>
+        </Pressable>
 
         <FlatList
           ref={listRef}
@@ -385,6 +406,8 @@ export default function ChatScreen() {
             )
           }
         />
+
+        <ChatCardsBanner connectionId={id} partnerName={connection.profile.firstName} />
 
         {pendingCount > 0 ? (
           <Pressable
@@ -704,19 +727,24 @@ const styles = StyleSheet.create({
   },
   backGlyph: { fontFamily: font.body, fontSize: 15, color: color.inkSoft },
   avatar: { width: 34, height: 34, borderRadius: 17 },
-  headerText: { flex: 1, gap: 2 },
+  headerText: { flex: 1, minWidth: 0, gap: 2 },
+  // Compact so the name always has room, even on a 360 pt phone.
   pauseButton: {
     minHeight: 44,
+    maxWidth: 98,
     borderWidth: 1,
     borderColor: alpha.lineStrong,
-    borderRadius: radius.pill,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    borderRadius: 16,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    justifyContent: 'center',
   },
   pauseLabel: {
     fontFamily: font.body,
-    fontSize: 10,
-    letterSpacing: 1.1,
+    fontSize: 9.5,
+    lineHeight: 12,
+    letterSpacing: 0.3,
+    textAlign: 'center',
     textTransform: 'uppercase',
     color: color.muted,
   },
@@ -730,6 +758,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   callGlyph: { fontFamily: font.body, fontSize: 16, color: color.inkSoft },
+  cardsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: space.xl,
+    paddingVertical: 9,
+    backgroundColor: color.ink,
+  },
+  cardsRowPressed: { opacity: 0.88 },
+  cardsGlyph: { fontSize: 12, color: color.goldOnDark },
+  cardsLabel: { flex: 1, fontFamily: font.bodySemi, fontSize: 12, letterSpacing: 0.4, color: color.white },
+  cardsBadge: {
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 6,
+    borderRadius: 10,
+    backgroundColor: color.goldGlow,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardsBadgeText: { fontFamily: font.bodyBold, fontSize: 11, color: '#3A2C10' },
+  cardsChevron: { fontSize: 18, color: alpha.onDarkStrong },
   messages: { flexGrow: 1, paddingHorizontal: space.xl, paddingVertical: 16, gap: 10 },
   loadEarlier: { alignSelf: 'center', paddingHorizontal: space.md, paddingVertical: space.sm },
   loadEarlierLabel: { color: color.ink, textDecorationLine: 'underline' },
