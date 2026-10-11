@@ -84,7 +84,6 @@ export default function DailyScreen() {
     emptyReason,
     narrowingCriterion,
     nextSetCity,
-    owed,
     owedAll,
     isLoading,
     error,

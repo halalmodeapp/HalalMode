@@ -10,7 +10,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { showNotice } from '@/lib/notice';
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
-import { color, font, layout, radius, space } from '@/theme/tokens';
+import { color, layout, radius, space } from '@/theme/tokens';
 import { testIds } from '@/lib/testIds';
 import { RTL_LAYOUT } from '@/lib/rtl';
 

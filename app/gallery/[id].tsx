@@ -76,11 +76,11 @@ export default function GalleryScreen() {
     setIndex(safeGalleryIndex(Math.round(event.nativeEvent.contentOffset.x / width), photos.length));
   };
 
-  const goTo = useCallback((next: number) => {
+  const goTo = (next: number) => {
     const target = safeGalleryIndex(next, photos.length);
     listRef.current?.scrollToOffset({ offset: target * width, animated: true });
     setIndex(target);
-  }, [photos.length, width]);
+  };
   const swipeTo = (distance: number, velocity: number) => {
     const current = safeGalleryIndex(index, photos.length);
     if (distance < -40 || velocity < -500) goTo(Math.min(photos.length - 1, current + 1));
