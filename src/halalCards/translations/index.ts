@@ -13,7 +13,9 @@ import type { CardsTranslation } from '../i18n';
  * A registered language shows Halal Cards fully in that language, in its own
  * direction. Until then, members using it see English, left to right.
  */
-export const CARDS_TRANSLATIONS: Partial<Record<AppLocale, CardsTranslation>> = {};
+export const CARDS_TRANSLATIONS: Partial<Record<AppLocale, CardsTranslation>> = {
+  ar: require('./ar.json') as CardsTranslation,
+};
 
 export function hasCardsTranslation(language: AppLocale): boolean {
   return !!CARDS_TRANSLATIONS[language];
