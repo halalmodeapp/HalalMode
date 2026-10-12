@@ -15,6 +15,7 @@ import type { CardsTranslation } from '../i18n';
  */
 export const CARDS_TRANSLATIONS: Partial<Record<AppLocale, CardsTranslation>> = {
   ar: require('./ar.json') as CardsTranslation,
+  ur: require('./ur.json') as CardsTranslation,
 };
 
 export function hasCardsTranslation(language: AppLocale): boolean {
