@@ -28,6 +28,7 @@ export const CARDS_TRANSLATIONS: Partial<Record<AppLocale, CardsTranslation>> = 
   so: require('./so.json') as CardsTranslation,
   es: require('./es.json') as CardsTranslation,
   ru: require('./ru.json') as CardsTranslation,
+  'zh-Hans': require('./zh-Hans.json') as CardsTranslation,
 };
 
 export function hasCardsTranslation(language: AppLocale): boolean {
