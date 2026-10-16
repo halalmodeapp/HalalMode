@@ -553,8 +553,24 @@ Deno.serve(async (request: Request) => {
     }
 
     const schedule = await dawnScheduleFor(client);
-    const generated = await client.rpc('generate_round_for_pairs_scheduled', { p_schedule: schedule });
-    if (generated.error) throw new Error(generated.error.message);
+    const generated = await Promise.resolve()
+      .then(() => client.rpc('generate_round_for_pairs_scheduled', { p_schedule: schedule }))
+      .catch((error) => {
+        const explicitRollback = isExplicitDatabaseRollback(error);
+        throw new MatchingRunError(
+          error instanceof Error ? error.message : String(error),
+          !shouldReleaseCycleClaim(true, explicitRollback),
+          error
+        );
+      });
+    if (generated.error) {
+      const explicitRollback = isExplicitDatabaseRollback(generated.error);
+      throw new MatchingRunError(
+        generated.error.message,
+        !shouldReleaseCycleClaim(true, explicitRollback),
+        generated.error
+      );
+    }
     return Response.json({ expiredSelections: expired.data, pairsCreated: generated.data, expiresAt, cycleDate: timing.cycleDate });
   } catch (error) {
     if (!(error instanceof MatchingRunError) || !error.preserveCycleClaim) {
