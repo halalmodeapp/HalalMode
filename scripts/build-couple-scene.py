@@ -325,9 +325,6 @@ def write_site(manifest):
     lines = []
     for entry in manifest:
         lines.append('    ' + layer(entry))
-        if entry['key'] == 'heart':
-            lines.append('    ' + bubble('him'))
-            lines.append('    ' + bubble('her'))
         if entry['key'] == 'walls':
             # Sunlight falls across the sky, city and walls, but stays behind
             # the stairs and the couple, so it never crosses a face or the copy.
@@ -336,6 +333,9 @@ def write_site(manifest):
                          '<div class="scene-glow"></div><div class="scene-rays scene-rays-a"></div>'
                          '<div class="scene-rays scene-rays-b"></div>'
                          '<div class="scene-motes">' + motes() + '</div></div>')
+    # Speech bubbles go last, above the flowers, so the words are never hidden.
+    lines.append('    ' + bubble('him'))
+    lines.append('    ' + bubble('her'))
     block = '\n'.join(lines)
     preload = '\n'.join(
         f'<link rel="preload" as="image" href="/img/scene/{by_key[key]["file"]}" fetchpriority="high">'

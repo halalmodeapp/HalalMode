@@ -73,9 +73,10 @@ html[data-page-hidden="true"] #cover-couple .scene-heart-float{animation-play-st
 #cover-couple .scene-bubble[data-show] span{opacity:1;transform:translateX(var(--tx,-50%)) scale(1);animation:scene-bubble-float 3.2s ease-in-out .5s infinite alternate}
 #cover-couple .scene-bubble[data-hide] span{opacity:0;transform:translateX(var(--tx,-50%)) scale(.92);transition:opacity .6s ease,transform .6s ease;animation:none}
 @keyframes scene-bubble-float{from{transform:translateX(var(--tx,-50%)) translateY(0)}to{transform:translateX(var(--tx,-50%)) translateY(calc(-3 * var(--u)))}}
-/* Phones: his head sits near the top of the short picture, under the header,
-   so his bubble speaks from the left of his face instead. */
-@media(max-width:960px){#cover-couple .scene-bubble-him span{--tx:-100%;left:calc(-40 * var(--u));bottom:calc(-112 * var(--u));transform-origin:100% 60%}
+/* Phones: the logo covers the sky above his head in the 16:9 picture, so
+   his bubble speaks from the left of his face, below the logo. The two lines
+   take turns there (see the script), so the bubbles never overlap. */
+@media(max-width:960px){#cover-couple .scene-bubble-him span{--tx:-100%;left:calc(-40 * var(--u));bottom:calc(-200 * var(--u));transform-origin:100% 60%}
 #cover-couple .scene-bubble-him span::after{left:auto;right:-.22em;bottom:calc(50% - .3em);margin-left:0}}
 @media(prefers-reduced-motion:reduce){#cover-couple .scene-bubble span{transform:translateX(var(--tx,-50%))!important;animation:none!important;transition:opacity .4s ease}}
 /* Warm light: a soft glow on the sun and a few broad shafts falling toward
@@ -122,6 +123,10 @@ header::before{content:'';position:absolute;z-index:-1;pointer-events:none;top:0
 .hero{position:relative}
 .nav{font:600 12px ui-sans-serif,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);text-decoration:none;background:rgba(252,252,251,.82);padding:8px 14px;border-radius:999px}
 .nav:hover{color:var(--gold)}
+.nav-primary{background:var(--halal-pink);color:#fff}
+.nav-primary:hover{background:var(--halal-pink-deep);color:#fff}
+.nav-arrow{display:inline-block}
+[dir="rtl"] .nav-arrow{transform:scaleX(-1)}
 .logo{height:30px;width:auto;display:block}
 header .logo-link .logo{filter:brightness(0) invert(1) drop-shadow(0 1px 6px rgba(10,10,10,.35))}
 .pill{font:600 12px ui-sans-serif,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);background:rgba(252,252,251,.82);padding:7px 14px;border-radius:999px}
@@ -189,10 +194,9 @@ button:disabled{opacity:.55;cursor:wait}
 .site-footer a{color:var(--gold);text-decoration:none}
 .site-footer a:hover{text-decoration:underline}
 @media(max-width:960px){
-  :root{--sidebar-width:100vw;--scene-full:min(86vw,62svh);--scene-min:max(150px,24svh)}
-  /* Phones and tablets scroll. The scene starts squarer and, as the page
-     scrolls, compresses (reframing as it goes) to a slim strip that stays at
-     the top, so a hint of it is always in view. --scene-h is set by script. */
+  :root{--sidebar-width:100vw;--scene-full:min(56.25vw,55svh)}
+  /* Phones and tablets scroll. The scene is a fixed 16:9 picture pinned to the
+     top; the copy scrolls up underneath it and never changes its size. */
   html,body{height:auto;overflow-x:clip;overflow-y:auto}
   /* No stacking context here, so the fixed header can sit above the scene and
      the copy sheet can slide under it. */
@@ -201,7 +205,7 @@ button:disabled{opacity:.55;cursor:wait}
   header{position:fixed;z-index:6;left:20px;right:20px;padding:14px 0}
   header::before{left:-20px;width:min(560px,94vw);height:min(150px,20svh)}
   header .header-actions .nav{display:none}
-  #cover-couple{position:fixed;z-index:3;top:0;right:0;left:0;margin:0;width:auto;height:var(--scene-h,var(--scene-full));border-radius:0 0 22px 22px;box-shadow:0 10px 30px rgba(10,10,10,.14)}
+  #cover-couple{position:fixed;z-index:3;top:0;right:0;left:0;margin:0;width:auto;height:var(--scene-full);border-radius:0 0 22px 22px;box-shadow:0 10px 30px rgba(10,10,10,.14)}
   .hero{position:relative;z-index:2;display:block;height:auto;margin-top:calc(var(--scene-full) - 24px);padding:40px clamp(18px,5vw,28px) calc(18px + env(safe-area-inset-bottom));background:var(--surface);border-radius:24px 24px 0 0;pointer-events:auto}
   .hero-spacer{display:none}
   .hero-sidebar{display:block;height:auto;max-width:640px;margin:0 auto;padding:0;overflow:visible;background:transparent;border:0;box-shadow:none}
@@ -209,6 +213,7 @@ button:disabled{opacity:.55;cursor:wait}
   .lede{font-size:15px;line-height:1.55;margin-bottom:14px}
   .mobile-links{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
   .how-link{display:inline-flex;align-items:center;gap:.35em;padding:9px 16px;border:1px solid var(--line);border-radius:999px;color:var(--ink);text-decoration:none;font:600 13px ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+  .how-link-primary{background:var(--halal-pink);border-color:var(--halal-pink);color:#fff}
   .stores{gap:8px;margin-bottom:14px}
   .slot{gap:3px}
   .soon{font-size:9.5px}
@@ -247,11 +252,11 @@ button:disabled{opacity:.55;cursor:wait}
     <div class="scene-layer" data-layer="woman" style="--d:0.0;--x:376;--y:491;--w:401;--h:401"><img src="/img/scene/woman.9da822e4ef.webp" alt="" width="802" height="802" decoding="async"></div>
     <div class="scene-layer" data-layer="man" style="--d:0.0;--x:812;--y:267;--w:364;--h:298"><img src="/img/scene/man.a1c9d96f4e.webp" alt="" width="729" height="596" decoding="async"></div>
     <div class="scene-layer scene-heart" data-layer="heart" data-heart-drag style="--d:0.0;--x:762;--y:432;--w:50;--h:42"><div class="scene-heart-offset"><div class="scene-heart-float"><img src="/img/scene/heart.c20d91f0ee.webp" alt="" width="101" height="83" decoding="async"></div></div></div>
-    <div class="scene-bubble scene-bubble-him" data-bubble="him" style="--d:0.0;--bx:988;--by:250" aria-hidden="true"><span><b data-i18n="bubbleHim">Nice to meet you.</b><i class="scene-bubble-emoji">👋</i></span></div>
-    <div class="scene-bubble scene-bubble-her" data-bubble="her" style="--d:0.0;--bx:559;--by:498" aria-hidden="true"><span><b data-i18n="bubbleHer">Nice to meet you too.</b></span></div>
     <div class="scene-layer" data-layer="bougainvillea" style="--d:0.6;--x:-10;--y:-10;--w:826;--h:558"><img src="/img/scene/bougainvillea.f698ef8f74.webp" alt="" width="826" height="558" decoding="async"></div>
     <div class="scene-layer" data-layer="plantLeft" style="--d:1.1;--x:-116;--y:625;--w:432;--h:437"><img src="/img/scene/plant-left.db3621348d.webp" alt="" width="432" height="437" decoding="async"></div>
     <div class="scene-layer" data-layer="plantRight" style="--d:1.3;--x:1113;--y:378;--w:697;--h:676"><img src="/img/scene/plant-right.751c24443c.webp" alt="" width="697" height="676" decoding="async"></div>
+    <div class="scene-bubble scene-bubble-him" data-bubble="him" style="--d:0.0;--bx:988;--by:250" aria-hidden="true"><span><b data-i18n="bubbleHim">Nice to meet you.</b><i class="scene-bubble-emoji">👋</i></span></div>
+    <div class="scene-bubble scene-bubble-her" data-bubble="her" style="--d:0.0;--bx:559;--by:498" aria-hidden="true"><span><b data-i18n="bubbleHer">Nice to meet you too.</b></span></div>
     <!-- /couple-scene:layers --></div>
 </div>
 <div id="wash"></div>
@@ -260,8 +265,8 @@ button:disabled{opacity:.55;cursor:wait}
 <header>
   <a class="logo-link" href="/" aria-label="Halal Mode" data-brand-name-aria><img class="logo" src="/logo.svg" alt="Halal Mode"><span class="logo-effect" aria-hidden="true"><span class="logo-shader"></span></span></a>
   <div class="header-actions">
-    <a class="nav" href="/how-it-works" data-i18n="navHow">How it works</a>
-    <a class="nav nav-refer" href="/refer" data-i18n="navRefer">Refer your friends</a>
+    <a class="nav nav-primary" href="/how-it-works"><span data-i18n="navHow">How it works</span> <span class="nav-arrow" aria-hidden="true">→</span></a>
+    <a class="nav nav-refer" href="/refer"><span data-i18n="navRefer">Refer your friends</span> <span class="nav-arrow" aria-hidden="true">→</span></a>
   </div>
 </header>
 
@@ -273,8 +278,8 @@ button:disabled{opacity:.55;cursor:wait}
     <p class="lede"><span data-i18n="heroIntro">Halal Mode is a better Muslim marriage app, built around a small, curated set of introductions each day. It’s intentionally designed for</span> <span data-i18n="heroBold">less noise and better connections.</span></p>
 
     <nav class="mobile-links" aria-label="More">
-      <a class="how-link" href="/how-it-works"><span data-i18n="navHow">How it works</span> <span aria-hidden="true">→</span></a>
-      <a class="how-link" href="/refer"><span data-i18n="navRefer">Refer your friends</span> <span aria-hidden="true">→</span></a>
+      <a class="how-link how-link-primary" href="/how-it-works"><span data-i18n="navHow">How it works</span> <span class="nav-arrow" aria-hidden="true">→</span></a>
+      <a class="how-link" href="/refer"><span data-i18n="navRefer">Refer your friends</span> <span class="nav-arrow" aria-hidden="true">→</span></a>
     </nav>
     <div class="stores" aria-label="App availability" data-i18n-aria="availability">
       <div class="slot"><span class="soon" data-i18n="comingSoon">Coming soon</span><div class="store ios" role="img" aria-label="App Store, coming soon">
@@ -489,21 +494,8 @@ button:disabled{opacity:.55;cursor:wait}
     var step={ArrowDown:.06,PageDown:.14,ArrowUp:-.04,PageUp:-.08}[event.key];
     if(step!==undefined)travel(step);
   });
-  /* On phones and tablets the page scrolls: the scene compresses from its
-     full height to a slim strip as the page moves, then stays in view. */
-  var mobile=window.matchMedia('(max-width: 960px)'),sceneFrame=0;
-  function sizeScene(){
-    sceneFrame=0;
-    if(!mobile.matches){root.style.removeProperty('--scene-h');return}
-    var vw=window.innerWidth,vh=window.innerHeight;
-    var full=Math.min(.86*vw,.62*vh),least=Math.max(150,.24*vh);
-    root.style.setProperty('--scene-h',Math.max(least,full-(window.scrollY||0)).toFixed(1)+'px');
-  }
-  function queueScene(){if(!sceneFrame)sceneFrame=requestAnimationFrame(sizeScene)}
-  window.addEventListener('scroll',queueScene,{passive:true});
-  window.addEventListener('resize',queueScene,{passive:true});
-  if(mobile.addEventListener)mobile.addEventListener('change',queueScene);
-  sizeScene();
+  /* On phones and tablets the page scrolls under a fixed scene. */
+  var mobile=window.matchMedia('(max-width: 960px)');
   function aim(nx,ny){
     targetX=enabled()?Math.max(-1,Math.min(1,nx)):0;targetY=enabled()?Math.max(-1,Math.min(1,ny)):0;
     if(!frame){lastT=0;frame=requestAnimationFrame(step)}
@@ -551,6 +543,13 @@ button:disabled{opacity:.55;cursor:wait}
     var hide=function(bubble){bubble.dataset.hide=''};
     var exchange=function(start,himKey,herKey,emoji){
       at(start,function(){line(him,himKey,emoji)});
+      if(mobile.matches){
+        /* On phones the bubbles share the space, so they take turns. */
+        at(start+2600,function(){hide(him)});
+        at(start+3200,function(){line(her,herKey,'')});
+        at(start+6400,function(){hide(her)});
+        return start+6400;
+      }
       at(start+2600,function(){line(her,herKey,'')});
       at(start+6000,function(){hide(him)});
       at(start+8200,function(){hide(her)});
