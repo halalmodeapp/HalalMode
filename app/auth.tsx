@@ -48,8 +48,8 @@ const C = {
   soft: '#3B3934',
   muted: '#6C6A65',
   label: '#8B8880',
-  gold: '#8A6A34',
-  line: 'rgba(138,106,52,0.2)',
+  gold: '#B8914F',
+  line: 'rgba(184,145,79,0.2)',
   err: '#9b2c2c',
 };
 // The app's own faces rather than the browser's: Playfair for the headline
@@ -384,19 +384,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  howButtonPressed: { backgroundColor: '#F5F1E9', borderColor: 'rgba(138,106,52,0.42)' },
+  howButtonPressed: { backgroundColor: '#F5F1E9', borderColor: 'rgba(184,145,79,0.42)' },
   howButtonLabel: { color: C.soft, fontFamily: appFont.bodySemi, fontSize: 12, lineHeight: 16 },
   globe: {
     width: 44,
     height: 44,
     borderRadius: 19,
     borderWidth: 1,
-    borderColor: 'rgba(138,106,52,0.24)',
+    borderColor: 'rgba(184,145,79,0.24)',
     backgroundColor: 'rgba(252,252,251,0.88)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  globeOpen: { borderColor: 'rgba(138,106,52,0.55)' },
+  globeOpen: { borderColor: 'rgba(184,145,79,0.55)' },
   languageMenu: {
     position: 'absolute',
     width: 300,
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 26,
     borderTopRightRadius: 26,
     borderTopWidth: 1,
-    borderColor: 'rgba(138,106,52,0.16)',
+    borderColor: 'rgba(184,145,79,0.16)',
   },
   sheetCompact: {
     flexGrow: 0,

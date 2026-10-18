@@ -2,7 +2,7 @@
 
 /** Cream paper and gold ink, as on halalmo.de. */
 export const PAPER = '#F1ECE2';
-export const INK = '138,106,52';
+export const INK = '184,145,79';
 /** Dot spacing in CSS pixels / dp. */
 export const CELL = 5;
 /** Where the two faces are in the photo, as fractions of its width and height. */

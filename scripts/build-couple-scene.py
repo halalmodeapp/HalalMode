@@ -86,6 +86,10 @@ ROTATION = {'man': (6.0, (1120, 546))}
 DENSITY = {'woman': 2, 'man': 2, 'heart': 2, 'bougainvillea': 1, 'plantLeft': 1, 'plantRight': 1}
 # Speech bubbles: world point each bubble's tail touches, just above each head.
 BUBBLES = {'him': (988, 250), 'her': (559, 498)}
+# Recolours a painting to a brand colour, keeping its brushwork and shading:
+# every pixel takes the target hue, with saturation scaled to match.
+HALAL_PINK = '#FC3C6C'  # Halal Pink, the pink of the cover's bougainvillea
+TINT = {'heart': HALAL_PINK}
 # Dust motes drifting through the god rays, just behind the man's head.
 MOTES = 18
 
@@ -112,10 +116,26 @@ def place(file, scale, x, y, rotation=None):
     return rgba[..., :3], alpha
 
 
+def tint(image, hex_colour):
+    """`image` recoloured to `hex_colour`'s hue, saturation scaled to match."""
+    rgba = np.asarray(image.convert('RGBA'))
+    hsv = np.asarray(Image.fromarray(rgba[..., :3]).convert('HSV')).astype(np.float32)
+    target = np.asarray(Image.new('RGB', (1, 1), hex_colour).convert('HSV')).astype(np.float32)[0, 0]
+    solid = rgba[..., 3] > 200
+    source_sat = np.median(hsv[..., 1][solid]) if solid.any() else 1
+    hsv[..., 0] = target[0]
+    hsv[..., 1] = np.clip(hsv[..., 1] * (target[1] / max(source_sat, 1)), 0, 255)
+    rgb = np.asarray(Image.fromarray(hsv.astype(np.uint8), 'HSV').convert('RGB'))
+    return Image.fromarray(np.dstack([rgb, rgba[..., 3]]), 'RGBA')
+
+
 def cutout(file, scale, x, y, density, rotation=None):
     """A cut-out rendered at `density` times its world size, cropped to its
     painted area. Returns the image and its world-pixel box."""
     art = Image.open(os.path.join(LAYERS_DIR, file)).convert('RGBA')
+    key = next((k for k, f, *_ in PLACEMENT if f == file), None)
+    if key in TINT:
+        art = tint(art, TINT[key])
     art = art.resize((max(1, round(art.width * scale * density)), max(1, round(art.height * scale * density))), Image.LANCZOS)
     left, top = x * density, y * density
     if rotation:

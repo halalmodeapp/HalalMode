@@ -35,7 +35,7 @@ export const COUPLE_SCENE_LAYERS: readonly CoupleSceneLayer[] = [
   { key: 'stairs', file: 'stairs.1207fda212.webp', depth: 0.0, x: -48, y: 235, width: 1632, height: 837 },
   { key: 'woman', file: 'woman.9da822e4ef.webp', depth: 0.0, x: 376, y: 491, width: 401, height: 401 },
   { key: 'man', file: 'man.dd6ed24f4d.webp', depth: 0.0, x: 816, y: 259, width: 370, height: 301 },
-  { key: 'heart', file: 'heart.b846661254.webp', depth: 0.0, x: 768, y: 438, width: 50, height: 42 },
+  { key: 'heart', file: 'heart.c20d91f0ee.webp', depth: 0.0, x: 768, y: 438, width: 50, height: 42 },
   { key: 'bougainvillea', file: 'bougainvillea.f698ef8f74.webp', depth: 0.6, x: -10, y: -10, width: 826, height: 558 },
   { key: 'plantLeft', file: 'plant-left.db3621348d.webp', depth: 1.1, x: -116, y: 625, width: 432, height: 437 },
   { key: 'plantRight', file: 'plant-right.751c24443c.webp', depth: 1.3, x: 1113, y: 378, width: 697, height: 676 },
