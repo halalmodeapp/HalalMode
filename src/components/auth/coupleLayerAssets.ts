@@ -8,7 +8,7 @@ export const COUPLE_SCENE_ASSETS: Record<CoupleSceneLayerKey, number> = {
   walls: require('../../../site/img/scene/walls.abb8aded8d.webp'),
   stairs: require('../../../site/img/scene/stairs.1207fda212.webp'),
   woman: require('../../../site/img/scene/woman.9da822e4ef.webp'),
-  man: require('../../../site/img/scene/man.664f4b8849.webp'),
+  man: require('../../../site/img/scene/man.a1c9d96f4e.webp'),
   heart: require('../../../site/img/scene/heart.c20d91f0ee.webp'),
   bougainvillea: require('../../../site/img/scene/bougainvillea.f698ef8f74.webp'),
   plantLeft: require('../../../site/img/scene/plant-left.db3621348d.webp'),

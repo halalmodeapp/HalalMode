@@ -55,8 +55,8 @@ html[data-cover-style="couple"] #cover-couple[data-pending]{opacity:0}
 #cover-couple .scene-heart::before{content:'';position:absolute;inset:-14px}
 #cover-couple .scene-heart[data-dragging="true"]{cursor:grabbing}
 #cover-couple .scene-heart-offset{position:absolute;inset:0;transition:transform 520ms cubic-bezier(.22,1,.36,1)}
-#cover-couple .scene-heart-float{position:absolute;inset:0;animation:scene-heart-float 4.8s ease-in-out infinite alternate;will-change:transform}
-@keyframes scene-heart-float{from{transform:translate3d(0,calc(2 * var(--u)),0) rotate(-2.5deg)}to{transform:translate3d(0,calc(-3.5 * var(--u)),0) rotate(2deg)}}
+#cover-couple .scene-heart-float{position:absolute;inset:0;animation:scene-heart-float 5.2s ease-in-out infinite alternate;will-change:transform}
+@keyframes scene-heart-float{0%{transform:translate3d(calc(-2 * var(--u)),calc(4 * var(--u)),0) rotate(-5deg) scale(.97)}50%{transform:translate3d(calc(2.5 * var(--u)),calc(-2 * var(--u)),0) rotate(2deg) scale(1.03)}100%{transform:translate3d(calc(-.5 * var(--u)),calc(-7 * var(--u)),0) rotate(4.5deg) scale(1)}}
 html[data-page-hidden="true"] #cover-couple .scene-heart-float{animation-play-state:paused}
 #cover-couple .scene-heart-offset img{position:absolute;inset:0;display:block;width:100%;height:100%;user-select:none;pointer-events:none;-webkit-user-drag:none}
 /* Speech bubbles: anchored just above each head, following the scroll zoom of
@@ -201,7 +201,7 @@ button:disabled{opacity:.55;cursor:wait}
   header{position:fixed;z-index:6;left:20px;right:20px;padding:14px 0}
   header::before{left:-20px;width:min(560px,94vw);height:min(150px,20svh)}
   header .header-actions .nav{display:none}
-  #cover-couple{position:fixed;z-index:3;top:0;right:0;left:0;margin:0;width:100vw;height:var(--scene-h,var(--scene-full));border-radius:0 0 22px 22px;box-shadow:0 10px 30px rgba(10,10,10,.14)}
+  #cover-couple{position:fixed;z-index:3;top:0;right:0;left:0;margin:0;width:auto;height:var(--scene-h,var(--scene-full));border-radius:0 0 22px 22px;box-shadow:0 10px 30px rgba(10,10,10,.14)}
   .hero{position:relative;z-index:2;display:block;height:auto;margin-top:calc(var(--scene-full) - 24px);padding:40px clamp(18px,5vw,28px) calc(18px + env(safe-area-inset-bottom));background:var(--surface);border-radius:24px 24px 0 0;pointer-events:auto}
   .hero-spacer{display:none}
   .hero-sidebar{display:block;height:auto;max-width:640px;margin:0 auto;padding:0;overflow:visible;background:transparent;border:0;box-shadow:none}
@@ -245,8 +245,8 @@ button:disabled{opacity:.55;cursor:wait}
     <div class="scene-light" style="--d:-0.6;--sunx:1108;--suny:98"><div class="scene-glow"></div><div class="scene-rays scene-rays-a"></div><div class="scene-rays scene-rays-b"></div><div class="scene-motes"><i style="--mx:887;--my:432;--ms:4.8;--mdx:-23;--mdy:1;--mo:0.89;animation-duration:11.0s;animation-delay:-15.6s"></i><i style="--mx:939;--my:317;--ms:3.2;--mdx:-21;--mdy:-2;--mo:0.67;animation-duration:15.0s;animation-delay:-10.5s"></i><i style="--mx:835;--my:318;--ms:4.3;--mdx:13;--mdy:-4;--mo:0.53;animation-duration:15.9s;animation-delay:-0.8s"></i><i style="--mx:1087;--my:427;--ms:3.7;--mdx:10;--mdy:22;--mo:0.71;animation-duration:15.0s;animation-delay:-4.7s"></i><i style="--mx:1112;--my:343;--ms:4.5;--mdx:-24;--mdy:6;--mo:0.45;animation-duration:17.6s;animation-delay:-2.9s"></i><i style="--mx:990;--my:496;--ms:3.9;--mdx:7;--mdy:23;--mo:0.82;animation-duration:11.7s;animation-delay:-10.3s"></i><i style="--mx:922;--my:452;--ms:3.4;--mdx:-5;--mdy:-14;--mo:0.64;animation-duration:13.6s;animation-delay:-2.9s"></i><i style="--mx:955;--my:299;--ms:5.4;--mdx:-6;--mdy:21;--mo:0.77;animation-duration:16.4s;animation-delay:-2.9s"></i><i style="--mx:1036;--my:324;--ms:3.5;--mdx:-29;--mdy:44;--mo:0.56;animation-duration:16.4s;animation-delay:-5.7s"></i><i style="--mx:884;--my:331;--ms:2.6;--mdx:7;--mdy:42;--mo:0.90;animation-duration:15.6s;animation-delay:-2.8s"></i><i style="--mx:1008;--my:518;--ms:4.0;--mdx:-25;--mdy:39;--mo:0.77;animation-duration:15.6s;animation-delay:-7.1s"></i><i style="--mx:1041;--my:327;--ms:2.3;--mdx:8;--mdy:12;--mo:0.72;animation-duration:13.6s;animation-delay:-14.3s"></i><i style="--mx:1099;--my:390;--ms:2.3;--mdx:-28;--mdy:44;--mo:0.78;animation-duration:14.4s;animation-delay:-10.0s"></i><i style="--mx:955;--my:283;--ms:4.1;--mdx:-1;--mdy:5;--mo:0.71;animation-duration:17.1s;animation-delay:-17.3s"></i><i style="--mx:1021;--my:525;--ms:2.2;--mdx:2;--mdy:34;--mo:0.52;animation-duration:14.4s;animation-delay:-15.5s"></i><i style="--mx:1086;--my:458;--ms:4.8;--mdx:-9;--mdy:28;--mo:0.56;animation-duration:12.6s;animation-delay:-6.9s"></i><i style="--mx:1069;--my:373;--ms:5.3;--mdx:-6;--mdy:4;--mo:0.59;animation-duration:18.6s;animation-delay:-8.4s"></i><i style="--mx:903;--my:286;--ms:3.9;--mdx:9;--mdy:30;--mo:0.74;animation-duration:14.4s;animation-delay:-16.7s"></i></div></div>
     <div class="scene-layer" data-layer="stairs" style="--d:0.0;--x:-48;--y:235;--w:1632;--h:837"><img src="/img/scene/stairs.1207fda212.webp" alt="" width="1632" height="837" fetchpriority="high"></div>
     <div class="scene-layer" data-layer="woman" style="--d:0.0;--x:376;--y:491;--w:401;--h:401"><img src="/img/scene/woman.9da822e4ef.webp" alt="" width="802" height="802" decoding="async"></div>
-    <div class="scene-layer" data-layer="man" style="--d:0.0;--x:814;--y:260;--w:369;--h:300"><img src="/img/scene/man.664f4b8849.webp" alt="" width="738" height="601" decoding="async"></div>
-    <div class="scene-layer scene-heart" data-layer="heart" data-heart-drag style="--d:0.0;--x:768;--y:438;--w:50;--h:42"><div class="scene-heart-offset"><div class="scene-heart-float"><img src="/img/scene/heart.c20d91f0ee.webp" alt="" width="101" height="83" decoding="async"></div></div></div>
+    <div class="scene-layer" data-layer="man" style="--d:0.0;--x:812;--y:267;--w:364;--h:298"><img src="/img/scene/man.a1c9d96f4e.webp" alt="" width="729" height="596" decoding="async"></div>
+    <div class="scene-layer scene-heart" data-layer="heart" data-heart-drag style="--d:0.0;--x:762;--y:432;--w:50;--h:42"><div class="scene-heart-offset"><div class="scene-heart-float"><img src="/img/scene/heart.c20d91f0ee.webp" alt="" width="101" height="83" decoding="async"></div></div></div>
     <div class="scene-bubble scene-bubble-him" data-bubble="him" style="--d:0.0;--bx:988;--by:250" aria-hidden="true"><span><b data-i18n="bubbleHim">Nice to meet you.</b><i class="scene-bubble-emoji">👋</i></span></div>
     <div class="scene-bubble scene-bubble-her" data-bubble="her" style="--d:0.0;--bx:559;--by:498" aria-hidden="true"><span><b data-i18n="bubbleHer">Nice to meet you too.</b></span></div>
     <div class="scene-layer" data-layer="bougainvillea" style="--d:0.6;--x:-10;--y:-10;--w:826;--h:558"><img src="/img/scene/bougainvillea.f698ef8f74.webp" alt="" width="826" height="558" decoding="async"></div>
@@ -325,7 +325,7 @@ button:disabled{opacity:.55;cursor:wait}
 
 
 <div id="dots" role="tablist" aria-label="Photos" data-i18n-aria="photos"></div>
-<script src="/i18n.js?v=20261018c"></script>
+<script src="/i18n.js?v=20261018d"></script>
 <script src="/waitlist-email.js?v=20261018a"></script>
 <script>
 /* ---------- Waitlist ---------- */

@@ -69,8 +69,8 @@ PLACEMENT = [
     ('walls', 'walls.png', 1.02, -10, -4, -0.2, 'frame'),
     ('stairs', 'stairs.png', 1.03, 25, 14, 0.0, 'frame'),
     ('woman', 'woman.png', 0.35, 360, 461, 0.0, None),  # seated on the tread, hand as close to the heart as his
-    ('man', 'man.png', 0.313, 768, 236, 0.0, None),
-    ('heart', 'heart.png', 0.0774, 734, 418, 0.0, None),
+    ('man', 'man.png', 0.313, 768, 234, 0.0, None),
+    ('heart', 'heart.png', 0.0774, 728, 412, 0.0, None),
     ('bougainvillea', 'bougainvillea.png', 0.55, -10, -10, 0.6, None),
     ('plantLeft', 'plant-left.png', 0.36, -127, 618, 1.1, None),
     ('plantRight', 'plant-right.png', 0.59, 1031, 364, 1.3, None),
@@ -78,7 +78,7 @@ PLACEMENT = [
 # Optional rotation (degrees, counter-clockwise) about a world-pixel pivot,
 # applied after scaling. The man tips slightly about his rear heel so both
 # soles rest on the descending treads. scene-warp.js pins match this pose.
-ROTATION = {'man': (7.0, (1120, 544))}
+ROTATION = {'man': (10.5, (1120, 544))}
 # Cut-outs exported whole, at this many times their on-screen size: the figures
 # and the heart at 2x so they stay crisp in the scroll zoom, the hanging flowers
 # and plants at 1x but never clipped to the frame, so zooming out shows more of

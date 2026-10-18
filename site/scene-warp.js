@@ -10,7 +10,8 @@
  *   - the bougainvillea swings from its top edge.
  * Pin weights are baked into the mesh once; per frame the CPU only computes a
  * few angles, so a frame costs a handful of uniform writes and five draws.
- * At rest the mesh draws exactly the image it replaces, so the swap is seamless.
+ * At rest the mesh draws exactly the image it replaces, so the swap is seamless
+ * (a bone's `rest` angle eases in with the breeze, so it never jumps).
  * Nothing runs with reduced motion, in the lite (save-data / low-memory) mode,
  * without WebGL, or while the page is hidden; the static images stay.
  */
@@ -23,7 +24,7 @@ const RIGS = {
   woman: {
     bones: [
       // Raised arm: shoulder -> fingertips.
-      { from: [629, 606], to: [775, 488], inner: 32, outer: 59, amp: 1.3, period: 5.6, phase: 0 },
+      { from: [629, 606], to: [775, 488], inner: 32, outer: 59, rest: 4.5, amp: 1.3, period: 5.6, phase: 0 },
       // Hijab trail: neck -> scarf tip. Kept narrow so the shoulder bag beside it stays still.
       { from: [532, 612], to: [408, 751], inner: 27, outer: 44, amp: 2.6, period: 4.3, phase: 1.7 },
     ],
@@ -31,9 +32,9 @@ const RIGS = {
   man: {
     bones: [
       // Reaching arm: shoulder -> fingertips.
-      { from: [948, 400], to: [819, 486], inner: 30, outer: 54, amp: 1.0, period: 6.1, phase: 0.9 },
+      { from: [940, 409], to: [816, 502], inner: 30, outer: 54, rest: 2, amp: 1.0, period: 6.1, phase: 0.9 },
       // Front shoe: the heel stays down while the toe rises and settles, unhurried.
-      { from: [1062, 549], to: [998, 549], inner: 22, outer: 34, amp: 2.2, period: 6.5, phase: 0, lift: true },
+      { from: [1062, 551], to: [999, 554], inner: 22, outer: 34, amp: 2.2, period: 6.5, phase: 0, lift: true },
     ],
   },
   bougainvillea: { sway: { anchor: 40, tip: 540, ampX: 6, ampY: 1.6, period: 6.5 } },
@@ -164,7 +165,7 @@ function prepare(layer, rig) {
       // A slow, relaxed rise and fall that only ever lifts the toe off the step.
       return b.amp * deg * 0.5 * (1 - Math.cos((2 * Math.PI * t) / b.period + b.phase));
     }
-    return b.amp * deg * (Math.sin((2 * Math.PI * t) / b.period + b.phase) + 0.3 * Math.sin((2 * Math.PI * t) / (b.period * 0.47) + b.phase + 1.3));
+    return (b.rest || 0) * deg + b.amp * deg * (Math.sin((2 * Math.PI * t) / b.period + b.phase) + 0.3 * Math.sin((2 * Math.PI * t) / (b.period * 0.47) + b.phase + 1.3));
   };
 
   let pixelW = 0, pixelH = 0;

@@ -2,7 +2,7 @@
 
 /** Every position is in the reference illustration's 1536x1024 world pixels. */
 export const COUPLE_WORLD = { width: 1536, height: 1024, bleed: 48 } as const;
-export const COUPLE_HEART_BOX = { x: 768, y: 438, width: 50, height: 42 } as const;
+export const COUPLE_HEART_BOX = { x: 762, y: 432, width: 50, height: 42 } as const;
 export const COUPLE_SUN = { x: 1108, y: 98 } as const;
 
 export type CoupleSceneLayerKey =
@@ -34,8 +34,8 @@ export const COUPLE_SCENE_LAYERS: readonly CoupleSceneLayer[] = [
   { key: 'walls', file: 'walls.abb8aded8d.webp', depth: -0.2, x: -48, y: -48, width: 1632, height: 1120 },
   { key: 'stairs', file: 'stairs.1207fda212.webp', depth: 0.0, x: -48, y: 235, width: 1632, height: 837 },
   { key: 'woman', file: 'woman.9da822e4ef.webp', depth: 0.0, x: 376, y: 491, width: 401, height: 401 },
-  { key: 'man', file: 'man.664f4b8849.webp', depth: 0.0, x: 814, y: 260, width: 369, height: 300 },
-  { key: 'heart', file: 'heart.c20d91f0ee.webp', depth: 0.0, x: 768, y: 438, width: 50, height: 42 },
+  { key: 'man', file: 'man.a1c9d96f4e.webp', depth: 0.0, x: 812, y: 267, width: 364, height: 298 },
+  { key: 'heart', file: 'heart.c20d91f0ee.webp', depth: 0.0, x: 762, y: 432, width: 50, height: 42 },
   { key: 'bougainvillea', file: 'bougainvillea.f698ef8f74.webp', depth: 0.6, x: -10, y: -10, width: 826, height: 558 },
   { key: 'plantLeft', file: 'plant-left.db3621348d.webp', depth: 1.1, x: -116, y: 625, width: 432, height: 437 },
   { key: 'plantRight', file: 'plant-right.751c24443c.webp', depth: 1.3, x: 1113, y: 378, width: 697, height: 676 },
