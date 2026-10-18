@@ -294,8 +294,11 @@ def write_site(manifest):
         bx, by = BUBBLES[who]
         key = 'bubbleHim' if who == 'him' else 'bubbleHer'
         text = 'Nice to meet you.' if who == 'him' else 'Nice to meet you too.'
+        # The text is translated; the emoji (his lines only) stays the same in
+        # every language and is swapped per line by the page script.
+        emoji = '<i class="scene-bubble-emoji">👋</i>' if who == 'him' else ''
         return (f'<div class="scene-bubble scene-bubble-{who}" data-bubble="{who}" style="--d:0.0;--bx:{bx};--by:{by}" aria-hidden="true">'
-                f'<span data-i18n="{key}">{text}</span></div>')
+                f'<span><b data-i18n="{key}">{text}</b>{emoji}</span></div>')
 
     by_key = {entry['key']: entry for entry in manifest}
     sx, sy = SUN
