@@ -31,9 +31,9 @@ const RIGS = {
   man: {
     bones: [
       // Reaching arm: shoulder -> fingertips.
-      { from: [954, 399], to: [821, 481], inner: 30, outer: 54, amp: 1.0, period: 6.1, phase: 0.9 },
+      { from: [951, 399], to: [820, 483], inner: 30, outer: 54, amp: 1.0, period: 6.1, phase: 0.9 },
       // Front shoe: the heel stays down while the toe rises and settles, unhurried.
-      { from: [1062, 552], to: [998, 550], inner: 22, outer: 34, amp: 2.2, period: 6.5, phase: 0, lift: true },
+      { from: [1062, 550], to: [998, 549], inner: 22, outer: 34, amp: 2.2, period: 6.5, phase: 0, lift: true },
     ],
   },
   bougainvillea: { sway: { anchor: 40, tip: 540, ampX: 6, ampY: 1.6, period: 6.5 } },
