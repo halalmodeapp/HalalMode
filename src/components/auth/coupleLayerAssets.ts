@@ -4,10 +4,10 @@ import type { CoupleSceneLayerKey } from './coupleSceneLayers';
 /** Metro needs static requires; the web landing page uses the same files. */
 export const COUPLE_SCENE_ASSETS: Record<CoupleSceneLayerKey, number> = {
   sky: require('../../../site/img/scene/sky.21b4c3d299.webp'),
-  city: require('../../../site/img/scene/city.6e4cf2c204.webp'),
+  city: require('../../../site/img/scene/city.c06d4b0910.webp'),
   walls: require('../../../site/img/scene/walls.abb8aded8d.webp'),
   stairs: require('../../../site/img/scene/stairs.1207fda212.webp'),
-  woman: require('../../../site/img/scene/woman.b36fb4c6c3.webp'),
+  woman: require('../../../site/img/scene/woman.9da822e4ef.webp'),
   man: require('../../../site/img/scene/man.719b86bc80.webp'),
   heart: require('../../../site/img/scene/heart.b846661254.webp'),
   bougainvillea: require('../../../site/img/scene/bougainvillea.f698ef8f74.webp'),

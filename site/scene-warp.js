@@ -23,9 +23,9 @@ const RIGS = {
   woman: {
     bones: [
       // Raised arm: shoulder -> fingertips.
-      { from: [622, 618], to: [775, 495], inner: 34, outer: 62, amp: 1.3, period: 5.6, phase: 0 },
+      { from: [629, 602], to: [775, 484], inner: 32, outer: 59, amp: 1.3, period: 5.6, phase: 0 },
       // Hijab trail: neck -> scarf tip. Kept narrow so the shoulder bag beside it stays still.
-      { from: [520, 625], to: [390, 770], inner: 28, outer: 46, amp: 2.6, period: 4.3, phase: 1.7 },
+      { from: [532, 608], to: [408, 747], inner: 27, outer: 44, amp: 2.6, period: 4.3, phase: 1.7 },
     ],
   },
   man: {

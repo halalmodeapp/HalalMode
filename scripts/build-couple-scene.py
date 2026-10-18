@@ -65,10 +65,10 @@ CRITICAL = ('sky', 'walls', 'stairs')
 #   painting exactly as supplied.
 PLACEMENT = [
     ('sky', 'sky.png', 1.12, -133, -45, -0.6, 'all'),
-    ('city', 'city.png', 0.55, 455, -25, -0.42, None),  # wide enough to meet the right-hand building
+    ('city', 'city.png', 0.5, 532, 70, -0.42, None),  # wide enough to meet the right-hand building; minaret tip in view
     ('walls', 'walls.png', 1.02, -10, -4, -0.2, 'frame'),
     ('stairs', 'stairs.png', 1.03, 25, 14, 0.0, 'frame'),
-    ('woman', 'woman.png', 0.367, 340, 466, 0.0, None),
+    ('woman', 'woman.png', 0.35, 360, 457, 0.0, None),  # seated on the tread, hand as close to the heart as his
     ('man', 'man.png', 0.313, 768, 241, 0.0, None),
     ('heart', 'heart.png', 0.0774, 734, 418, 0.0, None),
     ('bougainvillea', 'bougainvillea.png', 0.55, -10, -10, 0.6, None),

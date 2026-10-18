@@ -30,10 +30,10 @@ export type CoupleSceneLayer = {
 
 export const COUPLE_SCENE_LAYERS: readonly CoupleSceneLayer[] = [
   { key: 'sky', file: 'sky.21b4c3d299.webp', depth: -0.6, x: -48, y: -48, width: 1632, height: 1120 },
-  { key: 'city', file: 'city.6e4cf2c204.webp', depth: -0.42, x: 455, y: 38, width: 845, height: 500 },
+  { key: 'city', file: 'city.c06d4b0910.webp', depth: -0.42, x: 532, y: 128, width: 768, height: 454 },
   { key: 'walls', file: 'walls.abb8aded8d.webp', depth: -0.2, x: -48, y: -48, width: 1632, height: 1120 },
   { key: 'stairs', file: 'stairs.1207fda212.webp', depth: 0.0, x: -48, y: 235, width: 1632, height: 837 },
-  { key: 'woman', file: 'woman.b36fb4c6c3.webp', depth: 0.0, x: 356, y: 498, width: 421, height: 420 },
+  { key: 'woman', file: 'woman.9da822e4ef.webp', depth: 0.0, x: 376, y: 487, width: 401, height: 401 },
   { key: 'man', file: 'man.719b86bc80.webp', depth: 0.0, x: 817, y: 260, width: 370, height: 302 },
   { key: 'heart', file: 'heart.b846661254.webp', depth: 0.0, x: 768, y: 438, width: 50, height: 42 },
   { key: 'bougainvillea', file: 'bougainvillea.f698ef8f74.webp', depth: 0.6, x: -10, y: -10, width: 826, height: 558 },
