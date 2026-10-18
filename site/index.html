@@ -366,10 +366,13 @@ button:disabled{opacity:.55;cursor:wait}
     window.addEventListener('pointerup',endHeartDrag);window.addEventListener('pointercancel',endHeartDrag);
   }
 
-  var targetX=0,targetY=0,x=0,y=0,sy=0,sv=0,lastT=0,frame=0;
-  /* Scroll zoom is a damped spring: input pushes it, it always returns to rest
-     with a soft overshoot. The zoom-out side is limited so no edge ever shows. */
-  var SPRING=20,DAMPING=4.2,PUSH=19,ZOOM_IN=1.05,ZOOM_OUT=-.07;
+  var targetX=0,targetY=0,x=0,y=0,sy=0,pull=0,pullV=0,lastInput=0,lastT=0,frame=0;
+  /* Scroll zoom is an elastic overscroll: input stretches a rubber band that
+     resists more the further it goes, and once input stops it eases softly
+     back to rest (critically damped, so no bounce). Zooming out is kept small
+     so no edge of the scene ever shows. */
+  var IN_LIMIT=.22,OUT_LIMIT=.055,RETURN=26,IDLE_MS=110;
+  function stretch(p){var limit=p>=0?IN_LIMIT:OUT_LIMIT;return Math.sign(p)*limit*(1-Math.exp(-Math.abs(p)/limit))}
   var orientationBaseGamma=null,orientationBaseBeta=null,orientationPermissionRequested=false;
   function enabled(){return root.dataset.coverStyle==='couple'&&root.dataset.pageHidden!=='true'&&!(reduceMotion&&reduceMotion.matches)}
   function write(){scene.style.setProperty('--px',x.toFixed(4));scene.style.setProperty('--py',y.toFixed(4));scene.style.setProperty('--sy',sy.toFixed(4))}
@@ -377,18 +380,17 @@ button:disabled{opacity:.55;cursor:wait}
     frame=0;
     var dt=lastT?Math.min(.05,(now-lastT)/1000):1/60;lastT=now;
     x+=(targetX-x)*.09;y+=(targetY-y)*.09;
-    sv+=(-SPRING*sy-DAMPING*sv)*dt;sy+=sv*dt;
-    if(sy>ZOOM_IN){sy=ZOOM_IN;if(sv>0)sv=0}
-    if(sy<ZOOM_OUT){sy=ZOOM_OUT;if(sv<0)sv*=-.35}
-    if(Math.abs(targetX-x)<.002&&Math.abs(targetY-y)<.002&&Math.abs(sy)<.0006&&Math.abs(sv)<.002){x=targetX;y=targetY;sy=sv=0;lastT=0;write();return}
+    if(now-lastInput>IDLE_MS){pullV+=(-RETURN*pull-2*Math.sqrt(RETURN)*pullV)*dt;pull+=pullV*dt}else pullV=0;
+    sy+=(stretch(pull)-sy)*.22;
+    if(Math.abs(targetX-x)<.002&&Math.abs(targetY-y)<.002&&Math.abs(pull)<.0008&&Math.abs(sy)<.0008){x=targetX;y=targetY;sy=pull=pullV=0;lastT=0;write();return}
     write();frame=requestAnimationFrame(step);
   }
   /* The page does not scroll, so a wheel, a swipe on the picture or the arrow
-     keys push the scene instead: down travels in, up eases out a little, and
-     either way it springs back. */
+     keys pull the scene like an overscroll: down stretches in, up eases out a
+     little, and either way it settles back when you stop. */
   function travel(delta){
     if(!enabled())return;
-    sv+=delta*PUSH;
+    pull=Math.max(-1,Math.min(2,pull+delta));lastInput=performance.now();
     if(!frame){lastT=0;frame=requestAnimationFrame(step)}
   }
   function scrollsItself(node){
@@ -399,7 +401,7 @@ button:disabled{opacity:.55;cursor:wait}
   }
   window.addEventListener('wheel',function(event){
     if(scrollsItself(event.target))return;
-    travel((event.deltaMode===1?event.deltaY*16:event.deltaY)/1800);
+    travel((event.deltaMode===1?event.deltaY*16:event.deltaY)/1400);
   },{passive:true});
   var touchY=null;
   window.addEventListener('touchstart',function(event){
@@ -408,7 +410,7 @@ button:disabled{opacity:.55;cursor:wait}
   },{passive:true});
   window.addEventListener('touchmove',function(event){
     if(touchY===null)return;
-    var next=event.touches[0].clientY;travel((touchY-next)/900);touchY=next;
+    var next=event.touches[0].clientY;travel((touchY-next)/700);touchY=next;
   },{passive:true});
   window.addEventListener('touchend',function(){touchY=null},{passive:true});
   document.addEventListener('keydown',function(event){
@@ -430,7 +432,7 @@ button:disabled{opacity:.55;cursor:wait}
     orientationBaseGamma=null;orientationBaseBeta=null;
     if(enabled()){targetX=targetY=0;if(!frame){lastT=0;frame=requestAnimationFrame(step)}return}
     if(frame){cancelAnimationFrame(frame);frame=0}
-    targetX=targetY=x=y=sy=sv=0;write();
+    targetX=targetY=x=y=sy=pull=pullV=0;write();
   }
   window.addEventListener('pointermove',function(event){
     if(dragPointerId!==null||event.pointerType==='touch'||!enabled())return;
