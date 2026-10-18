@@ -1,28 +1,87 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-cover-style="couple">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Halal Mode — an intentional Muslim marriage app</title>
+<title>Halal Mode, an intentional Muslim marriage app</title>
 <meta name="description" content="A small daily set of reciprocal introductions. No endless swiping, no popularity scores. Join the waitlist for Halal Mode.">
+<link rel="canonical" href="https://halalmo.de/">
 <meta property="og:title" content="Halal Mode">
 <meta property="og:description" content="An intentional Muslim marriage app. A few reciprocal introductions a day, and a conversation only when the interest is mutual.">
 <meta property="og:image" content="/img/hero.webp">
-<link rel="preload" as="image" href="/img/hero.webp">
+<script>
+/* Email verification links land here; the referral page shows the result. */
+if(/[?&]verify=/.test(window.location.search))window.location.replace('/refer'+window.location.search);
+</script>
+<!-- couple-scene:preload -->
+<link rel="preload" as="image" href="/img/scene/sky.21b4c3d299.webp" fetchpriority="high">
+<link rel="preload" as="image" href="/img/scene/walls.abb8aded8d.webp" fetchpriority="high">
+<link rel="preload" as="image" href="/img/scene/stairs.1207fda212.webp" fetchpriority="high">
+<!-- /couple-scene:preload -->
 <meta name="theme-color" content="#FCFCFB">
 <link rel="icon" href="/favicon.png">
-<link rel="stylesheet" href="/logo-effect.css?v=20261001d">
-<link rel="stylesheet" href="/i18n.css?v=20261001b">
+<link rel="stylesheet" href="/logo-effect.css?v=20261017b">
+<link rel="stylesheet" href="/i18n.css?v=20261017a">
 <style>
-:root{--surface:#FCFCFB;--sand:#F2F0EC;--ink:#0A0A0A;--soft:#3B3934;--muted:#6C6A65;--label:#8B8880;--gold:#8A6A34;--line:rgba(138,106,52,.2);--green:#2F5D4A;--err:#9b2c2c}
+:root{--surface:#FCFCFB;--sand:#F2F0EC;--ink:#0A0A0A;--soft:#3B3934;--muted:#6C6A65;--label:#8B8880;--gold:#8A6A34;--coral:#F5565D;--coral-wash:rgba(245,86,93,.10);--cover-dune:#E8DBC5;--cover-ground:#D6BF96;--cover-plant:#526E64;--sidebar-width:clamp(360px,30vw,500px);--line:rgba(138,106,52,.2);--green:#2F5D4A;--err:#9b2c2c}
 *{box-sizing:border-box}html{scroll-behavior:smooth}html,body{overflow-x:clip}html{touch-action:pan-y pinch-zoom}
 body.grabbing{user-select:none;-webkit-user-select:none;cursor:grabbing}
 #hearts{position:absolute;pointer-events:none;opacity:0;transition:opacity .8s ease}
 body{margin:0;background:var(--surface);color:var(--ink);font:17px/1.6 ui-serif,Georgia,"Times New Roman",serif;-webkit-font-smoothing:antialiased}
 label,button,input,select,.eyebrow,footer,.msg,.fine,.n,.soon,.hint{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
 
-/* Full-page photo layer */
+/* Layered editorial cover, built from separately painted layers. Every layer
+   is placed in the reference's 1536x1024 world pixels. --u is the size of one
+   world pixel: enough to cover the frame with a little overscan, but on tall,
+   narrow frames small enough to keep both faces, both hands and the heart in
+   view (showing up to half of the layers' bleed). Mirrors
+   src/components/auth/coupleSceneLayout.ts. Parallax only writes
+   --px/--py on the scene; each layer derives its offset from its depth --d,
+   so each painted layer (sky, city, walls, stairs, bougainvillea, plants)
+   moves at its own depth, while the man, the woman and the heart share the
+   stairs' depth and stay seated on the steps. */
 #stage{position:fixed;inset:0;z-index:0;background:var(--surface);touch-action:pan-y}
+html[data-cover-style="couple"] #stage{visibility:hidden}
+#cover-couple{position:fixed;z-index:0;isolation:isolate;left:0;right:var(--sidebar-width);top:0;width:auto;height:100svh;opacity:0;visibility:hidden;pointer-events:none;overflow:hidden;contain:strict;container-type:size;transition:opacity .45s ease,visibility .45s ease;background:#2F6BD8;--px:0;--py:0;--sy:0}
+html[data-cover-style="couple"] #cover-couple{opacity:1;visibility:visible}
+/* Until the plates are decoded the scene stays hidden, so pots never pop in
+   ahead of the walls; without JavaScript it is simply shown. */
+html[data-cover-style="couple"] #cover-couple[data-pending]{opacity:0}
+#cover-couple .scene-world{position:absolute;--cover:calc(max(100cqw / 1536, 100cqh / 1024) * 1.035);--fit:min(100cqw / 714, 100cqh / 736);--least:max(100cqw / 1584, 100cqh / 1072);--u:max(var(--least), min(var(--cover), var(--fit)));--ax:calc(14 * var(--u));--ay:calc(8 * var(--u));--as:calc(20 * var(--u));--zoom:.9;width:calc(1536 * var(--u));height:calc(1024 * var(--u));left:clamp(calc(100cqw - 1560 * var(--u)), calc(50cqw - 812 * var(--u)), calc(24 * var(--u)));top:clamp(calc(100cqh - 1048 * var(--u)), calc(50cqh - 574 * var(--u)), calc(24 * var(--u)))}
+#cover-couple .scene-layer,#cover-couple .scene-light{position:absolute;left:calc(var(--x) * var(--u));top:calc(var(--y) * var(--u));width:calc(var(--w) * var(--u));height:calc(var(--h) * var(--u));transform:translate3d(calc(var(--px) * var(--d) * var(--ax)),calc(var(--py) * var(--d) * var(--ay) - var(--sy) * var(--d) * var(--as)),0) scale(calc(1 + var(--sy) * var(--zoom) * (1 + var(--d) * .55)));transform-origin:calc((800 - var(--x)) * var(--u)) calc((480 - var(--y)) * var(--u));will-change:transform}
+#cover-couple .scene-layer>img{position:absolute;inset:0;display:block;width:100%;height:100%;user-select:none;pointer-events:none}
+#cover-couple .scene-heart{position:absolute;left:calc(var(--x) * var(--u));top:calc(var(--y) * var(--u));width:calc(var(--w) * var(--u));height:calc(var(--h) * var(--u));cursor:grab;pointer-events:auto;touch-action:none}
+#cover-couple .scene-heart::before{content:'';position:absolute;inset:-14px}
+#cover-couple .scene-heart[data-dragging="true"]{cursor:grabbing}
+#cover-couple .scene-heart-offset{position:absolute;inset:0;transition:transform 520ms cubic-bezier(.22,1,.36,1)}
+#cover-couple .scene-heart-float{position:absolute;inset:0;animation:scene-heart-float 4.8s ease-in-out infinite alternate;will-change:transform}
+@keyframes scene-heart-float{from{transform:translate3d(0,calc(2 * var(--u)),0) rotate(-2.5deg)}to{transform:translate3d(0,calc(-3.5 * var(--u)),0) rotate(2deg)}}
+html[data-page-hidden="true"] #cover-couple .scene-heart-float{animation-play-state:paused}
+#cover-couple .scene-heart-offset img{position:absolute;inset:0;display:block;width:100%;height:100%;user-select:none;pointer-events:none;-webkit-user-drag:none}
+/* Warm light: a soft glow on the sun and a few broad shafts falling toward
+   the stairs, screened over the sky, city and walls only. */
+#cover-couple .scene-light{--x:-48;--y:-48;--w:1632;--h:1120;pointer-events:none;overflow:hidden}
+#cover-couple .scene-glow,#cover-couple .scene-rays{position:absolute;mix-blend-mode:screen;pointer-events:none}
+/* God rays: soft shafts fanning down-left from the sun. Each set is a
+   quarter-size layer anchored at the sun (so it stays small on the GPU),
+   turning a degree or two and breathing slowly; only transform and
+   opacity animate, which the compositor handles without repainting. */
+#cover-couple .scene-rays{left:calc((var(--sunx) + 48 - 1400) * var(--u));top:calc((var(--suny) + 48) * var(--u));width:calc(1400 * var(--u));height:calc(1150 * var(--u));transform-origin:100% 0;will-change:transform,opacity;-webkit-mask:radial-gradient(circle at 100% 0,#000 8%,rgba(0,0,0,.82) 32%,rgba(0,0,0,.45) 62%,transparent 96%);mask:radial-gradient(circle at 100% 0,#000 8%,rgba(0,0,0,.82) 32%,rgba(0,0,0,.45) 62%,transparent 96%)}
+#cover-couple .scene-rays-a{background:conic-gradient(from 180deg at 100% 0,rgba(255,246,222,0) 0deg,rgba(255,246,222,0) 5.4deg,rgba(255,246,222,0.40) 7.2deg,rgba(255,246,222,0.80) 9.0deg,rgba(255,246,222,0.40) 10.8deg,rgba(255,246,222,0) 12.6deg,rgba(255,246,222,0) 18.6deg,rgba(255,246,222,0.28) 19.8deg,rgba(255,246,222,0.55) 21.0deg,rgba(255,246,222,0.28) 22.2deg,rgba(255,246,222,0) 23.4deg,rgba(255,246,222,0) 28.6deg,rgba(255,246,222,0.38) 30.8deg,rgba(255,246,222,0.75) 33.0deg,rgba(255,246,222,0.38) 35.2deg,rgba(255,246,222,0) 37.4deg,rgba(255,246,222,0) 44.2deg,rgba(255,246,222,0.30) 45.6deg,rgba(255,246,222,0.60) 47.0deg,rgba(255,246,222,0.30) 48.4deg,rgba(255,246,222,0) 49.8deg,rgba(255,246,222,0) 54.2deg,rgba(255,246,222,0.40) 56.1deg,rgba(255,246,222,0.80) 58.0deg,rgba(255,246,222,0.40) 59.9deg,rgba(255,246,222,0) 61.8deg,rgba(255,246,222,0) 68.6deg,rgba(255,246,222,0.25) 69.8deg,rgba(255,246,222,0.50) 71.0deg,rgba(255,246,222,0.25) 72.2deg,rgba(255,246,222,0) 73.4deg,rgba(255,246,222,0) 78.8deg,rgba(255,246,222,0.28) 80.4deg,rgba(255,246,222,0.55) 82.0deg,rgba(255,246,222,0.28) 83.6deg,rgba(255,246,222,0) 85.2deg,rgba(255,246,222,0) 360deg);animation:scene-rays-a 37s ease-in-out infinite alternate,scene-rays-glow 9s ease-in-out infinite alternate}
+#cover-couple .scene-rays-b{background:conic-gradient(from 180deg at 100% 0,rgba(255,236,198,0) 0deg,rgba(255,236,198,0) 11.8deg,rgba(255,236,198,0.30) 12.9deg,rgba(255,236,198,0.60) 14.0deg,rgba(255,236,198,0.30) 15.1deg,rgba(255,236,198,0) 16.2deg,rgba(255,236,198,0) 24.0deg,rgba(255,236,198,0.33) 25.5deg,rgba(255,236,198,0.65) 27.0deg,rgba(255,236,198,0.33) 28.5deg,rgba(255,236,198,0) 30.0deg,rgba(255,236,198,0) 38.0deg,rgba(255,236,198,0.25) 39.0deg,rgba(255,236,198,0.50) 40.0deg,rgba(255,236,198,0.25) 41.0deg,rgba(255,236,198,0) 42.0deg,rgba(255,236,198,0) 49.2deg,rgba(255,236,198,0.33) 50.6deg,rgba(255,236,198,0.65) 52.0deg,rgba(255,236,198,0.33) 53.4deg,rgba(255,236,198,0) 54.8deg,rgba(255,236,198,0) 63.1deg,rgba(255,236,198,0.23) 64.0deg,rgba(255,236,198,0.45) 65.0deg,rgba(255,236,198,0.23) 66.0deg,rgba(255,236,198,0) 66.9deg,rgba(255,236,198,0) 74.4deg,rgba(255,236,198,0.25) 75.7deg,rgba(255,236,198,0.50) 77.0deg,rgba(255,236,198,0.25) 78.3deg,rgba(255,236,198,0) 79.6deg,rgba(255,236,198,0) 360deg);animation:scene-rays-b 29s ease-in-out infinite alternate,scene-rays-glow 7s ease-in-out -3s infinite alternate}
+#cover-couple .scene-glow{border-radius:50%;left:calc((var(--sunx) + 48 - 260) * var(--u));top:calc((var(--suny) + 48 - 260) * var(--u));width:calc(520 * var(--u));height:calc(520 * var(--u));background:radial-gradient(closest-side,rgba(255,247,222,.6),rgba(255,238,196,.28) 38%,rgba(255,226,160,.09) 66%,rgba(255,226,160,0))}
+#cover-couple .scene-motes{position:absolute;inset:0}
+/* Dust motes (positions, sizes and drift from the build): they show only
+   while crossing the light, then fade, like dust in a sunbeam. */
+#cover-couple .scene-motes i{position:absolute;left:calc(var(--mx) * var(--u));top:calc(var(--my) * var(--u));width:calc(var(--ms) * var(--u));height:calc(var(--ms) * var(--u));border-radius:50%;background:radial-gradient(closest-side,rgba(255,252,240,1),rgba(255,242,210,.45) 55%,rgba(255,240,200,0));opacity:0;will-change:transform,opacity;animation-name:scene-mote;animation-timing-function:ease-in-out;animation-iteration-count:infinite}
+@keyframes scene-rays-a{from{transform:rotate(-1.6deg)}to{transform:rotate(1.4deg)}}
+@keyframes scene-rays-b{from{transform:rotate(1.3deg)}to{transform:rotate(-1.5deg)}}
+@keyframes scene-rays-glow{from{opacity:.5}to{opacity:.85}}
+@keyframes scene-mote{0%{opacity:0;transform:translate3d(0,0,0)}22%{opacity:var(--mo)}50%{opacity:calc(var(--mo) * .55)}68%{opacity:var(--mo)}100%{opacity:0;transform:translate3d(calc(var(--mdx) * var(--u)),calc(var(--mdy) * var(--u)),0)}}
+html[data-scene-lite] #cover-couple .scene-motes{display:none}
+html[data-scene-lite] #cover-couple .scene-rays,html[data-page-hidden="true"] #cover-couple .scene-rays{animation-play-state:paused}
+html[data-page-hidden="true"] #cover-couple .scene-motes i{animation-play-state:paused}
+#cover-heart-particles{display:none}
 /* Whitewash keeps copy readable over any photo */
 #wash{display:none;position:fixed;inset:0;z-index:1;pointer-events:none;
   background:
@@ -30,44 +89,55 @@ label,button,input,select,.eyebrow,footer,.msg,.fine,.n,.soon,.hint{font-family:
    linear-gradient(0deg,rgba(252,252,251,.9) 0%,rgba(252,252,251,0) 26%),
    linear-gradient(180deg,rgba(252,252,251,.85) 0%,rgba(252,252,251,0) 18%)}
 
-.wrap{position:relative;z-index:2;padding:0 clamp(22px,6vw,128px)}
-.below .wrap{max-width:1240px;margin:0 auto}
-header{padding:22px 0;display:flex;align-items:center;justify-content:space-between}
-header{position:relative}
-header::before{content:'';position:absolute;z-index:-1;pointer-events:none;left:calc(-1*clamp(22px,6vw,128px));top:0;width:min(96vw,560px);height:230px;background:radial-gradient(ellipse 100% 100% at 0% 0%,rgba(252,252,251,.97) 0%,rgba(252,252,251,.82) 34%,rgba(252,252,251,.42) 66%,rgba(252,252,251,0) 100%)}
+.wrap{position:relative;z-index:2;padding:0;height:100svh;pointer-events:none}
+/* Everything lives on one screen: the page itself never scrolls. A wheel or
+   swipe over the illustration moves the scene instead (see the parallax
+   script); only the copy column scrolls internally on unusually short screens. */
+html,body{height:100%;overflow:hidden}
+header{position:absolute;z-index:5;top:0;left:clamp(22px,3vw,54px);right:clamp(22px,3vw,54px);padding:18px 0;display:flex;align-items:center;justify-content:space-between;pointer-events:auto}
+/* Shadow behind the white logo: darkest in the top-left corner, then an eased
+   radial falloff, so it reads as shade on the illustration rather than a shape. */
+header::before{content:'';position:absolute;z-index:-1;pointer-events:none;top:0;left:calc(-1 * clamp(22px,3vw,54px));width:clamp(420px,38vw,700px);height:clamp(200px,27vh,320px);background:radial-gradient(farthest-side at 0 0,rgba(10,10,10,.58) 0%,rgba(10,10,10,.55) 18%,rgba(10,10,10,.49) 30%,rgba(10,10,10,.41) 41%,rgba(10,10,10,.32) 51%,rgba(10,10,10,.23) 61%,rgba(10,10,10,.14) 71%,rgba(10,10,10,.07) 81%,rgba(10,10,10,.02) 91%,rgba(10,10,10,0) 100%)}
 .hero{position:relative}
 .nav{font:600 12px ui-sans-serif,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);text-decoration:none;background:rgba(252,252,251,.82);padding:8px 14px;border-radius:999px}
 .nav:hover{color:var(--gold)}
 .logo{height:30px;width:auto;display:block}
+header .logo-link .logo{filter:brightness(0) invert(1) drop-shadow(0 1px 6px rgba(10,10,10,.35))}
 .pill{font:600 12px ui-sans-serif,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);background:rgba(252,252,251,.82);padding:7px 14px;border-radius:999px}
 
-.hero{min-height:calc(100svh - 86px);display:grid;grid-template-columns:minmax(0,500px);gap:0;align-items:center;padding:8px 0 96px}
+.hero{height:100svh;display:grid;grid-template-columns:minmax(0,1fr) var(--sidebar-width);gap:0;align-items:stretch;padding:0;pointer-events:none}
+.hero-spacer{grid-column:1;pointer-events:none}
+.hero-sidebar{grid-column:2;position:relative;z-index:1;height:100svh;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:clamp(58px,7vh,84px) clamp(22px,2.2vw,40px) clamp(16px,2.6vh,30px);display:flex;flex-direction:column;justify-content:flex-start;background:rgba(252,252,251,.97);border-left:1px solid var(--line);box-shadow:-20px 0 72px rgba(10,10,10,.07);pointer-events:auto}
+html[dir=rtl] .hero{direction:ltr}
+html[dir=rtl] .hero-sidebar{direction:rtl}
 .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:600;margin:0 0 16px}
-h1{font-weight:600;font-size:clamp(40px,5.2vw,84px);line-height:1.02;margin:0 0 24px;letter-spacing:-.025em}
-.lede{color:var(--muted);font-size:clamp(16px,1.25vw,20px);line-height:1.6;max-width:34em;margin:0 0 30px}
+h1{font-weight:600;font-size:clamp(30px,min(2.85vw,5.6vh),62px);line-height:1.04;margin:clamp(6px,1.6vh,22px) 0 clamp(10px,2vh,22px);letter-spacing:-.025em}
+.lede{color:var(--muted);font-size:clamp(14px,min(1.15vw,2vh),19px);line-height:1.6;max-width:34em;margin:0 0 clamp(10px,2.2vh,30px)}
 .lede{font-weight:400}
 @font-face{font-family:'Playfair Display';src:url('/fonts/PlayfairDisplay-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
 /* the app's face for human sentences; scripts it doesn't cover keep their own fonts */
-html:not([lang=ar]):not([lang=ur]):not([lang=fa]):not([lang=hi]):not([lang=bn]):not([lang=zh-Hans]):not([lang=am]) .lede{font-family:'Playfair Display',Georgia,'Times New Roman',serif;font-weight:400;line-height:1.7}
+html:not([lang=ar]):not([lang=ur]):not([lang=fa]):not([lang=hi]):not([lang=bn]):not([lang=zh-Hans]):not([lang=am]) .lede{font-family:'Playfair Display',Georgia,'Times New Roman',serif;font-weight:400}
 
-.stores{display:flex;flex-wrap:wrap;gap:16px 30px;padding-top:0}
-.slot{display:flex;flex-direction:column;align-items:center;gap:9px}
+.stores{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding-top:0;margin-bottom:clamp(8px,2vh,30px)}
+.slot{min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px}
 
-.store{position:relative;display:flex;align-items:center;gap:12px;padding:10px 20px 10px 16px;border-radius:16px;background:var(--ink);color:var(--surface);min-width:190px;cursor:default;user-select:none;box-shadow:0 8px 24px rgba(10,10,10,.16)}
-.store svg{width:26px;height:26px;flex:none;fill:currentColor}
+.store{position:relative;display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:14px;background:var(--ink);color:var(--surface);min-width:0;width:100%;cursor:default;user-select:none;box-shadow:0 8px 24px rgba(10,10,10,.12)}
+.store svg{width:22px;height:22px;flex:none;fill:currentColor}
 .store small{display:block;font:500 11px/1.1 ui-sans-serif,system-ui,sans-serif;opacity:.7;letter-spacing:.02em}
-.store b{display:block;font:600 17px/1.2 ui-sans-serif,system-ui,sans-serif}
+.store b{display:block;font:600 14px/1.2 ui-sans-serif,system-ui,sans-serif}
 .soon{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
 
-.card{margin:0 0 26px;background:rgba(252,252,251,.86);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1);border:1px solid var(--line);border-radius:26px;padding:22px;box-shadow:0 20px 60px rgba(10,10,10,.12)}
-.card h2{font-size:26px;font-weight:600;margin:0 0 4px}.card p.sub{margin:0 0 20px;color:var(--muted);font-size:15px}
-label{display:block;font-size:13px;font-weight:600;margin:0 0 6px}
-input,select{width:100%;font-size:16px;padding:13px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);margin-bottom:16px}
+.card{margin:clamp(4px,1vh,12px) 0 0;background:rgba(252,252,251,.86);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1);border:1px solid var(--line);border-radius:22px;padding:clamp(12px,2.1vh,26px);box-shadow:0 16px 44px rgba(10,10,10,.1)}
+.card h2{font-size:clamp(19px,2.9vh,28px);font-weight:600;margin:0 0 4px}.card p.sub{margin:0 0 clamp(8px,1.4vh,14px);color:var(--muted);font-size:13px;line-height:1.45}
+label{display:block;font-size:13px;font-weight:600;margin:0 0 clamp(3px,.6vh,6px)}
+input,select{width:100%;font-size:16px;padding:clamp(7px,1.3vh,15px) 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);margin-bottom:clamp(7px,1.5vh,20px)}
 input:focus,select:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-button{width:100%;font-size:17px;font-weight:600;padding:15px;border:0;border-radius:999px;background:var(--ink);color:var(--surface);cursor:pointer;font-family:ui-serif,Georgia,serif}
+button{width:100%;font-size:17px;font-weight:600;padding:clamp(10px,1.9vh,18px);border:0;border-radius:999px;background:var(--ink);color:var(--surface);cursor:pointer;font-family:ui-serif,Georgia,serif}
 button:disabled{opacity:.55;cursor:wait}
-.msg{font-size:14px;margin:14px 0 0;min-height:1.4em}.ok{color:var(--green)}.bad{color:var(--err)}
-.fine{font-size:12px;color:var(--label);margin:14px 0 0}
+.msg{font-size:14px;margin:clamp(6px,1vh,14px) 0 0}
+.msg:empty{display:none}.ok{color:var(--green)}.bad{color:var(--err)}
+.fine{font-size:12px;line-height:1.4;color:var(--label);margin:clamp(4px,.9vh,14px) 0 0}
+.offer-fine{margin-top:8px}
 .row{display:grid;grid-template-columns:1.3fr 1fr;gap:12px}
 .hp{position:absolute;left:-9999px;height:0;overflow:hidden}
 
@@ -77,64 +147,95 @@ button:disabled{opacity:.55;cursor:wait}
 #dots button i{position:absolute;inset:0;background:var(--ink);transform:scaleX(0);transform-origin:left}
 #dots button.on i{transform:scaleX(1)}
 .hint{position:fixed;z-index:3;right:22px;bottom:18px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);background:rgba(252,252,251,.8);padding:6px 12px;border-radius:999px}
-
-/* Content below the fold sits on a solid surface */
-.below{position:relative;z-index:2;background:var(--surface);border-top:1px solid var(--line)}
-section.block{padding:64px 0}
-section.block+section.block{border-top:1px solid var(--line)}
-h2.t{font-weight:500;font-size:clamp(26px,4vw,38px);margin:0 0 32px;letter-spacing:-.01em}
-.grid{display:grid;gap:28px;grid-template-columns:repeat(3,1fr)}.grid.two{grid-template-columns:repeat(2,1fr)}
-.step .n{font-size:12px;letter-spacing:.14em;color:var(--gold);font-weight:600}
-.step h3{font-weight:500;font-size:20px;margin:6px 0 8px}.step p{margin:0;color:var(--muted);font-size:16px}
-footer{padding:36px 0 72px;border-top:1px solid var(--line);color:var(--muted);font-size:14px;display:flex;flex-wrap:wrap;gap:12px 32px;justify-content:space-between}
-footer a{color:var(--gold)}
-
-@media(max-width:860px){
-    .logo{height:25px}
-  .hero{grid-template-columns:1fr;padding:calc(44svh - 40px) 0 64px;align-items:start;min-height:0}
-  .hero::before{content:'';position:absolute;z-index:-1;left:calc(-1*clamp(22px,6vw,128px));right:calc(-1*clamp(22px,6vw,128px));top:calc(44svh - 40px - 30px);bottom:0;background:var(--surface);border-radius:26px 26px 0 0;box-shadow:0 -1px 0 rgba(138,106,52,.16)}
-  .stores{gap:14px 14px}
-  .store{min-width:0;padding:10px 14px 10px 12px}
-  .store b{font-size:15px}
-  #wash{background:
-    linear-gradient(180deg,rgba(252,252,251,.9) 0%,rgba(252,252,251,.74) 42%,rgba(252,252,251,.3) 100%)}
+/* Footer: a quiet strip laid over the bottom of the illustration. */
+.site-footer{position:fixed;z-index:4;left:clamp(22px,3vw,54px);bottom:clamp(12px,2vh,22px);max-width:calc(100vw - var(--sidebar-width) - 2 * clamp(22px,3vw,54px));display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;padding:7px 16px;border-radius:999px;background:rgba(252,252,251,.86);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 6px 24px rgba(10,10,10,.08);color:var(--soft);font:500 12px/1.35 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;pointer-events:auto}
+.site-footer a{color:var(--gold);text-decoration:none}
+.site-footer a:hover{text-decoration:underline}
+@media(max-width:960px){
+  :root{--sidebar-width:100vw}
+  .logo{height:25px}
+  header{left:20px;right:20px;padding:16px 0}
+  header::before{left:-20px;width:min(560px,94vw);height:min(176px,22svh)}
+  /* The sheet sizes itself to its content; the illustration takes the rest
+     of the screen (--sheet-h is measured by script, with a CSS fallback). */
+  #cover-couple{top:0;right:0;left:0;margin:0;width:100vw;height:max(170px,calc(100svh - var(--sheet-h,62svh) + 26px))}
+  .hero{position:fixed;left:0;right:0;bottom:0;z-index:2;display:block;height:auto;max-height:calc(100svh - 150px);overflow-y:auto;overscroll-behavior:contain;padding:16px clamp(18px,5vw,28px) calc(10px + env(safe-area-inset-bottom));background:var(--surface);border-radius:24px 24px 0 0;box-shadow:0 -1px 0 rgba(138,106,52,.16),0 -14px 40px rgba(10,10,10,.08);pointer-events:auto}
+  .hero-spacer{display:none}
+  .hero-sidebar{display:block;height:auto;max-width:640px;margin:0 auto;padding:0;overflow:visible;background:transparent;border:0;box-shadow:none}
+  h1{font-size:clamp(25px,6.6vw,40px);margin-bottom:6px}
+  .lede{font-size:14px;line-height:1.5;margin-bottom:10px}
+  .stores{gap:8px;margin-bottom:10px}
+  .slot{gap:3px}
+  .soon{font-size:9.5px}
+  .store{min-width:0;padding:7px 8px;border-radius:12px;box-shadow:none}
+  .store svg{width:18px;height:18px}
+  .store b{font-size:clamp(12px,3.5vw,14px)}
+  .card{margin-top:0;padding:12px 14px;border-radius:18px;background:rgba(252,252,251,.92);box-shadow:none}
+  .card h2{font-size:19px;margin-bottom:2px}
+  .card p.sub{font-size:12px;line-height:1.4;margin-bottom:8px}
+  label{font-size:12px;margin-bottom:3px}
+  input,select{padding:9px 12px;margin-bottom:8px;border-radius:12px}
+  button{padding:11px;font-size:16px}
+  .msg{margin-top:6px;min-height:0;font-size:13px}
+  .fine{font-size:11px;line-height:1.35;margin-top:5px}
+  .site-footer{position:static;max-width:none;margin-top:10px;justify-content:center;gap:2px 12px;padding:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;font-size:11px}
   #dots{bottom:auto;top:78px;right:22px;left:auto}
-  .card{background:rgba(252,252,251,.92)}
-  .grid,.grid.two{grid-template-columns:1fr}
   .hint{display:none}
 }
+/* Short laptop screens: trim the fine print spacing so the whole card fits. */
+@media(min-width:961px) and (max-height:800px){.hero-sidebar{padding-bottom:10px}.lede{line-height:1.5}.fine{margin-top:3px;line-height:1.3}.card p.sub{margin-bottom:6px}}
+@media(prefers-reduced-motion:reduce){#cover-couple .scene-rays,#cover-couple .scene-heart-float{animation:none}#cover-couple .scene-motes{display:none}#cover-couple .scene-heart-offset{transition:none}}
 @media(prefers-color-scheme:dark){.logo{filter:none}}
 </style>
 </head>
 <body>
 <div id="stage"></div>
+<div id="cover-couple" aria-hidden="true">
+  <div class="scene-world"><!-- couple-scene:layers -->
+    <div class="scene-layer" data-layer="sky" style="--d:-0.6;--x:-48;--y:-48;--w:1632;--h:1120"><img src="/img/scene/sky.21b4c3d299.webp" alt="" width="1632" height="1120" fetchpriority="high"></div>
+    <div class="scene-layer" data-layer="city" style="--d:-0.42;--x:455;--y:38;--w:845;--h:500"><img src="/img/scene/city.6e4cf2c204.webp" alt="" width="845" height="500" decoding="async"></div>
+    <div class="scene-layer" data-layer="walls" style="--d:-0.2;--x:-48;--y:-48;--w:1632;--h:1120"><img src="/img/scene/walls.abb8aded8d.webp" alt="" width="1632" height="1120" fetchpriority="high"></div>
+    <div class="scene-light" style="--d:-0.6;--sunx:1108;--suny:98"><div class="scene-glow"></div><div class="scene-rays scene-rays-a"></div><div class="scene-rays scene-rays-b"></div><div class="scene-motes"><i style="--mx:887;--my:432;--ms:4.8;--mdx:-23;--mdy:1;--mo:0.89;animation-duration:11.0s;animation-delay:-15.6s"></i><i style="--mx:939;--my:317;--ms:3.2;--mdx:-21;--mdy:-2;--mo:0.67;animation-duration:15.0s;animation-delay:-10.5s"></i><i style="--mx:835;--my:318;--ms:4.3;--mdx:13;--mdy:-4;--mo:0.53;animation-duration:15.9s;animation-delay:-0.8s"></i><i style="--mx:1087;--my:427;--ms:3.7;--mdx:10;--mdy:22;--mo:0.71;animation-duration:15.0s;animation-delay:-4.7s"></i><i style="--mx:1112;--my:343;--ms:4.5;--mdx:-24;--mdy:6;--mo:0.45;animation-duration:17.6s;animation-delay:-2.9s"></i><i style="--mx:990;--my:496;--ms:3.9;--mdx:7;--mdy:23;--mo:0.82;animation-duration:11.7s;animation-delay:-10.3s"></i><i style="--mx:922;--my:452;--ms:3.4;--mdx:-5;--mdy:-14;--mo:0.64;animation-duration:13.6s;animation-delay:-2.9s"></i><i style="--mx:955;--my:299;--ms:5.4;--mdx:-6;--mdy:21;--mo:0.77;animation-duration:16.4s;animation-delay:-2.9s"></i><i style="--mx:1036;--my:324;--ms:3.5;--mdx:-29;--mdy:44;--mo:0.56;animation-duration:16.4s;animation-delay:-5.7s"></i><i style="--mx:884;--my:331;--ms:2.6;--mdx:7;--mdy:42;--mo:0.90;animation-duration:15.6s;animation-delay:-2.8s"></i><i style="--mx:1008;--my:518;--ms:4.0;--mdx:-25;--mdy:39;--mo:0.77;animation-duration:15.6s;animation-delay:-7.1s"></i><i style="--mx:1041;--my:327;--ms:2.3;--mdx:8;--mdy:12;--mo:0.72;animation-duration:13.6s;animation-delay:-14.3s"></i><i style="--mx:1099;--my:390;--ms:2.3;--mdx:-28;--mdy:44;--mo:0.78;animation-duration:14.4s;animation-delay:-10.0s"></i><i style="--mx:955;--my:283;--ms:4.1;--mdx:-1;--mdy:5;--mo:0.71;animation-duration:17.1s;animation-delay:-17.3s"></i><i style="--mx:1021;--my:525;--ms:2.2;--mdx:2;--mdy:34;--mo:0.52;animation-duration:14.4s;animation-delay:-15.5s"></i><i style="--mx:1086;--my:458;--ms:4.8;--mdx:-9;--mdy:28;--mo:0.56;animation-duration:12.6s;animation-delay:-6.9s"></i><i style="--mx:1069;--my:373;--ms:5.3;--mdx:-6;--mdy:4;--mo:0.59;animation-duration:18.6s;animation-delay:-8.4s"></i><i style="--mx:903;--my:286;--ms:3.9;--mdx:9;--mdy:30;--mo:0.74;animation-duration:14.4s;animation-delay:-16.7s"></i></div></div>
+    <div class="scene-layer" data-layer="stairs" style="--d:0.0;--x:-48;--y:235;--w:1632;--h:837"><img src="/img/scene/stairs.1207fda212.webp" alt="" width="1632" height="837" fetchpriority="high"></div>
+    <div class="scene-layer" data-layer="woman" style="--d:0.0;--x:356;--y:498;--w:421;--h:420"><img src="/img/scene/woman.b36fb4c6c3.webp" alt="" width="842" height="840" decoding="async"></div>
+    <div class="scene-layer" data-layer="man" style="--d:0.0;--x:817;--y:260;--w:370;--h:302"><img src="/img/scene/man.719b86bc80.webp" alt="" width="741" height="604" decoding="async"></div>
+    <div class="scene-layer scene-heart" data-layer="heart" data-heart-drag style="--d:0.0;--x:768;--y:438;--w:50;--h:42"><div class="scene-heart-offset"><div class="scene-heart-float"><img src="/img/scene/heart.b846661254.webp" alt="" width="101" height="83" decoding="async"></div></div></div>
+    <div class="scene-layer" data-layer="bougainvillea" style="--d:0.6;--x:-10;--y:-10;--w:826;--h:558"><img src="/img/scene/bougainvillea.f698ef8f74.webp" alt="" width="826" height="558" decoding="async"></div>
+    <div class="scene-layer" data-layer="plantLeft" style="--d:1.1;--x:-48;--y:625;--w:364;--h:437"><img src="/img/scene/plant-left.8f84c4c1d0.webp" alt="" width="364" height="437" decoding="async"></div>
+    <div class="scene-layer" data-layer="plantRight" style="--d:1.3;--x:1113;--y:378;--w:471;--h:676"><img src="/img/scene/plant-right.07793bde60.webp" alt="" width="471" height="676" decoding="async"></div>
+    <!-- /couple-scene:layers --></div>
+</div>
 <div id="wash"></div>
 
 <div class="wrap">
 <header>
-  <a class="logo-link" href="/" aria-label="Halal Mode"><img class="logo" src="/logo.svg" alt="Halal Mode"><span class="logo-effect" aria-hidden="true"><span class="logo-shader"></span></span></a>
-  <a class="nav" href="/how-it-works" data-i18n="navHow">How it works</a>
+  <a class="logo-link" href="/" aria-label="Halal Mode" data-brand-name-aria><img class="logo" src="/logo.svg" alt="Halal Mode"><span class="logo-effect" aria-hidden="true"><span class="logo-shader"></span></span></a>
+  <div class="header-actions">
+    <a class="nav" href="/how-it-works" data-i18n="navHow">How it works</a>
+    <a class="nav nav-refer" href="/refer" data-i18n="navRefer">Refer your friends</a>
+  </div>
 </header>
 
 <main>
 <div class="hero">
-  <div>
+  <div class="hero-spacer" aria-hidden="true"></div>
+  <div class="hero-sidebar">
     <h1 data-i18n="heroTitle">Marriage, taken seriously.</h1>
     <p class="lede"><span data-i18n="heroIntro">Halal Mode is a better Muslim marriage app, built around a small, curated set of introductions each day. It’s intentionally designed for</span> <span data-i18n="heroBold">less noise and better connections.</span></p>
 
-    <div class="stores" style="margin-bottom:22px" aria-label="App availability" data-i18n-aria="availability">
-      <div class="slot"><span class="soon" data-i18n="comingSoon">Coming soon</span><div class="store ios" role="img" aria-label="App Store — coming soon">
+    <div class="stores" aria-label="App availability" data-i18n-aria="availability">
+      <div class="slot"><span class="soon" data-i18n="comingSoon">Coming soon</span><div class="store ios" role="img" aria-label="App Store, coming soon">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>
         <span><small data-i18n="downloadOn">Download on the</small><b>App Store</b></span>
       </div></div>
-      <div class="slot"><span class="soon" data-i18n="comingSoon">Coming soon</span><div class="store" role="img" aria-label="Google Play — coming soon">
+      <div class="slot"><span class="soon" data-i18n="comingSoon">Coming soon</span><div class="store" role="img" aria-label="Google Play, coming soon">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 1.6a1.6 1.6 0 0 0-.6 1.3v18.2c0 .5.2 1 .6 1.3l10-10.4L3.6 1.6z"/><path opacity=".78" d="m16.9 8.6-3.3 3.4 3.3 3.4 3.7-2.1c1-.6 1-1.9 0-2.5l-3.7-2.2z"/><path opacity=".9" d="M3.6 22.4c.4.3 1 .3 1.5 0l9.5-5.4-3-3.1-8 8.5z"/><path opacity=".9" d="m14.6 7-9.5-5.4a1.5 1.5 0 0 0-1.5 0l8 8.5 3-3.1z"/></svg>
         <span><small data-i18n="getItOn">Get it on</small><b>Google Play</b></span>
       </div></div>
     </div>
     <form id="f" class="card" novalidate>
     <h2 data-i18n="join">Join the waitlist</h2>
-    <p class="sub" data-i18n="early">Early members are invited first, in the order they joined.</p>
+    <p class="sub" data-i18n="waitlistOffer">Join the first 10,000 people on Halal Mode and automatically get 1 month of Premium free at launch.</p>
     <label for="email" data-i18n="email">Email</label>
     <input id="email" name="email" type="email" autocomplete="email" inputmode="email" required maxlength="254" placeholder="you@example.com">
     <div class="row"><div><label for="city" data-i18n="city">City</label>
@@ -145,35 +246,52 @@ footer a{color:var(--gold)}
       <option>18-24</option><option>25-29</option><option>30-34</option><option>35-39</option><option>40-49</option><option>50+</option>
     </select></div></div>
     <div class="hp" aria-hidden="true"><label>Leave blank <input id="website" tabindex="-1" autocomplete="off"></label></div>
-    <button id="go" type="submit" data-i18n="notify">Notify me</button>
+    <button id="go" type="submit" data-i18n="waitlistButton">Join the waitlist</button>
     <p id="msg" class="msg" role="status" aria-live="polite"></p>
+    <p class="fine offer-fine" data-i18n="offerFine">Limited to the first 10,000 verified signups.</p>
     <p class="fine" data-i18n="privacy">We use your details only to tell you when Halal Mode opens. No spam, and never shared.</p>
   </form>
+  <footer class="site-footer">
+    <span>© <span id="yr">2026</span> <span data-brand-name>Halal Mode</span></span>
+    <a href="/how-it-works" data-i18n="navHow">How it works</a>
+    <a href="/refer" data-i18n="navRefer">Refer your friends</a>
+    <span><span data-i18n="questions">Questions?</span> <a href="mailto:hello@halalmo.de">hello@halalmo.de</a></span>
+  </footer>
   </div>
 
 </div>
 </main>
 </div>
 
-<div class="below">
-<div class="wrap">
-<footer>
-  <span>© <span id="yr">2026</span> Halal Mode</span>
-  <span><a href="/how-it-works" data-i18n="navHow">How it works</a> &nbsp;·&nbsp; <span data-i18n="questions">Questions?</span> <a href="mailto:hello@halalmo.de">hello@halalmo.de</a></span>
-</footer>
-</div>
-</div>
 
 <div id="dots" role="tablist" aria-label="Photos" data-i18n-aria="photos"></div>
-<script src="/i18n.js?v=20261005a"></script>
+<script src="/i18n.js?v=20261017c"></script>
 <script>
-/* ---------- Waitlist form ---------- */
+/* ---------- Waitlist ---------- */
 (function(){
-  var URL_='https://lfuuywsmydruvqkqwvzw.supabase.co/rest/v1/rpc/join_waitlist';
+  var BASE='https://lfuuywsmydruvqkqwvzw.supabase.co';
+  var URL_=BASE+'/rest/v1/rpc/request_waitlist_verification';
+  var REFERRAL_EXISTS_URL=BASE+'/rest/v1/rpc/referral_code_exists';
   var KEY='sb_publishable_yioJpXVD_u-krXHgA7souQ_2pOiITsN';
+  var REFERRAL_STORAGE='halal-mode-referral-code';
   document.getElementById('yr').textContent=new Date().getFullYear();
   var f=document.getElementById('f'),msg=document.getElementById('msg'),go=document.getElementById('go');
   function say(key,ok){msg.dataset.messageKey=key||'';msg.textContent=key?window.HalalI18n.t(key):'';msg.className='msg '+(ok?'ok':'bad')}
+  function sayText(text,ok){msg.dataset.messageKey='';msg.textContent=text;msg.className='msg '+(ok?'ok':'bad')}
+  function restOptions(body){return {method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+KEY},body:JSON.stringify(body)}}
+  function validReferral(code){return /^HM[A-Z0-9]{8}$/.test(String(code||'').trim().toUpperCase())}
+  function readReferral(){try{var code=localStorage.getItem(REFERRAL_STORAGE)||'';return validReferral(code)?code.toUpperCase():''}catch(_){return ''}}
+  function rememberReferral(){
+    var saved=readReferral();
+    if(saved)return Promise.resolve();
+    var code=new URLSearchParams(window.location.search).get('ref');
+    if(!validReferral(code))return Promise.resolve();
+    code=code.trim().toUpperCase();
+    return fetch(REFERRAL_EXISTS_URL,restOptions({p_code:code})).then(function(r){return r.ok?r.json():false}).then(function(exists){
+      if(exists===true){try{localStorage.setItem(REFERRAL_STORAGE,code)}catch(_){} }
+    }).catch(function(){});
+  }
+  var referralReady=rememberReferral();
   f.addEventListener('submit',function(e){
     e.preventDefault();
     if(document.getElementById('website').value)return say('thanks',true);
@@ -182,16 +300,161 @@ footer a{color:var(--gold)}
     if(city.length<2)return say('validationCity');
     if(!age)return say('validationAge');
     go.disabled=true;say('');
-    fetch(URL_,{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+KEY},
-      body:JSON.stringify({p_email:email,p_city:city,p_age_range:age,p_locale:window.HalalI18n.language})})
-    .then(function(r){if(!r.ok)throw new Error(r.status);f.reset();say('thanks',true)})
+    referralReady.then(function(){
+      return fetch(URL_,restOptions({p_email:email,p_city:city,p_age_range:age,p_locale:window.HalalI18n.language,p_referral_code:readReferral()}));
+    })
+    .then(function(r){return r.json().catch(function(){return {}}).then(function(data){if(!r.ok)throw new Error(r.status);return data})})
+    .then(function(){f.reset();try{localStorage.removeItem(REFERRAL_STORAGE)}catch(_){};sayText(window.HalalI18n.t('almostThereTitle')+' '+window.HalalI18n.t('almostThereBody'),true)})
     .catch(function(){say('error')})
     .then(function(){go.disabled=false});
   });
+
 })();
 
 </script>
-<script src="/hearts.js?v=20261005g"></script>
-<script type="module" src="/logo-effect.js?v=20261001e"></script>
+<script>
+/* ---------- Couple cover: depth parallax ----------
+   One pair of numbers (--px, --py, each -1..1) drives every layer; the CSS turns
+   them into per-depth offsets. Motion eases toward the pointer (desktop) or
+   the device tilt (phones) in requestAnimationFrame and stops when settled. */
+(function(){
+  var root=document.documentElement;
+  var scene=document.getElementById('cover-couple');
+  if(!scene)return;
+  var reduceMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)');
+  var conn=navigator.connection||{};
+  if(conn.saveData||(navigator.hardwareConcurrency||8)<=2||(navigator.deviceMemory||8)<=2)root.dataset.sceneLite='';
+  var images=[].slice.call(scene.querySelectorAll('img'));
+  var waiting=images.filter(function(img){return !img.complete}).length;
+  if(waiting){
+    scene.dataset.pending='';
+    var reveal=function(){if(!('pending' in scene.dataset))return;delete scene.dataset.pending;if(performance.mark)performance.mark('scene-ready')};
+    images.forEach(function(img){
+      if(img.complete)return;
+      var done=function(){img.removeEventListener('load',done);img.removeEventListener('error',done);if(--waiting===0)requestAnimationFrame(reveal)};
+      img.addEventListener('load',done);img.addEventListener('error',done);
+    });
+    window.setTimeout(reveal,2500);
+  }
+
+  var heartHandle=scene.querySelector('[data-heart-drag]');
+  var heartOffset=heartHandle&&heartHandle.querySelector('.scene-heart-offset');
+  var dragPointerId=null,dragStartX=0,dragStartY=0,dragMoved=false;
+  function rubberBand(distance,limit){return Math.sign(distance)*limit*(1-Math.exp(-Math.abs(distance)/Math.max(1,limit)))}
+  if(heartHandle&&heartOffset){
+    heartHandle.addEventListener('pointerdown',function(event){
+      if(dragPointerId!==null||(event.pointerType==='mouse'&&event.button!==0))return;
+      dragPointerId=event.pointerId;dragStartX=event.clientX;dragStartY=event.clientY;dragMoved=false;
+      heartHandle.dataset.dragging='true';heartOffset.style.transition='none';heartOffset.style.transform='translate3d(0,0,0)';
+      try{heartHandle.setPointerCapture(event.pointerId)}catch(_){}
+      event.preventDefault();
+    });
+    window.addEventListener('pointermove',function(event){
+      if(event.pointerId!==dragPointerId)return;
+      var dx=event.clientX-dragStartX,dy=event.clientY-dragStartY;
+      if(Math.abs(dx)>7||Math.abs(dy)>7)dragMoved=true;
+      heartOffset.style.transform='translate3d('+rubberBand(dx,scene.clientWidth*.22)+'px,'+rubberBand(dy,scene.clientHeight*.2)+'px,0)';
+      event.preventDefault();
+    },{passive:false});
+    function endHeartDrag(event){
+      if(event.pointerId!==dragPointerId)return;
+      dragPointerId=null;heartOffset.style.transition='';
+      heartOffset.style.transform=dragMoved?'translate3d(0,0,0)':'scale(.97)';delete heartHandle.dataset.dragging;
+      if(!dragMoved)window.setTimeout(function(){if(heartHandle.dataset.dragging!=='true')heartOffset.style.transform=''},110);
+    }
+    window.addEventListener('pointerup',endHeartDrag);window.addEventListener('pointercancel',endHeartDrag);
+  }
+
+  var targetX=0,targetY=0,x=0,y=0,targetS=0,sy=0,frame=0;
+  var orientationBaseGamma=null,orientationBaseBeta=null,orientationPermissionRequested=false;
+  function enabled(){return root.dataset.coverStyle==='couple'&&root.dataset.pageHidden!=='true'&&!(reduceMotion&&reduceMotion.matches)}
+  function write(){scene.style.setProperty('--px',x.toFixed(4));scene.style.setProperty('--py',y.toFixed(4));scene.style.setProperty('--sy',sy.toFixed(4))}
+  function step(){
+    frame=0;
+    x+=(targetX-x)*.09;y+=(targetY-y)*.09;sy+=(targetS-sy)*.07;
+    if(Math.abs(targetX-x)<.002&&Math.abs(targetY-y)<.002&&Math.abs(targetS-sy)<.002){x=targetX;y=targetY;sy=targetS;write();return}
+    write();frame=requestAnimationFrame(step);
+  }
+  /* The page does not scroll, so a wheel, a swipe on the picture or the arrow
+     keys move the scene instead: nearer layers rise and the view eases in. */
+  function travel(delta){
+    if(!enabled())return;
+    targetS=Math.max(0,Math.min(1,targetS+delta));
+    if(!frame)frame=requestAnimationFrame(step);
+  }
+  function scrollsItself(node){
+    for(;node&&node!==document.body;node=node.parentElement){
+      if(node.scrollHeight>node.clientHeight+1&&/(auto|scroll)/.test(getComputedStyle(node).overflowY))return true;
+    }
+    return false;
+  }
+  window.addEventListener('wheel',function(event){
+    if(scrollsItself(event.target))return;
+    travel((event.deltaMode===1?event.deltaY*16:event.deltaY)/1800);
+  },{passive:true});
+  var touchY=null;
+  window.addEventListener('touchstart',function(event){
+    var t=event.target;
+    touchY=(t.closest&&t.closest('.hero,header,.site-footer'))?null:event.touches[0].clientY;
+  },{passive:true});
+  window.addEventListener('touchmove',function(event){
+    if(touchY===null)return;
+    var next=event.touches[0].clientY;travel((touchY-next)/900);touchY=next;
+  },{passive:true});
+  window.addEventListener('touchend',function(){touchY=null},{passive:true});
+  document.addEventListener('keydown',function(event){
+    var t=event.target;
+    if(t&&(t.isContentEditable||/^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(t.tagName)))return;
+    var step={ArrowDown:.08,PageDown:.25,ArrowUp:-.08,PageUp:-.25,Home:-1,End:1}[event.key];
+    if(step!==undefined)travel(step);
+  });
+  /* On phones the copy sheet sizes itself; the picture fills what is left. */
+  var sheet=document.querySelector('.hero');
+  if(sheet&&window.ResizeObserver){
+    new ResizeObserver(function(){root.style.setProperty('--sheet-h',sheet.offsetHeight+'px')}).observe(sheet);
+  }
+  function aim(nx,ny){
+    targetX=enabled()?Math.max(-1,Math.min(1,nx)):0;targetY=enabled()?Math.max(-1,Math.min(1,ny)):0;
+    if(!frame)frame=requestAnimationFrame(step);
+  }
+  function settle(){
+    orientationBaseGamma=null;orientationBaseBeta=null;
+    if(enabled()){targetX=targetY=0;if(!frame)frame=requestAnimationFrame(step);return}
+    if(frame){cancelAnimationFrame(frame);frame=0}
+    targetX=targetY=x=y=targetS=sy=0;write();
+  }
+  window.addEventListener('pointermove',function(event){
+    if(dragPointerId!==null||event.pointerType==='touch'||!enabled())return;
+    var rect=scene.getBoundingClientRect();
+    if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom){aim(0,0);return}
+    aim(((event.clientX-rect.left)/Math.max(1,rect.width)-.5)*2,((event.clientY-rect.top)/Math.max(1,rect.height)-.5)*2);
+  },{passive:true});
+  document.addEventListener('mouseleave',function(){aim(0,0)});
+  window.addEventListener('deviceorientation',function(event){
+    if(!enabled()||event.gamma===null||event.beta===null)return;
+    if(orientationBaseGamma===null)orientationBaseGamma=event.gamma;
+    if(orientationBaseBeta===null)orientationBaseBeta=event.beta;
+    aim((event.gamma-orientationBaseGamma)/18,(event.beta-orientationBaseBeta)/18);
+  },{passive:true});
+  window.addEventListener('pointerdown',function(event){
+    if(event.pointerType!=='touch'||orientationPermissionRequested)return;
+    var rect=scene.getBoundingClientRect();
+    if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)return;
+    var orientation=window.DeviceOrientationEvent;
+    if(!orientation||typeof orientation.requestPermission!=='function')return;
+    orientationPermissionRequested=true;
+    orientation.requestPermission().catch(function(){orientationPermissionRequested=false});
+  },{passive:true});
+  document.addEventListener('visibilitychange',function(){
+    root.dataset.pageHidden=String(document.hidden);
+    settle();
+  });
+  if(reduceMotion&&reduceMotion.addEventListener)reduceMotion.addEventListener('change',settle);
+  settle();
+})();
+</script>
+<script src="/hearts.js?v=20261017b"></script>
+<script type="module" src="/scene-warp.js?v=20261017c"></script>
+<script type="module" src="/logo-effect.js?v=20261017a"></script>
 </body>
 </html>

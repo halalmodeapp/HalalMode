@@ -1,8 +1,10 @@
 import { Asset } from 'expo-asset';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { SPRITE, createEngine } from './heartsEngine';
 import { CELL, INK, PAPER, dotRadius, inkFromPixels, photoFrame } from './heroLook';
+import { CoupleCoverScene } from './CoupleCoverScene';
+import type { CoverStyle } from './coverStyle';
 
 const HERO = require('../../../assets/branding/landing-hero.webp');
 const HEART = require('../../../assets/branding/chrome-heart.png');
@@ -14,9 +16,14 @@ const HEART = require('../../../assets/branding/chrome-heart.png');
  * hearts leave swells the dots into the picture behind, then fades back.
  * Drag a heart to toss it. The simulation lives in heartsEngine.ts.
  */
-export function HalftoneHero() {
+export function HalftoneHero({ variant = 'hearts' }: { variant?: CoverStyle }) {
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
+  const [coverSize, setCoverSize] = useState({ width: 0, height: 0 });
+  const [screenActive, setScreenActive] = useState(true);
+  const variantRef = useRef<CoverStyle>(variant);
+  const setModeRef = useRef<((mode: CoverStyle) => void) | null>(null);
+  variantRef.current = variant;
 
   useEffect(() => {
     const host = wrap.current;
@@ -36,6 +43,7 @@ export function HalftoneHero() {
     let frame = 0;
     let last = 0;
     let cancelled = false;
+    let running = false;
 
     const samplePhoto = () => {
       if (!photo || !width) return;
@@ -58,10 +66,14 @@ export function HalftoneHero() {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       width = nextWidth;
       height = nextHeight;
+      setCoverSize((current) => current.width === nextWidth && current.height === nextHeight
+        ? current
+        : { width: nextWidth, height: nextHeight });
       target.width = Math.round(width * dpr);
       target.height = Math.round(height * dpr);
       engine.resize(width, height, CELL);
       samplePhoto();
+      setModeRef.current?.(variantRef.current);
     };
 
     const drawDots = () => {
@@ -110,6 +122,11 @@ export function HalftoneHero() {
     };
 
     const loop = (now: number) => {
+      if (!running) return;
+      if (variantRef.current !== 'hearts') {
+        running = false;
+        return;
+      }
       frame = requestAnimationFrame(loop);
       if (document.hidden || !width) return;
       const dt = Math.min(2.5, (now - last) / 16.667 || 1);
@@ -122,6 +139,22 @@ export function HalftoneHero() {
       target.style.opacity = '1';
     };
 
+    const setMode = (mode: CoverStyle) => {
+      if (mode === 'couple') {
+        running = false;
+        cancelAnimationFrame(frame);
+        if (engine.dragging) engine.release(performance.now());
+        target.style.opacity = '0';
+        return;
+      }
+      target.style.opacity = '1';
+      if (running) return;
+      running = true;
+      last = performance.now();
+      frame = requestAnimationFrame(loop);
+    };
+    setModeRef.current = setMode;
+
     // Pointer: grab, drag, toss. Listen on the window so the logo and language
     // button laid over the hero don't swallow the touch.
     const local = (e: PointerEvent) => {
@@ -131,7 +164,7 @@ export function HalftoneHero() {
     const isControl = (el: EventTarget | null) =>
       el instanceof Element && !!el.closest('button,a,input,select,textarea,[role="button"],[role="menuitem"]');
     const onDown = (e: PointerEvent) => {
-      if (isControl(e.target)) return;
+      if (variantRef.current !== 'hearts' || isControl(e.target)) return;
       const { x, y } = local(e);
       if (!engine.grab(x, y, performance.now())) return;
       document.body.style.userSelect = 'none';
@@ -162,18 +195,19 @@ export function HalftoneHero() {
       img.onload = () => !cancelled && onLoad(img);
       img.src = Asset.fromModule(source).uri;
     };
-    load(HERO, (img) => { photo = img; samplePhoto(); });
+    load(HERO, (img) => { photo = img; samplePhoto(); setModeRef.current?.(variantRef.current); });
     load(HEART, (img) => { sprite = img; });
 
     const observer = new ResizeObserver(resize);
     observer.observe(host);
     resize();
-    last = performance.now();
-    frame = requestAnimationFrame(loop);
+    setMode(variantRef.current);
 
     return () => {
       cancelled = true;
+      running = false;
       cancelAnimationFrame(frame);
+      setModeRef.current = null;
       observer.disconnect();
       window.removeEventListener('pointerdown', onDown);
       window.removeEventListener('pointermove', onMove);
@@ -184,13 +218,31 @@ export function HalftoneHero() {
     };
   }, []);
 
+  useEffect(() => {
+    const updateVisibility = () => setScreenActive(!document.hidden);
+    updateVisibility();
+    document.addEventListener('visibilitychange', updateVisibility);
+    return () => document.removeEventListener('visibilitychange', updateVisibility);
+  }, []);
+
+  useEffect(() => {
+    setModeRef.current?.(variant);
+  }, [variant]);
+
   return (
-    <div ref={wrap} style={{ position: 'absolute', inset: 0, background: PAPER, overflow: 'hidden' }}>
+    <div ref={wrap} data-cover-style={variant} style={{ position: 'absolute', inset: 0, background: PAPER, overflow: 'hidden' }}>
       <canvas
         ref={canvas}
         aria-hidden
-        style={{ width: '100%', height: '100%', display: 'block', opacity: 0, transition: 'opacity .8s ease', touchAction: 'pan-y' }}
+        style={{ width: '100%', height: '100%', display: 'block', opacity: variant === 'couple' ? 0 : undefined, transition: 'opacity .45s ease', touchAction: 'pan-y' }}
       />
+      {variant === 'couple' ? (
+        <CoupleCoverScene
+          width={coverSize.width}
+          height={coverSize.height}
+          active={screenActive}
+        />
+      ) : null}
     </div>
   );
 }

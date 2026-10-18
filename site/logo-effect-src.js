@@ -11,12 +11,19 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 if (links.length && !reducedMotion &&
     (CSS.supports('mask-image', 'url("/logo.svg")') || CSS.supports('-webkit-mask-image', 'url("/logo.svg")'))) {
-  // The preprocessed SVG edge map makes highlights follow each letter.
-  const image = new Image();
-  image.onload = () => {
-    for (const link of links) mountLogo(link, image);
+  // The preprocessed SVG edge map makes highlights follow each letter. The
+  // effect only plays on hover or focus, so its texture (lossless WebP, same
+  // pixels as the PNG) waits until the page and the cover have loaded.
+  const loadMap = () => {
+    const image = new Image();
+    image.onload = () => {
+      for (const link of links) mountLogo(link, image);
+    };
+    image.src = '/logo-liquid-metal-map.webp';
   };
-  image.src = '/logo-liquid-metal-map.png';
+  const whenIdle = () => (window.requestIdleCallback ? requestIdleCallback(loadMap, { timeout: 2500 }) : setTimeout(loadMap, 600));
+  if (document.readyState === 'complete') whenIdle();
+  else addEventListener('load', whenIdle, { once: true });
 }
 
 function mountLogo(link, image) {

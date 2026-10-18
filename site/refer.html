@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Refer your friends to Halal Mode</title>
+<meta name="description" content="Invite a few good people to the Halal Mode waitlist and unlock more Premium at launch.">
+<link rel="canonical" href="https://halalmo.de/refer">
+<meta property="og:title" content="Refer your friends to Halal Mode">
+<meta property="og:description" content="Invite a few good people and unlock more Premium.">
+<meta name="theme-color" content="#FCFCFB">
+<link rel="icon" href="/favicon.png">
+<link rel="stylesheet" href="/logo-effect.css?v=20261017b">
+<link rel="stylesheet" href="/i18n.css?v=20261017a">
+<style>
+:root{--surface:#FCFCFB;--ink:#0A0A0A;--soft:#3B3934;--muted:#6C6A65;--label:#8B8880;--gold:#8A6A34;--line:rgba(138,106,52,.2)}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;display:flex;flex-direction:column;min-height:100svh;background:radial-gradient(ellipse 76% 40% at 50% 0%,#f7f1e6 0%,rgba(247,241,230,0) 100%),var(--surface);color:var(--ink);font:17px/1.6 ui-serif,Georgia,"Times New Roman",serif;-webkit-font-smoothing:antialiased}
+.nav,footer,.referral-tier,.referral-note,.referral-progress,.share-actions a,.share-actions button,.cta{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{width:100%;max-width:1100px;margin:0 auto;padding:0 clamp(22px,5.3vw,84px);display:flex;flex:1;flex-direction:column}
+header{padding:24px 0;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.logo{height:30px;width:auto;display:block}
+.header-links{display:flex;gap:10px;align-items:center}
+.nav{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 17px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.74);color:var(--soft);font-size:12px;font-weight:650;letter-spacing:.12em;text-transform:uppercase;text-decoration:none}
+.nav:hover{color:var(--gold);border-color:rgba(138,106,52,.42);background:#fff}
+.nav:focus-visible,.cta:focus-visible,.share-actions a:focus-visible,.share-actions button:focus-visible{outline:3px solid rgba(138,106,52,.5);outline-offset:3px}
+main{flex:1;display:flex;flex-direction:column;justify-content:center;padding:clamp(24px,6vh,72px) 0}
+h1{font-weight:600;font-size:clamp(40px,5vw,72px);line-height:1.02;letter-spacing:-.035em;margin:0 0 14px;max-width:16ch}
+.referral-sub{margin:0;color:var(--muted);font-size:clamp(17px,1.5vw,20px)}
+.referral-tiers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:clamp(24px,4vh,40px) 0 0}
+.referral-tier{margin:0;padding:20px 22px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(160deg,#f6f1e7,#fff 60%);color:var(--soft);font-weight:600;font-size:15px;line-height:1.4}
+.referral-note{margin:16px 0 0;color:var(--label);font-size:13px;line-height:1.5}
+.verification-status{margin-top:28px;padding:22px;border:1px solid var(--line);border-radius:20px;background:#fff}
+.verification-status[hidden],.share-actions[hidden],.cta[hidden]{display:none}
+.verification-title{margin:0;font-size:26px;font-weight:600}
+.verification-body,.referral-progress{margin:6px 0 0;color:var(--muted);font-size:16px}
+.referral-progress{color:var(--soft);font-size:14px}
+.share-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.share-actions a,.share-actions button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 20px;border:0;border-radius:999px;background:var(--ink);color:var(--surface);font-weight:600;font-size:14px;text-decoration:none;cursor:pointer}
+.cta{display:inline-flex;align-self:flex-start;align-items:center;justify-content:center;min-height:52px;margin-top:28px;padding:0 30px;border-radius:999px;background:var(--ink);color:var(--surface);text-decoration:none;font-weight:650;font-size:15px}
+footer{padding:26px 0 40px;border-top:1px solid var(--line);color:var(--muted);font-size:14px;display:flex;flex-wrap:wrap;gap:10px 32px;justify-content:space-between}
+footer a{color:var(--gold)}
+@media(max-width:680px){.wrap{padding:0 20px}header{padding:18px 0}.logo{height:25px}.nav{min-height:38px;padding:0 12px;font-size:10px;letter-spacing:.08em}h1{font-size:clamp(36px,10vw,52px)}.referral-tiers{grid-template-columns:1fr;gap:10px}.referral-tier{padding:16px 18px}}
+html[dir=rtl] main,html[dir=rtl] footer{text-align:right}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="logo-link" href="/" aria-label="Halal Mode" data-brand-name-aria><img class="logo" src="/logo.svg" alt="Halal Mode"><span class="logo-effect" aria-hidden="true"><span class="logo-shader"></span></span></a>
+  <div class="header-links"><a class="nav" href="/how-it-works" data-i18n="navHow">How it works</a></div>
+</header>
+
+<main id="referrals" aria-labelledby="referral-title">
+  <h1 id="referral-title" data-i18n="referralTitle">Refer your friends</h1>
+  <p class="referral-sub" data-i18n="referralBody">Invite a few good people and unlock more Premium.</p>
+  <div class="referral-tiers" aria-label="Referral rewards">
+    <p class="referral-tier" data-i18n="reward3">3 joins → 3 months free</p>
+    <p class="referral-tier" data-i18n="reward5">5 joins → 6 months free</p>
+    <p class="referral-tier" data-i18n="reward10">10 joins → 1 year free</p>
+  </div>
+  <p class="referral-note" data-i18n="referralNote">Referrals count once your friend verifies their email.</p>
+  <div id="verification-status" class="verification-status" role="status" aria-live="polite" hidden>
+    <p id="verification-title" class="verification-title"></p>
+    <p id="verification-body" class="verification-body"></p>
+    <p id="referral-progress" class="referral-progress"></p>
+    <div id="share-actions" class="share-actions" hidden>
+      <a id="whatsapp-share" href="#" target="_blank" rel="noopener" data-i18n="shareWhatsApp">WhatsApp</a>
+      <button id="copy-invite" type="button" data-i18n="copyInvite">Copy invite link</button>
+    </div>
+  </div>
+  <a class="cta referral-join" href="/" data-i18n="waitlistButton">Join the waitlist</a>
+</main>
+
+<footer>
+  <span>© <span id="yr">2026</span> <span data-brand-name>Halal Mode</span></span>
+  <span><a href="/how-it-works" data-i18n="navHow">How it works</a> &nbsp;·&nbsp; <span data-i18n="questions">Questions?</span> <a href="mailto:hello@halalmo.de">hello@halalmo.de</a></span>
+</footer>
+</div>
+<script src="/i18n.js?v=20261017c"></script>
+<script>
+/* ---------- Waitlist verification and referral sharing ---------- */
+(function(){
+  var BASE='https://lfuuywsmydruvqkqwvzw.supabase.co';
+  var VERIFY_URL=BASE+'/functions/v1/verify-waitlist';
+  document.getElementById('yr').textContent=new Date().getFullYear();
+
+  var status=document.getElementById('verification-status');
+  var title=document.getElementById('verification-title');
+  var body=document.getElementById('verification-body');
+  var progress=document.getElementById('referral-progress');
+  var share=document.getElementById('share-actions');
+  var join=document.querySelector('.referral-join');
+  var whatsapp=document.getElementById('whatsapp-share');
+  var copy=document.getElementById('copy-invite');
+  var shareUrl='';
+  function progressText(count){
+    count=Math.max(0,Number(count)||0);
+    if(count>=10)return '10+ verified referrals — 12 months free total.';
+    if(count>=5)return count+' of 10 joined';
+    if(count>=3)return count+' of 5 joined';
+    return count+' of 3 joined';
+  }
+  function renderVerified(data){
+    var months=Number(data&&data.reward_months)||0;
+    status.hidden=false;
+    title.textContent=window.HalalI18n.t('verifiedTitle');
+    body.textContent=data&&data.eligible===true
+      ? (months===1?'Your 1 month of Premium is automatically reserved for launch.': 'Your '+months+' months of Premium are automatically reserved for launch.')
+      : window.HalalI18n.t('verifiedNotEligible');
+    progress.textContent=progressText(data&&data.referral_count);
+    shareUrl=String(data&&data.referral_url||'');
+    if(shareUrl){
+      var text='I’m on the Halal Mode waitlist. It’s a Muslim marriage app built around fewer, more thoughtful matches.\n\nJoin the waitlist here: '+shareUrl;
+      whatsapp.href='https://wa.me/?text='+encodeURIComponent(text);
+      share.hidden=false;
+    }
+    join.hidden=true;
+  }
+  function verifyFromUrl(){
+    var token=new URLSearchParams(window.location.search).get('verify')||'';
+    if(!/^[0-9a-f]{64}$/i.test(token.trim()))return;
+    fetch(VERIFY_URL+'?token='+encodeURIComponent(token.trim()),{headers:{Accept:'application/json'}})
+      .then(function(r){return r.json().catch(function(){return {}}).then(function(data){if(!r.ok)throw new Error('verification');return data})})
+      .then(renderVerified)
+      .catch(function(){status.hidden=false;title.textContent=window.HalalI18n.t('verificationError');body.textContent='';progress.textContent='';join.hidden=false});
+  }
+  copy.addEventListener('click',function(){
+    if(!shareUrl)return;
+    var done=function(){copy.textContent=window.HalalI18n.t('copiedInvite');window.setTimeout(function(){copy.textContent=window.HalalI18n.t('copyInvite')},1600)};
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(shareUrl).then(done).catch(function(){})}
+    else {var area=document.createElement('textarea');area.value=shareUrl;area.setAttribute('readonly','');area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();try{document.execCommand('copy');done()}catch(_){}document.body.removeChild(area)}
+  });
+  verifyFromUrl();
+})();
+</script>
+<script type="module" src="/logo-effect.js?v=20261017a"></script>
+</body>
+</html>

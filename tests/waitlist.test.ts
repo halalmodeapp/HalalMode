@@ -9,7 +9,7 @@ const read = (path: string) => readFileSync(resolve(process.cwd(), path), 'utf8'
 
 /**
  * The waitlist is the one surface anybody on the internet can post to, so what
- * it accepts is written down twice — once in TypeScript for the buttons, once
+ * it accepts is written down twice, once in TypeScript for the buttons, once
  * in SQL as a constraint. Two copies of one list is exactly the shape that has
  * already drifted twice in this repo, so it gets a test rather than a comment.
  */
@@ -62,9 +62,9 @@ test('the summary reports counts and never an address', () => {
   );
 });
 
-test('the landing page reaches the server through the one open function', () => {
+test('the landing page reaches the server through the verified waitlist function', () => {
   const api = read('src/api/waitlist.ts');
-  assert.match(api, /rpc\('join_waitlist'/u);
+  assert.match(api, /rpc\('request_waitlist_verification'/u);
   // Lowercased and trimmed before it leaves, so the same person signing up from
   // two devices is one row rather than two.
   assert.match(api, /\.trim\(\)\.toLowerCase\(\)/u);
@@ -96,4 +96,26 @@ test('the waitlist speaks both languages', () => {
     const hits = catalog.split(`'${key}':`).length - 1;
     assert.equal(hits, 2, `${key} must be translated in both catalogs, found ${hits}`);
   }
+});
+
+test('the public offer is verification-backed and the referral UI has no client-side reward authority', () => {
+  const page = read('site/index.html');
+  const refer = read('site/refer.html');
+  const migration = read('supabase/migrations/20261016221105_waitlist_verification_and_referrals.sql');
+  assert.match(page, /data-i18n="waitlistOffer"/u);
+  assert.match(page, /Join the first 10,000 people on Halal Mode and automatically get 1 month of Premium free at launch\./u);
+  assert.match(page, /request_waitlist_verification/u);
+  assert.match(page, /localStorage\.setItem\(REFERRAL_STORAGE/u);
+  // Verification links from email land on the homepage and are forwarded,
+  // query intact, to the referral page that shows the result.
+  assert.match(page, /window\.location\.replace\('\/refer'\+window\.location\.search\)/u);
+  assert.match(page, /href="\/refer"/u);
+  assert.match(refer, /id="referrals"/u);
+  assert.match(refer, /data-i18n="reward3"/u);
+  assert.match(refer, /verify-waitlist/u);
+  for (const html of [page, refer]) assert.doesNotMatch(html, /referral_count\s*\+\+|referralCount\s*\+=/u);
+  assert.match(migration, /waitlist_referrals/u);
+  assert.match(migration, /waitlist_reward_months/u);
+  assert.match(migration, /verified_at/u);
+  assert.match(migration, /first-touch attribution/iu);
 });

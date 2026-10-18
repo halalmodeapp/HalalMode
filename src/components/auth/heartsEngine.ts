@@ -297,6 +297,10 @@ export function createEngine() {
     hearts,
     resize,
     step,
+    // Native renderers can keep the two light heart sprites at display
+    // cadence while sampling the much larger wake field less often.
+    stepHearts,
+    stepWake,
     pick,
     grab,
     drag,

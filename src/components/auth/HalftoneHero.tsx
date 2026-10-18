@@ -1,10 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, type ComponentRef } from 'react';
 import { Image, PanResponder, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { SPRITE, createEngine, type Heart } from './heartsEngine';
+import { CoupleCoverScene } from './CoupleCoverScene';
 import { CELL, INK, PAPER, dotRadius, photoFrame } from './heroLook';
 import { PHOTO_LUMINANCE, PHOTO_LUMINANCE_HEIGHT, PHOTO_LUMINANCE_WIDTH } from './heroPhotoInk';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useScreenActive } from '@/hooks/useScreenActive';
+import type { CoverStyle } from './coverStyle';
 
 const HEART = require('../../../assets/branding/chrome-heart.png');
 const HEART_ASPECT = SPRITE.frameHeight / SPRITE.frameWidth;
@@ -22,20 +26,24 @@ type HeartFrame = {
   grow: number;
   spriteFrame: number;
 };
-type DrawingFrame = { dots: string; hearts: HeartFrame[] };
+type HeartSpriteHandle = { update: (heart: HeartFrame) => void };
 
-const EMPTY_FRAME: DrawingFrame = { dots: '', hearts: [] };
-
-/** Native canvas-free version of the interactive halftone hero. */
-export function HalftoneHero() {
+/** Native canvas-free version of the interactive cover choices. */
+export function HalftoneHero({ variant = 'hearts' }: { variant?: CoverStyle }) {
   const photoInk = useRef(new Float32Array(0));
   const engineRef = useRef<ReturnType<typeof createEngine> | null>(null);
   if (!engineRef.current) engineRef.current = createEngine();
   const engine = engineRef.current;
   const [size, setSize] = useState<HeroSize>({ width: 0, height: 0 });
   const [restingDots, setRestingDots] = useState('');
-  const [drawing, setDrawing] = useState<DrawingFrame>(EMPTY_FRAME);
+  const [renderReady, setRenderReady] = useState(false);
+  const screenActive = useScreenActive();
+  const reducedMotion = useReducedMotion();
+  const restingPathRef = useRef<Path>(null);
+  const wakePathRef = useRef<Path>(null);
+  const heartRefs = useRef<(HeartSpriteHandle | null)[]>([]);
   const cell = getCellSize(size);
+  const [drawOrder, setDrawOrder] = useState<number[]>([]);
 
   const onLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
@@ -43,52 +51,71 @@ export function HalftoneHero() {
   };
 
   useEffect(() => {
+    if (variant === 'couple') return;
     if (!size.width || !size.height) return;
     engine.resize(size.width, size.height, cell);
+    // resize seeds and sizes the engine's mutable hearts. Capture the order
+    // only after that initialization so both sprites render and keep the
+    // intended small-behind-large layering when the layout changes.
+    setDrawOrder(engine.hearts.map((_, index) => index).sort((a, b) => engine.hearts[a]!.size - engine.hearts[b]!.size));
     photoInk.current = samplePhoto(engine.cols, engine.rows);
     setRestingDots(dotsPath(engine, photoInk.current, false));
-    setDrawing(EMPTY_FRAME);
-  }, [engine, size.width, size.height, cell]);
+    setRenderReady(true);
+  }, [engine, size.width, size.height, cell, variant]);
 
   useEffect(() => {
-    if (!size.width || !size.height) return;
+    if (variant !== 'hearts' || !renderReady || !size.width || !size.height || !screenActive || reducedMotion) return;
     let animationFrame = 0;
     let last = performance.now();
+    let wakeElapsed = 0;
 
     const loop = (now: number) => {
       animationFrame = requestAnimationFrame(loop);
       const elapsed = Math.max(0, now - last);
       last = now;
-      engine.step(Math.min(2.5, elapsed / 16.667 || 1));
-      setDrawing({
-        dots: dotsPath(engine, photoInk.current, true),
-        hearts: engine.hearts
-          .slice()
-          .sort((a, b) => a.size - b.size)
-          .map((heart, id) => heartFrame(heart, id, now, engine.frameOf(heart))),
-      });
+      const dt = Math.min(2.5, elapsed / 16.667 || 1);
+      // Heart physics stays smooth at the display cadence. The wake is a
+      // large diffusion field, so updating it at 30 Hz removes the Android
+      // JS/native bottleneck without changing its visible shape or decay.
+      engine.stepHearts(dt);
+      wakeElapsed += Math.min(elapsed, 100);
+      if (wakeElapsed >= 33.333) {
+        engine.stepWake(Math.min(4, wakeElapsed / 16.667));
+        wakeElapsed = 0;
+        wakePathRef.current?.setNativeProps({ d: dotsPath(engine, photoInk.current, true) });
+      }
+      // Keep the animation on the native view hierarchy. Rebuilding this
+      // path and all heart components through React every frame made the
+      // Android renderer spend most of its budget reconciling JSX instead of
+      // displaying the interaction.
+      for (const id of drawOrder) {
+        const heart = engine.hearts[id];
+        if (heart) heartRefs.current[id]?.update(heartFrame(heart, id, now, engine.frameOf(heart)));
+      }
     };
 
     animationFrame = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(animationFrame);
-  }, [engine, size.width, size.height]);
+  }, [drawOrder, engine, reducedMotion, renderReady, screenActive, size.width, size.height, variant]);
 
   const responder = useMemo(
     () => PanResponder.create({
       onStartShouldSetPanResponder: (event) =>
-        engine.grab(event.nativeEvent.locationX, event.nativeEvent.locationY, performance.now()),
+        variant === 'hearts' && engine.grab(event.nativeEvent.locationX, event.nativeEvent.locationY, performance.now()),
       onPanResponderTerminationRequest: () => false,
       onPanResponderMove: (event) =>
         engine.drag(event.nativeEvent.locationX, event.nativeEvent.locationY, performance.now()),
       onPanResponderRelease: () => engine.release(performance.now()),
       onPanResponderTerminate: () => engine.release(performance.now()),
     }),
-    [engine],
+    [engine, variant],
   );
 
   return (
     <View style={[styles.fill, styles.paper]} onLayout={onLayout} {...responder.panHandlers}>
-      {size.width > 0 && size.height > 0 && (
+      {variant === 'couple' ? (
+        <CoupleCoverScene width={size.width} height={size.height} active={screenActive && !reducedMotion} />
+      ) : renderReady && size.width > 0 && size.height > 0 ? (
         <Svg
           pointerEvents="none"
           width={size.width}
@@ -96,58 +123,100 @@ export function HalftoneHero() {
           viewBox={`0 0 ${size.width} ${size.height}`}
           style={styles.fill}
         >
-          <Path d={restingDots} fill={`rgba(${INK},.62)`} />
-          <Path d={drawing.dots} fill={`rgba(${INK},.62)`} fillRule="nonzero" />
+          <Path ref={restingPathRef} d={restingDots} fill={`rgba(${INK},.62)`} />
+          <Path ref={wakePathRef} d="" fill={`rgba(${INK},.62)`} fillRule="nonzero" />
         </Svg>
-      )}
-      {drawing.hearts.map((heart) => <HeartSprite key={heart.id} heart={heart} />)}
+      ) : null}
+      {variant === 'hearts' && drawOrder.map((id) => {
+        const heart = engine.hearts[id];
+        return heart ? (
+          <HeartSprite
+            key={id}
+            ref={(handle) => {
+              heartRefs.current[id] = handle;
+            }}
+            heart={heartFrame(heart, id, performance.now(), engine.frameOf(heart))}
+          />
+        ) : null;
+      })}
     </View>
   );
 }
 
-function HeartSprite({ heart }: { heart: HeartFrame }) {
-  const column = heart.spriteFrame % SPRITE.columns;
-  const row = Math.floor(heart.spriteFrame / SPRITE.columns);
-  const spriteWidth = heart.size * SPRITE.columns;
-  const spriteHeight = heart.height * SPRITE.rows;
+const HeartSprite = forwardRef<HeartSpriteHandle, { heart: HeartFrame }>(function HeartSprite({ heart }, ref) {
+  const outerRef = useRef<View>(null);
+  const imageRef = useRef<ComponentRef<typeof Image>>(null);
+
+  const update = (next: HeartFrame) => {
+    const column = next.spriteFrame % SPRITE.columns;
+    const row = Math.floor(next.spriteFrame / SPRITE.columns);
+    const spriteWidth = next.size * SPRITE.columns;
+    const spriteHeight = next.height * SPRITE.rows;
+
+    outerRef.current?.setNativeProps({
+      style: {
+        left: next.x - next.size / 2,
+        top: next.y - next.height / 2,
+        width: next.size,
+        height: next.height,
+        transform: [
+          { scale: next.grow },
+          { rotate: `${next.squashAxis}rad` },
+          { scaleX: 1 - next.squash },
+          { scaleY: 1 + next.squash * 0.6 },
+          { rotate: `${-next.squashAxis}rad` },
+          { rotate: `${next.angle}rad` },
+        ],
+      },
+    });
+    imageRef.current?.setNativeProps({
+      style: {
+        width: spriteWidth,
+        height: spriteHeight,
+        left: -column * next.size,
+        top: -row * next.height,
+      },
+    });
+  };
+
+  useImperativeHandle(ref, () => ({ update }), []);
+  useEffect(() => update(heart), [heart]);
 
   return (
     <View
+      ref={outerRef}
       pointerEvents="none"
-      style={[
-        styles.heart,
-        {
-          left: heart.x - heart.size / 2,
-          top: heart.y - heart.height / 2,
-          width: heart.size,
-          height: heart.height,
-          transform: [
-            { scale: heart.grow },
-            { rotate: `${heart.squashAxis}rad` },
-            { scaleX: 1 - heart.squash },
-            { scaleY: 1 + heart.squash * 0.6 },
-            { rotate: `${-heart.squashAxis}rad` },
-            { rotate: `${heart.angle}rad` },
-          ],
-        },
-      ]}
+      style={[styles.heart, {
+        left: heart.x - heart.size / 2,
+        top: heart.y - heart.height / 2,
+        width: heart.size,
+        height: heart.height,
+        transform: [
+          { scale: heart.grow },
+          { rotate: `${heart.squashAxis}rad` },
+          { scaleX: 1 - heart.squash },
+          { scaleY: 1 + heart.squash * 0.6 },
+          { rotate: `${-heart.squashAxis}rad` },
+          { rotate: `${heart.angle}rad` },
+        ],
+      }]}
     >
       <View style={[styles.spriteWindow, { width: heart.size, height: heart.height }]}>
         <Image
+          ref={imageRef}
           source={HEART}
           resizeMode="stretch"
-          style={{
-            position: 'absolute',
-            width: spriteWidth,
-            height: spriteHeight,
-            left: -column * heart.size,
-            top: -row * heart.height,
-          }}
+          style={[styles.sprite, {
+            width: heart.size * SPRITE.columns,
+            height: heart.height * SPRITE.rows,
+            left: -(heart.spriteFrame % SPRITE.columns) * heart.size,
+            top: -Math.floor(heart.spriteFrame / SPRITE.columns) * heart.height,
+          }]}
         />
       </View>
     </View>
   );
-}
+});
 
 function heartFrame(heart: Heart, id: number, now: number, spriteFrame: number): HeartFrame {
   const bobX = Math.sin(now * 0.00055 + heart.phase * 1.7) * 4;
@@ -249,4 +318,5 @@ const styles = StyleSheet.create({
     elevation: 7,
   },
   spriteWindow: { overflow: 'hidden' },
+  sprite: { position: 'absolute' },
 });
