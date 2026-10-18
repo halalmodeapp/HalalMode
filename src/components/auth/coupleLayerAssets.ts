@@ -11,6 +11,6 @@ export const COUPLE_SCENE_ASSETS: Record<CoupleSceneLayerKey, number> = {
   man: require('../../../site/img/scene/man.719b86bc80.webp'),
   heart: require('../../../site/img/scene/heart.b846661254.webp'),
   bougainvillea: require('../../../site/img/scene/bougainvillea.f698ef8f74.webp'),
-  plantLeft: require('../../../site/img/scene/plant-left.8f84c4c1d0.webp'),
-  plantRight: require('../../../site/img/scene/plant-right.07793bde60.webp'),
+  plantLeft: require('../../../site/img/scene/plant-left.db3621348d.webp'),
+  plantRight: require('../../../site/img/scene/plant-right.751c24443c.webp'),
 };

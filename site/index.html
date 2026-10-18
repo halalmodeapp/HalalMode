@@ -58,6 +58,24 @@ html[data-cover-style="couple"] #cover-couple[data-pending]{opacity:0}
 @keyframes scene-heart-float{from{transform:translate3d(0,calc(2 * var(--u)),0) rotate(-2.5deg)}to{transform:translate3d(0,calc(-3.5 * var(--u)),0) rotate(2deg)}}
 html[data-page-hidden="true"] #cover-couple .scene-heart-float{animation-play-state:paused}
 #cover-couple .scene-heart-offset img{position:absolute;inset:0;display:block;width:100%;height:100%;user-select:none;pointer-events:none;-webkit-user-drag:none}
+/* Speech bubbles: anchored just above each head, following the scroll zoom of
+   the couple's plane; each pops in, floats gently, then fades. */
+#cover-couple .scene-bubble{position:absolute;left:calc(var(--bx) * var(--u));top:calc(var(--by) * var(--u));width:0;height:0;pointer-events:none;
+  transform:translate3d(calc((var(--bx) - 800) * var(--u) * var(--sy) * var(--zoom)),calc((var(--by) - 480) * var(--u) * var(--sy) * var(--zoom)),0)}
+#cover-couple .scene-bubble span{position:absolute;left:0;bottom:calc(10 * var(--u));white-space:nowrap;padding:.5em .9em .55em;border-radius:1.15em;
+  background:rgba(252,252,251,.97);color:var(--ink);font:600 clamp(11px,calc(17 * var(--u)),19px)/1.25 ui-serif,Georgia,"Times New Roman",serif;letter-spacing:-.005em;
+  box-shadow:0 6px 20px rgba(10,10,10,.16),0 1px 2px rgba(10,10,10,.08);opacity:0;transform:translateX(var(--tx,-50%)) scale(.55);transform-origin:50% 100%;
+  transition:opacity .35s ease,transform .5s cubic-bezier(.34,1.56,.64,1)}
+#cover-couple .scene-bubble span::after{content:'';position:absolute;left:50%;margin-left:-.375em;bottom:-.32em;width:.75em;height:.75em;background:inherit;border-radius:0 0 .18em 0;transform:rotate(45deg) skew(8deg,8deg);box-shadow:3px 3px 6px rgba(10,10,10,.06)}
+#cover-couple .scene-bubble[data-show] span{opacity:1;transform:translateX(var(--tx,-50%)) scale(1);animation:scene-bubble-float 3.2s ease-in-out .5s infinite alternate}
+#cover-couple .scene-bubble[data-hide] span{opacity:0;transform:translateX(var(--tx,-50%)) scale(.92);transition:opacity .6s ease,transform .6s ease;animation:none}
+@keyframes scene-bubble-float{from{transform:translateX(var(--tx,-50%)) translateY(0)}to{transform:translateX(var(--tx,-50%)) translateY(calc(-3 * var(--u)))}}
+/* Phones: his head sits near the top of the short picture, under the header,
+   so his bubble speaks from the left of his face instead. */
+@media(max-width:960px){#cover-couple .scene-bubble-him span{--tx:-100%;left:calc(-40 * var(--u));bottom:calc(-112 * var(--u));transform-origin:100% 60%}
+#cover-couple .scene-bubble-him span::after{left:auto;right:-.28em;bottom:calc(50% - .375em);margin-left:0}}
+html[lang=ar] #cover-couple .scene-bubble span,html[lang=ur] #cover-couple .scene-bubble span,html[lang=fa] #cover-couple .scene-bubble span,html[lang=hi] #cover-couple .scene-bubble span,html[lang=bn] #cover-couple .scene-bubble span,html[lang=zh-Hans] #cover-couple .scene-bubble span,html[lang=am] #cover-couple .scene-bubble span{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+@media(prefers-reduced-motion:reduce){#cover-couple .scene-bubble span{transform:translateX(var(--tx,-50%))!important;animation:none!important;transition:opacity .4s ease}}
 /* Warm light: a soft glow on the sun and a few broad shafts falling toward
    the stairs, screened over the sky, city and walls only. */
 #cover-couple .scene-light{--x:-48;--y:-48;--w:1632;--h:1120;pointer-events:none;overflow:hidden}
@@ -198,12 +216,14 @@ button:disabled{opacity:.55;cursor:wait}
     <div class="scene-layer" data-layer="walls" style="--d:-0.2;--x:-48;--y:-48;--w:1632;--h:1120"><img src="/img/scene/walls.abb8aded8d.webp" alt="" width="1632" height="1120" fetchpriority="high"></div>
     <div class="scene-light" style="--d:-0.6;--sunx:1108;--suny:98"><div class="scene-glow"></div><div class="scene-rays scene-rays-a"></div><div class="scene-rays scene-rays-b"></div><div class="scene-motes"><i style="--mx:887;--my:432;--ms:4.8;--mdx:-23;--mdy:1;--mo:0.89;animation-duration:11.0s;animation-delay:-15.6s"></i><i style="--mx:939;--my:317;--ms:3.2;--mdx:-21;--mdy:-2;--mo:0.67;animation-duration:15.0s;animation-delay:-10.5s"></i><i style="--mx:835;--my:318;--ms:4.3;--mdx:13;--mdy:-4;--mo:0.53;animation-duration:15.9s;animation-delay:-0.8s"></i><i style="--mx:1087;--my:427;--ms:3.7;--mdx:10;--mdy:22;--mo:0.71;animation-duration:15.0s;animation-delay:-4.7s"></i><i style="--mx:1112;--my:343;--ms:4.5;--mdx:-24;--mdy:6;--mo:0.45;animation-duration:17.6s;animation-delay:-2.9s"></i><i style="--mx:990;--my:496;--ms:3.9;--mdx:7;--mdy:23;--mo:0.82;animation-duration:11.7s;animation-delay:-10.3s"></i><i style="--mx:922;--my:452;--ms:3.4;--mdx:-5;--mdy:-14;--mo:0.64;animation-duration:13.6s;animation-delay:-2.9s"></i><i style="--mx:955;--my:299;--ms:5.4;--mdx:-6;--mdy:21;--mo:0.77;animation-duration:16.4s;animation-delay:-2.9s"></i><i style="--mx:1036;--my:324;--ms:3.5;--mdx:-29;--mdy:44;--mo:0.56;animation-duration:16.4s;animation-delay:-5.7s"></i><i style="--mx:884;--my:331;--ms:2.6;--mdx:7;--mdy:42;--mo:0.90;animation-duration:15.6s;animation-delay:-2.8s"></i><i style="--mx:1008;--my:518;--ms:4.0;--mdx:-25;--mdy:39;--mo:0.77;animation-duration:15.6s;animation-delay:-7.1s"></i><i style="--mx:1041;--my:327;--ms:2.3;--mdx:8;--mdy:12;--mo:0.72;animation-duration:13.6s;animation-delay:-14.3s"></i><i style="--mx:1099;--my:390;--ms:2.3;--mdx:-28;--mdy:44;--mo:0.78;animation-duration:14.4s;animation-delay:-10.0s"></i><i style="--mx:955;--my:283;--ms:4.1;--mdx:-1;--mdy:5;--mo:0.71;animation-duration:17.1s;animation-delay:-17.3s"></i><i style="--mx:1021;--my:525;--ms:2.2;--mdx:2;--mdy:34;--mo:0.52;animation-duration:14.4s;animation-delay:-15.5s"></i><i style="--mx:1086;--my:458;--ms:4.8;--mdx:-9;--mdy:28;--mo:0.56;animation-duration:12.6s;animation-delay:-6.9s"></i><i style="--mx:1069;--my:373;--ms:5.3;--mdx:-6;--mdy:4;--mo:0.59;animation-duration:18.6s;animation-delay:-8.4s"></i><i style="--mx:903;--my:286;--ms:3.9;--mdx:9;--mdy:30;--mo:0.74;animation-duration:14.4s;animation-delay:-16.7s"></i></div></div>
     <div class="scene-layer" data-layer="stairs" style="--d:0.0;--x:-48;--y:235;--w:1632;--h:837"><img src="/img/scene/stairs.1207fda212.webp" alt="" width="1632" height="837" fetchpriority="high"></div>
-    <div class="scene-layer" data-layer="woman" style="--d:0.0;--x:376;--y:487;--w:401;--h:401"><img src="/img/scene/woman.9da822e4ef.webp" alt="" width="802" height="802" decoding="async"></div>
+    <div class="scene-layer" data-layer="woman" style="--d:0.0;--x:376;--y:491;--w:401;--h:401"><img src="/img/scene/woman.9da822e4ef.webp" alt="" width="802" height="802" decoding="async"></div>
     <div class="scene-layer" data-layer="man" style="--d:0.0;--x:817;--y:260;--w:370;--h:302"><img src="/img/scene/man.719b86bc80.webp" alt="" width="741" height="604" decoding="async"></div>
     <div class="scene-layer scene-heart" data-layer="heart" data-heart-drag style="--d:0.0;--x:768;--y:438;--w:50;--h:42"><div class="scene-heart-offset"><div class="scene-heart-float"><img src="/img/scene/heart.b846661254.webp" alt="" width="101" height="83" decoding="async"></div></div></div>
+    <div class="scene-bubble scene-bubble-him" data-bubble="him" style="--d:0.0;--bx:988;--by:250" aria-hidden="true"><span data-i18n="bubbleHim">Nice to meet you.</span></div>
+    <div class="scene-bubble scene-bubble-her" data-bubble="her" style="--d:0.0;--bx:559;--by:498" aria-hidden="true"><span data-i18n="bubbleHer">Nice to meet you too.</span></div>
     <div class="scene-layer" data-layer="bougainvillea" style="--d:0.6;--x:-10;--y:-10;--w:826;--h:558"><img src="/img/scene/bougainvillea.f698ef8f74.webp" alt="" width="826" height="558" decoding="async"></div>
-    <div class="scene-layer" data-layer="plantLeft" style="--d:1.1;--x:-48;--y:625;--w:364;--h:437"><img src="/img/scene/plant-left.8f84c4c1d0.webp" alt="" width="364" height="437" decoding="async"></div>
-    <div class="scene-layer" data-layer="plantRight" style="--d:1.3;--x:1113;--y:378;--w:471;--h:676"><img src="/img/scene/plant-right.07793bde60.webp" alt="" width="471" height="676" decoding="async"></div>
+    <div class="scene-layer" data-layer="plantLeft" style="--d:1.1;--x:-116;--y:625;--w:432;--h:437"><img src="/img/scene/plant-left.db3621348d.webp" alt="" width="432" height="437" decoding="async"></div>
+    <div class="scene-layer" data-layer="plantRight" style="--d:1.3;--x:1113;--y:378;--w:697;--h:676"><img src="/img/scene/plant-right.751c24443c.webp" alt="" width="697" height="676" decoding="async"></div>
     <!-- /couple-scene:layers --></div>
 </div>
 <div id="wash"></div>
@@ -266,7 +286,7 @@ button:disabled{opacity:.55;cursor:wait}
 
 
 <div id="dots" role="tablist" aria-label="Photos" data-i18n-aria="photos"></div>
-<script src="/i18n.js?v=20261017c"></script>
+<script src="/i18n.js?v=20261018a"></script>
 <script>
 /* ---------- Waitlist ---------- */
 (function(){
@@ -371,7 +391,7 @@ button:disabled{opacity:.55;cursor:wait}
      resists more the further it goes, and once input stops it eases softly
      back to rest (critically damped, so no bounce). Zooming out is kept small
      so no edge of the scene ever shows. */
-  var IN_LIMIT=.22,OUT_LIMIT=.055,RETURN=26,IDLE_MS=110;
+  var IN_LIMIT=.09,OUT_LIMIT=.025,RETURN=24,IDLE_MS=110;
   function stretch(p){var limit=p>=0?IN_LIMIT:OUT_LIMIT;return Math.sign(p)*limit*(1-Math.exp(-Math.abs(p)/limit))}
   var orientationBaseGamma=null,orientationBaseBeta=null,orientationPermissionRequested=false;
   function enabled(){return root.dataset.coverStyle==='couple'&&root.dataset.pageHidden!=='true'&&!(reduceMotion&&reduceMotion.matches)}
@@ -456,6 +476,16 @@ button:disabled{opacity:.55;cursor:wait}
     orientationPermissionRequested=true;
     orientation.requestPermission().catch(function(){orientationPermissionRequested=false});
   },{passive:true});
+  /* After 5-10 seconds he says hello, and she answers. Once per visit. */
+  var him=scene.querySelector('[data-bubble="him"]'),her=scene.querySelector('[data-bubble="her"]');
+  if(him&&her){
+    var at=function(ms,fn){window.setTimeout(fn,ms)};
+    var start=5000+Math.random()*5000;
+    at(start,function(){him.dataset.show=''});
+    at(start+2400,function(){her.dataset.show=''});
+    at(start+5600,function(){him.dataset.hide=''});
+    at(start+7600,function(){her.dataset.hide=''});
+  }
   document.addEventListener('visibilitychange',function(){
     root.dataset.pageHidden=String(document.hidden);
     settle();

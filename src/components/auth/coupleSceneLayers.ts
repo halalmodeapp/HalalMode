@@ -33,10 +33,10 @@ export const COUPLE_SCENE_LAYERS: readonly CoupleSceneLayer[] = [
   { key: 'city', file: 'city.c06d4b0910.webp', depth: -0.42, x: 532, y: 128, width: 768, height: 454 },
   { key: 'walls', file: 'walls.abb8aded8d.webp', depth: -0.2, x: -48, y: -48, width: 1632, height: 1120 },
   { key: 'stairs', file: 'stairs.1207fda212.webp', depth: 0.0, x: -48, y: 235, width: 1632, height: 837 },
-  { key: 'woman', file: 'woman.9da822e4ef.webp', depth: 0.0, x: 376, y: 487, width: 401, height: 401 },
+  { key: 'woman', file: 'woman.9da822e4ef.webp', depth: 0.0, x: 376, y: 491, width: 401, height: 401 },
   { key: 'man', file: 'man.719b86bc80.webp', depth: 0.0, x: 817, y: 260, width: 370, height: 302 },
   { key: 'heart', file: 'heart.b846661254.webp', depth: 0.0, x: 768, y: 438, width: 50, height: 42 },
   { key: 'bougainvillea', file: 'bougainvillea.f698ef8f74.webp', depth: 0.6, x: -10, y: -10, width: 826, height: 558 },
-  { key: 'plantLeft', file: 'plant-left.8f84c4c1d0.webp', depth: 1.1, x: -48, y: 625, width: 364, height: 437 },
-  { key: 'plantRight', file: 'plant-right.07793bde60.webp', depth: 1.3, x: 1113, y: 378, width: 471, height: 676 },
+  { key: 'plantLeft', file: 'plant-left.db3621348d.webp', depth: 1.1, x: -116, y: 625, width: 432, height: 437 },
+  { key: 'plantRight', file: 'plant-right.751c24443c.webp', depth: 1.3, x: 1113, y: 378, width: 697, height: 676 },
 ];

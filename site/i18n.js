@@ -20,6 +20,7 @@
 
   const copy = {
     en: {
+      bubbleHim: 'Nice to meet you.', bubbleHer: 'Nice to meet you too.',
       language: 'Choose language', navHow: 'How it works', navRefer: 'Refer your friends', heroTitle: 'Marriage, taken seriously.',
       heroIntro: 'Halal Mode is a better Muslim marriage app, built around a small, curated set of introductions each day. It’s intentionally designed for',
       heroBold: 'less noise and better connections.', comingSoon: 'Coming soon',
@@ -56,6 +57,7 @@
       cardsBody: '{{count}} guided quizzes, activities and adventures that help couples understand each other, grow closer and build a stronger marriage. Available in {{languages}} languages.',
     },
     ar: {
+      bubbleHim: 'تشرّفنا.', bubbleHer: 'الشرف لي.',
       language: 'اختر اللغة', navHow: 'كيف يشتغل', heroTitle: 'الزواج يستاهل جدّية.',
       heroIntro: 'حلال مود يساعد المسلمين على الزواج بطريقة أهدى وأوضح. كل يوم يعرّفك على عدد قليل من الناس، مختارين بعناية. والنتيجة:',
       heroBold: 'زحمة أقل. وتواصل أحسن.', comingSoon: 'قريبًا',
@@ -83,6 +85,7 @@
       cardsBody: '{{count}} من الاختبارات والأنشطة والمغامرات الموجّهة التي تساعد الأزواج على فهم بعضهم، والتقرّب، وبناء زواج أقوى. متاحة بـ{{languages}} لغة.'
     },
     ur: {
+      bubbleHim: 'آپ سے مل کر خوشی ہوئی۔', bubbleHer: 'مجھے بھی آپ سے مل کر خوشی ہوئی۔',
       language: 'زبان چنیں', navHow: 'یہ کیسے کام کرتا ہے', heroTitle: 'شادی، سنجیدگی کے ساتھ۔',
       heroIntro: 'حلال موڈ مسلم شادی کے لیے ایک بہتر ایپ ہے۔ ہر روز آپ کو چند سوچ سمجھ کر چنے گئے تعارف ملتے ہیں، تاکہ',
       heroBold: 'شور کم ہو۔ اچھے رابطے بنیں۔', comingSoon: 'جلد آ رہا ہے',
@@ -110,6 +113,7 @@
       cardsBody: '{{count}} رہنمائی والے کوئزز، سرگرمیاں اور مہمات، جو جوڑوں کو ایک دوسرے کو سمجھنے، قریب آنے اور مضبوط ازدواجی زندگی بنانے میں مدد دیں۔ {{languages}} زبانوں میں دستیاب۔'
     },
     hi: {
+      bubbleHim: 'आपसे मिलकर अच्छा लगा।', bubbleHer: 'मुझे भी आपसे मिलकर अच्छा लगा।',
       language: 'भाषा चुनें', navHow: 'यह कैसे काम करता है', heroTitle: 'शादी को संजीदगी से लें।',
       heroIntro: 'हलाल मोड मुस्लिम शादी के लिए एक बेहतर ऐप है। हर दिन आपको सोच-समझकर चुने गए कुछ परिचय मिलते हैं, ताकि',
       heroBold: 'शोर कम हो। अच्छे रिश्ते बनें।', comingSoon: 'जल्द आ रहा है',
@@ -137,6 +141,7 @@
       cardsBody: '{{count}} मार्गदर्शित क्विज़, गतिविधियाँ और रोमांच, जो जोड़ों को एक-दूसरे को समझने, करीब आने और मज़बूत शादी बनाने में मदद करते हैं। {{languages}} भाषाओं में उपलब्ध।'
     },
     id: {
+      bubbleHim: 'Senang bertemu denganmu.', bubbleHer: 'Senang bertemu denganmu juga.',
       language: 'Pilih bahasa', navHow: 'Cara kerjanya', heroTitle: 'Menikah, dengan niat yang jelas.',
       heroIntro: 'Halal Mode adalah aplikasi pernikahan Muslim yang lebih baik. Setiap hari, kamu mendapat beberapa perkenalan yang dipilih dengan cermat, supaya',
       heroBold: 'lebih sedikit distraksi. Lebih banyak koneksi yang berarti.', comingSoon: 'Segera hadir',
@@ -164,6 +169,7 @@
       cardsBody: '{{count}} kuis, aktivitas, dan petualangan terpandu yang membantu pasangan saling memahami, semakin dekat, dan membangun pernikahan yang lebih kuat. Tersedia dalam {{languages}} bahasa.'
     },
     ms: {
+      bubbleHim: 'Gembira berjumpa dengan awak.', bubbleHer: 'Saya pun gembira berjumpa dengan awak.',
       language: 'Pilih bahasa', navHow: 'Cara ia berfungsi', heroTitle: 'Perkahwinan, dengan niat yang jelas.',
       heroIntro: 'Halal Mode ialah aplikasi perkahwinan Muslim yang lebih baik. Setiap hari, anda dapat beberapa perkenalan yang dipilih dengan teliti, supaya',
       heroBold: 'kurang gangguan. Hubungan yang lebih bermakna.', comingSoon: 'Akan datang',
@@ -191,6 +197,7 @@
       cardsBody: '{{count}} kuiz, aktiviti dan pengembaraan berpandu yang membantu pasangan memahami satu sama lain, menjadi lebih rapat dan membina perkahwinan yang lebih kukuh. Tersedia dalam {{languages}} bahasa.'
     },
     bn: {
+      bubbleHim: 'আপনার সাথে দেখা হয়ে ভালো লাগল।', bubbleHer: 'আমারও আপনার সাথে দেখা হয়ে ভালো লাগল।',
       language: 'ভাষা বেছে নিন', navHow: 'যেভাবে কাজ করে', heroTitle: 'বিয়েকে গুরুত্ব দিয়ে।',
       heroIntro: 'হালাল মোড মুসলিমদের বিয়ের জন্য আরও ভালো একটি অ্যাপ। প্রতিদিন আপনার জন্য বেছে দেওয়া হয় অল্প কিছু পরিচয়, যাতে থাকে',
       heroBold: 'কম ভিড়। ভালো যোগাযোগ।', comingSoon: 'শিগগিরই আসছে',
@@ -218,6 +225,7 @@
       cardsBody: '{{count}}টি নির্দেশিত কুইজ, কার্যক্রম ও অ্যাডভেঞ্চার, যা দম্পতিদের একে অপরকে বুঝতে, আরও কাছাকাছি হতে এবং আরও শক্তিশালী দাম্পত্য গড়তে সাহায্য করে। {{languages}}টি ভাষায় পাওয়া যায়।'
     },
     fr: {
+      bubbleHim: 'Enchanté.', bubbleHer: 'Enchantée également.',
       language: 'Choisir la langue', navHow: 'Comment ça marche', heroTitle: 'Le mariage mérite qu’on s’y attarde.',
       heroIntro: 'Halal Mode est une meilleure façon de faire des rencontres en vue du mariage. Chaque jour, quelques présentations choisies avec soin, pour',
       heroBold: 'moins de bruit. De plus belles connexions.', comingSoon: 'Bientôt disponible',
@@ -245,6 +253,7 @@
       cardsBody: '{{count}} quiz, activités et aventures guidés pour aider les couples à mieux se comprendre, à se rapprocher et à construire un mariage plus solide. Disponible en {{languages}} langues.'
     },
     tr: {
+      bubbleHim: 'Tanıştığımıza memnun oldum.', bubbleHer: 'Ben de memnun oldum.',
       language: 'Dil seç', navHow: 'Nasıl çalışır', heroTitle: 'Evliliği ciddiye alıyoruz.',
       heroIntro: 'Halal Mode, Müslümanların evlilik niyetiyle tanışması için daha iyi bir uygulama. Her gün özenle seçilmiş az sayıda tanışma sunar; böylece',
       heroBold: 'daha az gürültü. Daha güçlü bağlar.', comingSoon: 'Yakında',
@@ -272,6 +281,7 @@
       cardsBody: 'Birbirinizi anlamanıza, yakınlaşmanıza ve daha güçlü bir evlilik kurmanıza yardımcı olan {{count}} rehberli bilgi oyunu, etkinlik ve macera. {{languages}} dilde kullanılabilir.'
     },
     fa: {
+      bubbleHim: 'از آشنایی‌تان خوشحالم.', bubbleHer: 'من هم از آشنایی‌تان خوشحالم.',
       language: 'انتخاب زبان', navHow: 'چطور کار می‌کند', heroTitle: 'ازدواج را جدی بگیریم.',
       heroIntro: 'حلال مود راه بهتری برای آشنایی مسلمان‌ها با هدف ازدواج است. هر روز چند آشنایی با دقت انتخاب‌شده به شما پیشنهاد می‌شود تا',
       heroBold: 'شلوغی کمتر باشد. ارتباط‌ها بهتر شوند.', comingSoon: 'به‌زودی',
@@ -299,6 +309,7 @@
       cardsBody: '{{count}} آزمون، فعالیت و ماجراجویی هدایت‌شده برای کمک به زوج‌ها تا یکدیگر را بهتر بفهمند، صمیمی‌تر شوند و زندگی مشترک محکم‌تری بسازند. در {{languages}} زبان در دسترس است.'
     },
     ha: {
+      bubbleHim: 'Na ji daɗin haɗuwa da ke.', bubbleHer: 'Ni ma na ji daɗin haɗuwa da kai.',
       language: 'Zaɓi harshe', navHow: 'Yadda yake aiki', heroTitle: 'Aure abu ne mai muhimmanci.',
       heroIntro: 'Halal Mode manhaja ce mafi kyau ga Musulmai masu neman aure. Kowace rana za ku ga ƴan gabatarwa da aka zaɓa da kyau, domin',
       heroBold: 'Hayaniya ta ragu. Haɗuwa mai ma’ana ta ƙaru.', comingSoon: 'Na nan tafe',
@@ -326,6 +337,7 @@
       cardsBody: 'Tambayoyin wasa, ayyuka da abubuwan kasada {{count}} masu jagora, waɗanda ke taimaka wa ma’aurata su fahimci juna, su ƙara kusanci, su kuma gina aure mai ƙarfi. Akwai su cikin harsuna {{languages}}.'
     },
     am: {
+      bubbleHim: 'ስለተዋወቅን ደስ ብሎኛል።', bubbleHer: 'እኔም ስለተዋወቅን ደስ ብሎኛል።',
       language: 'ቋንቋ ይምረጡ', navHow: 'እንዴት ይሰራል', heroTitle: 'ጋብቻ ቁም ነገር ነው።',
       heroIntro: 'ሃላል ሞድ ሙስሊሞች ለጋብቻ እንዲተዋወቁ የሚረዳ የተሻለ መተግበሪያ ነው። በየቀኑ በጥንቃቄ የተመረጡ ጥቂት ሰዎችን ያስተዋውቅዎታል። ይህም ማለት',
       heroBold: 'ጫጫታ ያንሳል። ጥሩ ግንኙነት ይጨምራል።', comingSoon: 'በቅርቡ',
@@ -353,6 +365,7 @@
       cardsBody: 'ጥንዶች እርስ በርሳቸውን እንዲረዱ፣ እንዲቀራረቡ እና ጠንካራ ትዳር እንዲገነቡ የሚረዱ {{count}} የተመሩ ጥያቄዎች፣ እንቅስቃሴዎች እና ጀብዱዎች። በ{{languages}} ቋንቋዎች ይገኛሉ።'
     },
     so: {
+      bubbleHim: 'Waan ku faraxsanahay inaan kula kulmo.', bubbleHer: 'Aniguna waan ku faraxsanahay inaan kula kulmo.',
       language: 'Dooro luqadda', navHow: 'Sida ay u shaqayso', heroTitle: 'Guurka si dhab ah ayaan u qaadannaa.',
       heroIntro: 'Halal Mode waa app ka wanaagsan oo Muslimiintu ku bartaan qof ay guursan karaan. Maalin kasta waxa lagu tusaa dad yar oo si taxaddar leh loo soo xulay, si aad u hesho',
       heroBold: 'buuq yar. Xiriir macno leh.', comingSoon: 'Dhawaan',
@@ -380,6 +393,7 @@
       cardsBody: '{{count}} su’aalo, hawlo iyo tacaburro la hagayo oo ka caawiya lammaanaha inay is fahmaan, isu soo dhowaadaan oo dhisaan guur ka xoog badan. Waxaa lagu heli karaa {{languages}} luqadood.'
     },
     es: {
+      bubbleHim: 'Encantado de conocerte.', bubbleHer: 'Encantada de conocerte también.',
       language: 'Elegir idioma', navHow: 'Cómo funciona', heroTitle: 'El matrimonio merece atención.',
       heroIntro: 'Halal Mode es una forma mejor de conocer a alguien con intención de casarse. Cada día, unas pocas presentaciones elegidas con cuidado para tener',
       heroBold: 'menos ruido. Mejores conexiones.', comingSoon: 'Muy pronto',
@@ -407,6 +421,7 @@
       cardsBody: '{{count}} cuestionarios, actividades y aventuras guiadas que ayudan a las parejas a entenderse, acercarse y construir un matrimonio más sólido. Disponible en {{languages}} idiomas.'
     },
     ru: {
+      bubbleHim: 'Приятно познакомиться.', bubbleHer: 'Мне тоже очень приятно.',
       language: 'Выбрать язык', navHow: 'Как это работает', heroTitle: 'К браку, серьёзно.',
       heroIntro: 'Халал Мод помогает мусульманам знакомиться для брака по-новому. Каждый день несколько тщательно подобранных знакомств, чтобы было',
       heroBold: 'меньше шума. Больше настоящего общения.', comingSoon: 'Скоро',
@@ -434,6 +449,7 @@
       cardsBody: '{{count}} направленных викторин, занятий и приключений, которые помогают парам лучше понять друг друга, стать ближе и построить более крепкий брак. Доступно на {{languages}} языках.'
     },
     'zh-Hans': {
+      bubbleHim: '很高兴认识你。', bubbleHer: '我也很高兴认识你。',
       language: '选择语言', navHow: '使用方式', heroTitle: '认真对待婚姻。',
       heroIntro: '哈拉尔·莫德是一款更适合穆斯林寻找婚姻伴侣的应用。每天只为你精选少量介绍，让你',
       heroBold: '少些干扰，多些真诚的连接。', comingSoon: '即将上线',

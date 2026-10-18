@@ -68,7 +68,7 @@ PLACEMENT = [
     ('city', 'city.png', 0.5, 532, 70, -0.42, None),  # wide enough to meet the right-hand building; minaret tip in view
     ('walls', 'walls.png', 1.02, -10, -4, -0.2, 'frame'),
     ('stairs', 'stairs.png', 1.03, 25, 14, 0.0, 'frame'),
-    ('woman', 'woman.png', 0.35, 360, 457, 0.0, None),  # seated on the tread, hand as close to the heart as his
+    ('woman', 'woman.png', 0.35, 360, 461, 0.0, None),  # seated on the tread, hand as close to the heart as his
     ('man', 'man.png', 0.313, 768, 241, 0.0, None),
     ('heart', 'heart.png', 0.0774, 734, 418, 0.0, None),
     ('bougainvillea', 'bougainvillea.png', 0.55, -10, -10, 0.6, None),
@@ -79,9 +79,13 @@ PLACEMENT = [
 # applied after scaling. The man tips slightly about his rear heel so both
 # soles rest on the descending treads. scene-warp.js pins match this pose.
 ROTATION = {'man': (5.0, (1120, 549))}
-# The figures and the heart are exported at twice their on-screen size so they
-# stay crisp when the scroll zoom travels in towards them.
-DENSITY = {'woman': 2, 'man': 2, 'heart': 2}
+# Cut-outs exported whole, at this many times their on-screen size: the figures
+# and the heart at 2x so they stay crisp in the scroll zoom, the hanging flowers
+# and plants at 1x but never clipped to the frame, so zooming out shows more of
+# each painting instead of a cut edge.
+DENSITY = {'woman': 2, 'man': 2, 'heart': 2, 'bougainvillea': 1, 'plantLeft': 1, 'plantRight': 1}
+# Speech bubbles: world point each bubble's tail touches, just above each head.
+BUBBLES = {'him': (988, 250), 'her': (559, 498)}
 # Dust motes drifting through the god rays, just behind the man's head.
 MOTES = 18
 
@@ -286,11 +290,21 @@ def write_site(manifest):
                     f'<div class="scene-heart-offset"><div class="scene-heart-float">{img}</div></div></div>')
         return f'<div class="scene-layer" data-layer="{entry["key"]}" style="{style}">{img}</div>'
 
+    def bubble(who):
+        bx, by = BUBBLES[who]
+        key = 'bubbleHim' if who == 'him' else 'bubbleHer'
+        text = 'Nice to meet you.' if who == 'him' else 'Nice to meet you too.'
+        return (f'<div class="scene-bubble scene-bubble-{who}" data-bubble="{who}" style="--d:0.0;--bx:{bx};--by:{by}" aria-hidden="true">'
+                f'<span data-i18n="{key}">{text}</span></div>')
+
     by_key = {entry['key']: entry for entry in manifest}
     sx, sy = SUN
     lines = []
     for entry in manifest:
         lines.append('    ' + layer(entry))
+        if entry['key'] == 'heart':
+            lines.append('    ' + bubble('him'))
+            lines.append('    ' + bubble('her'))
         if entry['key'] == 'walls':
             # Sunlight falls across the sky, city and walls, but stays behind
             # the stairs and the couple, so it never crosses a face or the copy.
