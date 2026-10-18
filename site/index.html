@@ -19,7 +19,7 @@ if(/[?&]verify=/.test(window.location.search))window.location.replace('/refer'+w
 <link rel="preload" as="image" href="/img/scene/stairs.1207fda212.webp" fetchpriority="high">
 <!-- /couple-scene:preload -->
 <meta name="theme-color" content="#FCFCFB">
-<link rel="icon" href="/favicon.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2"><link rel="icon" type="image/png" href="/favicon.png?v=2">
 <link rel="stylesheet" href="/logo-effect.css?v=20261017b">
 <link rel="stylesheet" href="/i18n.css?v=20261017a">
 <style>
@@ -128,6 +128,8 @@ header::before{content:'';position:absolute;z-index:-1;pointer-events:none;top:0
 .nav-arrow{display:inline-block}
 [dir="rtl"] .nav-arrow{transform:scaleX(-1)}
 .logo{height:30px;width:auto;display:block}
+/* A small trademark mark beside the wordmark. */
+.logo-tm{position:absolute;left:100%;top:-1px;margin-left:3px;font:600 9px/1 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:0;pointer-events:none;color:#fff;text-shadow:0 1px 4px rgba(10,10,10,.35)}
 header .logo-link .logo{filter:brightness(0) invert(1) drop-shadow(0 1px 6px rgba(10,10,10,.35))}
 .pill{font:600 12px ui-sans-serif,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);background:rgba(252,252,251,.82);padding:7px 14px;border-radius:999px}
 
@@ -263,7 +265,7 @@ button:disabled{opacity:.55;cursor:wait}
 
 <div class="wrap">
 <header>
-  <a class="logo-link" href="/" aria-label="Halal Mode" data-brand-name-aria><img class="logo" src="/logo.svg" alt="Halal Mode"><span class="logo-effect" aria-hidden="true"><span class="logo-shader"></span></span></a>
+  <a class="logo-link" href="/" aria-label="Halal Mode" data-brand-name-aria><img class="logo" src="/logo.svg" alt="Halal Mode"><sup class="logo-tm" aria-hidden="true">™</sup><span class="logo-effect" aria-hidden="true"><span class="logo-shader"></span></span></a>
   <div class="header-actions">
     <a class="nav nav-primary" href="/how-it-works"><span data-i18n="navHow">How it works</span> <span class="nav-arrow" aria-hidden="true">→</span></a>
     <a class="nav nav-refer" href="/refer"><span data-i18n="navRefer">Refer your friends</span> <span class="nav-arrow" aria-hidden="true">→</span></a>

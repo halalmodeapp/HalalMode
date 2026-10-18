@@ -27,7 +27,7 @@ import { useSession } from '@/state/session';
 import { useAuth } from '@/state/auth';
 import { useBreakpoint } from '@/theme/breakpoints';
 import { font as appFont } from '@/theme/tokens';
-import { RTL_LAYOUT } from '@/lib/rtl';
+import { LTR_LAYOUT, LTR_WEB_PROPS, RTL_LAYOUT } from '@/lib/rtl';
 import { ShiningWordmark } from '@/components/brand/ShiningWordmark';
 import { howItWorksUrl } from '@/lib/publicLinks';
 
@@ -144,7 +144,16 @@ export default function AuthScreen() {
               pointerEvents="box-none"
               style={[styles.header, compact && styles.headerCompact, { paddingTop: insets.top + (compact ? 8 : 18) }]}
             >
-              <ShiningWordmark width={compact ? 132 : 176} fill={C.surface} />
+              <View style={[styles.brand, LTR_LAYOUT]} {...LTR_WEB_PROPS}>
+                <ShiningWordmark width={compact ? 132 : 176} fill={C.surface} />
+                <Text
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
+                  style={[styles.trademark, compact && styles.trademarkCompact]}
+                >
+                  ™
+                </Text>
+              </View>
               <View style={styles.headerActions}>
                 <Pressable
                   accessibilityRole="link"
@@ -372,6 +381,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   headerCompact: { paddingHorizontal: 14 },
+  // The wordmark is English in every language, so its trademark mark always sits to its right.
+  brand: { flexDirection: 'row', alignItems: 'flex-start' },
+  trademark: { marginLeft: 3, marginTop: -2, color: C.surface, fontFamily: appFont.bodySemi, fontSize: 10, lineHeight: 12 },
+  trademarkCompact: { fontSize: 8, lineHeight: 10 },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: 7, flexShrink: 1 },
   howButton: {
     minHeight: 36,

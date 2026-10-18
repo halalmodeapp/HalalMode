@@ -9,7 +9,7 @@
 <meta property="og:title" content="Refer your friends to Halal Mode">
 <meta property="og:description" content="Invite a few good people and unlock more Premium.">
 <meta name="theme-color" content="#FCFCFB">
-<link rel="icon" href="/favicon.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2"><link rel="icon" type="image/png" href="/favicon.png?v=2">
 <link rel="stylesheet" href="/logo-effect.css?v=20261017b">
 <link rel="stylesheet" href="/i18n.css?v=20261017a">
 <style>
@@ -21,6 +21,8 @@ body{margin:0;display:flex;flex-direction:column;min-height:100svh;background:ra
 .wrap{width:100%;max-width:1100px;margin:0 auto;padding:0 clamp(22px,5.3vw,84px);display:flex;flex:1;flex-direction:column}
 header{padding:24px 0;display:flex;align-items:center;justify-content:space-between;gap:20px}
 .logo{height:30px;width:auto;display:block}
+/* A small trademark mark beside the wordmark. */
+.logo-tm{position:absolute;left:100%;top:-1px;margin-left:3px;font:600 9px/1 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:0;pointer-events:none;color:var(--ink)}
 .header-links{display:flex;gap:10px;align-items:center}
 .nav{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 17px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.74);color:var(--soft);font-size:12px;font-weight:650;letter-spacing:.12em;text-transform:uppercase;text-decoration:none}
 .nav:hover{color:var(--gold);border-color:rgba(184,145,79,.42);background:#fff}
@@ -58,7 +60,7 @@ html[dir=rtl] main,html[dir=rtl] footer{text-align:right}
 <body>
 <div class="wrap">
 <header>
-  <a class="logo-link" href="/" aria-label="Halal Mode" data-brand-name-aria><img class="logo" src="/logo.svg" alt="Halal Mode"><span class="logo-effect" aria-hidden="true"><span class="logo-shader"></span></span></a>
+  <a class="logo-link" href="/" aria-label="Halal Mode" data-brand-name-aria><img class="logo" src="/logo.svg" alt="Halal Mode"><sup class="logo-tm" aria-hidden="true">™</sup><span class="logo-effect" aria-hidden="true"><span class="logo-shader"></span></span></a>
   <div class="header-links"><a class="nav" href="/how-it-works" data-i18n="navHow">How it works</a></div>
 </header>
 
