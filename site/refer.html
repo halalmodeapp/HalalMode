@@ -43,6 +43,16 @@ footer{padding:26px 0 40px;border-top:1px solid var(--line);color:var(--muted);f
 footer a{color:var(--gold)}
 @media(max-width:680px){.wrap{padding:0 20px}header{padding:18px 0}.logo{height:25px}.nav{min-height:38px;padding:0 12px;font-size:10px;letter-spacing:.08em}h1{font-size:clamp(36px,10vw,52px)}.referral-tiers{grid-template-columns:1fr;gap:10px}.referral-tier{padding:16px 18px}}
 html[dir=rtl] main,html[dir=rtl] footer{text-align:right}
+.link-form{margin-top:28px;max-width:560px}
+.link-form[hidden]{display:none}
+.link-form label{display:block;margin:0 0 8px;font:600 14px ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.link-row{display:flex;gap:8px}
+.link-row input{flex:1;min-width:0;font-size:16px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--ink)}
+.link-row input:focus,.link-row button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.link-row button{flex:none;padding:0 20px;border:0;border-radius:999px;background:var(--ink);color:var(--surface);font:600 14px ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer}
+.link-row button:disabled{opacity:.55;cursor:wait}
+.link-msg{margin:10px 0 0;min-height:1.2em;color:var(--muted);font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+@media(max-width:480px){.link-row{flex-direction:column}.link-row button{min-height:46px}}
 </style>
 </head>
 <body>
@@ -61,6 +71,14 @@ html[dir=rtl] main,html[dir=rtl] footer{text-align:right}
     <p class="referral-tier" data-i18n="reward10">10 joins → 1 year free</p>
   </div>
   <p class="referral-note" data-i18n="referralNote">Referrals count once your friend verifies their email.</p>
+  <form id="link-form" class="link-form" novalidate>
+    <label for="link-email" data-i18n="referFormTitle">Get your referral link</label>
+    <div class="link-row">
+      <input id="link-email" type="email" autocomplete="email" inputmode="email" required maxlength="254" placeholder="you@example.com">
+      <button id="link-go" type="submit" data-i18n="referFormButton">Email me my link</button>
+    </div>
+    <p id="link-msg" class="link-msg" role="status" aria-live="polite"></p>
+  </form>
   <div id="verification-status" class="verification-status" role="status" aria-live="polite" hidden>
     <p id="verification-title" class="verification-title"></p>
     <p id="verification-body" class="verification-body"></p>
@@ -78,12 +96,33 @@ html[dir=rtl] main,html[dir=rtl] footer{text-align:right}
   <span><a href="/how-it-works" data-i18n="navHow">How it works</a> &nbsp;·&nbsp; <span data-i18n="questions">Questions?</span> <a href="mailto:hello@halalmo.de">hello@halalmo.de</a></span>
 </footer>
 </div>
-<script src="/i18n.js?v=20261018a"></script>
+<script src="/i18n.js?v=20261018b"></script>
+<script src="/waitlist-email.js?v=20261018a"></script>
 <script>
 /* ---------- Waitlist verification and referral sharing ---------- */
 (function(){
   var BASE='https://lfuuywsmydruvqkqwvzw.supabase.co';
   var VERIFY_URL=BASE+'/functions/v1/verify-waitlist';
+  var LINK_URL=BASE+'/rest/v1/rpc/request_referral_link';
+  var KEY='sb_publishable_yioJpXVD_u-krXHgA7souQ_2pOiITsN';
+  /* Members confirm their email here to get a referral link. The reply is the
+     same whether or not the address is on the waitlist. */
+  var linkForm=document.getElementById('link-form'),linkMsg=document.getElementById('link-msg'),linkGo=document.getElementById('link-go');
+  function linkSay(text){linkMsg.textContent=text}
+  if(/[?&]verify=/.test(window.location.search))linkForm.hidden=true;
+  linkForm.addEventListener('submit',function(e){
+    e.preventDefault();
+    var email=document.getElementById('link-email').value.trim().toLowerCase();
+    var checked=window.HalalWaitlistEmail.check(email);
+    if(checked.suggestion)return linkSay(window.HalalI18n.t('emailSuggest').replace('{{email}}',checked.suggestion));
+    if(!checked.ok)return linkSay(window.HalalI18n.t('validationEmail'));
+    linkGo.disabled=true;linkSay('');
+    fetch(LINK_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+KEY},body:JSON.stringify({p_email:email,p_locale:window.HalalI18n.language})})
+      .then(function(r){if(!r.ok)throw new Error(r.status)})
+      .then(function(){linkSay(window.HalalI18n.t('referFormSent'))})
+      .catch(function(){linkSay(window.HalalI18n.t('error'))})
+      .then(function(){linkGo.disabled=false});
+  });
   document.getElementById('yr').textContent=new Date().getFullYear();
 
   var status=document.getElementById('verification-status');

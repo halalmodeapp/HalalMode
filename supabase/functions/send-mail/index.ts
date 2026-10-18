@@ -1,6 +1,6 @@
 /**
  * Drains the mail outbox through Resend: every email the service sends goes
- * through here (report alerts to the operator, waitlist welcomes, and later
+ * through here (report alerts to the operator, waitlist verification, and later
  * support), so there is one sender, one set of DNS records, one log.
  *
  * Secrets (supabase secrets set …): RESEND_API_KEY, OPERATOR_EMAIL, and
@@ -36,15 +36,18 @@ interface Moderation {
 
 interface Claimed {
   id: number;
-  kind: 'report' | 'waitlist_welcome' | 'moderation';
+  kind: 'report' | 'waitlist_welcome' | 'moderation' | 'waitlist_verification';
   to: string | null;
   locale: string;
   report: Report | null;
   moderation: Moderation | null;
+  verification: { token: string } | null;
+  welcome: { eligible: boolean } | null;
 }
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const FROM = Deno.env.get('MAIL_FROM') ?? 'Halal Mode <hello@halalmo.de>';
+const MODERATION_MEDIA_LINK_TTL_SECONDS = 60 * 60;
 
 const escape = (value: unknown) =>
   String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -68,10 +71,10 @@ async function reportEmail(report: Report, secret: string) {
   );
   const button = (href: string, label: string, colour: string) =>
     `<a href="${href}" style="display:inline-block;margin:4px 8px 4px 0;padding:10px 16px;border-radius:999px;background:${colour};color:#fff;text-decoration:none;font-weight:600">${label}</a>`;
-  const subject = `Report: ${report.subject_name ?? 'member'} — ${report.reason}${report.subject_report_count > 1 ? ` (${report.subject_report_count} reports)` : ''}`;
+  const subject = `Report: ${report.subject_name ?? 'member'}, ${report.reason}${report.subject_report_count > 1 ? ` (${report.subject_report_count} reports)` : ''}`;
   const html = `<div style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.5;color:#0a0a0a">
 <p><b>Reason:</b> ${escape(report.reason)}</p>
-<p><b>What they wrote:</b><br>${escape(report.detail || '—').replace(/\n/g, '<br>')}</p>
+<p><b>What they wrote:</b><br>${escape(report.detail || '...').replace(/\n/g, '<br>')}</p>
 <p><b>Reported member:</b> ${escape(report.subject_name)} (${escape([report.subject_city, report.subject_country].filter(Boolean).join(', '))})<br>
 <code>${escape(report.subject_id)}</code><br>
 Reports against them in total: <b>${report.subject_report_count}</b>${report.subject_paused ? ' · already hidden' : ''}</p>
@@ -87,9 +90,9 @@ Reports against them in total: <b>${report.subject_report_count}</b>${report.sub
 async function moderationEmail(item: Moderation, client: any) {
   let shown = `<p><b>Bio:</b><br>${escape(item.ref).replace(/\n/g, '<br>')}</p>`;
   if (item.kind === 'photo') {
-    const signed = await client.storage.from('profile-photos').createSignedUrl(item.ref, 7 * 24 * 3600);
+    const signed = await client.storage.from('profile-photos').createSignedUrl(item.ref, MODERATION_MEDIA_LINK_TTL_SECONDS);
     shown = signed.data?.signedUrl
-      ? `<p><a href="${signed.data.signedUrl}">Open the photo</a> (private link, 7 days)</p>`
+      ? `<p><a href="${signed.data.signedUrl}">Open the photo</a> (private link, 1 hour)</p>`
       : '<p>The photo could not be linked.</p>';
   }
   const what = item.kind === 'photo'
@@ -98,38 +101,85 @@ async function moderationEmail(item: Moderation, client: any) {
   return {
     subject: `${what}: ${item.first_name ?? 'member'}`,
     html: `<div style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.5;color:#0a0a0a">
-<p><b>${escape(what)}</b> — ${escape(item.reason ?? '')}</p>
+<p><b>${escape(what)}</b>, ${escape(item.reason ?? '')}</p>
 ${shown}
 <p><b>Member:</b> ${escape(item.first_name)} <code>${escape(item.user_id)}</code></p>
-<p style="color:#6C6A65;font-size:13px">Checked by Claude Haiku. A removed photo can be added back by the member; a bio is never changed automatically.</p>
+<p style="color:#6C6A65;font-size:13px">Checked by automated content moderation. A removed photo can be added back by the member; a bio is never changed automatically.</p>
 </div>`,
   };
 }
 
-const WELCOME: Record<string, { subject: string; body: string }> = {
+const WELCOME: Record<string, { subject: string; thanks: string; offer: string; next: string; confirm: string; button: string }> = {
   en: {
-    subject: 'You’re on the Halal Mode waitlist',
-    body: 'Thank you for joining. We are opening Halal Mode city by city, and we will write to you as soon as introductions begin where you are.',
+    subject: 'You’re on the Halal Mode waitlist ✓',
+    thanks: 'Thank you for joining Halal Mode. You don’t need to do anything else: your place is saved.',
+    offer: 'You’re one of the first 10,000, so 1 month of Premium is reserved for you, free, at launch.',
+    next: 'We’re opening city by city, and we’ll write to you as soon as introductions begin where you are.',
+    confirm: 'A friend invited you. Confirm your email so they get the credit:',
+    button: 'Confirm my email',
   },
   ar: {
-    subject: 'أنت على قائمة انتظار حلال مود',
-    body: 'شكرًا لانضمامك. نفتح حلال مود مدينةً تلو الأخرى، وسنكتب إليك فور بدء التعارفات في مدينتك.',
+    subject: 'أنت على قائمة انتظار حلال مود ✓',
+    thanks: 'شكرًا لانضمامك إلى حلال مود. لا تحتاج إلى فعل أي شيء آخر: مكانك محفوظ.',
+    offer: 'أنت من أول 10,000 شخص، لذلك حجزنا لك شهرًا من بريميوم مجانًا عند الإطلاق.',
+    next: 'نفتح مدينةً تلو الأخرى، وسنكتب إليك فور بدء التعارفات في مدينتك.',
+    confirm: 'دعاك صديق. أكّد بريدك الإلكتروني ليُحتسب له ذلك:',
+    button: 'تأكيد بريدي',
   },
 };
 
-function welcomeEmail(locale: string) {
+function welcomeEmail(locale: string, eligible: boolean, token: string | null) {
   const words = WELCOME[locale] ?? WELCOME.en;
   const rtl = locale === 'ar';
+  const offer = eligible ? `<p><b>${escape(words.offer)}</b></p>` : '';
+  const confirm = token
+    ? `<p>${escape(words.confirm)}</p><p><a href="https://halalmo.de/refer?verify=${encodeURIComponent(token)}" style="display:inline-block;padding:11px 17px;border-radius:999px;background:#0a0a0a;color:#fff;text-decoration:none;font-weight:600">${escape(words.button)}</a></p>`
+    : '';
   return {
     subject: words.subject,
-    html: `<div dir="${rtl ? 'rtl' : 'ltr'}" style="font-family:system-ui,sans-serif;font-size:16px;line-height:1.6;color:#0a0a0a"><p>${escape(words.body)}</p><p>Halal Mode</p></div>`,
+    html: `<div dir="${rtl ? 'rtl' : 'ltr'}" style="font-family:system-ui,sans-serif;font-size:16px;line-height:1.6;color:#0a0a0a"><p>${escape(words.thanks)}</p>${offer}<p>${escape(words.next)}</p>${confirm}<p>Halal Mode</p></div>`,
   };
 }
 
-async function send(apiKey: string, to: string, subject: string, html: string): Promise<string | null> {
+const VERIFICATION: Record<string, { subject: string; intro: string; button: string; expiry: string }> = {
+  en: {
+    subject: 'Your Halal Mode referral link',
+    intro: 'Confirm your email to get your referral link. Invite a few good people and unlock more Premium.',
+    button: 'Get my referral link',
+    expiry: 'This link expires in 7 days.',
+  },
+  ar: {
+    subject: 'رابط الدعوة الخاص بك في حلال مود',
+    intro: 'أكّد بريدك الإلكتروني لتحصل على رابط الدعوة. ادعُ أشخاصًا طيبين واحصل على مزيد من بريميوم.',
+    button: 'احصل على رابطي',
+    expiry: 'ينتهي هذا الرابط خلال 7 أيام.',
+  },
+};
+
+function verificationEmail(locale: string, token: string) {
+  const words = VERIFICATION[locale] ?? VERIFICATION.en;
+  const rtl = locale === 'ar';
+  const link = `https://halalmo.de/refer?verify=${encodeURIComponent(token)}`;
+  return {
+    subject: words.subject,
+    html: `<div dir="${rtl ? 'rtl' : 'ltr'}" style="font-family:system-ui,sans-serif;font-size:16px;line-height:1.6;color:#0a0a0a"><p>${escape(words.intro)}</p><p><a href="${link}" style="display:inline-block;padding:11px 17px;border-radius:999px;background:#0a0a0a;color:#fff;text-decoration:none;font-weight:600">${escape(words.button)}</a></p><p style="color:#6c6a65;font-size:13px">${escape(words.expiry)}</p><p>Halal Mode</p></div>`,
+  };
+}
+
+async function send(
+  apiKey: string,
+  to: string,
+  subject: string,
+  html: string,
+  idempotencyKey: string,
+): Promise<string | null> {
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'Idempotency-Key': idempotencyKey,
+    },
     body: JSON.stringify({ from: FROM, to: [to], subject, html }),
   });
   return response.ok ? null : `${response.status} ${(await response.text()).slice(0, 300)}`;
@@ -156,13 +206,16 @@ Deno.serve(async (request) => {
     try {
       if (item.kind === 'report' && item.report) {
         const mail = await reportEmail(item.report, secret.data as string);
-        error = await send(apiKey, operator, mail.subject, mail.html);
+        error = await send(apiKey, operator, mail.subject, mail.html, `mail-${item.id}`);
       } else if (item.kind === 'moderation' && item.moderation) {
         const mail = await moderationEmail(item.moderation, client);
-        error = await send(apiKey, operator, mail.subject, mail.html);
+        error = await send(apiKey, operator, mail.subject, mail.html, `mail-${item.id}`);
       } else if (item.kind === 'waitlist_welcome' && item.to) {
-        const mail = welcomeEmail(item.locale);
-        error = await send(apiKey, item.to, mail.subject, mail.html);
+        const mail = welcomeEmail(item.locale, item.welcome?.eligible === true, item.verification?.token ?? null);
+        error = await send(apiKey, item.to, mail.subject, mail.html, `mail-${item.id}`);
+      } else if (item.kind === 'waitlist_verification' && item.to && item.verification?.token) {
+        const mail = verificationEmail(item.locale, item.verification.token);
+        error = await send(apiKey, item.to, mail.subject, mail.html, `mail-${item.id}`);
       } else {
         error = 'nothing to send';
       }

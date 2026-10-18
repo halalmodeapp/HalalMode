@@ -20,6 +20,7 @@
 
   const copy = {
     en: {
+      offerFree: '1 month of Premium, free', offerFreeFor: 'for the first 10,000 people', joinedTitle: 'You’re in.', joinedBody: 'Thank you for being one of the first 10,000. Your free month of Premium is reserved for launch, and a note is on its way to your inbox.', joinedBodyLate: 'Thank you for joining. Your place is saved, and a note is on its way to your inbox. We’ll write to you when Halal Mode opens.', emailSuggest: 'Did you mean {{email}}?', referFormTitle: 'Get your referral link', referFormButton: 'Email me my link', referFormSent: 'If that email is on the waitlist, your referral link is on its way.',
       bubbleHim: 'Nice to meet you.', bubbleHer: 'Nice to meet you too.',
       language: 'Choose language', navHow: 'How it works', navRefer: 'Refer your friends', heroTitle: 'Marriage, taken seriously.',
       heroIntro: 'Halal Mode is a better Muslim marriage app, built around a small, curated set of introductions each day. It’s intentionally designed for',
@@ -28,7 +29,7 @@
       early: 'Early members are invited first, in the order they joined.',
       email: 'Email', city: 'City', cityPlaceholder: 'e.g. London', age: 'Age range',
       choose: 'Choose…', notify: 'Notify me', waitlistOffer: 'Join the first 10,000 people on Halal Mode and automatically get 1 month of Premium free at launch.',
-      waitlistButton: 'Join the waitlist', offerFine: 'Limited to the first 10,000 verified signups.',
+      waitlistButton: 'Join the waitlist', offerFine: 'Limited to the first 10,000 signups.',
       privacy: 'We use your details only to tell you when Halal Mode opens. No spam, and never shared.',
       questions: 'Questions?', soundOn: 'Sound on', soundOff: 'Sound off',
       soundToggle: 'Squeeze sound', availability: 'App availability', photos: 'Photos',
@@ -57,6 +58,8 @@
       cardsBody: '{{count}} guided quizzes, activities and adventures that help couples understand each other, grow closer and build a stronger marriage. Available in {{languages}} languages.',
     },
     ar: {
+      offerFine: 'العرض لأول 10,000 مسجّل فقط.',
+      offerFree: 'شهر بريميوم مجانًا', offerFreeFor: 'لأول 10,000 شخص', joinedTitle: 'أنت معنا.', joinedBody: 'شكرًا لأنك من أول 10,000. شهر البريميوم المجاني محجوز لك عند الإطلاق، ورسالة في طريقها إلى بريدك.', joinedBodyLate: 'شكرًا لانضمامك. مكانك محفوظ، ورسالة في طريقها إلى بريدك. سنراسلك عند إطلاق حلال مود.', emailSuggest: 'هل تقصد {{email}}؟', referFormTitle: 'احصل على رابط الدعوة', referFormButton: 'أرسل لي الرابط', referFormSent: 'إذا كان هذا البريد في قائمة الانتظار، فرابط الدعوة في طريقه إليك.',
       bubbleHim: 'تشرّفنا.', bubbleHer: 'الشرف لي.',
       language: 'اختر اللغة', navHow: 'كيف يشتغل', heroTitle: 'الزواج يستاهل جدّية.',
       heroIntro: 'حلال مود يساعد المسلمين على الزواج بطريقة أهدى وأوضح. كل يوم يعرّفك على عدد قليل من الناس، مختارين بعناية. والنتيجة:',
@@ -85,6 +88,8 @@
       cardsBody: '{{count}} من الاختبارات والأنشطة والمغامرات الموجّهة التي تساعد الأزواج على فهم بعضهم، والتقرّب، وبناء زواج أقوى. متاحة بـ{{languages}} لغة.'
     },
     ur: {
+      offerFine: 'صرف پہلے 10,000 سائن اپس کے لیے۔',
+      offerFree: 'ایک مہینہ پریمیم، مفت', offerFreeFor: 'پہلے 10,000 لوگوں کے لیے', joinedTitle: 'آپ شامل ہو گئے۔', joinedBody: 'پہلے 10,000 میں شامل ہونے کا شکریہ۔ آپ کا مفت پریمیم مہینہ لانچ کے لیے محفوظ ہے، اور ایک پیغام آپ کے ان باکس کی طرف آ رہا ہے۔', joinedBodyLate: 'شامل ہونے کا شکریہ۔ آپ کی جگہ محفوظ ہے، اور ایک پیغام آپ کے ان باکس کی طرف آ رہا ہے۔ حلال موڈ کھلنے پر ہم آپ کو لکھیں گے۔', emailSuggest: 'کیا آپ کا مطلب {{email}} تھا؟', referFormTitle: 'اپنا ریفرل لنک حاصل کریں', referFormButton: 'مجھے لنک ای میل کریں', referFormSent: 'اگر یہ ای میل ویٹ لسٹ میں ہے تو آپ کا ریفرل لنک آ رہا ہے۔',
       bubbleHim: 'آپ سے مل کر خوشی ہوئی۔', bubbleHer: 'مجھے بھی آپ سے مل کر خوشی ہوئی۔',
       language: 'زبان چنیں', navHow: 'یہ کیسے کام کرتا ہے', heroTitle: 'شادی، سنجیدگی کے ساتھ۔',
       heroIntro: 'حلال موڈ مسلم شادی کے لیے ایک بہتر ایپ ہے۔ ہر روز آپ کو چند سوچ سمجھ کر چنے گئے تعارف ملتے ہیں، تاکہ',
@@ -113,6 +118,8 @@
       cardsBody: '{{count}} رہنمائی والے کوئزز، سرگرمیاں اور مہمات، جو جوڑوں کو ایک دوسرے کو سمجھنے، قریب آنے اور مضبوط ازدواجی زندگی بنانے میں مدد دیں۔ {{languages}} زبانوں میں دستیاب۔'
     },
     hi: {
+      offerFine: 'सिर्फ़ पहले 10,000 साइनअप के लिए।',
+      offerFree: '1 महीना प्रीमियम, मुफ़्त', offerFreeFor: 'पहले 10,000 लोगों के लिए', joinedTitle: 'आप शामिल हो गए।', joinedBody: 'पहले 10,000 में शामिल होने के लिए शुक्रिया। आपका मुफ़्त प्रीमियम महीना लॉन्च के लिए सुरक्षित है, और एक संदेश आपके इनबॉक्स में आ रहा है।', joinedBodyLate: 'शामिल होने के लिए शुक्रिया। आपकी जगह सुरक्षित है, और एक संदेश आपके इनबॉक्स में आ रहा है। हलाल मोड खुलने पर हम आपको लिखेंगे।', emailSuggest: 'क्या आपका मतलब {{email}} था?', referFormTitle: 'अपना रेफ़रल लिंक पाएँ', referFormButton: 'मुझे लिंक ईमेल करें', referFormSent: 'अगर यह ईमेल वेटलिस्ट में है, तो आपका रेफ़रल लिंक आ रहा है।',
       bubbleHim: 'आपसे मिलकर अच्छा लगा।', bubbleHer: 'मुझे भी आपसे मिलकर अच्छा लगा।',
       language: 'भाषा चुनें', navHow: 'यह कैसे काम करता है', heroTitle: 'शादी को संजीदगी से लें।',
       heroIntro: 'हलाल मोड मुस्लिम शादी के लिए एक बेहतर ऐप है। हर दिन आपको सोच-समझकर चुने गए कुछ परिचय मिलते हैं, ताकि',
@@ -141,6 +148,8 @@
       cardsBody: '{{count}} मार्गदर्शित क्विज़, गतिविधियाँ और रोमांच, जो जोड़ों को एक-दूसरे को समझने, करीब आने और मज़बूत शादी बनाने में मदद करते हैं। {{languages}} भाषाओं में उपलब्ध।'
     },
     id: {
+      offerFine: 'Hanya untuk 10.000 pendaftar pertama.',
+      offerFree: '1 bulan Premium, gratis', offerFreeFor: 'untuk 10.000 orang pertama', joinedTitle: 'Kamu sudah terdaftar.', joinedBody: 'Terima kasih telah menjadi salah satu dari 10.000 orang pertama. Satu bulan Premium gratis sudah disiapkan untukmu saat peluncuran, dan pesan sedang dikirim ke kotak masukmu.', joinedBodyLate: 'Terima kasih telah bergabung. Tempatmu sudah tersimpan, dan pesan sedang dikirim ke kotak masukmu. Kami akan mengabarimu saat Halal Mode dibuka.', emailSuggest: 'Maksudmu {{email}}?', referFormTitle: 'Dapatkan tautan rujukanmu', referFormButton: 'Kirim tautannya ke email saya', referFormSent: 'Jika email itu ada di daftar tunggu, tautan rujukanmu sedang dikirim.',
       bubbleHim: 'Senang bertemu denganmu.', bubbleHer: 'Senang bertemu denganmu juga.',
       language: 'Pilih bahasa', navHow: 'Cara kerjanya', heroTitle: 'Menikah, dengan niat yang jelas.',
       heroIntro: 'Halal Mode adalah aplikasi pernikahan Muslim yang lebih baik. Setiap hari, kamu mendapat beberapa perkenalan yang dipilih dengan cermat, supaya',
@@ -169,6 +178,8 @@
       cardsBody: '{{count}} kuis, aktivitas, dan petualangan terpandu yang membantu pasangan saling memahami, semakin dekat, dan membangun pernikahan yang lebih kuat. Tersedia dalam {{languages}} bahasa.'
     },
     ms: {
+      offerFine: 'Terhad kepada 10,000 pendaftaran pertama.',
+      offerFree: '1 bulan Premium, percuma', offerFreeFor: 'untuk 10,000 orang pertama', joinedTitle: 'Anda sudah berdaftar.', joinedBody: 'Terima kasih kerana menjadi antara 10,000 orang pertama. Sebulan Premium percuma disimpan untuk anda semasa pelancaran, dan satu nota sedang dihantar ke peti masuk anda.', joinedBodyLate: 'Terima kasih kerana menyertai. Tempat anda disimpan, dan satu nota sedang dihantar ke peti masuk anda. Kami akan menghubungi anda apabila Halal Mode dibuka.', emailSuggest: 'Maksud anda {{email}}?', referFormTitle: 'Dapatkan pautan rujukan anda', referFormButton: 'E-melkan pautan saya', referFormSent: 'Jika e-mel itu ada dalam senarai menunggu, pautan rujukan anda sedang dihantar.',
       bubbleHim: 'Gembira berjumpa dengan awak.', bubbleHer: 'Saya pun gembira berjumpa dengan awak.',
       language: 'Pilih bahasa', navHow: 'Cara ia berfungsi', heroTitle: 'Perkahwinan, dengan niat yang jelas.',
       heroIntro: 'Halal Mode ialah aplikasi perkahwinan Muslim yang lebih baik. Setiap hari, anda dapat beberapa perkenalan yang dipilih dengan teliti, supaya',
@@ -197,6 +208,8 @@
       cardsBody: '{{count}} kuiz, aktiviti dan pengembaraan berpandu yang membantu pasangan memahami satu sama lain, menjadi lebih rapat dan membina perkahwinan yang lebih kukuh. Tersedia dalam {{languages}} bahasa.'
     },
     bn: {
+      offerFine: 'শুধু প্রথম ১০,০০০ সাইনআপের জন্য।',
+      offerFree: '১ মাস প্রিমিয়াম, ফ্রি', offerFreeFor: 'প্রথম ১০,০০০ জনের জন্য', joinedTitle: 'আপনি যুক্ত হয়েছেন।', joinedBody: 'প্রথম ১০,০০০ জনের একজন হওয়ার জন্য ধন্যবাদ। লঞ্চের সময় আপনার এক মাসের ফ্রি প্রিমিয়াম সংরক্ষিত, আর একটি বার্তা আপনার ইনবক্সে যাচ্ছে।', joinedBodyLate: 'যুক্ত হওয়ার জন্য ধন্যবাদ। আপনার জায়গা সংরক্ষিত, আর একটি বার্তা আপনার ইনবক্সে যাচ্ছে। হালাল মোড চালু হলে আমরা আপনাকে জানাব।', emailSuggest: 'আপনি কি {{email}} বোঝাতে চেয়েছেন?', referFormTitle: 'আপনার রেফারেল লিংক নিন', referFormButton: 'আমাকে লিংক ইমেল করুন', referFormSent: 'ইমেলটি ওয়েটলিস্টে থাকলে আপনার রেফারেল লিংক পাঠানো হচ্ছে।',
       bubbleHim: 'আপনার সাথে দেখা হয়ে ভালো লাগল।', bubbleHer: 'আমারও আপনার সাথে দেখা হয়ে ভালো লাগল।',
       language: 'ভাষা বেছে নিন', navHow: 'যেভাবে কাজ করে', heroTitle: 'বিয়েকে গুরুত্ব দিয়ে।',
       heroIntro: 'হালাল মোড মুসলিমদের বিয়ের জন্য আরও ভালো একটি অ্যাপ। প্রতিদিন আপনার জন্য বেছে দেওয়া হয় অল্প কিছু পরিচয়, যাতে থাকে',
@@ -225,6 +238,8 @@
       cardsBody: '{{count}}টি নির্দেশিত কুইজ, কার্যক্রম ও অ্যাডভেঞ্চার, যা দম্পতিদের একে অপরকে বুঝতে, আরও কাছাকাছি হতে এবং আরও শক্তিশালী দাম্পত্য গড়তে সাহায্য করে। {{languages}}টি ভাষায় পাওয়া যায়।'
     },
     fr: {
+      offerFine: 'Réservé aux 10 000 premières inscriptions.',
+      offerFree: '1 mois de Premium offert', offerFreeFor: 'aux 10 000 premières personnes', joinedTitle: 'C’est fait.', joinedBody: 'Merci de faire partie des 10 000 premiers. Votre mois de Premium offert est réservé pour le lancement, et un message est en route vers votre boîte mail.', joinedBodyLate: 'Merci de nous avoir rejoints. Votre place est enregistrée, et un message est en route vers votre boîte mail. Nous vous écrirons à l’ouverture de Halal Mode.', emailSuggest: 'Vouliez-vous dire {{email}} ?', referFormTitle: 'Obtenez votre lien de parrainage', referFormButton: 'M’envoyer mon lien', referFormSent: 'Si cette adresse figure sur la liste d’attente, votre lien de parrainage est en route.',
       bubbleHim: 'Enchanté.', bubbleHer: 'Enchantée également.',
       language: 'Choisir la langue', navHow: 'Comment ça marche', heroTitle: 'Le mariage mérite qu’on s’y attarde.',
       heroIntro: 'Halal Mode est une meilleure façon de faire des rencontres en vue du mariage. Chaque jour, quelques présentations choisies avec soin, pour',
@@ -253,6 +268,8 @@
       cardsBody: '{{count}} quiz, activités et aventures guidés pour aider les couples à mieux se comprendre, à se rapprocher et à construire un mariage plus solide. Disponible en {{languages}} langues.'
     },
     tr: {
+      offerFine: 'Yalnızca ilk 10.000 kayıt için.',
+      offerFree: '1 ay Premium, ücretsiz', offerFreeFor: 'ilk 10.000 kişiye', joinedTitle: 'Listedesin.', joinedBody: 'İlk 10.000 kişiden biri olduğun için teşekkürler. Ücretsiz Premium ayın açılış için ayrıldı ve gelen kutuna bir not yolda.', joinedBodyLate: 'Katıldığın için teşekkürler. Yerin kaydedildi ve gelen kutuna bir not yolda. Halal Mode açıldığında sana yazacağız.', emailSuggest: 'Bunu mu demek istedin: {{email}}?', referFormTitle: 'Davet bağlantını al', referFormButton: 'Bağlantımı e-postayla gönder', referFormSent: 'Bu e-posta bekleme listesindeyse davet bağlantın yolda.',
       bubbleHim: 'Tanıştığımıza memnun oldum.', bubbleHer: 'Ben de memnun oldum.',
       language: 'Dil seç', navHow: 'Nasıl çalışır', heroTitle: 'Evliliği ciddiye alıyoruz.',
       heroIntro: 'Halal Mode, Müslümanların evlilik niyetiyle tanışması için daha iyi bir uygulama. Her gün özenle seçilmiş az sayıda tanışma sunar; böylece',
@@ -281,6 +298,8 @@
       cardsBody: 'Birbirinizi anlamanıza, yakınlaşmanıza ve daha güçlü bir evlilik kurmanıza yardımcı olan {{count}} rehberli bilgi oyunu, etkinlik ve macera. {{languages}} dilde kullanılabilir.'
     },
     fa: {
+      offerFine: 'فقط برای ۱۰٬۰۰۰ ثبت‌نام اول.',
+      offerFree: '۱ ماه پریمیوم، رایگان', offerFreeFor: 'برای ۱۰٬۰۰۰ نفر اول', joinedTitle: 'ثبت شدید.', joinedBody: 'ممنون که جزو ۱۰٬۰۰۰ نفر اول هستید. یک ماه پریمیوم رایگان برای زمان راه‌اندازی برایتان کنار گذاشته شده و پیامی در راه صندوق ایمیلتان است.', joinedBodyLate: 'ممنون که پیوستید. جای شما محفوظ است و پیامی در راه صندوق ایمیلتان است. هنگام راه‌اندازی حلال مود به شما خبر می‌دهیم.', emailSuggest: 'منظورتان {{email}} بود؟', referFormTitle: 'لینک دعوت خود را بگیرید', referFormButton: 'لینکم را ایمیل کنید', referFormSent: 'اگر این ایمیل در فهرست انتظار باشد، لینک دعوت شما در راه است.',
       bubbleHim: 'از آشنایی‌تان خوشحالم.', bubbleHer: 'من هم از آشنایی‌تان خوشحالم.',
       language: 'انتخاب زبان', navHow: 'چطور کار می‌کند', heroTitle: 'ازدواج را جدی بگیریم.',
       heroIntro: 'حلال مود راه بهتری برای آشنایی مسلمان‌ها با هدف ازدواج است. هر روز چند آشنایی با دقت انتخاب‌شده به شما پیشنهاد می‌شود تا',
@@ -309,6 +328,8 @@
       cardsBody: '{{count}} آزمون، فعالیت و ماجراجویی هدایت‌شده برای کمک به زوج‌ها تا یکدیگر را بهتر بفهمند، صمیمی‌تر شوند و زندگی مشترک محکم‌تری بسازند. در {{languages}} زبان در دسترس است.'
     },
     ha: {
+      offerFine: 'Ga masu rajista 10,000 na farko kawai.',
+      offerFree: 'Wata 1 ta Premium, kyauta', offerFreeFor: 'ga mutane 10,000 na farko', joinedTitle: 'Kun shiga.', joinedBody: 'Mun gode da kasancewa cikin mutane 10,000 na farko. An ajiye muku watan Premium kyauta don lokacin ƙaddamarwa, kuma saƙo yana kan hanyar zuwa akwatin imel ɗinku.', joinedBodyLate: 'Mun gode da shiga. An ajiye muku wuri, kuma saƙo yana kan hanyar zuwa akwatin imel ɗinku. Za mu rubuta muku idan Halal Mode ya buɗe.', emailSuggest: 'Kuna nufin {{email}}?', referFormTitle: 'Samu hanyar gayyatarku', referFormButton: 'Aiko min da hanyar', referFormSent: 'Idan wannan imel yana cikin jerin jira, hanyar gayyatarku tana kan hanya.',
       bubbleHim: 'Na ji daɗin haɗuwa da ke.', bubbleHer: 'Ni ma na ji daɗin haɗuwa da kai.',
       language: 'Zaɓi harshe', navHow: 'Yadda yake aiki', heroTitle: 'Aure abu ne mai muhimmanci.',
       heroIntro: 'Halal Mode manhaja ce mafi kyau ga Musulmai masu neman aure. Kowace rana za ku ga ƴan gabatarwa da aka zaɓa da kyau, domin',
@@ -337,6 +358,8 @@
       cardsBody: 'Tambayoyin wasa, ayyuka da abubuwan kasada {{count}} masu jagora, waɗanda ke taimaka wa ma’aurata su fahimci juna, su ƙara kusanci, su kuma gina aure mai ƙarfi. Akwai su cikin harsuna {{languages}}.'
     },
     am: {
+      offerFine: 'ለመጀመሪያዎቹ 10,000 ተመዝጋቢዎች ብቻ።',
+      offerFree: '1 ወር ፕሪሚየም፣ በነጻ', offerFreeFor: 'ለመጀመሪያዎቹ 10,000 ሰዎች', joinedTitle: 'ተመዝግበዋል።', joinedBody: 'ከመጀመሪያዎቹ 10,000 ሰዎች አንዱ ስለሆኑ እናመሰግናለን። ነጻ የፕሪሚየም ወርዎ ለማስጀመሪያው ተይዟል፣ እና መልእክት ወደ ኢሜይልዎ እየመጣ ነው።', joinedBodyLate: 'ስለተቀላቀሉ እናመሰግናለን። ቦታዎ ተይዟል፣ እና መልእክት ወደ ኢሜይልዎ እየመጣ ነው። ሀላል ሞድ ሲከፈት እንጽፍልዎታለን።', emailSuggest: '{{email}} ማለትዎ ነበር?', referFormTitle: 'የግብዣ ሊንክዎን ያግኙ', referFormButton: 'ሊንኩን በኢሜይል ላኩልኝ', referFormSent: 'ይህ ኢሜይል በመጠባበቂያ ዝርዝሩ ላይ ካለ፣ የግብዣ ሊንክዎ እየመጣ ነው።',
       bubbleHim: 'ስለተዋወቅን ደስ ብሎኛል።', bubbleHer: 'እኔም ስለተዋወቅን ደስ ብሎኛል።',
       language: 'ቋንቋ ይምረጡ', navHow: 'እንዴት ይሰራል', heroTitle: 'ጋብቻ ቁም ነገር ነው።',
       heroIntro: 'ሃላል ሞድ ሙስሊሞች ለጋብቻ እንዲተዋወቁ የሚረዳ የተሻለ መተግበሪያ ነው። በየቀኑ በጥንቃቄ የተመረጡ ጥቂት ሰዎችን ያስተዋውቅዎታል። ይህም ማለት',
@@ -365,6 +388,8 @@
       cardsBody: 'ጥንዶች እርስ በርሳቸውን እንዲረዱ፣ እንዲቀራረቡ እና ጠንካራ ትዳር እንዲገነቡ የሚረዱ {{count}} የተመሩ ጥያቄዎች፣ እንቅስቃሴዎች እና ጀብዱዎች። በ{{languages}} ቋንቋዎች ይገኛሉ።'
     },
     so: {
+      offerFine: 'Kaliya 10,000-ka isdiiwaangeliyay ee ugu horreeya.',
+      offerFree: '1 bil oo Premium ah, bilaash', offerFreeFor: '10,000-ka qof ee ugu horreeya', joinedTitle: 'Waad ku biirtay.', joinedBody: 'Waad ku mahadsan tahay inaad ka mid tahay 10,000-ka ugu horreeya. Bishaada Premium ee bilaashka ah waa laguu kaydiyay marka la furo, fariinna waxay ku socotaa sanduuqaaga.', joinedBodyLate: 'Waad ku mahadsan tahay inaad ku biirtay. Booskaaga waa la kaydiyay, fariinna waxay ku socotaa sanduuqaaga. Waan kuu qori doonnaa marka Halal Mode la furo.', emailSuggest: 'Ma waxaad ula jeeday {{email}}?', referFormTitle: 'Hel xiriirkaaga casuumaadda', referFormButton: 'Iigu soo dir xiriirka', referFormSent: 'Haddii iimaylkaas uu ku jiro liiska sugitaanka, xiriirkaaga casuumaadda wuu soo socdaa.',
       bubbleHim: 'Waan ku faraxsanahay inaan kula kulmo.', bubbleHer: 'Aniguna waan ku faraxsanahay inaan kula kulmo.',
       language: 'Dooro luqadda', navHow: 'Sida ay u shaqayso', heroTitle: 'Guurka si dhab ah ayaan u qaadannaa.',
       heroIntro: 'Halal Mode waa app ka wanaagsan oo Muslimiintu ku bartaan qof ay guursan karaan. Maalin kasta waxa lagu tusaa dad yar oo si taxaddar leh loo soo xulay, si aad u hesho',
@@ -393,6 +418,8 @@
       cardsBody: '{{count}} su’aalo, hawlo iyo tacaburro la hagayo oo ka caawiya lammaanaha inay is fahmaan, isu soo dhowaadaan oo dhisaan guur ka xoog badan. Waxaa lagu heli karaa {{languages}} luqadood.'
     },
     es: {
+      offerFine: 'Solo para los primeros 10.000 registros.',
+      offerFree: '1 mes de Premium gratis', offerFreeFor: 'para las primeras 10.000 personas', joinedTitle: 'Ya estás dentro.', joinedBody: 'Gracias por ser una de las primeras 10.000 personas. Tu mes gratis de Premium está reservado para el lanzamiento, y una nota va de camino a tu bandeja de entrada.', joinedBodyLate: 'Gracias por unirte. Tu lugar está guardado, y una nota va de camino a tu bandeja de entrada. Te escribiremos cuando abra Halal Mode.', emailSuggest: '¿Quisiste decir {{email}}?', referFormTitle: 'Consigue tu enlace de invitación', referFormButton: 'Envíame mi enlace', referFormSent: 'Si ese correo está en la lista de espera, tu enlace de invitación va de camino.',
       bubbleHim: 'Encantado de conocerte.', bubbleHer: 'Encantada de conocerte también.',
       language: 'Elegir idioma', navHow: 'Cómo funciona', heroTitle: 'El matrimonio merece atención.',
       heroIntro: 'Halal Mode es una forma mejor de conocer a alguien con intención de casarse. Cada día, unas pocas presentaciones elegidas con cuidado para tener',
@@ -421,6 +448,8 @@
       cardsBody: '{{count}} cuestionarios, actividades y aventuras guiadas que ayudan a las parejas a entenderse, acercarse y construir un matrimonio más sólido. Disponible en {{languages}} idiomas.'
     },
     ru: {
+      offerFine: 'Только для первых 10 000 регистраций.',
+      offerFree: '1 месяц Premium бесплатно', offerFreeFor: 'первым 10 000 участникам', joinedTitle: 'Вы в списке.', joinedBody: 'Спасибо, что вы среди первых 10 000. Бесплатный месяц Premium закреплён за вами к запуску, а письмо уже в пути.', joinedBodyLate: 'Спасибо, что присоединились. Ваше место сохранено, а письмо уже в пути. Мы напишем, когда Halal Mode откроется.', emailSuggest: 'Вы имели в виду {{email}}?', referFormTitle: 'Получите свою реферальную ссылку', referFormButton: 'Прислать ссылку на почту', referFormSent: 'Если этот адрес есть в списке ожидания, реферальная ссылка уже в пути.',
       bubbleHim: 'Приятно познакомиться.', bubbleHer: 'Мне тоже очень приятно.',
       language: 'Выбрать язык', navHow: 'Как это работает', heroTitle: 'К браку, серьёзно.',
       heroIntro: 'Халал Мод помогает мусульманам знакомиться для брака по-новому. Каждый день несколько тщательно подобранных знакомств, чтобы было',
@@ -449,6 +478,8 @@
       cardsBody: '{{count}} направленных викторин, занятий и приключений, которые помогают парам лучше понять друг друга, стать ближе и построить более крепкий брак. Доступно на {{languages}} языках.'
     },
     'zh-Hans': {
+      offerFine: '仅限前 10,000 名注册者。',
+      offerFree: '免费赠送 1 个月 Premium', offerFreeFor: '前 10,000 人专享', joinedTitle: '你已加入。', joinedBody: '感谢你成为前 10,000 人之一。上线时为你保留 1 个月免费 Premium，一封邮件正在发往你的收件箱。', joinedBodyLate: '感谢你的加入。你的名额已保存，一封邮件正在发往你的收件箱。Halal Mode 上线时我们会通知你。', emailSuggest: '你是不是想输入 {{email}}？', referFormTitle: '获取你的邀请链接', referFormButton: '把链接发到我的邮箱', referFormSent: '如果该邮箱在候补名单中，你的邀请链接正在发送。',
       bubbleHim: '很高兴认识你。', bubbleHer: '我也很高兴认识你。',
       language: '选择语言', navHow: '使用方式', heroTitle: '认真对待婚姻。',
       heroIntro: '哈拉尔·莫德是一款更适合穆斯林寻找婚姻伴侣的应用。每天只为你精选少量介绍，让你',

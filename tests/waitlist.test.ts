@@ -102,9 +102,16 @@ test('the public offer is verification-backed and the referral UI has no client-
   const page = read('site/index.html');
   const refer = read('site/refer.html');
   const migration = read('supabase/migrations/20261016221105_waitlist_verification_and_referrals.sql');
+  const instant = read('supabase/migrations/20261018120000_instant_waitlist_join.sql');
+  assert.match(instant, /joined_rank <= 10000/u);
+  assert.match(instant, /waitlist_email_plausible/u);
   assert.match(page, /data-i18n="waitlistOffer"/u);
   assert.match(page, /Join the first 10,000 people on Halal Mode and automatically get 1 month of Premium free at launch\./u);
-  assert.match(page, /request_waitlist_verification/u);
+  // Joining is instant (no confirmation click); confirmation is only for referrals.
+  assert.match(page, /join_waitlist_now/u);
+  assert.doesNotMatch(page, /request_waitlist_verification/u);
+  assert.match(page, /data-i18n="offerFree"/u);
+  assert.match(refer, /request_referral_link/u);
   assert.match(page, /localStorage\.setItem\(REFERRAL_STORAGE/u);
   // Verification links from email land on the homepage and are forwarded,
   // query intact, to the referral page that shows the result.

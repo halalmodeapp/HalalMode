@@ -147,6 +147,21 @@ html:not([lang=ar]):not([lang=ur]):not([lang=fa]):not([lang=hi]):not([lang=bn]):
 .soon{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
 
 .card{margin:clamp(4px,1vh,12px) 0 0;background:rgba(252,252,251,.86);-webkit-backdrop-filter:blur(18px) saturate(1.1);backdrop-filter:blur(18px) saturate(1.1);border:1px solid var(--line);border-radius:22px;padding:clamp(12px,2.1vh,26px);box-shadow:0 16px 44px rgba(10,10,10,.1)}
+/* The free month, visible at a glance. */
+.offer-pill{display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:.25em .4em;margin:0 0 clamp(6px,1.2vh,12px);padding:6px 12px;border-radius:999px;background:var(--coral-wash);color:#B3313A;font:500 13px/1.35 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.offer-pill b{font-weight:800;color:#D63A44}
+/* After joining: a tick and a thank-you take the form's place. */
+.card[data-joined]>:not(.joined):not(.offer-pill){display:none}
+.joined{text-align:center;padding:clamp(6px,1.4vh,14px) 4px 2px}
+.joined[hidden]{display:none}
+.joined-tick{display:grid;place-items:center;width:56px;height:56px;margin:0 auto 12px;border-radius:50%;background:#2F5D4A;animation:joined-pop .5s cubic-bezier(.34,1.56,.64,1) both}
+.joined-tick svg{width:30px;height:30px;fill:none;stroke:#FCFCFB;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:24;stroke-dashoffset:24;animation:joined-draw .45s .25s ease-out forwards}
+.joined h3{margin:0 0 6px;font-size:clamp(22px,3vh,28px);font-weight:600}
+.joined p{margin:0 auto;max-width:28em;color:var(--muted);font-size:15px;line-height:1.55}
+.joined-refer{display:inline-flex;margin-top:14px;padding:9px 16px;border:1px solid var(--line);border-radius:999px;color:var(--ink);text-decoration:none;font:600 13px ui-sans-serif,system-ui,sans-serif}
+@keyframes joined-pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes joined-draw{to{stroke-dashoffset:0}}
+@media(prefers-reduced-motion:reduce){.joined-tick,.joined-tick svg{animation:none;stroke-dashoffset:0}}
 .card h2{font-size:clamp(19px,2.9vh,28px);font-weight:600;margin:0 0 4px}.card p.sub{margin:0 0 clamp(8px,1.4vh,14px);color:var(--muted);font-size:13px;line-height:1.45}
 label{display:block;font-size:13px;font-weight:600;margin:0 0 clamp(3px,.6vh,6px)}
 input,select{width:100%;font-size:16px;padding:clamp(7px,1.3vh,15px) 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);margin-bottom:clamp(7px,1.5vh,20px)}
@@ -202,7 +217,9 @@ button:disabled{opacity:.55;cursor:wait}
   .hint{display:none}
 }
 /* Short laptop screens: trim the fine print spacing so the whole card fits. */
-@media(min-width:961px) and (max-height:800px){.hero-sidebar{padding-bottom:10px}.lede{line-height:1.5}.fine{margin-top:3px;line-height:1.3}.card p.sub{margin-bottom:6px}}
+/* Short desktop screens: the free-month pill already says what the line under the heading says. */
+@media(min-width:961px) and (max-height:940px){.card p.sub{display:none}}
+@media(min-width:961px) and (max-height:800px){.hero-sidebar{padding-top:52px;padding-bottom:8px}.offer-pill{margin-bottom:4px;padding:4px 11px}.lede{line-height:1.5}.fine{margin-top:3px;line-height:1.3}.card p.sub{margin-bottom:6px}}
 @media(prefers-reduced-motion:reduce){#cover-couple .scene-rays,#cover-couple .scene-heart-float{animation:none}#cover-couple .scene-motes{display:none}#cover-couple .scene-heart-offset{transition:none}}
 @media(prefers-color-scheme:dark){.logo{filter:none}}
 </style>
@@ -255,6 +272,7 @@ button:disabled{opacity:.55;cursor:wait}
       </div></div>
     </div>
     <form id="f" class="card" novalidate>
+    <p class="offer-pill"><b data-i18n="offerFree">1 month of Premium, free</b> <span data-i18n="offerFreeFor">for the first 10,000 people</span></p>
     <h2 data-i18n="join">Join the waitlist</h2>
     <p class="sub" data-i18n="waitlistOffer">Join the first 10,000 people on Halal Mode and automatically get 1 month of Premium free at launch.</p>
     <label for="email" data-i18n="email">Email</label>
@@ -269,8 +287,14 @@ button:disabled{opacity:.55;cursor:wait}
     <div class="hp" aria-hidden="true"><label>Leave blank <input id="website" tabindex="-1" autocomplete="off"></label></div>
     <button id="go" type="submit" data-i18n="waitlistButton">Join the waitlist</button>
     <p id="msg" class="msg" role="status" aria-live="polite"></p>
-    <p class="fine offer-fine" data-i18n="offerFine">Limited to the first 10,000 verified signups.</p>
+    <p class="fine offer-fine" data-i18n="offerFine">Limited to the first 10,000 signups.</p>
     <p class="fine" data-i18n="privacy">We use your details only to tell you when Halal Mode opens. No spam, and never shared.</p>
+    <div class="joined" id="joined" role="status" aria-live="polite" hidden>
+      <span class="joined-tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg></span>
+      <h3 data-i18n="joinedTitle">You’re in.</h3>
+      <p id="joined-body" data-i18n="joinedBody">Thank you for being one of the first 10,000. Your free month of Premium is reserved for launch, and a note is on its way to your inbox.</p>
+      <a class="joined-refer" href="/refer" data-i18n="navRefer">Refer your friends</a>
+    </div>
   </form>
   <footer class="site-footer">
     <span>© <span id="yr">2026</span> <span data-brand-name>Halal Mode</span></span>
@@ -286,12 +310,13 @@ button:disabled{opacity:.55;cursor:wait}
 
 
 <div id="dots" role="tablist" aria-label="Photos" data-i18n-aria="photos"></div>
-<script src="/i18n.js?v=20261018a"></script>
+<script src="/i18n.js?v=20261018b"></script>
+<script src="/waitlist-email.js?v=20261018a"></script>
 <script>
 /* ---------- Waitlist ---------- */
 (function(){
   var BASE='https://lfuuywsmydruvqkqwvzw.supabase.co';
-  var URL_=BASE+'/rest/v1/rpc/request_waitlist_verification';
+  var URL_=BASE+'/rest/v1/rpc/join_waitlist_now';
   var REFERRAL_EXISTS_URL=BASE+'/rest/v1/rpc/referral_code_exists';
   var KEY='sb_publishable_yioJpXVD_u-krXHgA7souQ_2pOiITsN';
   var REFERRAL_STORAGE='halal-mode-referral-code';
@@ -317,16 +342,25 @@ button:disabled{opacity:.55;cursor:wait}
     e.preventDefault();
     if(document.getElementById('website').value)return say('thanks',true);
     var email=f.email.value.trim().toLowerCase(),city=f.city.value.trim(),age=f.age.value;
-    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return say('validationEmail');
+    var checked=window.HalalWaitlistEmail?window.HalalWaitlistEmail.check(email):{ok:/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email),suggestion:''};
+    if(checked.suggestion)return sayText(window.HalalI18n.t('emailSuggest').replace('{{email}}',checked.suggestion),false);
+    if(!checked.ok)return say('validationEmail');
     if(city.length<2)return say('validationCity');
     if(!age)return say('validationAge');
     go.disabled=true;say('');
     referralReady.then(function(){
       return fetch(URL_,restOptions({p_email:email,p_city:city,p_age_range:age,p_locale:window.HalalI18n.language,p_referral_code:readReferral()}));
     })
-    .then(function(r){return r.json().catch(function(){return {}}).then(function(data){if(!r.ok)throw new Error(r.status);return data})})
-    .then(function(){f.reset();try{localStorage.removeItem(REFERRAL_STORAGE)}catch(_){};sayText(window.HalalI18n.t('almostThereTitle')+' '+window.HalalI18n.t('almostThereBody'),true)})
-    .catch(function(){say('error')})
+    .then(function(r){return r.json().catch(function(){return {}}).then(function(data){if(!r.ok){var err=new Error(r.status);err.status=r.status;throw err}return data})})
+    .then(function(data){
+      try{localStorage.removeItem(REFERRAL_STORAGE)}catch(_){}
+      say('');
+      var body=document.getElementById('joined-body');
+      body.dataset.i18n=data&&data.eligible===false?'joinedBodyLate':'joinedBody';
+      body.textContent=window.HalalI18n.t(body.dataset.i18n);
+      f.dataset.joined='';document.getElementById('joined').hidden=false;
+    })
+    .catch(function(err){say(err&&err.status===400?'validationEmail':'error')})
     .then(function(){go.disabled=false});
   });
 
