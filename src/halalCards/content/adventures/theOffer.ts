@@ -2,7 +2,7 @@ import type { Adventure, Condition } from '../../types.ts';
 import { slot } from '../images.ts';
 
 /**
- * The Offer — a job abroad, an unwell father, and who gets to decide.
+ * The Offer, a job abroad, an unwell father, and who gets to decide.
  * Hidden states: partnership, family, fulfilment.
  */
 export const theOffer: Adventure = {
@@ -11,7 +11,7 @@ export const theOffer: Adventure = {
   title: 'The Offer',
   tagline: 'A dream job in Dubai. A father who isn’t well. One decision for two.',
   description:
-    'Hana is offered the role of her career — in Dubai, starting in three months. Idris’s father had a stroke last year. Play both of them through a decision about careers, money, family and where home is. Every path has a cost; the question is who chooses it.',
+    'Hana is offered the role of her career, in Dubai, starting in three months. Idris’s father had a stroke last year. Play both of them through a decision about careers, money, family and where home is. Every path has a cost; the question is who chooses it.',
   minutes: 16,
   themes: ['Relocation', 'Careers', 'Money', 'Family pressure', 'Marriage roles'],
   cover: slot('adv-offer-cover', 'cover', 'A young woman holding a printed job offer letter at a kitchen table, a laptop showing a Dubai skyline, her husband in the background holding a phone with a family photo on it.', 'Hana holding a job offer letter while Idris looks at a family photo.'),
@@ -41,7 +41,7 @@ export const theOffer: Adventure = {
         choices: [
           { id: 'tell', label: 'Run downstairs and tell Idris straight away.', effects: { vars: { partnership: 1 }, flags: ['told_first'] }, next: 'idris_reacts', beat: 'Hana told Idris about the offer the moment she saw it.' },
           { id: 'sit', label: 'Keep it to herself for a few days to think.', effects: { flags: ['delayed'] }, next: 'idris_finds', beat: 'Hana kept the offer to herself for a few days.', lesson: { id: 'o-l-sit', tag: 'Notice this', text: 'Thinking first is reasonable. The risk is that someone else tells him before you do.' } },
-          { id: 'decline', label: 'Decline tonight. Family comes first.', effects: { vars: { fulfilment: -2 }, flags: ['declined_alone'] }, next: 'quiet_regret', beat: 'Hana declined the offer that night without telling Idris.', lesson: { id: 'o-l-sacrifice', tag: 'Notice this', text: 'A sacrifice your spouse never knew about is one they can’t appreciate — or question.' } },
+          { id: 'decline', label: 'Decline tonight. Family comes first.', effects: { vars: { fulfilment: -2 }, flags: ['declined_alone'] }, next: 'quiet_regret', beat: 'Hana declined the offer that night without telling Idris.', lesson: { id: 'o-l-sacrifice', tag: 'Notice this', text: 'A sacrifice your spouse never knew about is one they can’t appreciate, or question.' } },
         ],
       },
     },
@@ -57,7 +57,7 @@ export const theOffer: Adventure = {
         prompt: 'You are Idris. What is your first reaction?',
         choices: [
           { id: 'congrats', label: '“That’s incredible! Tell me everything.”', effects: { vars: { partnership: 1, fulfilment: 1 } }, next: 'first_talk', beat: 'Idris celebrated with her first.' },
-          { id: 'dad', label: '“Dubai? What about my dad?”', effects: { vars: { family: 1, partnership: -1 }, flags: ['dad_first'] }, next: 'first_talk', beat: 'Idris’s first words were about his father.', lesson: { id: 'o-l-first', tag: 'Rule 2', text: 'His worry is real — but leading with it means Hana’s joy went unheard.' } },
+          { id: 'dad', label: '“Dubai? What about my dad?”', effects: { vars: { family: 1, partnership: -1 }, flags: ['dad_first'] }, next: 'first_talk', beat: 'Idris’s first words were about his father.', lesson: { id: 'o-l-first', tag: 'Rule 2', text: 'His worry is real, but leading with it means Hana’s joy went unheard.' } },
           { id: 'quiet', label: '“Wow. We’ll see.” And go quiet.', effects: { vars: { partnership: -1 }, flags: ['withheld'] }, next: 'first_talk', beat: 'Idris said “we’ll see” and went quiet.' },
         ],
       },
@@ -75,7 +75,7 @@ export const theOffer: Adventure = {
         choices: [
           { id: 'gentle', label: 'Wait until home: “I heard about Dubai tonight. I wish I’d heard it from you.”', next: 'first_talk', beat: 'Idris waited until they were home and raised it gently.' },
           { id: 'confront', label: 'In the car: “Why am I the last to know?”', effects: { vars: { partnership: -1 } }, next: 'first_talk', beat: 'Idris confronted Hana in the car.' },
-          { id: 'hide', label: 'Say nothing, and feel quietly hurt.', effects: { vars: { partnership: -1 }, flags: ['hurt_hidden'] }, next: 'family_hears', beat: 'Idris said nothing and nursed the hurt.', lesson: { id: 'o-l-hidden', tag: 'Pattern forming', text: 'A hurt kept quiet tends to come out sideways — usually in the decision itself.' } },
+          { id: 'hide', label: 'Say nothing, and feel quietly hurt.', effects: { vars: { partnership: -1 }, flags: ['hurt_hidden'] }, next: 'family_hears', beat: 'Idris said nothing and nursed the hurt.', lesson: { id: 'o-l-hidden', tag: 'Pattern forming', text: 'A hurt kept quiet tends to come out sideways, usually in the decision itself.' } },
         ],
       },
     },
@@ -117,7 +117,7 @@ export const theOffer: Adventure = {
             { id: 'dream', label: 'Hana getting to do this.', effects: { vars: { fulfilment: 1 }, flags: ['a_dream'] }, next: 'family_hears', beat: 'Idris wrote: Hana getting to do this.' },
           ],
           B: [
-            { id: 'career', label: 'This chance — it may not come again.', effects: { vars: { fulfilment: 1 }, flags: ['b_career'] }, next: 'family_hears', beat: 'Hana wrote: this chance may not come again.' },
+            { id: 'career', label: 'This chance, it may not come again.', effects: { vars: { fulfilment: 1 }, flags: ['b_career'] }, next: 'family_hears', beat: 'Hana wrote: this chance may not come again.' },
             { id: 'near', label: 'Staying near both our families.', effects: { vars: { family: 1 }, flags: ['b_family'] }, next: 'family_hears', beat: 'Hana wrote: staying near our families.' },
             { id: 'idris', label: 'Whatever Idris truly wants.', effects: { flags: ['b_defer'] }, next: 'family_hears', beat: 'Hana wrote: whatever Idris truly wants.' },
           ],
@@ -137,7 +137,7 @@ export const theOffer: Adventure = {
       id: 'generous_stalemate',
       title: 'After you',
       image: slot('adv-offer-stalemate', 'scene', 'A couple sitting at a table each sliding a card toward the other, both smiling helplessly, two cups of tea going cold.', 'Idris and Hana each insisting on the other\'s wish.'),
-      passages: [{ text: '“You should take it.” “No — your dad.” “But it’s your dream.” Neither will choose for themselves.' }],
+      passages: [{ text: '“You should take it.” “No, your dad.” “But it’s your dream.” Neither will choose for themselves.' }],
       decision: {
         mode: 'joint',
         prompt: 'Together: how do you get unstuck?',
@@ -162,8 +162,8 @@ export const theOffer: Adventure = {
         actor: 'A',
         prompt: 'You are Idris. What do you tell his mother?',
         choices: [
-          { id: 'ours', label: '“It’s a decision Hana and I will make together, Mum — and we’ll think about you and Dad in it.”', effects: { vars: { partnership: 1, family: -1 } }, next: 'options', beat: 'Idris told his mother it was a decision for him and Hana to make together.', lesson: { id: 'o-l-ours', tag: 'Boundary', text: 'Including family in your thinking is different from handing them the decision.' } },
-          { id: 'promise', label: '“Don’t worry, Mum. We’re not going anywhere.”', effects: { vars: { family: 2, partnership: -2 }, flags: ['promised'] }, next: 'hana_learns', beat: 'Idris promised his mother they would not go — before deciding with Hana.' },
+          { id: 'ours', label: '“It’s a decision Hana and I will make together, Mum, and we’ll think about you and Dad in it.”', effects: { vars: { partnership: 1, family: -1 } }, next: 'options', beat: 'Idris told his mother it was a decision for him and Hana to make together.', lesson: { id: 'o-l-ours', tag: 'Boundary', text: 'Including family in your thinking is different from handing them the decision.' } },
+          { id: 'promise', label: '“Don’t worry, Mum. We’re not going anywhere.”', effects: { vars: { family: 2, partnership: -2 }, flags: ['promised'] }, next: 'hana_learns', beat: 'Idris promised his mother they would not go, before deciding with Hana.' },
           { id: 'blame', label: '“It’s Hana’s job, Mum, not my idea.”', effects: { vars: { partnership: -2, family: -1 }, flags: ['blamed_hana'] }, next: 'hana_learns', beat: 'Idris told his mother the whole thing was Hana’s idea.', lesson: { id: 'o-l-blame', tag: 'Notice this', text: 'Putting it on Hana keeps him safe with his mother and sets his wife against her.' } },
         ],
       },
@@ -203,8 +203,8 @@ export const theOffer: Adventure = {
         prompt: 'Together: what do you choose?',
         choices: [
           { id: 'trial', label: 'Go to Dubai for two years, with a review after one.', effects: { flags: ['went'], vars: { fulfilment: 2, family: -1 } }, next: 'dubai', beat: 'They chose two years in Dubai with a review after one.' },
-          { id: 'support', label: 'Go — and use the extra income for his father’s care and frequent visits.', effects: { flags: ['went', 'funded_care'], vars: { fulfilment: 2 } }, next: 'dubai', beat: 'They chose Dubai and to fund his father’s care and regular visits.' },
-          { id: 'negotiate', label: 'Stay — Hana negotiates a hybrid version of the role.', effects: { flags: ['negotiated'] }, next: 'negotiation', beat: 'They chose to stay and try to negotiate a hybrid role.' },
+          { id: 'support', label: 'Go, and use the extra income for his father’s care and frequent visits.', effects: { flags: ['went', 'funded_care'], vars: { fulfilment: 2 } }, next: 'dubai', beat: 'They chose Dubai and to fund his father’s care and regular visits.' },
+          { id: 'negotiate', label: 'Stay, Hana negotiates a hybrid version of the role.', effects: { flags: ['negotiated'] }, next: 'negotiation', beat: 'They chose to stay and try to negotiate a hybrid role.' },
           { id: 'stay', label: 'Stay. Decline the offer.', effects: { flags: ['stayed'], vars: { family: 1, fulfilment: -1 } }, next: 'staying', beat: 'They chose to stay and decline.' },
         ],
       },
@@ -220,9 +220,9 @@ export const theOffer: Adventure = {
         actor: 'B',
         prompt: 'You are Hana. What do you do?',
         choices: [
-          { id: 'take', label: 'Take it — one week a month.', effects: { vars: { fulfilment: 1 } }, next: 'staying', beat: 'Hana accepted a London role with monthly trips.' },
+          { id: 'take', label: 'Take it, one week a month.', effects: { vars: { fulfilment: 1 } }, next: 'staying', beat: 'Hana accepted a London role with monthly trips.' },
           { id: 'push', label: 'Push for fully remote, with Idris’s support behind her.', when: { var: 'partnership', gte: 1 }, effects: { vars: { fulfilment: 2 } }, next: 'staying', beat: 'With Idris behind her, Hana negotiated a fully remote role.' },
-          { id: 'walk', label: 'Walk away — half a dream feels worse than none.', effects: { vars: { fulfilment: -1 } }, next: 'staying', beat: 'Hana walked away from the counter-offer.' },
+          { id: 'walk', label: 'Walk away, half a dream feels worse than none.', effects: { vars: { fulfilment: -1 } }, next: 'staying', beat: 'Hana walked away from the counter-offer.' },
         ],
       },
     },
@@ -245,7 +245,7 @@ export const theOffer: Adventure = {
         ],
         combos: [
           { pair: ['month', 'carers'], next: 'dubai_settles', beat: 'Idris would go back for a month, and they would add more care afterwards.', effects: { vars: { partnership: 1 } } },
-          { pair: ['home', 'carers'], next: 'dubai_strain', beat: 'One wanted to go home for good; the other wanted to stay and add care. They stayed — not quite agreed.', effects: { vars: { partnership: -1 } } },
+          { pair: ['home', 'carers'], next: 'dubai_strain', beat: 'One wanted to go home for good; the other wanted to stay and add care. They stayed, not quite agreed.', effects: { vars: { partnership: -1 } } },
           { pair: ['home', 'month'], next: 'homecoming', beat: 'One wanted a month; the other wanted to go home for good. They went home.', effects: { flags: ['came_home'], vars: { fulfilment: -1 } } },
         ],
         diverge: 'dubai_strain',
@@ -263,7 +263,7 @@ export const theOffer: Adventure = {
         prompt: 'You are Idris. What do you do?',
         choices: [
           { id: 'say', label: '“I feel guilty every day we’re here. I need you to know that.”', effects: { vars: { partnership: 1 } }, next: 'year_later', beat: 'Idris told Hana about his guilt.' },
-          { id: 'bury', label: 'Keep it to himself and work longer hours.', effects: { flags: ['buried_guilt'], vars: { partnership: -1 } }, next: 'year_later', beat: 'Idris buried his guilt in work.', lesson: { id: 'o-l-bury', tag: 'Rule 1', text: 'Guilt left unsaid often turns into distance — or blame.' } },
+          { id: 'bury', label: 'Keep it to himself and work longer hours.', effects: { flags: ['buried_guilt'], vars: { partnership: -1 } }, next: 'year_later', beat: 'Idris buried his guilt in work.', lesson: { id: 'o-l-bury', tag: 'Rule 1', text: 'Guilt left unsaid often turns into distance, or blame.' } },
         ],
       },
     },
@@ -279,7 +279,7 @@ export const theOffer: Adventure = {
         prompt: 'You are Hana. What do you do?',
         choices: [
           { id: 'cut', label: 'Offer to drop to four days a week so visits are easier.', effects: { vars: { partnership: 1, family: 1 } }, next: 'year_later', beat: 'Hana offered to work four days so they could visit more.' },
-          { id: 'go', label: 'Keep going at full speed — this is the window.', effects: { vars: { fulfilment: 1 } }, next: 'year_later', beat: 'Hana kept going at full speed.' },
+          { id: 'go', label: 'Keep going at full speed, this is the window.', effects: { vars: { fulfilment: 1 } }, next: 'year_later', beat: 'Hana kept going at full speed.' },
         ],
       },
     },
@@ -329,7 +329,7 @@ export const theOffer: Adventure = {
         mode: 'joint',
         prompt: 'Together: do you look back honestly?',
         choices: [
-          { id: 'honest', label: 'Yes — properly, including what it cost each of you.', effects: { vars: { partnership: 1 } }, next: { routes: endingRoutes() }, beat: 'A year on, they looked back honestly at what it had cost.' },
+          { id: 'honest', label: 'Yes, properly, including what it cost each of you.', effects: { vars: { partnership: 1 } }, next: { routes: endingRoutes() }, beat: 'A year on, they looked back honestly at what it had cost.' },
           { id: 'peace', label: 'Keep the peace. It’s done; why reopen it?', effects: { flags: ['no_review'] }, next: { routes: endingRoutes() }, beat: 'A year on, they chose not to look back.' },
         ],
       },
@@ -342,7 +342,7 @@ export const theOffer: Adventure = {
       mood: 'strained',
       image: slot('adv-offer-end-promise', 'outcome', 'A woman looking out of a rainy London window holding a mug, an old printed job offer pinned to a corkboard behind her.', 'Hana at a rainy window, the old offer pinned behind her.'),
       whatHappened: 'They stayed because Idris promised his mother before he asked his wife. Hana has never quite forgiven the order it happened in.',
-      pattern: { name: 'Deciding for two', explanation: 'A shared decision was made by one person and a parent — the spouse was informed, not consulted.' },
+      pattern: { name: 'Deciding for two', explanation: 'A shared decision was made by one person and a parent, the spouse was informed, not consulted.' },
       couldHaveChanged: 'Idris saying to his mother: “Hana and I will decide this together.” The outcome might have been the same; the marriage would not.',
       takeaway: 'How a decision is made matters as much as what is decided.',
       guide: [{ id: 'o-e-together', text: 'We make major decisions together before telling family.' }],
@@ -367,7 +367,7 @@ export const theOffer: Adventure = {
       whatHappened: 'Dubai is going well on paper. Idris carries a guilt he has never put into words, and it is turning into distance.',
       pattern: { name: 'Buried feelings', explanation: 'An unspoken feeling did not go away; it went underground.' },
       couldHaveChanged: 'Idris saying, once, “I feel guilty every day we are here.”',
-      takeaway: 'Feelings you don’t share still shape the marriage — you just can’t see how.',
+      takeaway: 'Feelings you don’t share still shape the marriage, you just can’t see how.',
       guide: [{ id: 'o-e-say', text: 'We say the hard feeling out loud, even when the decision is made.' }],
     },
     home_again: {
@@ -376,7 +376,7 @@ export const theOffer: Adventure = {
       mood: 'bittersweet',
       image: slot('adv-offer-end-home', 'outcome', 'A family Friday lunch in a modest home, an older man at the head of the table, a young woman smiling but a little wistful, moving boxes still in the corner.', 'A family lunch at home, with moving boxes in the corner.'),
       whatHappened: 'They came back for his father. The family is whole again. Hana gave up something real.',
-      pattern: { name: 'Honourable sacrifice', explanation: 'The choice was right for the family — and still a loss for Hana.' },
+      pattern: { name: 'Honourable sacrifice', explanation: 'The choice was right for the family, and still a loss for Hana.' },
       couldHaveChanged: 'Naming that loss together, so it does not become a debt.',
       takeaway: 'A sacrifice is lighter when it is seen and shared.',
       epilogues: [
@@ -390,9 +390,9 @@ export const theOffer: Adventure = {
       title: 'The road not taken',
       mood: 'bittersweet',
       image: slot('adv-offer-end-road', 'outcome', 'A woman walking alone on a quiet road at dusk that forks, glancing back at the other path lit by distant city lights.', 'Hana walking a road, glancing back at the other path.'),
-      whatHappened: 'Life is good and steady. But Hana feels she gave up a piece of who she was going to be — and isn’t sure Idris knows.',
+      whatHappened: 'Life is good and steady. But Hana feels she gave up a piece of who she was going to be, and isn’t sure Idris knows.',
       pattern: { name: 'Silent sacrifice', explanation: 'When one spouse quietly gives something up, it can become an invisible debt.' },
-      couldHaveChanged: 'Deciding out loud and together — even if they still stayed.',
+      couldHaveChanged: 'Deciding out loud and together, even if they still stayed.',
       takeaway: 'Don’t sacrifice in secret. Let your spouse share the cost.',
       guide: [{ id: 'o-e-secret', text: 'Neither of us makes a big sacrifice in secret.' }],
     },
@@ -401,10 +401,10 @@ export const theOffer: Adventure = {
       title: 'Two separate decisions',
       mood: 'strained',
       image: slot('adv-offer-end-separate', 'outcome', 'Two people in the same kitchen each on their own laptop, backs to each other, two separate calendars on the wall.', 'Idris and Hana working back to back in their kitchen.'),
-      whatHappened: 'Each of them made their own moves — with family, with work, alone. They live in the result together, but neither feels it was theirs.',
+      whatHappened: 'Each of them made their own moves, with family, with work, alone. They live in the result together, but neither feels it was theirs.',
       pattern: { name: 'Parallel decision-making', explanation: 'They acted as two individuals managing a situation, not a couple facing one.' },
       couldHaveChanged: 'Sitting down early, writing down what mattered, and deciding as one.',
-      takeaway: 'A marriage is a shared decision-maker — or it becomes two roommates.',
+      takeaway: 'A marriage is a shared decision-maker, or it becomes two roommates.',
       guide: [{ id: 'o-e-team', text: 'Big decisions are ours, not mine or yours.' }],
     },
     new_shape: {
@@ -412,7 +412,7 @@ export const theOffer: Adventure = {
       title: 'A new shape',
       mood: 'steady',
       image: slot('adv-offer-end-shape', 'outcome', 'A woman working on a laptop at a kitchen table in London, a boarding pass beside her, her husband bringing her tea, sunlight.', 'Hana working from home with a boarding pass, Idris bringing tea.'),
-      whatHappened: 'Not the job as offered — a new version of it. Hana works from London with trips to Dubai. It is not perfect, but it is theirs.',
+      whatHappened: 'Not the job as offered, a new version of it. Hana works from London with trips to Dubai. It is not perfect, but it is theirs.',
       pattern: { name: 'Creative compromise', explanation: 'Instead of choosing between two options, they made a third.' },
       couldHaveChanged: 'Asking for the hybrid version sooner, before the family pressure built.',
       takeaway: 'When both choices hurt someone, look for the one nobody has offered yet.',
@@ -435,7 +435,7 @@ export const theOffer: Adventure = {
       title: 'Still deciding',
       mood: 'steady',
       image: slot('adv-offer-end-still', 'outcome', 'A couple walking slowly along a river path at sunset, side by side, deep in conversation.', 'Idris and Hana walking by a river at sunset.'),
-      whatHappened: 'The year went the way it went — some of it chosen, some of it simply happening. They are still talking about what it meant.',
+      whatHappened: 'The year went the way it went, some of it chosen, some of it simply happening. They are still talking about what it meant.',
       pattern: { name: 'Muddling through', explanation: 'Some of the decision was shared; some was left to circumstance and family.' },
       couldHaveChanged: 'More honesty early about what each of them truly wanted.',
       takeaway: 'Say what you want before you say what you will settle for.',

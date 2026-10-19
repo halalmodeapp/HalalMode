@@ -4,6 +4,7 @@ import { useState, type ReactNode } from 'react';
 import { Platform, StyleSheet, Text as RNText, View, type ImageStyle, type TextStyle, type ViewStyle } from 'react-native';
 
 import { ILLUSTRATIONS, THUMBNAILS } from '@/halalCards/illustrations';
+import { coverCropPosition } from '@/halalCards/imageCrop';
 import type { ImageSlot } from '@/halalCards/types';
 import { useI18n } from '@/i18n';
 import { color, font, radius, space } from '@/theme/tokens';
@@ -22,6 +23,7 @@ export function Illustration({
   style,
   rounded = true,
   thumb = false,
+  cropZoom,
   tint,
   children,
 }: {
@@ -31,6 +33,8 @@ export function Illustration({
   rounded?: boolean;
   /** Use the small version, for list tiles. */
   thumb?: boolean;
+  /** Extra crop for a small, wide preview where faces should read first. */
+  cropZoom?: number;
   /** A colour wash over the picture, for section title cards. */
   tint?: string;
   /** Laid over the bottom of the picture, on a readable scrim. */
@@ -41,6 +45,20 @@ export function Illustration({
   const [thumbFailed, setThumbFailed] = useState(false);
   const small = thumb && !thumbFailed ? THUMBNAILS[image.id] : undefined;
   const source = small ?? ILLUSTRATIONS[image.id];
+  // Covers are portrait artwork, but the catalogue also shows them in wide
+  // tiles. Keep the upper-middle band in view so faces remain the focal point
+  // instead of letting object-fit crop around the mathematical centre.
+  const contentPosition = image.role === 'cover'
+    ? coverCropPosition(aspectRatio, image.focalY)
+    : undefined;
+  const effectiveZoom = Math.max(
+    1,
+    cropZoom ?? (thumb && image.role === 'cover' && aspectRatio > 0.84 ? 1.08 : 1),
+  );
+  const mediaStyle = [
+    StyleSheet.absoluteFill,
+    effectiveZoom > 1 ? { transform: [{ scale: effectiveZoom }] } : null,
+  ] as ImageStyle;
 
   return (
     <View
@@ -58,8 +76,9 @@ export function Illustration({
       {source ? (
         <Image
           source={source}
-          style={StyleSheet.absoluteFill as ImageStyle}
+          style={mediaStyle}
           contentFit="cover"
+          contentPosition={contentPosition}
           transition={200}
           onError={small ? () => setThumbFailed(true) : undefined}
           accessibilityIgnoresInvertColors

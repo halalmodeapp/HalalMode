@@ -36,7 +36,7 @@ export function AdventurePlay(props: PlayProps<Adventure>) {
   const copy = useCardsCopy();
   const state = session.state as AdventureState;
   // Each phone keeps its own note of which reveals it has read, and works
-  // through any newer ones in order — so a player who was away sees every move
+  // through any newer ones in order, so a player who was away sees every move
   // made meanwhile. Opening a session shows only the latest, as a reminder.
   const reveals = state.reveals ?? [];
   const [seenSeq, setSeenSeq] = useState(() => Math.max(0, (reveals[reveals.length - 1]?.seq ?? 0) - 1));

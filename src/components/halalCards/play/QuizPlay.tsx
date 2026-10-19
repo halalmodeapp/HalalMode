@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { ZoomIn } from 'react-native-reanimated';
+import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 
 import { DiscussButton, FinishActions } from '@/components/halalCards/Actions';
 import { ChoiceOption, Pill, PlayCard, RevealTile, Waiting } from '@/components/halalCards/CardParts';
@@ -57,7 +57,7 @@ export function QuizPlay(props: PlayProps<Quiz>) {
 
 function answerLabel(_quiz: Quiz, _card: QuizCard, options: string[], answer: QuizAnswer | undefined): string {
   const value = answer?.self ?? answer?.guess;
-  return value === undefined ? '—' : options[value] ?? '—';
+  return value === undefined ? '...' : options[value] ?? '...';
 }
 
 function QuizResults({ session, activity, partnerName, connectionId, onReplay }: PlayProps<Quiz>) {
@@ -264,13 +264,13 @@ function Reveal({
   const reveal = revealCard(quiz, index, answers);
   const them = otherSeat(me);
   const nameOf = (seat: Seat) => (seat === me ? copy('you') : partnerName);
-  const option = (value: number | undefined) => (value === undefined ? '—' : options[value] ?? '—');
+  const option = (value: number | undefined) => (value === undefined ? '...' : options[value] ?? '...');
   const verdict = (agreed: boolean | null, distance?: number) =>
     agreed === null ? null : agreed ? copy('samePage') : distance === 1 ? copy('close') : distance ? copy('apart', { count: distance }) : copy('different');
 
   const banner = (label: string | null, gold: boolean) =>
     label ? (
-      <Animated.View entering={reducedMotion ? undefined : ZoomIn.delay(600).springify()}>
+      <Animated.View entering={reducedMotion ? undefined : FadeInDown.delay(600).duration(900).easing(Easing.out(Easing.cubic))}>
         <Pill label={label} tone={gold ? 'gold' : 'quiet'} />
       </Animated.View>
     ) : null;
@@ -320,7 +320,7 @@ function Reveal({
                 key={seat}
                 index={tileIndex}
                 who={`${nameOf(seat)} · ${copy('pointedAt')}`}
-                answer={reveal.pointed ? nameOf(reveal.pointed[seat]) : '—'}
+                answer={reveal.pointed ? nameOf(reveal.pointed[seat]) : '...'}
               />
             ))}
           </View>

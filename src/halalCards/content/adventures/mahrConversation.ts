@@ -2,7 +2,7 @@ import type { Adventure, Condition } from '../../types.ts';
 import { slot } from '../images.ts';
 
 /**
- * The Mahr Conversation — an engagement, two fathers, and a figure that
+ * The Mahr Conversation, an engagement, two fathers, and a figure that
  * becomes a test of whose voice counts. Hidden states: partnership, family,
  * voice (whether the bride's own wishes lead).
  */
@@ -12,7 +12,7 @@ export const mahrConversation: Adventure = {
   title: 'The Mahr Conversation',
   tagline: 'Two fathers, one number, and a bride nobody has asked.',
   description:
-    'Faris and Layla are newly engaged. Her father names a mahr his family finds insulting; his father names one hers finds insulting back. Play both of them through the week the families negotiate — and decide whether the couple has a voice in their own beginning.',
+    'Faris and Layla are newly engaged. Her father names a mahr his family finds insulting; his father names one hers finds insulting back. Play both of them through the week the families negotiate, and decide whether the couple has a voice in their own beginning.',
   minutes: 14,
   themes: ['Mahr', 'Family pressure', 'Engagement'],
   cover: slot('concept-mahr-cover', 'cover', 'Two older men across a formal living room, tea untouched, a young couple watching nervously from the doorway.', 'Two fathers in tense conversation while the couple watch.'),
@@ -40,8 +40,8 @@ export const mahrConversation: Adventure = {
         actor: 'A',
         prompt: 'You are Faris. What do you do in the room?',
         choices: [
-          { id: 'ask_layla', label: '“With respect — could we hear what Layla would like?”', effects: { vars: { voice: 2, partnership: 1, family: -1 }, flags: ['faris_asked'] }, next: 'drive_home', beat: 'Faris asked, in front of both families, what Layla wanted.', lesson: { id: 'mh-l-ask', tag: 'Notice this', text: 'The mahr is the bride’s right. Asking her is not rudeness — it is the point.' } },
-          { id: 'silent', label: 'Stay quiet — this is for the elders.', effects: { vars: { voice: -1 } }, next: 'drive_home', beat: 'Faris stayed quiet and let the elders talk.' },
+          { id: 'ask_layla', label: '“With respect, could we hear what Layla would like?”', effects: { vars: { voice: 2, partnership: 1, family: -1 }, flags: ['faris_asked'] }, next: 'drive_home', beat: 'Faris asked, in front of both families, what Layla wanted.', lesson: { id: 'mh-l-ask', tag: 'Notice this', text: 'The mahr is the bride’s right. Asking her is not rudeness, it is the point.' } },
+          { id: 'silent', label: 'Stay quiet, this is for the elders.', effects: { vars: { voice: -1 } }, next: 'drive_home', beat: 'Faris stayed quiet and let the elders talk.' },
           { id: 'side_father', label: 'Back his father: “We have to be realistic.”', effects: { vars: { family: -1, partnership: -1 } }, next: 'drive_home', beat: 'Faris backed his father’s figure in the room.' },
         ],
       },
@@ -94,19 +94,19 @@ export const mahrConversation: Adventure = {
         choices: [],
         byRole: {
           A: [
-            { id: 'means', label: 'An honour I want to give properly — even if it takes time.', effects: { vars: { voice: 1 } }, next: 'leak', beat: 'Faris said the mahr was an honour he wanted to give properly.' },
+            { id: 'means', label: 'An honour I want to give properly, even if it takes time.', effects: { vars: { voice: 1 } }, next: 'leak', beat: 'Faris said the mahr was an honour he wanted to give properly.' },
             { id: 'afford', label: 'Honestly, a worry: I can only afford so much.', effects: { vars: { partnership: 1 }, flags: ['faris_honest'] }, next: 'leak', beat: 'Faris admitted what he could actually afford.' },
             { id: 'formality', label: 'A formality our families care about more than we do.', effects: { vars: { voice: -1 } }, next: 'leak', beat: 'Faris called the mahr a formality for the families.' },
           ],
           B: [
-            { id: 'right', label: 'My right — and I want to choose it myself.', effects: { vars: { voice: 1 } }, next: 'leak', beat: 'Layla said the mahr was her right to choose.' },
+            { id: 'right', label: 'My right, and I want to choose it myself.', effects: { vars: { voice: 1 } }, next: 'leak', beat: 'Layla said the mahr was her right to choose.' },
             { id: 'symbol', label: 'A symbol. Something meaningful matters more than the amount.', effects: { flags: ['symbolic'] }, next: 'leak', beat: 'Layla said a meaningful mahr mattered more than its size.' },
             { id: 'security', label: 'Security, for a future I can’t predict.', effects: { flags: ['security'] }, next: 'leak', beat: 'Layla said the mahr was about security.' },
           ],
         },
         combos: [
           { pair: ['afford', 'symbol'], next: 'leak', beat: 'Faris admitted his limits; Layla said meaning mattered more than money. Both relaxed.', effects: { vars: { partnership: 2 } } },
-          { pair: ['afford', 'security'], next: 'leak', beat: 'Faris’s honesty about money met Layla’s need for security — a real tension, finally out in the open.', effects: { vars: { partnership: 1 } } },
+          { pair: ['afford', 'security'], next: 'leak', beat: 'Faris’s honesty about money met Layla’s need for security, a real tension, finally out in the open.', effects: { vars: { partnership: 1 } } },
           { pair: ['formality', 'right'], next: 'leak', beat: 'Faris called it a formality; Layla called it her right. The call ended quietly.', effects: { vars: { partnership: -1 } } },
         ],
         diverge: 'leak',
@@ -119,7 +119,7 @@ export const mahrConversation: Adventure = {
       image: slot('adv-mahr-leak', 'turning_point', 'A busy family WhatsApp group shown as floating speech-bubble shapes around a young woman holding her phone in a kitchen, aunties gossiping in the background.', 'Layla seeing the gossip spread.'),
       passages: [
         { text: 'An aunt has told half the community both families’ figures. Messages arrive: “Is it true they’re haggling over you?”' },
-        { text: 'The figure the fathers agreed is now public — and Layla learns it from her cousin.', when: { flag: 'fathers_decided' } },
+        { text: 'The figure the fathers agreed is now public, and Layla learns it from her cousin.', when: { flag: 'fathers_decided' } },
       ],
       decision: {
         mode: 'role',
@@ -161,7 +161,7 @@ export const mahrConversation: Adventure = {
         prompt: 'Together: how is the mahr decided?',
         choices: [
           { id: 'layla', label: 'Layla names it; Faris says honestly what he can give now and later.', effects: { vars: { voice: 2, partnership: 1 }, flags: ['layla_named'] }, next: 'tell_fathers', beat: 'Layla named the mahr, and Faris was honest about now and later.' },
-          { id: 'meaningful', label: 'A meaningful mahr — a set of things chosen together, not a number.', effects: { vars: { voice: 1, partnership: 1 }, flags: ['meaningful'] }, next: 'tell_fathers', beat: 'They chose a meaningful mahr together instead of a number.' },
+          { id: 'meaningful', label: 'A meaningful mahr, a set of things chosen together, not a number.', effects: { vars: { voice: 1, partnership: 1 }, flags: ['meaningful'] }, next: 'tell_fathers', beat: 'They chose a meaningful mahr together instead of a number.' },
           { id: 'split', label: 'Meet the fathers halfway to keep the peace.', effects: { vars: { family: 1 } }, next: 'tell_fathers', beat: 'They split the difference between the fathers.' },
         ],
       },
@@ -188,7 +188,7 @@ export const mahrConversation: Adventure = {
       image: slot('adv-mahr-end-hers', 'outcome', 'A bride and groom at a simple nikah ceremony, the bride smiling as an imam writes in a register, families gathered warmly.', 'Faris and Layla at their nikah.'),
       whatHappened: 'At the nikah, the imam reads out a mahr Layla chose herself. Both fathers nod.',
       pattern: { name: 'The couple as decision-makers', explanation: 'Families were honoured but not handed the decision.' },
-      couldHaveChanged: 'Nothing big — though asking Layla on the first night would have saved a week.',
+      couldHaveChanged: 'Nothing big, though asking Layla on the first night would have saved a week.',
       takeaway: 'The mahr is the bride’s right; the decision is the couple’s to make, with families blessing it.',
       epilogues: [{ text: 'The two fathers end the evening laughing together.', when: { var: 'family', gte: 2 } }],
       guide: [{ id: 'mh-e-hers', text: 'Big decisions about our marriage are made with us in the room.' }],
@@ -217,7 +217,7 @@ export const mahrConversation: Adventure = {
       whatHappened: 'Nobody got what they wanted; everybody can live with it. The wedding is back on track.',
       pattern: { name: 'Peacekeeping', explanation: 'Splitting the difference protected the families more than it expressed the couple.' },
       couldHaveChanged: 'Asking what each figure meant before splitting it.',
-      takeaway: 'Compromise is good — once you know what each side actually needs.',
+      takeaway: 'Compromise is good, once you know what each side actually needs.',
       guide: [{ id: 'mh-e-need', text: 'Before we compromise, we ask what each of us actually needs.' }],
     },
     stronger: {
@@ -225,7 +225,7 @@ export const mahrConversation: Adventure = {
       image: slot('adv-mahr-end-stronger', 'outcome', 'A young couple walking side by side through a market, carrying a small bag each, comfortable and smiling, chaperone sister a few steps behind.', 'Faris and Layla walking through a market together.'),
       whatHappened: 'The week was ugly. But Faris and Layla now know how they handle pressure: together.',
       pattern: { name: 'A first test passed', explanation: 'An early conflict with family became practice for marriage.' },
-      couldHaveChanged: 'Less of the family drama — but not the way they faced it.',
+      couldHaveChanged: 'Less of the family drama, but not the way they faced it.',
       takeaway: 'How you face the first family pressure sets the pattern for the rest.',
       guide: [{ id: 'mh-e-face', text: 'We face family pressure side by side, never against each other.' }],
     },
@@ -233,7 +233,7 @@ export const mahrConversation: Adventure = {
       id: 'bruised', title: 'A bruised beginning', mood: 'strained',
       image: slot('adv-mahr-end-bruised', 'outcome', 'Two mothers sitting at opposite ends of a long table at a small engagement dinner, not speaking, the couple between them looking tense.', 'Two mothers not speaking at the engagement dinner.'),
       whatHappened: 'The engagement survives. The two families barely speak at the wedding.',
-      pattern: { name: 'Winning against family', explanation: 'The couple asserted themselves — but bluntly, and the families felt dismissed.' },
+      pattern: { name: 'Winning against family', explanation: 'The couple asserted themselves, but bluntly, and the families felt dismissed.' },
       couldHaveChanged: 'The same decision, delivered with a request for blessing.',
       takeaway: 'Firm and respectful are not opposites.',
       guide: [{ id: 'mh-e-respect', text: 'We can disagree with our parents and still honour them.' }],

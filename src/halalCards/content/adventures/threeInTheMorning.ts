@@ -2,7 +2,7 @@ import type { Adventure, Condition } from '../../types.ts';
 import { slot } from '../images.ts';
 
 /**
- * Three in the Morning — a new baby, two exhausted parents, and the quiet
+ * Three in the Morning, a new baby, two exhausted parents, and the quiet
  * arithmetic of who does more. Hidden states: team, resentment, support.
  */
 export const threeInTheMorning: Adventure = {
@@ -11,7 +11,7 @@ export const threeInTheMorning: Adventure = {
   title: 'Three in the Morning',
   tagline: 'A six-week-old, two tired parents, and opinions from both grandmothers.',
   description:
-    'Ibrahim and Ruqayya have a six-week-old daughter and have not slept properly since. Each quietly believes they do more. Play both of them through the nights, the visits and the first evening alone — and see whether exhaustion makes them a team or a tally.',
+    'Ibrahim and Ruqayya have a six-week-old daughter and have not slept properly since. Each quietly believes they do more. Play both of them through the nights, the visits and the first evening alone, and see whether exhaustion makes them a team or a tally.',
   minutes: 14,
   themes: ['Children', 'Marriage roles', 'Family help', 'Exhaustion'],
   cover: slot('concept-baby-cover', 'cover', 'A kitchen at 3am, a father warming a bottle and a mother asleep at the table with her head on her arms, a baby monitor glowing.', 'Exhausted new parents in the kitchen at 3am.'),
@@ -75,7 +75,7 @@ export const threeInTheMorning: Adventure = {
         choices: [
           { id: 'shield', label: '“Ruqayya knows her best. Shall I make everyone tea?”', effects: { vars: { team: 2, support: -1 } }, next: 'evening', beat: 'Ibrahim backed Ruqayya in front of both grandmothers.' },
           { id: 'roles', label: 'Give the grandmothers jobs: cooking and laundry, not advice.', effects: { vars: { support: 2, team: 1 }, flags: ['jobs'] }, next: 'evening', beat: 'Ibrahim gave the grandmothers practical jobs instead of advice.' },
-          { id: 'agree', label: 'Agree with his mother — she raised five children.', effects: { vars: { resentment: 1, team: -1 } }, next: 'evening', beat: 'Ibrahim agreed with his mother’s advice in front of Ruqayya.' },
+          { id: 'agree', label: 'Agree with his mother, she raised five children.', effects: { vars: { resentment: 1, team: -1 } }, next: 'evening', beat: 'Ibrahim agreed with his mother’s advice in front of Ruqayya.' },
         ],
       },
     },
@@ -116,7 +116,7 @@ export const threeInTheMorning: Adventure = {
       id: 'scorecard',
       title: 'The scorecard',
       image: slot('adv-baby-scorecard', 'scene', 'A notepad on a kitchen counter with two columns of tally marks, a baby bottle beside it, an empty room in early morning light.', 'A notepad of tally marks on the kitchen counter.'),
-      passages: [{ text: 'A week later, they are keeping count — out loud. Nights, nappies, hours.' }],
+      passages: [{ text: 'A week later, they are keeping count, out loud. Nights, nappies, hours.' }],
       decision: {
         mode: 'role',
         actor: 'B',
@@ -156,12 +156,12 @@ export const threeInTheMorning: Adventure = {
         mode: 'private',
         prompt: 'What do you want from tonight?',
         choices: [
-          { id: 'us', label: 'To talk about us — not the baby.', effects: { vars: { team: 1 } }, next: 'month', beat: 'One of them wanted to talk about the two of them.' },
+          { id: 'us', label: 'To talk about us, not the baby.', effects: { vars: { team: 1 } }, next: 'month', beat: 'One of them wanted to talk about the two of them.' },
           { id: 'baby', label: 'To check the monitor and go home early.', next: 'month', beat: 'One of them wanted to check in and go home early.' },
           { id: 'air', label: 'To finally say the hard things.', effects: { vars: { resentment: -1 } }, next: 'month', beat: 'One of them wanted to finally say the hard things.' },
         ],
         combos: [
-          { pair: ['us', 'us'], next: 'month', beat: 'Both wanted to talk about the two of them — and laughed like they used to.', effects: { vars: { team: 2 } } },
+          { pair: ['us', 'us'], next: 'month', beat: 'Both wanted to talk about the two of them, and laughed like they used to.', effects: { vars: { team: 2 } } },
           { pair: ['baby', 'air'], next: 'month', beat: 'One wanted to go home early; the other had finally gathered the courage to talk. It came out in the car.', effects: { vars: { resentment: 1 } } },
         ],
         diverge: 'month',
@@ -171,14 +171,14 @@ export const threeInTheMorning: Adventure = {
       id: 'month',
       title: 'Three months',
       image: slot('adv-baby-month', 'scene', 'A father lying on a rug playing with a smiling baby while the mother sits nearby with tea, watching them, afternoon light.', 'Ibrahim playing with the baby as Ruqayya watches.'),
-      passages: [{ text: 'Three months. The baby smiles now. The question is what kind of parents — and spouses — they have become.' }],
+      passages: [{ text: 'Three months. The baby smiles now. The question is what kind of parents, and spouses, they have become.' }],
       decision: {
         mode: 'role',
         actor: 'A',
         prompt: 'You are Ibrahim. What do you say to Ruqayya?',
         choices: [
           { id: 'thank', label: '“I don’t know how you did those first weeks. Thank you.”', effects: { vars: { team: 1, resentment: -1 } }, next: { routes: endingRoutes() }, beat: 'Ibrahim thanked Ruqayya for those first weeks.' },
-          { id: 'nothing', label: 'Nothing — the worst is over.', effects: { vars: { resentment: 1 } }, next: { routes: endingRoutes() }, beat: 'Ibrahim decided the worst was over and said nothing.' },
+          { id: 'nothing', label: 'Nothing, the worst is over.', effects: { vars: { resentment: 1 } }, next: { routes: endingRoutes() }, beat: 'Ibrahim decided the worst was over and said nothing.' },
         ],
       },
     },
@@ -228,13 +228,13 @@ export const threeInTheMorning: Adventure = {
       whatHappened: 'She comes back after a week. They are polite. Something has to be rebuilt.',
       pattern: { name: 'Escape over repair', explanation: 'Leaving relieved the pressure without fixing what caused it.' },
       couldHaveChanged: 'One honest night-plan conversation before she left.',
-      takeaway: 'Space can help — if you agree why you are taking it and when you will talk.',
+      takeaway: 'Space can help, if you agree why you are taking it and when you will talk.',
       guide: [{ id: 'tm-e-space', text: 'If we need space, we say why and when we will talk.' }],
     },
     weekends: {
       id: 'weekends', title: 'Saturday mornings', mood: 'steady',
       image: slot('adv-baby-end-weekend', 'outcome', 'A father feeding a baby a bottle in a kitchen at sunrise, wearing a hoodie, smiling down at her, quiet house.', 'Ibrahim feeding the baby at sunrise.'),
-      whatHappened: 'Ibrahim’s weekend nights become his time with his daughter — and Ruqayya’s two full sleeps a week.',
+      whatHappened: 'Ibrahim’s weekend nights become his time with his daughter, and Ruqayya’s two full sleeps a week.',
       pattern: { name: 'Clear ownership', explanation: 'A simple, owned task stopped the vague sense of unfairness.' },
       couldHaveChanged: 'Talking about the weekdays too.',
       takeaway: 'A clear job each beats a vague promise to “help”.',

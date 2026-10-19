@@ -2,7 +2,7 @@ import type { Adventure, Condition } from '../../types.ts';
 import { slot } from '../images.ts';
 
 /**
- * Whose Wedding Is It? — a couple who want a small nikah, two mothers who
+ * Whose Wedding Is It?, a couple who want a small nikah, two mothers who
  * want five hundred guests. Hidden states: partnership, family, debt.
  */
 export const whoseWedding: Adventure = {
@@ -11,7 +11,7 @@ export const whoseWedding: Adventure = {
   title: 'Whose Wedding Is It?',
   tagline: 'They want a small nikah. Both mothers want five hundred guests.',
   description:
-    'Adam and Mariam want a small, simple nikah and to put their savings toward a home. Both mothers are planning a wedding for five hundred. Play both of them through a deposit paid without asking, a disagreement between the two of you, and an elder who offers to help — and find out whose day it turns into.',
+    'Adam and Mariam want a small, simple nikah and to put their savings toward a home. Both mothers are planning a wedding for five hundred. Play both of them through a deposit paid without asking, a disagreement between the two of you, and an elder who offers to help, and find out whose day it turns into.',
   minutes: 13,
   themes: ['Wedding', 'Family pressure', 'Money', 'Engagement'],
   cover: slot('concept-wedding-cover', 'cover', 'A young couple sitting on the floor surrounded by wedding planning lists and fabric samples, both mothers looming in the background on phones.', 'An engaged couple buried in wedding plans as both mothers talk on phones.'),
@@ -37,7 +37,7 @@ export const whoseWedding: Adventure = {
         prompt: 'You are Adam. Mariam is looking at you. What do you say?',
         choices: [
           { id: 'own', label: '“I knew she was looking, and I didn’t stop her. I’m sorry. Let’s decide together.”', effects: { vars: { partnership: 2 } }, next: 'mothers', beat: 'Adam admitted he knew and asked to decide together.' },
-          { id: 'excuse', label: '“She did it herself — you know what she’s like.”', effects: { vars: { partnership: -1 } }, next: 'mothers', beat: 'Adam blamed his mother entirely.' },
+          { id: 'excuse', label: '“She did it herself, you know what she’s like.”', effects: { vars: { partnership: -1 } }, next: 'mothers', beat: 'Adam blamed his mother entirely.' },
           { id: 'defend', label: '“She just wants it to be special for us.”', effects: { vars: { partnership: -1, family: 1 } }, next: 'mothers', beat: 'Adam defended his mother’s booking.' },
         ],
       },
@@ -76,7 +76,7 @@ export const whoseWedding: Adventure = {
           ],
           B: [
             { id: 'small', label: 'Small, simple, and money toward a home.', effects: { vars: { partnership: 1 } }, next: 'elder', beat: 'Mariam wrote: small, simple, money toward a home.' },
-            { id: 'meaningful', label: 'Meaningful — the guest count matters less than who’s there.', effects: { vars: { partnership: 1 } }, next: 'elder', beat: 'Mariam wrote: meaningful, whoever’s there.' },
+            { id: 'meaningful', label: 'Meaningful, the guest count matters less than who’s there.', effects: { vars: { partnership: 1 } }, next: 'elder', beat: 'Mariam wrote: meaningful, whoever’s there.' },
             { id: 'give_in', label: 'I don’t mind any more.', effects: { vars: { debt: 1 } }, next: 'elder', beat: 'Mariam wrote: I don’t mind any more.' },
           ],
         },
@@ -99,7 +99,7 @@ export const whoseWedding: Adventure = {
         choices: [
           { id: 'small_nikah', label: 'A small nikah at the masjid, a modest walimah, savings to a home.', effects: { vars: { partnership: 1, debt: -1 }, flags: ['small_plan'] }, next: 'mothers_hear', beat: 'They asked for a small nikah and modest walimah.' },
           { id: 'two', label: 'A small nikah now; a bigger family celebration in a year.', effects: { vars: { family: 1 }, flags: ['two_plan'] }, next: 'mothers_hear', beat: 'They asked for a small nikah now and a celebration later.' },
-          { id: 'big', label: 'Let the mothers have the big wedding — but split the cost three ways.', effects: { vars: { family: 2, debt: 1 }, flags: ['big_plan'] }, next: 'mothers_hear', beat: 'They agreed to the big wedding with costs shared.' },
+          { id: 'big', label: 'Let the mothers have the big wedding, but split the cost three ways.', effects: { vars: { family: 2, debt: 1 }, flags: ['big_plan'] }, next: 'mothers_hear', beat: 'They agreed to the big wedding with costs shared.' },
         ],
       },
     },
@@ -145,7 +145,7 @@ export const whoseWedding: Adventure = {
     their_day: {
       id: 'their_day', title: 'Their day', mood: 'renewed',
       image: slot('adv-wedding-end-theirs', 'outcome', 'A small nikah in a bright masjid hall, a bride and groom sitting with an imam, around thirty family members smiling, simple flowers.', 'A small nikah with close family.'),
-      whatHappened: 'Thirty people, a masjid, a garden walimah — and a deposit on a flat the week after.',
+      whatHappened: 'Thirty people, a masjid, a garden walimah, and a deposit on a flat the week after.',
       pattern: { name: 'United as a couple', explanation: 'They agreed first, then spoke to their families with one voice.' },
       couldHaveChanged: 'Agreeing before the hall was ever booked.',
       takeaway: 'Decide together first; then tell your families together.',
@@ -165,9 +165,9 @@ export const whoseWedding: Adventure = {
       id: 'big_day', title: 'Five hundred guests', mood: 'steady',
       image: slot('adv-wedding-end-big', 'outcome', 'A huge wedding hall full of guests at round tables, a bride and groom on a small stage looking tired but smiling, bright lights.', 'A huge wedding hall full of guests.'),
       whatHappened: 'It is the wedding their mothers dreamed of. It is lovely. They are exhausted.',
-      pattern: { name: 'Honouring family', explanation: 'They chose family joy over their own preference — and shared the cost fairly.' },
+      pattern: { name: 'Honouring family', explanation: 'They chose family joy over their own preference, and shared the cost fairly.' },
       couldHaveChanged: 'Nothing wrong with it, as long as it was a real choice.',
-      takeaway: 'Giving your families their day is a gift — if you choose it together.',
+      takeaway: 'Giving your families their day is a gift, if you choose it together.',
       epilogues: [{ text: 'The shared costs mean nobody starts married in debt.', when: { var: 'debt', lte: 1 } }],
       guide: [{ id: 'ww-e-choose', text: 'If we give family what they want, it is a choice we make together.' }],
     },
@@ -186,7 +186,7 @@ export const whoseWedding: Adventure = {
       whatHappened: 'The wedding happened his mother’s way. Mariam remembers the moment Adam said “whatever you think”.',
       pattern: { name: 'Wavering under pressure', explanation: 'A couple’s agreement collapsed the moment it was tested by a parent.' },
       couldHaveChanged: '“Yes, Mum. It’s what we both want.”',
-      takeaway: 'Your spouse is watching whose side you stand on — even at the wedding.',
+      takeaway: 'Your spouse is watching whose side you stand on, even at the wedding.',
       guide: [{ id: 'ww-e-stand', text: 'Once we agree, we stand by it in front of family.' }],
     },
     handed_over: {

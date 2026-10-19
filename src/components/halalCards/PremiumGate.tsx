@@ -10,7 +10,6 @@ import { Card } from '@/components/ui/Card';
 import { Text } from '@/components/ui/Text';
 import { useCardsCopy } from '@/halalCards/copy';
 import { USE_MOCKS } from '@/lib/supabase';
-import { useFeatureFlags } from '@/state/featureFlags';
 import { useSession } from '@/state/session';
 import { space } from '@/theme/tokens';
 import { SurfaceToneProvider } from '@/theme/tone';
@@ -18,8 +17,8 @@ import { SurfaceToneProvider } from '@/theme/tone';
 /**
  * Shown when neither member has unlocked Halal Cards. Everything stays
  * browsable; only starting a shared session needs Premium. Never a dead end:
- * there is always a preview to try alone, and a way to ask the match — who may
- * have Premium — to start one.
+ * there is always a preview to try alone, and a way to ask the match, who may
+ * have Premium, to start one.
  */
 export function PremiumGate({
   partnerName,
@@ -32,13 +31,15 @@ export function PremiumGate({
 }) {
   const copy = useCardsCopy();
   const { setTier } = useSession();
-  const { premiumPurchases } = useFeatureFlags();
   const [asked, setAsked] = useState(false);
   const ask = useMutation({
     mutationFn: () => sendMessage(connectionId, copy('askMessage')),
     onSuccess: () => setAsked(true),
   });
-  const canBuy = premiumPurchases || USE_MOCKS;
+  // There is no production purchase SDK or transaction handler yet. A remote
+  // flag must not expose a purchase button that only routes to an unavailable
+  // screen. Test builds keep their local demo switch.
+  const canBuy = USE_MOCKS;
 
   return (
     <Card tone="dark" style={styles.card}>

@@ -2,7 +2,7 @@ import type { Adventure, Condition } from '../../types.ts';
 import { slot } from '../images.ts';
 
 /**
- * The Upstairs Room — newlyweds living with his parents to save for a home.
+ * The Upstairs Room, newlyweds living with his parents to save for a home.
  * Hidden states: privacy, family, partnership.
  */
 export const upstairsRoom: Adventure = {
@@ -11,7 +11,7 @@ export const upstairsRoom: Adventure = {
   title: 'The Upstairs Room',
   tagline: 'One room, no lock, and a mother-in-law with a key to everything.',
   description:
-    'To save for a deposit, Yahya and Sumaya move into the upstairs room at his parents’ house. It was meant to be a year. Play both of them through overheard conversations, kitchen politics and a moving-out date that keeps slipping — and decide what a couple needs to stay a couple under someone else’s roof.',
+    'To save for a deposit, Yahya and Sumaya move into the upstairs room at his parents’ house. It was meant to be a year. Play both of them through overheard conversations, kitchen politics and a moving-out date that keeps slipping, and decide what a couple needs to stay a couple under someone else’s roof.',
   minutes: 14,
   themes: ['Living with in-laws', 'Boundaries', 'Marriage roles', 'Money'],
   cover: slot('concept-house-cover', 'cover', 'A family staircase with a young couple’s door at the top slightly ajar, a mother’s hand on the banister below.', 'A family staircase leading to the couple’s room.'),
@@ -30,7 +30,7 @@ export const upstairsRoom: Adventure = {
       id: 'knock',
       title: 'The knock that isn’t',
       image: slot('adv-house-knock', 'scene', 'A young couple’s bedroom door opening without a knock, an older woman stepping in holding folded laundry, the young wife sitting up surprised in a loose hijab.', 'Yahya’s mother walking in with laundry.'),
-      passages: [{ text: 'Week three. Yahya’s mother walks into their room with folded laundry — without knocking — for the fourth time.' }],
+      passages: [{ text: 'Week three. Yahya’s mother walks into their room with folded laundry, without knocking, for the fourth time.' }],
       decision: {
         mode: 'role',
         actor: 'B',
@@ -112,7 +112,7 @@ export const upstairsRoom: Adventure = {
       title: 'The savings account',
       image: slot('adv-house-savings', 'scene', 'A couple sitting on a bed with a laptop showing a simple savings bar chart, calculator and notebook, serious faces.', 'Yahya and Sumaya looking at their savings.'),
       passages: [
-        { text: 'They look at the savings. Eight months in, they are behind — Yahya has been quietly paying some of his parents’ bills.' },
+        { text: 'They look at the savings. Eight months in, they are behind, Yahya has been quietly paying some of his parents’ bills.' },
       ],
       decision: {
         mode: 'role',
@@ -155,7 +155,7 @@ export const upstairsRoom: Adventure = {
         prompt: 'You are Yahya. How do you begin?',
         choices: [
           { id: 'grateful', label: '“We’re so grateful for this year. Here’s what we’ve decided, together.”', effects: { vars: { family: 2 } }, next: { routes: endingRoutes() }, beat: 'Yahya began with gratitude and spoke for them both.' },
-          { id: 'sumaya', label: 'Let Sumaya explain — it’s mostly her wish.', effects: { vars: { family: -1, partnership: -1 } }, next: { routes: endingRoutes() }, beat: 'Yahya let Sumaya explain the decision alone.' },
+          { id: 'sumaya', label: 'Let Sumaya explain, it’s mostly her wish.', effects: { vars: { family: -1, partnership: -1 } }, next: { routes: endingRoutes() }, beat: 'Yahya let Sumaya explain the decision alone.' },
         ],
       },
     },
@@ -177,7 +177,7 @@ export const upstairsRoom: Adventure = {
       pattern: { name: 'Agreed boundaries', explanation: 'Clear rules made a shared house livable.' },
       couldHaveChanged: 'Agreeing them before moving in.',
       takeaway: 'Living with family works best with rules agreed before the first problem.',
-      epilogues: [{ text: 'Sumaya still counts the days until they move — but without bitterness.', when: { var: 'privacy', lte: 1 } }],
+      epilogues: [{ text: 'Sumaya still counts the days until they move, but without bitterness.', when: { var: 'privacy', lte: 1 } }],
       guide: [{ id: 'ur-e-rules', text: 'If we share a home with family, we agree house rules first.' }],
     },
     small_flat: {
@@ -195,7 +195,7 @@ export const upstairsRoom: Adventure = {
       image: slot('adv-house-end-guest', 'outcome', 'A young woman sitting alone on the edge of a bed in a small room with her suitcase still half unpacked in the corner, looking out of the window.', 'Sumaya alone, suitcase still half unpacked.'),
       whatHappened: 'Two years on, they still live upstairs. Sumaya has never unpacked the second suitcase.',
       pattern: { name: 'Silent accommodation', explanation: 'Each small thing was endured, and the endurance became the marriage.' },
-      couldHaveChanged: 'Yahya speaking up — in his own voice — about the smallest thing.',
+      couldHaveChanged: 'Yahya speaking up, in his own voice, about the smallest thing.',
       takeaway: 'Your spouse should never feel like a guest in your marriage.',
       guide: [{ id: 'ur-e-guest', text: 'We make sure neither of us feels like a guest at home.' }],
     },

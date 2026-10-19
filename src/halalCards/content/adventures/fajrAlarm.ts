@@ -2,7 +2,7 @@ import type { Adventure, Condition } from '../../types.ts';
 import { slot } from '../images.ts';
 
 /**
- * Fajr Alarm — different levels of practice under one roof, and the line
+ * Fajr Alarm, different levels of practice under one roof, and the line
  * between encouraging and judging. Hidden states: closeness, judgement, faith.
  */
 export const fajrAlarm: Adventure = {
@@ -11,7 +11,7 @@ export const fajrAlarm: Adventure = {
   title: 'Fajr Alarm',
   tagline: 'One prays every prayer at the masjid. One is just trying to keep up.',
   description:
-    'Zaid has found his way back to the masjid and prays every prayer there. Amal prays too — but Fajr after night shifts is a struggle, and lately she feels watched in her own home. Play both of them through a season where encouragement and judgement look very alike.',
+    'Zaid has found his way back to the masjid and prays every prayer there. Amal prays too, but Fajr after night shifts is a struggle, and lately she feels watched in her own home. Play both of them through a season where encouragement and judgement look very alike.',
   minutes: 14,
   themes: ['Different levels of practice', 'Feeling judged', 'Ramadan'],
   cover: slot('concept-practice-cover', 'cover', 'A dim bedroom before dawn, a man rolling out a prayer mat while his wife sleeps, an alarm clock glowing 5:02.', 'A man unrolling a prayer mat before dawn as his wife sleeps.'),
@@ -39,8 +39,8 @@ export const fajrAlarm: Adventure = {
         actor: 'A',
         prompt: 'You are Zaid. What do you do?',
         choices: [
-          { id: 'wake', label: 'Wake her gently — it’s Fajr.', effects: { vars: { judgement: 1 }, flags: ['woke_her'] }, next: 'morning', beat: 'Zaid woke Amal for Fajr after her night shift.', lesson: { id: 'fa-l-wake', tag: 'Notice this', text: 'Encouragement that ignores how someone is doing can feel like supervision.' } },
-          { id: 'ask', label: 'Let her sleep — and ask later how she’d like Fajr to work.', effects: { vars: { closeness: 1 } }, next: 'morning', beat: 'Zaid let Amal sleep and resolved to ask her how she wanted Fajr to work.' },
+          { id: 'wake', label: 'Wake her gently, it’s Fajr.', effects: { vars: { judgement: 1 }, flags: ['woke_her'] }, next: 'morning', beat: 'Zaid woke Amal for Fajr after her night shift.', lesson: { id: 'fa-l-wake', tag: 'Notice this', text: 'Encouragement that ignores how someone is doing can feel like supervision.' } },
+          { id: 'ask', label: 'Let her sleep, and ask later how she’d like Fajr to work.', effects: { vars: { closeness: 1 } }, next: 'morning', beat: 'Zaid let Amal sleep and resolved to ask her how she wanted Fajr to work.' },
           { id: 'leave', label: 'Pray alone, and quietly hope she’ll join one day.', effects: { flags: ['silent_hope'] }, next: 'morning', beat: 'Zaid prayed alone and kept his hopes to himself.' },
         ],
       },
@@ -59,9 +59,9 @@ export const fajrAlarm: Adventure = {
         actor: 'B',
         prompt: 'You are Amal. What do you say?',
         choices: [
-          { id: 'explain', label: 'Tell him honestly how hard Fajr is after nights, and that she does pray it — late.', effects: { vars: { closeness: 1 }, flags: ['honest'] }, next: 'friend_visit', beat: 'Amal told Zaid honestly how hard Fajr was after night shifts.' },
+          { id: 'explain', label: 'Tell him honestly how hard Fajr is after nights, and that she does pray it, late.', effects: { vars: { closeness: 1 }, flags: ['honest'] }, next: 'friend_visit', beat: 'Amal told Zaid honestly how hard Fajr was after night shifts.' },
           { id: 'snap', label: '“I’m not a child, Zaid.”', effects: { vars: { judgement: 1, closeness: -1 } }, next: 'friend_visit', beat: 'Amal snapped that she was not a child.' },
-          { id: 'pretend', label: 'Promise to try — then hit snooze every morning.', effects: { flags: ['pretending'] }, next: 'friend_visit', beat: 'Amal promised to try and quietly kept snoozing.', lesson: { id: 'fa-l-pretend', tag: 'Pattern forming', text: 'Agreeing to keep the peace postpones the conversation — and adds guilt to it.' } },
+          { id: 'pretend', label: 'Promise to try, then hit snooze every morning.', effects: { flags: ['pretending'] }, next: 'friend_visit', beat: 'Amal promised to try and quietly kept snoozing.', lesson: { id: 'fa-l-pretend', tag: 'Pattern forming', text: 'Agreeing to keep the peace postpones the conversation, and adds guilt to it.' } },
         ],
       },
     },
@@ -79,7 +79,7 @@ export const fajrAlarm: Adventure = {
         choices: [
           { id: 'defend', label: '“That’s between Amal and Allah, brother.”', effects: { vars: { closeness: 2 }, flags: ['defended'] }, next: 'overheard', beat: 'Zaid told his friend Amal’s worship was between her and Allah.' },
           { id: 'laugh', label: 'Laugh awkwardly and change the subject.', effects: { vars: { judgement: 1 } }, next: 'overheard', beat: 'Zaid laughed it off without answering.' },
-          { id: 'agree', label: '“I’m working on her, insha’Allah.”', effects: { vars: { judgement: 2 }, flags: ['working_on_her'] }, next: 'overheard', beat: 'Zaid told his friend he was “working on” Amal.', lesson: { id: 'fa-l-project', tag: 'Notice this', text: 'Talking about a spouse as a project — even kindly — turns partnership into supervision.' } },
+          { id: 'agree', label: '“I’m working on her, insha’Allah.”', effects: { vars: { judgement: 2 }, flags: ['working_on_her'] }, next: 'overheard', beat: 'Zaid told his friend he was “working on” Amal.', lesson: { id: 'fa-l-project', tag: 'Notice this', text: 'Talking about a spouse as a project, even kindly, turns partnership into supervision.' } },
         ],
       },
     },
@@ -100,7 +100,7 @@ export const fajrAlarm: Adventure = {
         choices: [
           { id: 'talk', label: 'After the guest leaves, sit Zaid down and talk properly.', effects: { vars: { closeness: 1 } }, next: 'talk', beat: 'Amal sat Zaid down for a proper conversation.' },
           { id: 'withdraw', label: 'Say nothing. Pray in her room, alone, from now on.', effects: { vars: { faith: -1, closeness: -1 } }, next: 'distance', beat: 'Amal withdrew and began praying alone, out of sight.' },
-          { id: 'perform', label: 'Start going to Fajr — mostly so nobody can say anything.', effects: { flags: ['performing'], vars: { judgement: 1 } }, next: 'distance', beat: 'Amal began going to Fajr mainly to stop the comments.', lesson: { id: 'fa-l-perform', tag: 'Notice this', text: 'Worship done for an audience can quietly empty it of meaning.' } },
+          { id: 'perform', label: 'Start going to Fajr, mostly so nobody can say anything.', effects: { flags: ['performing'], vars: { judgement: 1 } }, next: 'distance', beat: 'Amal began going to Fajr mainly to stop the comments.', lesson: { id: 'fa-l-perform', tag: 'Notice this', text: 'Worship done for an audience can quietly empty it of meaning.' } },
         ],
       },
     },
@@ -114,7 +114,7 @@ export const fajrAlarm: Adventure = {
         mode: 'joint',
         prompt: 'Together: how will worship work in your home?',
         choices: [
-          { id: 'together', label: 'Pray together when we can — never as pressure.', effects: { vars: { closeness: 1, faith: 1 }, flags: ['no_pressure'] }, next: 'ramadan', beat: 'They agreed to pray together when they could, without pressure.' },
+          { id: 'together', label: 'Pray together when we can, never as pressure.', effects: { vars: { closeness: 1, faith: 1 }, flags: ['no_pressure'] }, next: 'ramadan', beat: 'They agreed to pray together when they could, without pressure.' },
           { id: 'consent', label: 'Zaid wakes her only on days she asks.', effects: { vars: { closeness: 1, judgement: -1 }, flags: ['consent_wake'] }, next: 'ramadan', beat: 'They agreed Zaid would wake Amal only when she asked.' },
           { id: 'own', label: 'Each keeps their own practice, privately.', effects: { vars: { faith: -1 } }, next: 'ramadan', beat: 'They agreed to keep worship private to each of them.' },
         ],
@@ -161,13 +161,13 @@ export const fajrAlarm: Adventure = {
             { id: 'masjid', label: 'Spend every night at the masjid.', effects: { vars: { faith: 1, closeness: -1 } }, next: 'lonely', beat: 'Zaid spent every night at the masjid.' },
           ],
           B: [
-            { id: 'goal', label: 'Suggest a small shared goal — a juz together each week.', effects: { vars: { faith: 1, closeness: 1 } }, next: 'quiet_night', beat: 'Amal suggested reading a juz together each week.' },
+            { id: 'goal', label: 'Suggest a small shared goal, a juz together each week.', effects: { vars: { faith: 1, closeness: 1 } }, next: 'quiet_night', beat: 'Amal suggested reading a juz together each week.' },
             { id: 'join', label: 'Join him for suhoor and Fajr when she can.', effects: { vars: { faith: 1 } }, next: 'quiet_night', beat: 'Amal joined him for suhoor and Fajr when she could.' },
             { id: 'own', label: 'Keep her own Ramadan, in her own time.', next: 'lonely', beat: 'Amal kept her own Ramadan, in her own time.' },
           ],
         },
         combos: [
-          { pair: ['ask', 'goal'], next: 'quiet_night', beat: 'Zaid asked what she wanted; Amal had an answer ready — a juz together each week.', effects: { vars: { closeness: 1, faith: 1 } } },
+          { pair: ['ask', 'goal'], next: 'quiet_night', beat: 'Zaid asked what she wanted; Amal had an answer ready, a juz together each week.', effects: { vars: { closeness: 1, faith: 1 } } },
           { pair: ['masjid', 'own'], next: 'lonely', beat: 'Zaid spent his nights at the masjid; Amal spent hers alone.', effects: { vars: { closeness: -1 } } },
           { pair: ['plan', 'own'], next: 'lonely', beat: 'Zaid’s carefully planned routine met Amal’s wish for her own time.', effects: { vars: { judgement: 1 } } },
         ],
@@ -200,7 +200,7 @@ export const fajrAlarm: Adventure = {
         prompt: 'You are Zaid. What do you do?',
         choices: [
           { id: 'home', label: 'Stay home and pray beside her.', effects: { vars: { closeness: 1, faith: 1 } }, next: 'last_night', beat: 'Zaid stayed home on the twenty-seventh night to pray beside Amal.' },
-          { id: 'thank', label: 'Go to the masjid — but first thank her for her patience with him.', effects: { vars: { closeness: 1, judgement: -1 } }, next: 'last_night', beat: 'Zaid thanked Amal for her patience before going to the masjid.' },
+          { id: 'thank', label: 'Go to the masjid, but first thank her for her patience with him.', effects: { vars: { closeness: 1, judgement: -1 } }, next: 'last_night', beat: 'Zaid thanked Amal for her patience before going to the masjid.' },
         ],
       },
     },
@@ -215,7 +215,7 @@ export const fajrAlarm: Adventure = {
         choices: [
           { id: 'one', label: 'One prayer together every day.', effects: { flags: ['kept_one'], vars: { faith: 1 } }, next: { routes: endingRoutes() }, beat: 'They kept one prayer together every day.' },
           { id: 'ask', label: 'A rule: encouragement only when asked.', effects: { flags: ['rule_ask'], vars: { judgement: -1 } }, next: { routes: endingRoutes() }, beat: 'They agreed encouragement would come only when asked.' },
-          { id: 'none', label: 'Nothing formal — just goodwill.', next: { routes: endingRoutes() }, beat: 'They kept nothing formal, just goodwill.' },
+          { id: 'none', label: 'Nothing formal, just goodwill.', next: { routes: endingRoutes() }, beat: 'They kept nothing formal, just goodwill.' },
         ],
       },
     },
@@ -234,7 +234,7 @@ export const fajrAlarm: Adventure = {
     kindness: {
       id: 'kindness', title: 'Only when asked', mood: 'steady',
       image: slot('adv-fajr-alarm-end-kindness', 'outcome', 'A woman setting her own alarm on a phone with a small smile while her husband reads nearby, morning light.', 'Amal setting her own alarm.'),
-      whatHappened: 'Zaid stops waking her. Six weeks later, Amal asks him to — on her days off.',
+      whatHappened: 'Zaid stops waking her. Six weeks later, Amal asks him to, on her days off.',
       pattern: { name: 'Respecting autonomy', explanation: 'Making encouragement opt-in removed the shame from it.' },
       couldHaveChanged: 'Agreeing this before the friend’s comment would have spared a hard week.',
       takeaway: 'Encouragement lands when it is welcome.',
@@ -245,7 +245,7 @@ export const fajrAlarm: Adventure = {
       image: slot('adv-fajr-alarm-end-performance', 'outcome', 'A woman standing at the back of a women’s section of a masjid at dawn, present but distant, looking at her phone screen dimly.', 'Amal at Fajr, present but far away.'),
       whatHappened: 'Amal never misses Fajr now. She has never felt emptier in it.',
       pattern: { name: 'Compliance without conviction', explanation: 'Pressure produced the behaviour and drained the meaning.' },
-      couldHaveChanged: 'Amal saying how the comment felt — and Zaid listening — instead of performing to end it.',
+      couldHaveChanged: 'Amal saying how the comment felt, and Zaid listening, instead of performing to end it.',
       takeaway: 'Outward practice without inner peace is worth talking about, not hiding.',
       guide: [{ id: 'fa-e-heart', text: 'We talk about how worship feels, not just whether it happened.' }],
     },
@@ -263,7 +263,7 @@ export const fajrAlarm: Adventure = {
       image: slot('adv-fajr-alarm-end-parallel', 'outcome', 'Two prayer mats rolled up separately on two different shelves in the same hallway.', 'Two prayer mats on separate shelves.'),
       whatHappened: 'They both pray. They just never do it together, and never talk about it.',
       pattern: { name: 'Avoidance', explanation: 'Silence kept the peace and lost the shared part of their faith.' },
-      couldHaveChanged: 'Either of them raising it again — it did not matter who.',
+      couldHaveChanged: 'Either of them raising it again, it did not matter who.',
       takeaway: 'Faith kept private by default can become faith kept apart.',
       guide: [{ id: 'fa-e-share', text: 'We share something of our worship, even something small.' }],
     },
@@ -272,7 +272,7 @@ export const fajrAlarm: Adventure = {
       image: slot('adv-fajr-alarm-end-defended', 'outcome', 'A wife resting her head on her husband’s shoulder on a sofa, both relaxed, a prayer mat folded beside them.', 'Amal resting on Zaid’s shoulder.'),
       whatHappened: 'Years later, Amal still remembers the night he said “That’s between Amal and Allah.”',
       pattern: { name: 'Loyalty in public', explanation: 'Protecting a spouse in front of others built more trust than any conversation.' },
-      couldHaveChanged: 'Little — though speaking about Fajr earlier would have helped.',
+      couldHaveChanged: 'Little, though speaking about Fajr earlier would have helped.',
       takeaway: 'Defend your spouse in public; discuss in private.',
       epilogues: [{ text: 'His friend apologises to Amal at Eid.', when: { var: 'closeness', gte: 4 } }],
       guide: [{ id: 'fa-e-public', text: 'We never criticise each other’s deen in front of others.' }],
@@ -280,7 +280,7 @@ export const fajrAlarm: Adventure = {
     one_prayer: {
       id: 'one_prayer', title: 'One prayer a day', mood: 'steady',
       image: slot('adv-fajr-alarm-end-one', 'outcome', 'A couple praying Isha together in a small living room, side by side, evening lamp light.', 'Zaid and Amal praying Isha together.'),
-      whatHappened: 'Fajr stays hard. Isha becomes theirs — every night, together.',
+      whatHappened: 'Fajr stays hard. Isha becomes theirs, every night, together.',
       pattern: { name: 'Finding shared ground', explanation: 'Instead of fighting over the hardest prayer, they found an easier one to share.' },
       couldHaveChanged: 'Starting there from the beginning.',
       takeaway: 'Start where it is easy to meet.',

@@ -2,7 +2,7 @@ import type { Adventure, Condition } from '../../types.ts';
 import { slot } from '../images.ts';
 
 /**
- * Starting Over at Thirty-Four — one spouse's calling, the other's income,
+ * Starting Over at Thirty-Four, one spouse's calling, the other's income,
  * and what "supporting each other" costs in practice. Hidden states:
  * partnership, strain (money pressure), fulfilment.
  */
@@ -12,7 +12,7 @@ export const startingOver: Adventure = {
   title: 'Starting Over at Thirty-Four',
   tagline: 'He wants to study the deen full-time. She would carry the bills for four years.',
   description:
-    'Musa wants to leave a secure job to study Islamic sciences full-time. It would mean Khadija carrying the household income for four years. Play both of them through a resignation letter, her parents’ reaction and a surprise that changes the maths — and find out what “supporting each other” really means.',
+    'Musa wants to leave a secure job to study Islamic sciences full-time. It would mean Khadija carrying the household income for four years. Play both of them through a resignation letter, her parents’ reaction and a surprise that changes the maths, and find out what “supporting each other” really means.',
   minutes: 14,
   themes: ['Careers', 'Money', 'Marriage roles', 'Family'],
   cover: slot('concept-career-cover', 'cover', 'A man at a desk covered in classical Arabic texts at night, his wife in the doorway in work clothes holding car keys.', 'A husband studying Arabic texts as his wife returns from work.'),
@@ -38,7 +38,7 @@ export const startingOver: Adventure = {
         prompt: 'You are Musa. What do you do?',
         choices: [
           { id: 'show', label: 'Show Khadija the letter and ask what she thinks before sending anything.', effects: { vars: { partnership: 2 } }, next: 'her_reaction', beat: 'Musa showed Khadija the letter before sending it.' },
-          { id: 'send', label: 'Send it — he’s waited long enough.', effects: { vars: { partnership: -2, fulfilment: 1 }, flags: ['sent_alone'] }, next: 'her_reaction', beat: 'Musa sent his resignation without telling Khadija.', lesson: { id: 'so-l-alone', tag: 'Notice this', text: 'A decision that moves your spouse’s life is not yours to make alone.' } },
+          { id: 'send', label: 'Send it, he’s waited long enough.', effects: { vars: { partnership: -2, fulfilment: 1 }, flags: ['sent_alone'] }, next: 'her_reaction', beat: 'Musa sent his resignation without telling Khadija.', lesson: { id: 'so-l-alone', tag: 'Notice this', text: 'A decision that moves your spouse’s life is not yours to make alone.' } },
           { id: 'hint', label: 'Drop hints about “dreams” at dinner.', effects: { flags: ['hinted'] }, next: 'her_reaction', beat: 'Musa dropped hints about his dream at dinner.' },
         ],
       },
@@ -66,7 +66,7 @@ export const startingOver: Adventure = {
       id: 'numbers',
       title: 'The spreadsheet',
       image: slot('adv-career-numbers', 'scene', 'A couple at a kitchen table with a laptop showing a simple budget chart, a calculator and a pile of bills, both leaning in seriously.', 'Musa and Khadija going through a budget.'),
-      passages: [{ text: 'They sit down with the numbers. It’s possible — just — if nothing goes wrong.' }],
+      passages: [{ text: 'They sit down with the numbers. It’s possible, just, if nothing goes wrong.' }],
       decision: {
         mode: 'private',
         prompt: 'What matters most to you here? Answer for yourself.',
@@ -78,7 +78,7 @@ export const startingOver: Adventure = {
             { id: 'wait', label: 'Maybe it should wait a few years.', effects: { vars: { fulfilment: -1 } }, next: 'parents', beat: 'Musa wondered if it should wait.' },
           ],
           B: [
-            { id: 'support', label: 'I want to support him — with a safety net.', effects: { vars: { partnership: 1 } }, next: 'parents', beat: 'Khadija wanted to support him with a safety net.' },
+            { id: 'support', label: 'I want to support him, with a safety net.', effects: { vars: { partnership: 1 } }, next: 'parents', beat: 'Khadija wanted to support him with a safety net.' },
             { id: 'children', label: 'I want children soon. How does this fit?', effects: { flags: ['children_question'] }, next: 'parents', beat: 'Khadija asked how children would fit.' },
             { id: 'carry', label: 'I’ll carry it, whatever it costs me.', effects: { vars: { strain: 1 }, flags: ['carrying'] }, next: 'parents', beat: 'Khadija decided to carry it whatever it cost her.' },
           ],
@@ -102,7 +102,7 @@ export const startingOver: Adventure = {
         prompt: 'You are Khadija. What do you say to your father?',
         choices: [
           { id: 'defend', label: '“We decided together. I believe in him.”', effects: { vars: { partnership: 2 } }, next: 'surprise', beat: 'Khadija defended their decision to her father.' },
-          { id: 'agree', label: 'Say nothing — part of her agrees with him.', effects: { vars: { partnership: -1 }, flags: ['doubting'] }, next: 'surprise', beat: 'Khadija stayed quiet, half agreeing with her father.' },
+          { id: 'agree', label: 'Say nothing, part of her agrees with him.', effects: { vars: { partnership: -1 }, flags: ['doubting'] }, next: 'surprise', beat: 'Khadija stayed quiet, half agreeing with her father.' },
         ],
       },
     },
@@ -118,7 +118,7 @@ export const startingOver: Adventure = {
         choices: [
           { id: 'delay', label: 'Delay the studies a year and save.', effects: { vars: { strain: -1, fulfilment: -1 }, flags: ['delayed'] }, next: 'first_year', beat: 'They delayed the studies a year to save.' },
           { id: 'part_time', label: 'Musa studies part-time and keeps three days of work.', effects: { vars: { strain: -1, partnership: 1 }, flags: ['part_time'] }, next: 'first_year', beat: 'They chose part-time study with three days of work.' },
-          { id: 'go', label: 'Go ahead as planned — they’ll find a way.', effects: { vars: { strain: 2, fulfilment: 2 }, flags: ['full_time'] }, next: 'first_year', beat: 'They went ahead with full-time study regardless.' },
+          { id: 'go', label: 'Go ahead as planned, they’ll find a way.', effects: { vars: { strain: 2, fulfilment: 2 }, flags: ['full_time'] }, next: 'first_year', beat: 'They went ahead with full-time study regardless.' },
         ],
       },
     },
@@ -135,8 +135,8 @@ export const startingOver: Adventure = {
         actor: 'A',
         prompt: 'You are Musa. What do you do?',
         choices: [
-          { id: 'ask', label: 'Ask Khadija honestly how she’s coping — and mean it.', effects: { vars: { partnership: 1, strain: -1 } }, next: 'breaking_point', beat: 'Musa asked Khadija honestly how she was coping.' },
-          { id: 'study', label: 'Bury himself in study — it’s what they sacrificed for.', effects: { vars: { fulfilment: 1, strain: 1 } }, next: 'breaking_point', beat: 'Musa buried himself in study.' },
+          { id: 'ask', label: 'Ask Khadija honestly how she’s coping, and mean it.', effects: { vars: { partnership: 1, strain: -1 } }, next: 'breaking_point', beat: 'Musa asked Khadija honestly how she was coping.' },
+          { id: 'study', label: 'Bury himself in study, it’s what they sacrificed for.', effects: { vars: { fulfilment: 1, strain: 1 } }, next: 'breaking_point', beat: 'Musa buried himself in study.' },
         ],
       },
     },
@@ -151,7 +151,7 @@ export const startingOver: Adventure = {
         prompt: 'What do you do tonight?',
         choices: [
           { id: 'talk', label: 'Sit down and talk honestly about whether this is working.', effects: { vars: { partnership: 1 } }, next: 'review', beat: 'One of them asked to talk honestly about whether it was working.' },
-          { id: 'push', label: 'Push through — it’s only one bad night.', effects: { vars: { strain: 1 } }, next: 'review', beat: 'One of them decided to push through.' },
+          { id: 'push', label: 'Push through, it’s only one bad night.', effects: { vars: { strain: 1 } }, next: 'review', beat: 'One of them decided to push through.' },
           { id: 'blame', label: 'Say what has been building up.', effects: { vars: { partnership: -1, strain: 1 } }, next: 'review', beat: 'One of them said what had been building up.' },
         ],
         combos: [
@@ -183,7 +183,7 @@ export const startingOver: Adventure = {
       image: slot('adv-career-end-shared', 'outcome', 'A man in a graduation gown holding a scroll beside his wife and toddler, family members around them smiling, a mosque courtyard in the background.', 'Musa graduating with Khadija and their child beside him.'),
       whatHappened: 'Four years later, Musa graduates. Khadija is in the front row with their toddler. Both of them feel it was their degree.',
       pattern: { name: 'Shared ownership of a dream', explanation: 'Because they decided and adjusted together, the cost and the reward were both shared.' },
-      couldHaveChanged: 'Little — though showing her the letter first saved them most of the pain.',
+      couldHaveChanged: 'Little, though showing her the letter first saved them most of the pain.',
       takeaway: 'Support your spouse’s calling with a plan, not just with faith.',
       epilogues: [{ text: 'Khadija’s father gives the first speech at the celebration.', when: { var: 'partnership', gte: 5 } }],
       guide: [{ id: 'so-e-plan', text: 'We support each other’s dreams with a shared plan and regular reviews.' }],
@@ -193,7 +193,7 @@ export const startingOver: Adventure = {
       image: slot('adv-career-end-burnout', 'outcome', 'A woman asleep sitting upright on a hospital break-room chair still in scrubs, a phone showing missed calls in her hand.', 'Khadija asleep in a hospital break room.'),
       whatHappened: 'Musa is thriving in his studies. Khadija is running on empty, and has stopped saying so.',
       pattern: { name: 'One carries, one flies', explanation: 'One spouse’s dream was funded by the other’s silent exhaustion.' },
-      couldHaveChanged: 'Asking how she was coping — and adjusting when the answer was hard.',
+      couldHaveChanged: 'Asking how she was coping, and adjusting when the answer was hard.',
       takeaway: 'A calling that costs your spouse their health needs a new plan.',
       guide: [{ id: 'so-e-cost', text: 'We check what our plans cost each other, honestly, every month.' }],
     },
@@ -202,7 +202,7 @@ export const startingOver: Adventure = {
       image: slot('adv-career-end-slow', 'outcome', 'A man on a train with a laptop and an Arabic textbook open, commuting between work and study, looking content.', 'Musa studying on his commute.'),
       whatHappened: 'Part-time takes seven years instead of four. Nobody is exhausted, and nobody resents it.',
       pattern: { name: 'Creative compromise', explanation: 'Neither all-in nor giving up: a slower path everyone could live with.' },
-      couldHaveChanged: 'Nothing — this was a good choice.',
+      couldHaveChanged: 'Nothing, this was a good choice.',
       takeaway: 'The slower road is still a road.',
       guide: [{ id: 'so-e-slow', text: 'When both options cost too much, we look for a slower third way.' }],
     },
@@ -222,7 +222,7 @@ export const startingOver: Adventure = {
       whatHappened: 'The studies go on. Khadija never quite forgets that the letter was sent before she saw it.',
       pattern: { name: 'Unilateral decision', explanation: 'A shared life was changed by one person’s choice.' },
       couldHaveChanged: 'Showing her the letter first.',
-      takeaway: 'Ask before you leap — especially when your spouse will catch you.',
+      takeaway: 'Ask before you leap, especially when your spouse will catch you.',
       guide: [{ id: 'so-e-ask', text: 'We never make a life-changing decision without the other.' }],
     },
     father_was_right: {
@@ -246,7 +246,7 @@ export const startingOver: Adventure = {
     managing: {
       id: 'managing', title: 'Managing', mood: 'steady',
       image: slot('adv-career-end-managing', 'outcome', 'A family in a small living room on a weekend, a toddler playing on the rug, the father reading, the mother folding laundry, calm and ordinary.', 'An ordinary weekend at home for the family.'),
-      whatHappened: 'They are managing — some months better than others.',
+      whatHappened: 'They are managing, some months better than others.',
       pattern: { name: 'Getting by', explanation: 'The plan works, mostly, but has never been properly reviewed.' },
       couldHaveChanged: 'A regular review of how it is going for both of them.',
       takeaway: 'Review big plans regularly, not only when they break.',

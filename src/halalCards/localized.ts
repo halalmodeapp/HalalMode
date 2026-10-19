@@ -18,7 +18,7 @@ const cache = new Map<string, CardsContent>();
 
 /**
  * The catalogue in a member's language. Ids, structure and rules never change
- * with language — only the words — so sessions stay compatible between two
+ * with language, only the words, so sessions stay compatible between two
  * members using different languages.
  */
 export function localizedContent(language: AppLocale): CardsContent {

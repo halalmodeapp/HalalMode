@@ -1,12 +1,12 @@
 /**
- * Halal Cards — the shared model for Relationship Lab, Quizzes and Adventures.
+ * Halal Cards, the shared model for Relationship Lab, Quizzes and Adventures.
  *
  * Content is data. A new lesson, quiz, story, branch or ending is a new object
  * in `src/halalCards/content`, never a new screen: the engine reads these
  * shapes and the play screen renders whatever the engine says is next.
  *
- * Two people play one session. They are always called seats — `host` (the
- * member who started it) and `guest` (the one invited) — never "me" and
+ * Two people play one session. They are always called seats, `host` (the
+ * member who started it) and `guest` (the one invited), never "me" and
  * "them", so a stored session reads the same from either phone.
  */
 
@@ -33,6 +33,8 @@ export interface ImageSlot {
   prompt: string;
   /** Screen-reader description of the finished picture. */
   alt: string;
+  /** Normalized vertical face-group centre for cropped catalogue thumbnails. */
+  focalY?: number;
 }
 
 /** A lesson the couple may choose to keep in their Relationship Guide. */
@@ -158,7 +160,7 @@ export interface QuizCard {
    * name. Needed by `know_me` and `guess_my_answer`.
    */
   guessPrompt?: string;
-  /** `more_likely` has none — the options are always the two players. */
+  /** `more_likely` has none, the options are always the two players. */
   options: string[];
   /** Said at the reveal, whatever was answered. A nudge to talk. */
   talk?: string;
@@ -228,7 +230,7 @@ export type Next =
 export interface StoryChoice {
   id: string;
   label: string;
-  /** Only offered while this holds — earlier choices open and close doors. */
+  /** Only offered while this holds, earlier choices open and close doors. */
   when?: Condition;
   effects?: Effects;
   next: Next;
@@ -256,7 +258,7 @@ export interface StoryDecision {
   choices: StoryChoice[];
   /**
    * `private` only: each player decides for their own character, from that
-   * character's own options — the shape of a pursue/withdraw moment, where
+   * character's own options, the shape of a pursue/withdraw moment, where
    * two people act at once without knowing what the other will do.
    */
   byRole?: Record<RoleId, StoryChoice[]>;
@@ -291,7 +293,7 @@ export interface StoryScene {
 export interface StoryEnding {
   id: string;
   title: string;
-  /** Where the relationship stands — never simply good or bad. */
+  /** Where the relationship stands, never simply good or bad. */
   mood: 'steady' | 'tender' | 'fragile' | 'strained' | 'bittersweet' | 'renewed';
   image: ImageSlot;
   whatHappened: string;
@@ -327,7 +329,7 @@ export interface AdventureConcept {
 export type Activity = LabLesson | Quiz | Adventure;
 
 // ---------------------------------------------------------------------------
-// Session state — what is stored and shared between the two phones
+// Session state, what is stored and shared between the two phones
 // ---------------------------------------------------------------------------
 
 export interface LabState {
@@ -396,7 +398,7 @@ export interface CardsSummary {
 
 /**
  * Sealed answers keyed by step. The server returns the other seat's answer
- * only once this seat has answered the same key — `theirReady` alone says
+ * only once this seat has answered the same key, `theirReady` alone says
  * they have answered without saying what.
  */
 export interface SealedAnswer<T = unknown> {

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 
 import { startCardsSession } from '@/api/halalCards';
 import { fetchConnection } from '@/api/connections';
@@ -97,7 +97,10 @@ export default function ActivityDetail() {
     <Screen>
       <ScreenHeader onAction={() => backOr(cardsPaths.hub(id))} trailingLabel={copy(`kind.${activity.kind}`)} />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Animated.View entering={reducedMotion ? undefined : FadeInDown.springify().damping(18)} style={styles.column}>
+        <Animated.View
+          entering={reducedMotion ? undefined : FadeInDown.duration(900).easing(Easing.out(Easing.cubic))}
+          style={styles.column}
+        >
           <Illustration image={activity.cover} aspectRatio={4 / 5} style={styles.cover}>
             <OverlayText kind="eyebrow">{eyebrow(activity, copy)}</OverlayText>
             <OverlayText kind="titleLarge">{activity.title}</OverlayText>
@@ -194,7 +197,7 @@ const styles = StyleSheet.create({
   cover: { borderRadius: radius.hero },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs },
   how: { gap: space.xs, paddingVertical: space.sm },
-  framing: { padding: space.md, borderRadius: radius.md, backgroundColor: 'rgba(138,106,52,0.08)' },
+  framing: { padding: space.md, borderRadius: radius.md, backgroundColor: 'rgba(184,145,79,0.08)' },
   roles: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md },
   role: { flex: 1, minWidth: 150, gap: 4 },
 });

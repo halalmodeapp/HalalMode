@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated';
+import Animated, { Easing, FadeInDown, LinearTransition } from 'react-native-reanimated';
 
 import { fetchConnection } from '@/api/connections';
 import { PlayCard } from '@/components/halalCards/CardParts';
@@ -93,7 +93,7 @@ export default function JournalScreen() {
                   <Animated.View
                     key={entry.id}
                     layout={reducedMotion ? undefined : LinearTransition}
-                    entering={reducedMotion ? undefined : FadeInDown.delay(index * 50)}
+                    entering={reducedMotion ? undefined : FadeInDown.delay(index * 110).duration(900).easing(Easing.out(Easing.cubic))}
                     style={styles.entry}
                   >
                     <Text style={styles.number}>{index + 1}</Text>
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingVertical: space.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(138,106,52,0.25)',
+    borderBottomColor: 'rgba(184,145,79,0.25)',
   },
   number: { fontFamily: font.display, fontSize: 22, lineHeight: 26, color: color.gold, minWidth: 22 },
   flexText: { flex: 1, gap: 2 },

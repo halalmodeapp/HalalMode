@@ -2,7 +2,7 @@ import type { Adventure, Condition } from '../../types.ts';
 import { slot } from '../images.ts';
 
 /**
- * Public Couple, Private Couple — one loves sharing their life online, one
+ * Public Couple, Private Couple, one loves sharing their life online, one
  * wants it kept private, and a post goes further than either expected.
  * Hidden states: trust, privacy, closeness.
  */
@@ -12,7 +12,7 @@ export const publicPrivate: Adventure = {
   title: 'Public Couple, Private Couple',
   tagline: 'She posts their life. He wants it kept between them. Then a post goes viral.',
   description:
-    'Rania has a growing following for her calm, faith-centred lifestyle posts — and their marriage is part of it. Tariq is a private man who never agreed to be content. Play both of them through a sponsorship offer, a viral post about their first argument, and the comment section that follows.',
+    'Rania has a growing following for her calm, faith-centred lifestyle posts, and their marriage is part of it. Tariq is a private man who never agreed to be content. Play both of them through a sponsorship offer, a viral post about their first argument, and the comment section that follows.',
   minutes: 13,
   themes: ['Social media', 'Boundaries', 'Privacy'],
   cover: slot('concept-insta-cover', 'cover', 'A couple at a café, the woman holding up a phone to film their coffees, the man covering his face with a menu, laughing.', 'A wife filming coffees while her husband hides behind a menu.'),
@@ -38,7 +38,7 @@ export const publicPrivate: Adventure = {
         prompt: 'You are Rania. What do you do?',
         choices: [
           { id: 'ask', label: 'Show Tariq and ask how he feels before replying.', effects: { vars: { trust: 1 } }, next: 'reaction', beat: 'Rania asked Tariq how he felt before replying to the brand.' },
-          { id: 'accept', label: 'Say yes — he’ll come round, and the money is good.', effects: { vars: { trust: -1, privacy: -1 }, flags: ['accepted_alone'] }, next: 'reaction', beat: 'Rania accepted the campaign before asking Tariq.' },
+          { id: 'accept', label: 'Say yes, he’ll come round, and the money is good.', effects: { vars: { trust: -1, privacy: -1 }, flags: ['accepted_alone'] }, next: 'reaction', beat: 'Rania accepted the campaign before asking Tariq.' },
           { id: 'solo', label: 'Counter-offer: she’ll do it alone, no husband.', effects: { vars: { privacy: 1 } }, next: 'reaction', beat: 'Rania offered to do the campaign without Tariq.' },
         ],
       },
@@ -67,9 +67,9 @@ export const publicPrivate: Adventure = {
       title: 'The first real argument',
       image: slot('adv-insta-argument', 'scene', 'A couple in a living room mid-argument, both standing, gesturing, a ring light and tripod set up in the corner of the room.', 'Tariq and Rania arguing beside her ring light.'),
       passages: [
-        { text: 'A week later, a real argument — about chores, about the campaign, about everything. Rania, upset, writes a vague, emotional post: “When marriage gets hard, keep showing up.” It is clearly about them.' },
+        { text: 'A week later, a real argument, about chores, about the campaign, about everything. Rania, upset, writes a vague, emotional post: “When marriage gets hard, keep showing up.” It is clearly about them.' },
       ],
-      lessons: [{ id: 'pp-l-post', tag: 'Notice this', text: 'Posting about a conflict — even vaguely — invites strangers into it.' }],
+      lessons: [{ id: 'pp-l-post', tag: 'Notice this', text: 'Posting about a conflict, even vaguely, invites strangers into it.' }],
       decision: {
         mode: 'role',
         actor: 'B',
@@ -100,12 +100,12 @@ export const publicPrivate: Adventure = {
           ],
           B: [
             { id: 'delete', label: 'Take it down and call Tariq.', effects: { vars: { privacy: 1, trust: 1 } }, next: 'comments', beat: 'Rania took the post down and called Tariq.' },
-            { id: 'ride', label: 'Leave it up — the engagement is good for her account.', effects: { vars: { privacy: -1, trust: -1 }, flags: ['left_up'] }, next: 'comments', beat: 'Rania left the post up for the engagement.' },
+            { id: 'ride', label: 'Leave it up, the engagement is good for her account.', effects: { vars: { privacy: -1, trust: -1 }, flags: ['left_up'] }, next: 'comments', beat: 'Rania left the post up for the engagement.' },
             { id: 'explain', label: 'Post a follow-up saying they’re fine.', effects: { vars: { privacy: -1 } }, next: 'comments', beat: 'Rania posted a follow-up saying they were fine.' },
           ],
         },
         combos: [
-          { pair: ['call', 'delete'], next: 'boundaries', beat: 'Their calls crossed — he called to talk, she had already taken it down.', effects: { vars: { trust: 2, closeness: 1 } } },
+          { pair: ['call', 'delete'], next: 'boundaries', beat: 'Their calls crossed, he called to talk, she had already taken it down.', effects: { vars: { trust: 2, closeness: 1 } } },
           { pair: ['demand', 'ride'], next: 'comments', beat: 'He demanded she delete it; she refused. The comments kept coming.', effects: { vars: { trust: -2 } } },
           { pair: ['cold', 'explain'], next: 'comments', beat: 'He went silent; she told 300,000 strangers they were fine.', effects: { vars: { closeness: -1 } } },
         ],
@@ -139,7 +139,7 @@ export const publicPrivate: Adventure = {
         prompt: 'Together: what’s the rule from now on?',
         choices: [
           { id: 'never_conflict', label: 'Never post about conflict, and Tariq approves any post he’s in.', effects: { vars: { privacy: 2, trust: 1 }, flags: ['rules'] }, next: 'campaign', beat: 'They agreed never to post conflict, and Tariq approves any post he is in.' },
-          { id: 'no_husband', label: 'Rania keeps creating — but Tariq is never on camera.', effects: { vars: { privacy: 2 }, flags: ['offscreen'] }, next: 'campaign', beat: 'They agreed Tariq would stay off camera entirely.' },
+          { id: 'no_husband', label: 'Rania keeps creating, but Tariq is never on camera.', effects: { vars: { privacy: 2 }, flags: ['offscreen'] }, next: 'campaign', beat: 'They agreed Tariq would stay off camera entirely.' },
           { id: 'private', label: 'Make the account private for a while.', effects: { vars: { privacy: 3, closeness: 1 }, flags: ['went_private'] }, next: 'campaign', beat: 'They agreed to make the account private for a while.' },
         ],
       },
@@ -159,7 +159,7 @@ export const publicPrivate: Adventure = {
         choices: [
           { id: 'solo', label: 'Do it alone, on her terms.', effects: { vars: { privacy: 1, trust: 1 } }, next: { routes: endingRoutes() }, beat: 'Rania did the campaign alone, on her terms.' },
           { id: 'decline', label: 'Decline. It isn’t worth what it costs at home.', effects: { vars: { closeness: 1 } }, next: { routes: endingRoutes() }, beat: 'Rania declined the campaign for the sake of home.' },
-          { id: 'couple', label: 'Do the couple content anyway — one last time.', effects: { vars: { trust: -2, privacy: -1 } }, next: { routes: endingRoutes() }, beat: 'Rania did the couple content anyway.' },
+          { id: 'couple', label: 'Do the couple content anyway, one last time.', effects: { vars: { trust: -2, privacy: -1 } }, next: { routes: endingRoutes() }, beat: 'Rania did the couple content anyway.' },
         ],
       },
     },
@@ -180,7 +180,7 @@ export const publicPrivate: Adventure = {
       image: slot('adv-insta-end-offscreen', 'outcome', 'A woman filming herself making tea, a man’s hand only just visible at the edge of the frame passing her a cup.', 'Tariq’s hand passing Rania tea, just out of frame.'),
       whatHappened: 'Her followers know she is married. They never see him. He likes it that way; so does she, eventually.',
       pattern: { name: 'Separate lanes', explanation: 'Each kept what mattered to them without forcing the other.' },
-      couldHaveChanged: 'Starting there — before the brand ever asked.',
+      couldHaveChanged: 'Starting there, before the brand ever asked.',
       takeaway: 'A spouse’s privacy is theirs to choose, not yours to spend.',
       guide: [{ id: 'pp-e-consent', text: 'Neither of us shares the other online without asking.' }],
     },
@@ -198,7 +198,7 @@ export const publicPrivate: Adventure = {
       image: slot('adv-insta-end-exposed', 'outcome', 'A man sitting alone in a dark living room lit only by a phone screen showing a couple photo, looking tired and distant.', 'Tariq alone with a couple photo on his phone.'),
       whatHappened: 'The couple content went live. Tariq is polite. He has stopped telling Rania anything personal.',
       pattern: { name: 'Privacy spent without consent', explanation: 'One spouse’s comfort became the other’s product.' },
-      couldHaveChanged: 'Asking him first — and taking no for an answer.',
+      couldHaveChanged: 'Asking him first, and taking no for an answer.',
       takeaway: 'Trust is the one thing you cannot monetise.',
       guide: [{ id: 'pp-e-trust', text: 'We never trade the other’s privacy for anything.' }],
     },

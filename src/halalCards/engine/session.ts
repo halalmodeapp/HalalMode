@@ -133,7 +133,7 @@ export function awaitingOf(activity: Activity, session: CardsSession): Awaiting 
 
 /**
  * Whether this session can be played with the content this app has. A session
- * started on an older edition — a renamed scene, a removed card — is offered a
+ * started on an older edition, a renamed scene, a removed card, is offered a
  * restart rather than drawn half-broken.
  */
 export function contentMatches(activity: Activity, session: Pick<CardsSession, 'state' | 'contentVersion'>): boolean {

@@ -10,8 +10,8 @@ import { color } from '@/theme/tokens';
  *
  * In a language Halal Cards has been translated into, it follows the app's
  * direction. In any other, it is shown in English, laid out left to right in
- * Latin type — otherwise English sentences pick up the Arabic face and right
- * alignment — and the hub says so in the member's own language.
+ * Latin type, otherwise English sentences pick up the Arabic face and right
+ * alignment, and the hub says so in the member's own language.
  */
 export default function HalalCardsLayout() {
   const { language } = useI18n();

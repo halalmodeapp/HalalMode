@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 
 import { Illustration, OverlayText } from '@/components/halalCards/Illustration';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
@@ -33,9 +33,16 @@ export default function SectionScreen() {
   const { LAB_LESSONS, QUIZZES, ADVENTURES } = useCardsContent();
   const activities: Activity[] = kind === 'lab' ? LAB_LESSONS : kind === 'quiz' ? QUIZZES : ADVENTURES;
   // Engaged and married content waits, unseen, until a couple unlocks that
-  // stage together — a later feature. Only what suits them now is listed.
+  // stage together, a later feature. Only what suits them now is listed.
   const ordered = activities.filter((activity) => inTrack(activity, track));
-  const enter = (index: number) => (reducedMotion ? undefined : FadeInDown.delay(50 * index).springify().damping(18));
+  const enter = (index: number) => (
+    reducedMotion
+      ? undefined
+      : FadeInDown
+        .delay(120 * index)
+        .duration(900)
+        .easing(Easing.out(Easing.cubic))
+  );
   const open = (activity: Activity) => router.push(cardsPaths.activity(id, activity.id) as never);
 
 
@@ -82,7 +89,7 @@ export default function SectionScreen() {
                   accessibilityLabel={completed.has(activity.id) ? `${activity.title}, ${copy('completed')}` : activity.title}
                   style={({ pressed }) => [styles.tile, completed.has(activity.id) && styles.tileDone, pressed && styles.pressed]}
                 >
-                  <Illustration image={activity.cover} aspectRatio={kind === 'adventure' ? 4 / 5 : 16 / 10} thumb>
+                  <Illustration image={activity.cover} aspectRatio={kind === 'adventure' ? 4 / 5 : 16 / 10} thumb cropZoom={kind === 'adventure' ? 1 : 1.2}>
                     <OverlayText kind="eyebrow">
                       {activity.kind === 'lab'
                         ? `${activity.ruleLabel} · ${copy('minutes', { count: activity.minutes })}`

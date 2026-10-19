@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 
 import { respondCardsInvite } from '@/api/halalCards';
 import { Text } from '@/components/ui/Text';
@@ -59,7 +59,10 @@ export function ChatCardsBanner({ connectionId, partnerName }: { connectionId: s
         : copy('waitingAccept', { name: partnerName });
 
   const card = (
-    <Animated.View entering={reducedMotion ? undefined : FadeInDown.springify().damping(18)} style={styles.card}>
+    <Animated.View
+      entering={reducedMotion ? undefined : FadeInDown.duration(720).easing(Easing.out(Easing.cubic))}
+      style={styles.card}
+    >
       <View style={[styles.row, isRTL && styles.rowReverse]}>
         <View style={styles.mark}>
           <Text style={styles.markGlyph}>✦</Text>

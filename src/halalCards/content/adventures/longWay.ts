@@ -2,7 +2,7 @@ import type { Adventure, Condition } from '../../types.ts';
 import { slot } from '../images.ts';
 
 /**
- * A Long Way from the Masjid — a move to a small town with no Muslim
+ * A Long Way from the Masjid, a move to a small town with no Muslim
  * community, where one of them thrives and one feels lost. Hidden states:
  * belonging, closeness, faith.
  */
@@ -37,7 +37,7 @@ export const longWay: Adventure = {
         actor: 'A',
         prompt: 'You are Yusuf. How do you greet her?',
         choices: [
-          { id: 'ask', label: 'Ask about her day first — really ask.', effects: { vars: { closeness: 1 } }, next: 'her_day', beat: 'Yusuf asked about Hafsa’s day before telling her about his.' },
+          { id: 'ask', label: 'Ask about her day first, really ask.', effects: { vars: { closeness: 1 } }, next: 'her_day', beat: 'Yusuf asked about Hafsa’s day before telling her about his.' },
           { id: 'share', label: 'Tell her all about his great day.', effects: { vars: { belonging: -1 } }, next: 'her_day', beat: 'Yusuf told Hafsa all about his great day.' },
           { id: 'cheer', label: '“You’ll love it once you settle in!”', effects: { vars: { closeness: -1 } }, next: 'her_day', beat: 'Yusuf told her she’d love it once she settled in.', lesson: { id: 'lw-l-cheer', tag: 'Rule 2', text: 'Reassurance before understanding can feel like being told your feelings are wrong.' } },
         ],
@@ -76,7 +76,7 @@ export const longWay: Adventure = {
           A: [
             { id: 'drive', label: 'Drive ninety minutes to the city masjid for Eid prayer.', effects: { vars: { faith: 1, belonging: 1 } }, next: 'front_room', beat: 'Yusuf wanted to drive to the city masjid for Eid.' },
             { id: 'home', label: 'Make Eid special at home, just the two of them.', effects: { vars: { closeness: 1 } }, next: 'front_room', beat: 'Yusuf wanted to make Eid special at home.' },
-            { id: 'work', label: 'Pop into work for a couple of hours — it’s a busy week.', effects: { vars: { closeness: -2 } }, next: 'front_room', beat: 'Yusuf went into work for a few hours on Eid.' },
+            { id: 'work', label: 'Pop into work for a couple of hours, it’s a busy week.', effects: { vars: { closeness: -2 } }, next: 'front_room', beat: 'Yusuf went into work for a few hours on Eid.' },
           ],
           B: [
             { id: 'drive', label: 'Drive to the city masjid, whatever it takes.', effects: { vars: { faith: 1 } }, next: 'front_room', beat: 'Hafsa wanted to drive to the city masjid.' },
@@ -104,9 +104,9 @@ export const longWay: Adventure = {
         mode: 'joint',
         prompt: 'Together: do you start it?',
         choices: [
-          { id: 'start', label: 'Start it — Friday evenings, food and a short talk.', effects: { vars: { belonging: 2, faith: 1 }, flags: ['started_circle'] }, next: 'offer', beat: 'They started a Friday-evening gathering at home.' },
+          { id: 'start', label: 'Start it, Friday evenings, food and a short talk.', effects: { vars: { belonging: 2, faith: 1 }, flags: ['started_circle'] }, next: 'offer', beat: 'They started a Friday-evening gathering at home.' },
           { id: 'online', label: 'Join an online halaqa instead.', effects: { vars: { faith: 1 } }, next: 'offer', beat: 'They joined an online halaqa.' },
-          { id: 'not_yet', label: 'Not yet — they’re too tired.', effects: { vars: { belonging: -1 } }, next: 'offer', beat: 'They decided they were too tired to start anything yet.' },
+          { id: 'not_yet', label: 'Not yet, they’re too tired.', effects: { vars: { belonging: -1 } }, next: 'offer', beat: 'They decided they were too tired to start anything yet.' },
         ],
       },
     },
@@ -125,7 +125,7 @@ export const longWay: Adventure = {
         choices: [
           { id: 'stay', label: 'Stay. This is becoming home.', effects: { vars: { belonging: 1 } }, next: 'decide', beat: 'One of them wanted to stay.' },
           { id: 'go', label: 'Go back. Family and community matter more.', effects: { flags: ['wants_home'] }, next: 'decide', beat: 'One of them wanted to go back.' },
-          { id: 'unsure', label: 'Unsure — talk it through.', effects: { vars: { closeness: 1 } }, next: 'decide', beat: 'One of them was unsure and wanted to talk.' },
+          { id: 'unsure', label: 'Unsure, talk it through.', effects: { vars: { closeness: 1 } }, next: 'decide', beat: 'One of them was unsure and wanted to talk.' },
         ],
         combos: [
           { pair: ['stay', 'stay'], next: 'decide', beat: 'To their own surprise, both wanted to stay.', effects: { vars: { closeness: 1 } } },
@@ -144,7 +144,7 @@ export const longWay: Adventure = {
         mode: 'joint',
         prompt: 'Together: stay or go?',
         choices: [
-          { id: 'stay', label: 'Stay — and keep building what they started.', effects: { vars: { belonging: 1 }, flags: ['stayed'] }, next: { routes: endingRoutes() }, beat: 'They chose to stay.' },
+          { id: 'stay', label: 'Stay, and keep building what they started.', effects: { vars: { belonging: 1 }, flags: ['stayed'] }, next: { routes: endingRoutes() }, beat: 'They chose to stay.' },
           { id: 'go', label: 'Move back to the city, near family.', effects: { flags: ['moved_back'] }, next: { routes: endingRoutes() }, beat: 'They chose to move back to the city.' },
         ],
       },
@@ -156,7 +156,7 @@ export const longWay: Adventure = {
       image: slot('adv-town-end-built', 'outcome', 'A small rented community hall with a handmade sign shape, families praying together, children playing at the back, the couple greeting people at the door.', 'A small community gathering the couple built.'),
       whatHappened: 'Three years on, the Friday gathering has a rented hall. Hafsa runs the women’s circle. She calls the town home.',
       pattern: { name: 'Building what you lack', explanation: 'Instead of waiting for belonging, they created it together.' },
-      couldHaveChanged: 'Nothing — though saying “I’m lonely” on day one sped everything up.',
+      couldHaveChanged: 'Nothing, though saying “I’m lonely” on day one sped everything up.',
       takeaway: 'If you can’t find the community you need, you may be meant to start it.',
       epilogues: [{ text: 'Their old neighbour comes to every Eid now.', when: { flag: 'neighbour' } }],
       guide: [{ id: 'lw-e-build', text: 'Wherever we live, we build a community around our home.' }],
@@ -164,7 +164,7 @@ export const longWay: Adventure = {
     home_again: {
       id: 'home_again', title: 'Home, changed', mood: 'tender',
       image: slot('adv-town-end-home', 'outcome', 'A couple arriving at a busy family home with boxes, relatives rushing out to hug them, a city street behind.', 'Yusuf and Hafsa arriving home to their families.'),
-      whatHappened: 'They move back. They are closer than when they left — they learned to rely on each other out there.',
+      whatHappened: 'They move back. They are closer than when they left, they learned to rely on each other out there.',
       pattern: { name: 'A season that strengthened them', explanation: 'Isolation, faced together, deepened the marriage.' },
       couldHaveChanged: 'Little.',
       takeaway: 'A hard season faced together is never wasted.',
@@ -184,14 +184,14 @@ export const longWay: Adventure = {
       image: slot('adv-town-end-two', 'outcome', 'A husband leaving for work early in the morning while his wife sits on a video call with family at the kitchen table, not looking up.', 'Yusuf leaving as Hafsa stays on a family video call.'),
       whatHappened: 'Yusuf’s life is the job and the coast. Hafsa’s life is the video calls home. They share a house.',
       pattern: { name: 'Parallel lives', explanation: 'Each coped alone, and the coping drew them apart.' },
-      couldHaveChanged: 'Starting something together — the gathering, a routine, anything shared.',
+      couldHaveChanged: 'Starting something together, the gathering, a routine, anything shared.',
       takeaway: 'In a new place, build at least one thing together.',
       guide: [{ id: 'lw-e-together', text: 'In a new place, we build at least one thing together.' }],
     },
     deeper_faith: {
       id: 'deeper_faith', title: 'A quieter faith', mood: 'tender',
       image: slot('adv-town-end-faith', 'outcome', 'A couple praying Fajr together at dawn in a cottage with a window overlooking the sea, peaceful.', 'Yusuf and Hafsa praying Fajr by the sea.'),
-      whatHappened: 'No masjid, no community — and their own faith, practised together at home, has never been stronger.',
+      whatHappened: 'No masjid, no community, and their own faith, practised together at home, has never been stronger.',
       pattern: { name: 'Faith at home', explanation: 'Without outside structure, they made worship their own shared habit.' },
       couldHaveChanged: 'Some community would still help.',
       takeaway: 'The home can be a masjid too.',

@@ -2,7 +2,7 @@ import type { Adventure, Condition } from '../../types.ts';
 import { slot } from '../images.ts';
 
 /**
- * Read at 11:42 — a work trip, an unanswered message, a liked photo, and the
+ * Read at 11:42, a work trip, an unanswered message, a liked photo, and the
  * anxious–avoidant loop. Hidden states: trust, closeness, loop.
  */
 export const readAt1142: Adventure = {
@@ -11,7 +11,7 @@ export const readAt1142: Adventure = {
   title: 'Read at 11:42',
   tagline: 'One message. Five hours of silence. A liked photo.',
   description:
-    'Yusuf is away for a week on a work trip. Maryam’s message shows “read” — and no reply. Play both sides of a week where a bad day, a phone and two different ways of coping can draw a couple closer or start a loop neither can stop.',
+    'Yusuf is away for a week on a work trip. Maryam’s message shows “read”, and no reply. Play both sides of a week where a bad day, a phone and two different ways of coping can draw a couple closer or start a loop neither can stop.',
   minutes: 15,
   themes: ['Communication breakdowns', 'Feeling ignored', 'Social media', 'Jealousy', 'Anxious/avoidant loop'],
   cover: slot('adv-1142-cover', 'cover', 'A phone lying on a bedside table showing a single unanswered message with a tiny “read 11:42” label, a hijab folded beside it, morning light.', 'A phone on a bedside table showing an unanswered message.'),
@@ -59,7 +59,7 @@ export const readAt1142: Adventure = {
             effects: { vars: { loop: 1 }, flags: ['checked_insta'] },
             next: 'the_like',
             beat: 'Maryam went looking for signs of him online.',
-            lesson: { id: 'm-l-search', tag: 'Notice this', text: 'Searching for evidence when anxious tends to find some — whether or not it means anything.' },
+            lesson: { id: 'm-l-search', tag: 'Notice this', text: 'Searching for evidence when anxious tends to find some, whether or not it means anything.' },
           },
         ],
       },
@@ -70,7 +70,7 @@ export const readAt1142: Adventure = {
       title: 'The like',
       image: slot('adv-1142-like', 'scene', 'Close-up of a young woman in a hijab lit by a phone screen showing a social media photo of a smiling graduate in a gown, her expression a mix of hurt and suspicion.', 'Maryam looking at a liked photo on her phone.'),
       passages: [
-        { text: 'There it is. Forty minutes ago, Yusuf liked a photo — a former colleague’s graduation picture. She is smiling in her gown.' },
+        { text: 'There it is. Forty minutes ago, Yusuf liked a photo, a former colleague’s graduation picture. She is smiling in her gown.' },
         { text: 'He has time for that, but not for her?' },
       ],
       decision: {
@@ -174,10 +174,10 @@ export const readAt1142: Adventure = {
           ],
         },
         combos: [
-          { pair: ['nothing', 'ring'], next: 'the_loop', beat: 'Yusuf stayed silent while Maryam called again and again — each move feeding the other.', effects: { vars: { loop: 1 } } },
+          { pair: ['nothing', 'ring'], next: 'the_loop', beat: 'Yusuf stayed silent while Maryam called again and again, each move feeding the other.', effects: { vars: { loop: 1 } } },
           { pair: ['nothing', 'freeze'], next: 'cold_war', beat: 'Both of them went silent.' },
           { pair: ['sorry', 'ring'], next: 'the_loop', beat: 'Yusuf’s short goodnight crossed with Maryam’s calls; he muted his phone.' },
-          { pair: ['explain', 'one'], next: 'morning_after', beat: 'Their messages crossed — his honest one, her calm one. Both felt understood.', effects: { vars: { closeness: 2 } } },
+          { pair: ['explain', 'one'], next: 'morning_after', beat: 'Their messages crossed, his honest one, her calm one. Both felt understood.', effects: { vars: { closeness: 2 } } },
           { pair: ['explain', 'freeze'], next: 'evening_call', beat: 'Yusuf wrote honestly; Maryam, who had gone silent, read it at midnight and softened.' },
           { pair: ['nothing', 'one'], next: 'morning_after', beat: 'Maryam’s single calm message was waiting when Yusuf woke.' },
         ],
@@ -199,14 +199,14 @@ export const readAt1142: Adventure = {
         actor: 'A',
         prompt: 'You are Yusuf. What do you say?',
         choices: [
-          { id: 'space', label: '“Can you just give me some space?!” — and hang up.', effects: { vars: { trust: -2, loop: 1 } }, next: 'cold_war', beat: 'Yusuf demanded space and hung up.' },
+          { id: 'space', label: '“Can you just give me some space?!”, and hang up.', effects: { vars: { trust: -2, loop: 1 } }, next: 'cold_war', beat: 'Yusuf demanded space and hung up.' },
           {
             id: 'name',
             label: '“I think we’re in a loop. I’m drained, not angry with you. Can we talk at nine tomorrow?”',
             effects: { vars: { trust: 2, loop: -2 }, flags: ['named_loop'] },
             next: 'morning_after',
             beat: 'Yusuf named the loop and gave a time to talk.',
-            lesson: { id: 'm-l-named', tag: 'Breaking the loop', text: 'Naming the pattern makes it the shared problem — instead of each other.' },
+            lesson: { id: 'm-l-named', tag: 'Breaking the loop', text: 'Naming the pattern makes it the shared problem, instead of each other.' },
           },
           { id: 'pretend', label: '“Sorry, I’m fine. Everything’s fine.”', effects: { flags: ['pretended'], vars: { closeness: -1 } }, next: 'return_home', beat: 'Yusuf insisted everything was fine.' },
         ],
@@ -229,7 +229,7 @@ export const readAt1142: Adventure = {
         choices: [
           { id: 'like', label: 'Bring up the liked photo.', when: { flag: 'checked_insta' }, next: 'the_like_talk', beat: 'Maryam brought up the liked photo.' },
           { id: 'listen', label: 'Just listen to his day.', effects: { vars: { closeness: 2 } }, next: 'return_home', beat: 'Maryam simply listened to his day.' },
-          { id: 'feel', label: 'Listen — then tell him calmly how the silence felt.', effects: { vars: { trust: 1, closeness: 1 }, flags: ['said_feeling'] }, next: 'return_home', beat: 'Maryam listened, then calmly told him how the silence felt.' },
+          { id: 'feel', label: 'Listen, then tell him calmly how the silence felt.', effects: { vars: { trust: 1, closeness: 1 }, flags: ['said_feeling'] }, next: 'return_home', beat: 'Maryam listened, then calmly told him how the silence felt.' },
         ],
       },
     },
@@ -268,7 +268,7 @@ export const readAt1142: Adventure = {
         actor: 'B',
         prompt: 'You are Maryam. What do you do?',
         choices: [
-          { id: 'monitor', label: 'Drop it — and quietly keep an eye on his activity.', effects: { vars: { loop: 2 }, flags: ['monitoring'] }, next: 'return_home', beat: 'Maryam dropped it out loud and kept watching his activity.' },
+          { id: 'monitor', label: 'Drop it, and quietly keep an eye on his activity.', effects: { vars: { loop: 2 }, flags: ['monitoring'] }, next: 'return_home', beat: 'Maryam dropped it out loud and kept watching his activity.' },
           { id: 'under', label: '“It wasn’t really the photo. I felt invisible today, and then I saw that.”', effects: { vars: { trust: 1, closeness: 2 } }, next: 'return_home', beat: 'Maryam said what was underneath: she had felt invisible.', lesson: { id: 'm-l-under', tag: 'Underneath', text: 'Jealousy is often loneliness wearing armour.' } },
           { id: 'passwords', label: '“If there’s nothing to hide, give me your passwords.”', effects: { vars: { trust: -2 }, flags: ['passwords'] }, next: 'return_home', beat: 'Maryam asked for his passwords.' },
         ],
@@ -295,7 +295,7 @@ export const readAt1142: Adventure = {
       id: 'morning_after',
       title: 'Nine o’clock',
       image: slot('adv-1142-morning', 'scene', 'Early morning after Fajr, a young woman by a window with the sunrise, smiling slightly during a phone call, a prayer mat folded on a chair.', 'Maryam on a morning call after Fajr.'),
-      passages: [{ text: 'At nine, exactly when he said, Yusuf calls.', when: { flag: 'named_loop' } }, { text: 'In the morning, the first thing either of them does is reach for the phone — to call, not to check.' }],
+      passages: [{ text: 'At nine, exactly when he said, Yusuf calls.', when: { flag: 'named_loop' } }, { text: 'In the morning, the first thing either of them does is reach for the phone, to call, not to check.' }],
       decision: {
         mode: 'role',
         actor: 'B',
@@ -313,7 +313,7 @@ export const readAt1142: Adventure = {
       turningPoint: true,
       image: slot('adv-1142-home', 'turning_point', 'A man arriving home with a suitcase at night, his wife at the open door, both hesitating on the threshold, warm hallway light.', 'Yusuf arriving home with a suitcase as Maryam opens the door.'),
       passages: [
-        { text: 'Friday. Yusuf comes through the door with his suitcase. They hug — a little carefully.' },
+        { text: 'Friday. Yusuf comes through the door with his suitcase. They hug, a little carefully.' },
         { text: 'He said everything was fine. Neither of them believes it.', when: { flag: 'pretended' } },
         { text: 'Maryam knows exactly how long he was online last night.', when: { flag: 'monitoring' } },
       ],
@@ -362,7 +362,7 @@ export const readAt1142: Adventure = {
         actor: 'B',
         prompt: 'You are Maryam. What do you do?',
         choices: [
-          { id: 'raise', label: '“Before you go — can we talk about last week?”', next: 'the_talk', beat: 'Maryam raised last week before the next trip.' },
+          { id: 'raise', label: '“Before you go, can we talk about last week?”', next: 'the_talk', beat: 'Maryam raised last week before the next trip.' },
           { id: 'let', label: 'Let it go. It was just a bad week.', effects: { vars: { loop: 1 }, flags: ['buried'] }, next: { routes: endingRoutes() }, beat: 'Maryam let it go as just a bad week.' },
         ],
       },
@@ -380,8 +380,8 @@ export const readAt1142: Adventure = {
         mode: 'joint',
         prompt: 'Together: what is the one agreement you will write down?',
         choices: [
-          { id: 'reply', label: 'When busy, send one line: “Busy — will call at [time].”', effects: { flags: ['rule_reply'], vars: { trust: 1 } }, next: { routes: endingRoutes() }, beat: 'They agreed on a one-line reply rule.' },
-          { id: 'space', label: 'Say when you need space — and when you’ll be back.', effects: { flags: ['rule_space'], vars: { loop: -2, trust: 1 } }, next: { routes: endingRoutes() }, beat: 'They agreed to say when they need space and when they’ll return.' },
+          { id: 'reply', label: 'When busy, send one line: “Busy, will call at [time].”', effects: { flags: ['rule_reply'], vars: { trust: 1 } }, next: { routes: endingRoutes() }, beat: 'They agreed on a one-line reply rule.' },
+          { id: 'space', label: 'Say when you need space, and when you’ll be back.', effects: { flags: ['rule_space'], vars: { loop: -2, trust: 1 } }, next: { routes: endingRoutes() }, beat: 'They agreed to say when they need space and when they’ll return.' },
           { id: 'social', label: 'Agree together what feels respectful online.', effects: { flags: ['rule_sm'], vars: { trust: 1 } }, next: { routes: endingRoutes() }, beat: 'They agreed together what feels respectful online.' },
         ],
       },
@@ -392,10 +392,10 @@ export const readAt1142: Adventure = {
       id: 'return_time',
       title: '“Back at nine”',
       mood: 'renewed',
-      image: slot('adv-1142-end-return', 'outcome', 'A phone screen showing a simple message “Busy day — back at 9 🤍” with a woman smiling at it while making tea.', 'Maryam smiling at a message saying “back at 9”.'),
+      image: slot('adv-1142-end-return', 'outcome', 'A phone screen showing a simple message “Busy day, back at 9 🤍” with a woman smiling at it while making tea.', 'Maryam smiling at a message saying “back at 9”.'),
       whatHappened: 'Next trip, Yusuf has another bad day. He sends: “Rough one. Need an hour. Back at nine.” At nine, he calls. Maryam barely notices the hour.',
       pattern: { name: 'The anxious/avoidant loop, broken', explanation: 'He learned to take space with a return time; she learned to trust the space.' },
-      couldHaveChanged: 'Not much now — but the first silence could have been one two-minute call.',
+      couldHaveChanged: 'Not much now, but the first silence could have been one two-minute call.',
       takeaway: 'Space is safe when it comes with a return.',
       epilogues: [{ text: 'They still laugh about “read at 11:42”.', when: { var: 'closeness', gte: 3 } }],
       guide: [
@@ -408,7 +408,7 @@ export const readAt1142: Adventure = {
       title: 'Nothing to guess',
       mood: 'steady',
       image: slot('adv-1142-end-phones', 'outcome', 'Two phones lying side by side on a sofa cushion, screens dark, a couple’s hands nearby holding mugs.', 'Two phones side by side, ignored, as the couple share tea.'),
-      whatHappened: 'They agree what feels respectful online. The like stops mattering — because neither of them has to guess anymore.',
+      whatHappened: 'They agree what feels respectful online. The like stops mattering, because neither of them has to guess anymore.',
       pattern: { name: 'Jealousy as unspoken insecurity', explanation: 'The photo was never the problem. Feeling unseen was.' },
       couldHaveChanged: 'Maryam asking about the photo calmly, rather than searching first.',
       takeaway: 'Agree your boundaries before you need them.',
@@ -419,7 +419,7 @@ export const readAt1142: Adventure = {
       title: 'One line',
       mood: 'tender',
       image: slot('adv-1142-end-oneline', 'outcome', 'A man in a meeting room glancing down and quickly typing a short message under the table, smiling slightly.', 'Yusuf quickly sending a one-line message from a meeting.'),
-      whatHappened: 'The one-line rule works. Not perfectly — Yusuf forgets twice — but the silence never stretches to five hours again.',
+      whatHappened: 'The one-line rule works. Not perfectly, Yusuf forgets twice, but the silence never stretches to five hours again.',
       pattern: { name: 'Small habit, big safety', explanation: 'A tiny, concrete agreement prevented the gap where anxiety grows.' },
       couldHaveChanged: 'Talking about why Yusuf goes quiet, not just what to do about it.',
       takeaway: 'The smallest agreements are the ones you actually keep.',
@@ -435,7 +435,7 @@ export const readAt1142: Adventure = {
       pattern: { name: 'Pursue–withdraw', explanation: 'Each one’s coping move triggered the other’s, again and again.' },
       couldHaveChanged: 'Either of them naming the pattern out loud, once, instead of fighting inside it.',
       takeaway: 'You can’t fix a loop by doing your half harder.',
-      guide: [{ id: 'm-e-name', text: 'When we notice the loop, we name it and pause — together.' }],
+      guide: [{ id: 'm-e-name', text: 'When we notice the loop, we name it and pause, together.' }],
     },
     surveillance: {
       id: 'surveillance',
@@ -444,7 +444,7 @@ export const readAt1142: Adventure = {
       image: slot('adv-1142-end-pass', 'outcome', 'A phone lying between a couple at a dinner table like a third guest, both looking at it rather than each other.', 'A phone lying between Yusuf and Maryam at dinner.'),
       whatHappened: 'Yusuf hands over his passwords. Maryam finds nothing. Somehow they both feel worse.',
       pattern: { name: 'Control in place of trust', explanation: 'Checking soothes anxiety for an hour and erodes trust for months.' },
-      couldHaveChanged: 'Saying the feeling underneath — “I felt invisible” — instead of asking for proof.',
+      couldHaveChanged: 'Saying the feeling underneath, “I felt invisible”, instead of asking for proof.',
       takeaway: 'Access is not the same as trust.',
       guide: [{ id: 'm-e-trust', text: 'We talk about what we feel instead of checking each other’s phones.' }],
     },
@@ -453,7 +453,7 @@ export const readAt1142: Adventure = {
       title: 'Next month',
       mood: 'fragile',
       image: slot('adv-1142-end-next', 'outcome', 'A packed suitcase standing by a front door at dawn, a woman watching it from the stairs.', 'A packed suitcase by the door at dawn.'),
-      whatHappened: 'The weekend was lovely and nothing was said. Next month he travels again — and the week goes exactly the same way.',
+      whatHappened: 'The weekend was lovely and nothing was said. Next month he travels again, and the week goes exactly the same way.',
       pattern: { name: 'Avoiding repair', explanation: 'Peace was kept by not talking, so nothing changed.' },
       couldHaveChanged: 'One honest conversation before the next trip.',
       takeaway: 'What isn’t talked about tends to repeat.',
@@ -487,10 +487,10 @@ export const readAt1142: Adventure = {
       mood: 'steady',
       image: slot('adv-1142-end-learning', 'outcome', 'A couple walking along a canal path at dusk, talking, one gesturing as if explaining something, the other listening.', 'Yusuf and Maryam walking by a canal, talking.'),
       whatHappened: 'Not their finest week, not their worst. They each learned one thing about how the other copes.',
-      pattern: { name: 'Different stress styles', explanation: 'He withdraws to cope; she reaches out. Neither is wrong — they just need a bridge.' },
+      pattern: { name: 'Different stress styles', explanation: 'He withdraws to cope; she reaches out. Neither is wrong, they just need a bridge.' },
       couldHaveChanged: 'A clear agreement about what to do next time one of them goes quiet.',
-      takeaway: 'Know how each of you behaves under stress — before the stress arrives.',
-      epilogues: [{ text: 'The liked photo is never mentioned again — for better or worse.', when: { flag: 'checked_insta' } }],
+      takeaway: 'Know how each of you behaves under stress, before the stress arrives.',
+      epilogues: [{ text: 'The liked photo is never mentioned again, for better or worse.', when: { flag: 'checked_insta' } }],
       guide: [{ id: 'm-e-styles', text: 'We know how each of us copes with stress and plan for it.' }],
     },
   },

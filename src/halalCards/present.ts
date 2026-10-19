@@ -28,7 +28,7 @@ export function promptRepeatsTitle(quiz: Pick<Quiz, 'title'>, prompt: string): b
 /**
  * Lab and quizzes share one cursor, so either player's Next moves both. Each
  * phone keeps its own "seen up to" mark and shows anything the other skipped
- * past — a reveal or a card to read — before the current card. On opening a
+ * past, a reveal or a card to read, before the current card. On opening a
  * session, the card just before the cursor is shown again only if it was a
  * reveal (both had answered), so the last result is never lost.
  */
@@ -55,7 +55,7 @@ export function viewCursor(seen: number, cursor: number): { index: number; catch
   return { index, catchingUp: index < cursor };
 }
 
-/** A sentence instead of a count — the recap's rule applied to quizzes too. */
+/** A sentence instead of a count, the recap's rule applied to quizzes too. */
 export function quizSummaryKey(score: QuizScore): 'quizMostlySame' | 'quizMixed' | 'quizMostlyDifferent' | null {
   if (!score.compared) return null;
   const share = (score.agreed + score.close * 0.5) / score.compared;

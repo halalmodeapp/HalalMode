@@ -8,7 +8,7 @@ import type { ImageSlot } from '../types.ts';
  */
 export const STYLE_REFERENCE_IMAGE = 'docs/halal-cards-style-reference.webp';
 
-export const ILLUSTRATION_STYLE = `HALAL MODE — ILLUSTRATION SYSTEM
+export const ILLUSTRATION_STYLE = `HALAL MODE, ILLUSTRATION SYSTEM
 
 Create a consistent family of editorial flat illustrations for Halal Mode, a modern Muslim relationship and marriage app.
 
@@ -118,17 +118,17 @@ Prefer one strong visual idea per illustration instead of filling the image with
 
 Do not include text, captions, speech bubbles, logos or UI elements inside the illustration unless specifically requested.
 
-The final image should feel calm, contemporary, inclusive, thoughtful and premium — appropriate for a modern Muslim relationship app rather than explicitly religious educational material.`;
+The final image should feel calm, contemporary, inclusive, thoughtful and premium, appropriate for a modern Muslim relationship app rather than explicitly religious educational material.`;
 
 /** Size to generate each kind of slot at, and how the app crops it. */
 export const SLOT_FORMAT: Record<ImageSlot['role'], { size: string; note: string }> = {
   cover: {
     size: '1600 × 2000 px (4:5, portrait)',
-    note: 'Also shown cropped to 16:10 in lists — keep the characters in the middle third, and keep the lower quarter simple and uncluttered (the app lays the title over it).',
+    note: 'Also shown cropped to 16:10 in lists, keep the characters in the middle third, and keep the lower quarter simple and uncluttered (the app lays the title over it).',
   },
   scene: {
     size: '1920 × 1200 px (16:10, landscape)',
-    note: 'The app lays the scene title over the bottom — keep the lower quarter simple and uncluttered.',
+    note: 'The app lays the scene title over the bottom, keep the lower quarter simple and uncluttered.',
   },
   turning_point: {
     size: '1920 × 1200 px (16:10, landscape)',
@@ -136,15 +136,21 @@ export const SLOT_FORMAT: Record<ImageSlot['role'], { size: string; note: string
   },
   outcome: {
     size: '1600 × 2000 px (4:5, portrait)',
-    note: 'The app lays the ending title over the bottom — keep the lower quarter simple and uncluttered.',
+    note: 'The app lays the ending title over the bottom, keep the lower quarter simple and uncluttered.',
   },
 };
 
-export function slot(id: string, role: ImageSlot['role'], prompt: string, alt: string): ImageSlot {
-  return { id, role, prompt, alt };
+export function slot(
+  id: string,
+  role: ImageSlot['role'],
+  prompt: string,
+  alt: string,
+  focalY?: number,
+): ImageSlot {
+  return { id, role, prompt, alt, ...(focalY === undefined ? {} : { focalY }) };
 }
 
-/** Just the SCENE DESIGN section for a slot — what changes from image to image. */
+/** Just the SCENE DESIGN section for a slot, what changes from image to image. */
 export function sceneDesign(image: ImageSlot, mood?: string): string {
   return [
     'SCENE DESIGN',
@@ -154,7 +160,7 @@ export function sceneDesign(image: ImageSlot, mood?: string): string {
     ...(mood ? ['', `Emotional tone: ${mood}`] : []),
     '',
     `Format: ${SLOT_FORMAT[image.role].size}. ${SLOT_FORMAT[image.role].note}`,
-    'Create one single illustration of this scene — the reference image is a sheet of examples, so do not copy its grid or panels.',
+    'Create one single illustration of this scene, the reference image is a sheet of examples, so do not copy its grid or panels.',
   ].join('\n');
 }
 
@@ -192,19 +198,22 @@ export const SECTION_TITLE_CARDS = {
   lab: slot(
     'section-lab',
     'cover',
-    'Title card for “Relationship Lab”. A married couple sitting across a small table with an open notebook, sketching a simple diagram of two overlapping circles between them, thoughtful and engaged. The whole image is tinted in a warm, muted brick-red and terracotta palette — reds dominate the background, clothing accents and shadows, with cream highlights — so it reads unmistakably as the red chapter.',
-    'A couple working through a notebook together, in warm red tones.'
+    'Title card for “Relationship Lab”. A married couple sitting across a small table with an open notebook, sketching a simple diagram of two overlapping circles between them, thoughtful and engaged. The whole image is tinted in a warm, muted brick-red and terracotta palette, reds dominate the background, clothing accents and shadows, with cream highlights, so it reads unmistakably as the red chapter.',
+    'A couple working through a notebook together, in warm red tones.',
+    0.30,
   ),
   quiz: slot(
     'section-quiz',
     'cover',
-    'Title card for “Relationship Quizzes”. A husband and wife on a sofa each holding a card close to their chest, grinning at each other as if about to reveal their answers, playful and light. The whole image is tinted in a warm, muted saffron and ochre-yellow palette — yellows and golds dominate the background, cushions and shadows, with cream highlights — so it reads unmistakably as the yellow chapter.',
-    'A couple about to reveal their cards, in warm yellow tones.'
+    'Title card for “Relationship Quizzes”. A husband and wife on a sofa each holding a card close to their chest, grinning at each other as if about to reveal their answers, playful and light. The whole image is tinted in a warm, muted saffron and ochre-yellow palette, yellows and golds dominate the background, cushions and shadows, with cream highlights, so it reads unmistakably as the yellow chapter.',
+    'A couple about to reveal their cards, in warm yellow tones.',
+    0.28,
   ),
   adventure: slot(
     'section-adventure',
     'cover',
-    'Title card for “Relationship Adventures”. A married couple standing together at the start of a winding path that forks ahead toward a distant city skyline and hills, one pointing ahead, the other holding a map, a sense of story and journey. The whole image is tinted in a muted teal, dusty cyan and soft blue palette — blues dominate the sky, path and shadows, with cream highlights — so it reads unmistakably as the blue chapter.',
-    'A couple at a fork in a path, in cool blue tones.'
+    'Title card for “Relationship Adventures”. A married couple standing together at the start of a winding path that forks ahead toward a distant city skyline and hills, one pointing ahead, the other holding a map, a sense of story and journey. The whole image is tinted in a muted teal, dusty cyan and soft blue palette, blues dominate the sky, path and shadows, with cream highlights, so it reads unmistakably as the blue chapter.',
+    'A couple at a fork in a path, in cool blue tones.',
+    0.31,
   ),
 };

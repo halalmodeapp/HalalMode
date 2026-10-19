@@ -2,7 +2,7 @@ import type { Adventure, Condition } from '../../types.ts';
 import { slot } from '../images.ts';
 
 /**
- * The Old Friend — an innocent friendship that does not feel innocent from
+ * The Old Friend, an innocent friendship that does not feel innocent from
  * the outside, and what spouses owe each other about boundaries. Hidden
  * states: trust, transparency, security.
  */
@@ -31,7 +31,7 @@ export const oldFriend: Adventure = {
       id: 'notification',
       title: '11:40 p.m.',
       image: slot('adv-friend-notification', 'scene', 'A dark bedroom, a phone screen lighting up on a bedside table, a woman lying awake looking at it, her husband asleep facing away.', 'Leila noticing a late-night message on Sami’s phone.'),
-      passages: [{ text: 'Sami’s phone lights up at 11:40 p.m.: “Thank you so much again, you’re a lifesaver 😊” — from Hana, his old university colleague.' }],
+      passages: [{ text: 'Sami’s phone lights up at 11:40 p.m.: “Thank you so much again, you’re a lifesaver 😊”, from Hana, his old university colleague.' }],
       decision: {
         mode: 'role',
         actor: 'B',
@@ -57,7 +57,7 @@ export const oldFriend: Adventure = {
         prompt: 'You are Sami. How do you respond?',
         choices: [
           { id: 'open', label: 'Hand her the phone: “Read anything you like. She’s job hunting.”', effects: { vars: { transparency: 2, security: 1 } }, next: 'dinner_invite', beat: 'Sami offered Leila his phone and explained.' },
-          { id: 'dismiss', label: '“It’s nothing — just a colleague. Don’t be silly.”', effects: { vars: { security: -1 } }, next: 'dinner_invite', beat: 'Sami told Leila not to be silly.', lesson: { id: 'of-l-dismiss', tag: 'Rule 2', text: 'This response may make your partner feel dismissed — the worry is real even if the threat isn’t.' } },
+          { id: 'dismiss', label: '“It’s nothing, just a colleague. Don’t be silly.”', effects: { vars: { security: -1 } }, next: 'dinner_invite', beat: 'Sami told Leila not to be silly.', lesson: { id: 'of-l-dismiss', tag: 'Rule 2', text: 'This response may make your partner feel dismissed, the worry is real even if the threat isn’t.' } },
           { id: 'defensive', label: '“Are you going through my phone now?”', effects: { vars: { trust: -1 } }, next: 'dinner_invite', beat: 'Sami got defensive about his phone.' },
         ],
       },
@@ -66,15 +66,15 @@ export const oldFriend: Adventure = {
       id: 'dinner_invite',
       title: 'The work dinner',
       image: slot('adv-friend-dinner', 'scene', 'A man reading an email invitation on a laptop at a home desk, his wife reading over his shoulder, a restaurant name implied by a simple illustrated menu card icon.', 'Sami and Leila reading a dinner invitation.'),
-      passages: [{ text: 'Hana invites Sami to a networking dinner with her new team — as a thank-you. Spouses aren’t mentioned.' }],
+      passages: [{ text: 'Hana invites Sami to a networking dinner with her new team, as a thank-you. Spouses aren’t mentioned.' }],
       decision: {
         mode: 'role',
         actor: 'A',
         prompt: 'You are Sami. What do you do?',
         choices: [
-          { id: 'with_leila', label: 'Say yes — if Leila comes too.', effects: { vars: { security: 2, transparency: 1 }, flags: ['brought_leila'] }, next: 'feelings', beat: 'Sami accepted the dinner only if Leila came too.' },
+          { id: 'with_leila', label: 'Say yes, if Leila comes too.', effects: { vars: { security: 2, transparency: 1 }, flags: ['brought_leila'] }, next: 'feelings', beat: 'Sami accepted the dinner only if Leila came too.' },
           { id: 'decline', label: 'Decline politely.', effects: { vars: { security: 1 } }, next: 'feelings', beat: 'Sami declined the dinner.' },
-          { id: 'go_alone', label: 'Go alone — it’s professional.', effects: { vars: { security: -1 }, flags: ['went_alone'] }, next: 'feelings', beat: 'Sami went to the dinner alone.' },
+          { id: 'go_alone', label: 'Go alone, it’s professional.', effects: { vars: { security: -1 }, flags: ['went_alone'] }, next: 'feelings', beat: 'Sami went to the dinner alone.' },
         ],
       },
     },
@@ -121,7 +121,7 @@ export const oldFriend: Adventure = {
         mode: 'joint',
         prompt: 'Together: what will you agree?',
         choices: [
-          { id: 'groups', label: 'Advice in group chats or by email only — nothing late, nothing one-to-one.', effects: { vars: { security: 2, transparency: 1 }, flags: ['agreed'] }, next: 'hana_again', beat: 'They agreed advice would only happen in groups or by email, never late.' },
+          { id: 'groups', label: 'Advice in group chats or by email only, nothing late, nothing one-to-one.', effects: { vars: { security: 2, transparency: 1 }, flags: ['agreed'] }, next: 'hana_again', beat: 'They agreed advice would only happen in groups or by email, never late.' },
           { id: 'open_phones', label: 'Nothing hidden: either can see the other’s messages any time.', effects: { vars: { transparency: 2 }, flags: ['open_phones'] }, next: 'hana_again', beat: 'They agreed either could see the other’s messages.' },
           { id: 'end', label: 'Sami ends the friendship kindly.', effects: { vars: { security: 2, trust: 1 }, flags: ['ended'] }, next: 'hana_again', beat: 'They agreed Sami would kindly end the friendship.' },
         ],
@@ -132,14 +132,14 @@ export const oldFriend: Adventure = {
       title: 'Another message',
       turningPoint: true,
       image: slot('adv-friend-again', 'turning_point', 'A man in an office looking at his phone showing a new message, a small hesitation in his face, sunlight through blinds.', 'Sami hesitating over a new message at work.'),
-      passages: [{ text: 'A month later: “Sami, quick favour — can I call you tonight? Big interview tomorrow!”' }],
+      passages: [{ text: 'A month later: “Sami, quick favour, can I call you tonight? Big interview tomorrow!”' }],
       decision: {
         mode: 'role',
         actor: 'A',
         prompt: 'You are Sami. What do you do?',
         choices: [
           { id: 'keep', label: 'Reply by email with tips, and mention it to Leila that evening.', effects: { vars: { trust: 2, transparency: 1 } }, next: 'leila_hears', beat: 'Sami replied by email and told Leila about it.' },
-          { id: 'call', label: 'Call — it’s a one-off — and not mention it.', effects: { vars: { trust: -2 }, flags: ['hid_call'] }, next: 'leila_hears', beat: 'Sami took the call and did not mention it.' },
+          { id: 'call', label: 'Call, it’s a one-off, and not mention it.', effects: { vars: { trust: -2 }, flags: ['hid_call'] }, next: 'leila_hears', beat: 'Sami took the call and did not mention it.' },
         ],
       },
     },
@@ -166,7 +166,7 @@ export const oldFriend: Adventure = {
     nothing_hidden: {
       id: 'nothing_hidden', title: 'Nothing to hide', mood: 'renewed',
       image: slot('adv-friend-end-nothing', 'outcome', 'A husband and wife cooking together in a kitchen, one phone lying face up on the counter beside them, relaxed and laughing.', 'Sami and Leila cooking together, a phone face up beside them.'),
-      whatHappened: 'Leila hasn’t thought about Hana in months. Sami still helps people — in daylight, by email.',
+      whatHappened: 'Leila hasn’t thought about Hana in months. Sami still helps people, in daylight, by email.',
       pattern: { name: 'Proactive transparency', explanation: 'He offered openness before it was asked for, so trust grew instead of shrinking.' },
       couldHaveChanged: 'Little; agreeing the boundary before the first late message.',
       takeaway: 'Transparency offered is worth more than transparency demanded.',
@@ -177,7 +177,7 @@ export const oldFriend: Adventure = {
       id: 'heard', title: 'Heard', mood: 'tender',
       image: slot('adv-friend-end-heard', 'outcome', 'A wife resting her forehead against her husband’s, both eyes closed, a gentle reconciled moment in a dim living room.', 'Sami and Leila forehead to forehead.'),
       whatHappened: 'The night he listened without defending himself is the night Leila stopped worrying.',
-      pattern: { name: 'Validation without agreement', explanation: 'He didn’t agree there was a threat — he agreed her feeling made sense.' },
+      pattern: { name: 'Validation without agreement', explanation: 'He didn’t agree there was a threat, he agreed her feeling made sense.' },
       couldHaveChanged: 'Not much.',
       takeaway: 'Validation does not mean agreement. It means “I understand.”',
       guide: [{ id: 'of-e-heard', text: 'When one of us feels insecure, the other listens before explaining.' }],
@@ -196,7 +196,7 @@ export const oldFriend: Adventure = {
       image: slot('adv-friend-end-hidden', 'outcome', 'A woman holding her husband’s phone showing a call log, looking at him across a room, hurt rather than angry.', 'Leila holding Sami’s phone, hurt.'),
       whatHappened: 'The call was innocent. Hiding it was not. It takes months to rebuild what one omission broke.',
       pattern: { name: 'Secrecy over substance', explanation: 'The hiding, not the call, broke the trust.' },
-      couldHaveChanged: 'Mentioning it that evening — or replying by email.',
+      couldHaveChanged: 'Mentioning it that evening, or replying by email.',
       takeaway: 'The cover-up is always worse than the thing.',
       guide: [{ id: 'of-e-tell', text: 'If we would hesitate to mention it, we mention it.' }],
     },

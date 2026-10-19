@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FlipInEasyX, ZoomIn } from 'react-native-reanimated';
+import Animated, { Easing, FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { LoadingDots } from '@/components/ui/LoadingDots';
 import { Text } from '@/components/ui/Text';
@@ -31,7 +31,7 @@ export function PlayCard({
   return (
     <Animated.View
       key={dealKey}
-      entering={reducedMotion ? undefined : FadeInDown.springify().damping(18).stiffness(170)}
+      entering={reducedMotion ? undefined : FadeInDown.duration(720).easing(Easing.out(Easing.cubic))}
       style={[styles.card, tone === 'dark' && styles.cardDark, tone === 'gold' && styles.cardGold, style]}
     >
       <SurfaceToneProvider tone={tone === 'dark' ? 'dark' : 'light'}>{children}</SurfaceToneProvider>
@@ -54,7 +54,7 @@ export function ChoiceOption({
   index: number;
   selected?: boolean;
   disabled?: boolean;
-  /** Shown but not yours to pick — the other player is deciding. */
+  /** Shown but not yours to pick, the other player is deciding. */
   dimmed?: boolean;
   onPress?: () => void;
   testID?: string;
@@ -90,7 +90,7 @@ export function LessonChip({ tag, text, delay = 0 }: { tag?: string; text: strin
   const reducedMotion = useReducedMotion();
   return (
     <Animated.View
-      entering={reducedMotion ? undefined : ZoomIn.delay(delay).springify().damping(16)}
+      entering={reducedMotion ? undefined : FadeInDown.delay(delay).duration(900).easing(Easing.out(Easing.cubic))}
       style={styles.lesson}
       accessibilityRole="text"
     >
@@ -126,7 +126,7 @@ export function RevealTile({
   const reducedMotion = useReducedMotion();
   return (
     <Animated.View
-      entering={reducedMotion ? undefined : FlipInEasyX.delay(120 + index * 220).duration(520)}
+      entering={reducedMotion ? undefined : FadeInDown.delay(160 + index * 240).duration(900).easing(Easing.out(Easing.cubic))}
       style={styles.tile}
     >
       <View style={styles.tileHead}>
@@ -139,7 +139,7 @@ export function RevealTile({
   );
 }
 
-/** A short list of points with gold marks — for insights and summaries. */
+/** A short list of points with gold marks, for insights and summaries. */
 export function Points({ items }: { items: string[] }) {
   const { isRTL } = useI18n();
   return (

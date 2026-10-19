@@ -2,7 +2,7 @@ import type { ImageSourcePropType } from 'react-native';
 
 /**
  * Generated illustrations, by image slot id. Written by
- * scripts/optimize-halal-cards-images.py — run it after adding a picture to
+ * scripts/optimize-halal-cards-images.py, run it after adding a picture to
  * assets/halal-cards (named by its slot id, see docs/HALAL_CARDS_ILLUSTRATIONS.md)
  * rather than editing this file by hand.
  *
@@ -323,5 +323,44 @@ export const ILLUSTRATIONS: Partial<Record<string, ImageSourcePropType>> = {
 
 /** Small versions of the covers, for list tiles. */
 export const THUMBNAILS: Partial<Record<string, ImageSourcePropType>> = {
-
+  'adv-1142-cover': require('../../assets/halal-cards/thumbs/adv-1142-cover.webp'),
+  'adv-offer-cover': require('../../assets/halal-cards/thumbs/adv-offer-cover.webp'),
+  'adv-ramadan-cover': require('../../assets/halal-cards/thumbs/adv-ramadan-cover.webp'),
+  'concept-anger-cover': require('../../assets/halal-cards/thumbs/concept-anger-cover.webp'),
+  'concept-baby-cover': require('../../assets/halal-cards/thumbs/concept-baby-cover.webp'),
+  'concept-brother-cover': require('../../assets/halal-cards/thumbs/concept-brother-cover.webp'),
+  'concept-career-cover': require('../../assets/halal-cards/thumbs/concept-career-cover.webp'),
+  'concept-friend-cover': require('../../assets/halal-cards/thumbs/concept-friend-cover.webp'),
+  'concept-house-cover': require('../../assets/halal-cards/thumbs/concept-house-cover.webp'),
+  'concept-ignored-cover': require('../../assets/halal-cards/thumbs/concept-ignored-cover.webp'),
+  'concept-insta-cover': require('../../assets/halal-cards/thumbs/concept-insta-cover.webp'),
+  'concept-mahr-cover': require('../../assets/halal-cards/thumbs/concept-mahr-cover.webp'),
+  'concept-practice-cover': require('../../assets/halal-cards/thumbs/concept-practice-cover.webp'),
+  'concept-town-cover': require('../../assets/halal-cards/thumbs/concept-town-cover.webp'),
+  'concept-wedding-cover': require('../../assets/halal-cards/thumbs/concept-wedding-cover.webp'),
+  'guide-hero': require('../../assets/halal-cards/thumbs/guide-hero.webp'),
+  'hub-hero': require('../../assets/halal-cards/thumbs/hub-hero.webp'),
+  'lab-one-cover': require('../../assets/halal-cards/thumbs/lab-one-cover.webp'),
+  'lab-three-cover': require('../../assets/halal-cards/thumbs/lab-three-cover.webp'),
+  'lab-two-cover': require('../../assets/halal-cards/thumbs/lab-two-cover.webp'),
+  'lab-zero-cover': require('../../assets/halal-cards/thumbs/lab-zero-cover.webp'),
+  'quiz-affection-cover': require('../../assets/halal-cards/thumbs/quiz-affection-cover.webp'),
+  'quiz-budget-cover': require('../../assets/halal-cards/thumbs/quiz-budget-cover.webp'),
+  'quiz-check-in-cover': require('../../assets/halal-cards/thumbs/quiz-check-in-cover.webp'),
+  'quiz-expect-cover': require('../../assets/halal-cards/thumbs/quiz-expect-cover.webp'),
+  'quiz-families-cover': require('../../assets/halal-cards/thumbs/quiz-families-cover.webp'),
+  'quiz-family-cover': require('../../assets/halal-cards/thumbs/quiz-family-cover.webp'),
+  'quiz-first-year-cover': require('../../assets/halal-cards/thumbs/quiz-first-year-cover.webp'),
+  'quiz-future-cover': require('../../assets/halal-cards/thumbs/quiz-future-cover.webp'),
+  'quiz-guess-cover': require('../../assets/halal-cards/thumbs/quiz-guess-cover.webp'),
+  'quiz-know-me-cover': require('../../assets/halal-cards/thumbs/quiz-know-me-cover.webp'),
+  'quiz-likely-cover': require('../../assets/halal-cards/thumbs/quiz-likely-cover.webp'),
+  'quiz-love-cover': require('../../assets/halal-cards/thumbs/quiz-love-cover.webp'),
+  'quiz-money-cover': require('../../assets/halal-cards/thumbs/quiz-money-cover.webp'),
+  'quiz-nikah-cover': require('../../assets/halal-cards/thumbs/quiz-nikah-cover.webp'),
+  'quiz-parenting-cover': require('../../assets/halal-cards/thumbs/quiz-parenting-cover.webp'),
+  'quiz-wyr-cover': require('../../assets/halal-cards/thumbs/quiz-wyr-cover.webp'),
+  'section-adventure': require('../../assets/halal-cards/thumbs/section-adventure.webp'),
+  'section-lab': require('../../assets/halal-cards/thumbs/section-lab.webp'),
+  'section-quiz': require('../../assets/halal-cards/thumbs/section-quiz.webp'),
 };

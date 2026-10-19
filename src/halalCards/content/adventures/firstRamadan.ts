@@ -2,7 +2,7 @@ import type { Adventure, Condition } from '../../types.ts';
 import { slot } from '../images.ts';
 
 /**
- * The First Ramadan — in-laws, hosting, a comment at iftar, and the slow build
+ * The First Ramadan, in-laws, hosting, a comment at iftar, and the slow build
  * of things left unsaid. Hidden states: closeness, resentment, family.
  */
 export const firstRamadan: Adventure = {
@@ -11,13 +11,13 @@ export const firstRamadan: Adventure = {
   title: 'The First Ramadan',
   tagline: 'Four Fridays, one family iftar, and a comment about samosas.',
   description:
-    'Hamza and Noor are four months married when Ramadan arrives — and Hamza’s mother has plans for it. Take turns as each of them. Small choices early on decide whether Eid feels like a homecoming or a truce.',
+    'Hamza and Noor are four months married when Ramadan arrives, and Hamza’s mother has plans for it. Take turns as each of them. Small choices early on decide whether Eid feels like a homecoming or a truce.',
   minutes: 15,
   soloPreview: true,
   themes: ['Family and in-laws', 'Ramadan', 'Boundaries', 'Small things'],
   cover: slot('adv-ramadan-cover', 'cover', 'A newlywed couple’s small flat at maghrib, lanterns in the window, a long table being laid for many guests, the young wife pausing with a tray of dates.', 'A young couple preparing a big iftar in a small flat.'),
   roles: {
-    A: { name: 'Hamza', gender: 'male', sketch: 'Loves his family, hates letting anyone down — especially his mother.' },
+    A: { name: 'Hamza', gender: 'male', sketch: 'Loves his family, hates letting anyone down, especially his mother.' },
     B: { name: 'Noor', gender: 'female', sketch: 'Works full-time and hoped for a quiet Ramadan focused on worship.' },
   },
   variables: {
@@ -32,7 +32,7 @@ export const firstRamadan: Adventure = {
       title: 'The phone call',
       image: slot('adv-ramadan-invite', 'scene', 'A young man on the phone in a narrow hallway, smiling but uncertain, his wife visible in the kitchen behind him unpacking groceries.', 'Hamza on the phone in the hallway while Noor unpacks shopping.'),
       passages: [
-        { text: 'Two days before Ramadan, Hamza’s mother calls. “Your first Ramadan as a married couple! The whole family will come to yours for iftar — every Friday. Your new flat, Noor’s cooking. It will be beautiful.”' },
+        { text: 'Two days before Ramadan, Hamza’s mother calls. “Your first Ramadan as a married couple! The whole family will come to yours for iftar, every Friday. Your new flat, Noor’s cooking. It will be beautiful.”' },
         { text: 'Noor is in the kitchen. She works full-time, and last week she said she wanted this Ramadan to be quiet: more Qur’an, more tarawih, fewer gatherings.' },
       ],
       decision: {
@@ -46,7 +46,7 @@ export const firstRamadan: Adventure = {
             effects: { vars: { family: 1, resentment: 1 }, flags: ['decided_alone'] },
             next: 'noor_finds_out',
             beat: 'Hamza agreed to four Friday iftars without asking Noor.',
-            lesson: { id: 'r-l-alone', tag: 'Notice this', text: 'Saying yes for two people is a decision about your spouse’s time — made without them.' },
+            lesson: { id: 'r-l-alone', tag: 'Notice this', text: 'Saying yes for two people is a decision about your spouse’s time, made without them.' },
           },
           {
             id: 'check',
@@ -60,7 +60,7 @@ export const firstRamadan: Adventure = {
             label: '“How about one Friday to start? Noor’s working all month.”',
             effects: { flags: ['offered_one'] },
             next: 'talk_plan',
-            beat: 'Hamza offered his mother one Friday instead of four — before asking Noor.',
+            beat: 'Hamza offered his mother one Friday instead of four, before asking Noor.',
           },
         ],
       },
@@ -74,7 +74,7 @@ export const firstRamadan: Adventure = {
         { text: 'That evening, the family WhatsApp group lights up. “Can’t wait for Fridays at Hamza and Noor’s!” Hearts. A sister-in-law asks what Noor will be making.' },
         { text: 'Noor scrolls back. Hamza has not said a word to her about it.' },
       ],
-      lessons: [{ id: 'r-l-small', tag: 'Small thing', text: 'This could be a five-minute conversation tonight — or a story Noor tells herself for a month.' }],
+      lessons: [{ id: 'r-l-small', tag: 'Small thing', text: 'This could be a five-minute conversation tonight, or a story Noor tells herself for a month.' }],
       decision: {
         mode: 'role',
         actor: 'B',
@@ -152,7 +152,7 @@ export const firstRamadan: Adventure = {
       image: slot('adv-ramadan-plan', 'scene', 'A young married couple at a small kitchen table with two cups of tea and a paper Ramadan calendar between them, pens in hand, talking seriously but warmly.', 'Hamza and Noor planning Ramadan over tea.'),
       passages: [
         { text: 'Hamza and Noor sit down with two cups of tea and a calendar.' },
-        { text: 'Hamza has already offered his mother one Friday. Noor notices she was not asked — but at least it is only one.', when: { flag: 'offered_one' } },
+        { text: 'Hamza has already offered his mother one Friday. Noor notices she was not asked, but at least it is only one.', when: { flag: 'offered_one' } },
         { text: 'The group-chat message still hangs between them, but they are here, talking.', when: { flag: 'group_message' } },
       ],
       lessons: [{ id: 'r-l-joint', tag: 'Joint decision', text: 'You both have to pick the same answer. If you don’t, talk it through and choose again.' }],
@@ -160,7 +160,7 @@ export const firstRamadan: Adventure = {
         mode: 'joint',
         prompt: 'Together: how many family iftars will you host this Ramadan?',
         choices: [
-          { id: 'all', label: 'All four Fridays — it matters to his family.', effects: { vars: { family: 2, resentment: 1 }, flags: ['host_all'] }, next: 'first_friday', beat: 'They agreed to host all four Fridays.' },
+          { id: 'all', label: 'All four Fridays, it matters to his family.', effects: { vars: { family: 2, resentment: 1 }, flags: ['host_all'] }, next: 'first_friday', beat: 'They agreed to host all four Fridays.' },
           { id: 'two', label: 'Two Fridays, and alternate the others with Noor’s family.', effects: { vars: { family: 1, closeness: 1 }, flags: ['host_two'] }, next: 'first_friday', beat: 'They agreed on two Fridays, alternating with Noor’s family.' },
           { id: 'one', label: 'One big iftar, and visit them on other evenings.', effects: { vars: { closeness: 1 }, flags: ['host_one'] }, next: 'first_friday', beat: 'They agreed on one big iftar and visits on other nights.' },
         ],
@@ -175,10 +175,10 @@ export const firstRamadan: Adventure = {
       passages: [
         { text: 'Fourteen people in a flat built for four. Noor left work early and has been cooking since three.' },
         { text: 'She is exhausted. She has said nothing about the four Fridays, to anyone.', when: { flag: 'swallowed' } },
-        { text: 'Since the group message, the aunties are polite to Noor — a little too polite.', when: { flag: 'group_message' } },
-        { text: 'As the samosas go round, Hamza’s mother laughs: “In our family we make them fresh, not from the freezer. Never mind — Noor will learn!” A few people laugh along.' },
+        { text: 'Since the group message, the aunties are polite to Noor, a little too polite.', when: { flag: 'group_message' } },
+        { text: 'As the samosas go round, Hamza’s mother laughs: “In our family we make them fresh, not from the freezer. Never mind, Noor will learn!” A few people laugh along.' },
       ],
-      lessons: [{ id: 'r-l-private', tag: 'Private choice', text: 'You each decide what your character does — at the same moment, without knowing what the other will do.' }],
+      lessons: [{ id: 'r-l-private', tag: 'Private choice', text: 'You each decide what your character does, at the same moment, without knowing what the other will do.' }],
       decision: {
         mode: 'private',
         prompt: 'In that moment, what do you do?',
@@ -191,7 +191,7 @@ export const firstRamadan: Adventure = {
               effects: { vars: { resentment: 1 }, flags: ['hamza_laughed'] },
               next: 'after_iftar',
               beat: 'Hamza laughed along at the comment.',
-              lesson: { id: 'r-l-dismiss', tag: 'Notice this', text: 'This response may make your partner feel dismissed — and alone in a room full of family.' },
+              lesson: { id: 'r-l-dismiss', tag: 'Notice this', text: 'This response may make your partner feel dismissed, and alone in a room full of family.' },
             },
             {
               id: 'praise',
@@ -233,7 +233,7 @@ export const firstRamadan: Adventure = {
           ],
         },
         combos: [
-          { pair: ['praise', 'joke'], next: 'warm_kitchen', beat: 'Hamza praised Noor’s food and Noor joked back — the room laughed with her, not at her.', effects: { vars: { family: 1 } } },
+          { pair: ['praise', 'joke'], next: 'warm_kitchen', beat: 'Hamza praised Noor’s food and Noor joked back, the room laughed with her, not at her.', effects: { vars: { family: 1 } } },
           { pair: ['laugh', 'smile'], next: 'tarawih_quiet', beat: 'Hamza laughed along and Noor smiled through it. Nobody said anything.' },
           { pair: ['laugh', 'leave'], next: 'after_iftar', beat: 'Hamza laughed along; Noor left the room. He did not follow.', effects: { vars: { closeness: -1 } } },
         ],
@@ -284,8 +284,8 @@ export const firstRamadan: Adventure = {
       image: slot('adv-ramadan-midnight', 'scene', 'A small flat at midnight after guests have left, a sink full of dishes, leftover dates on a plate, a young wife leaning on the counter and her husband in the doorway.', 'Hamza and Noor in the kitchen after guests leave.'),
       passages: [
         { text: 'Midnight. The flat is quiet again, the sink full.' },
-        { text: 'Noor keeps hearing the laughter — and Hamza’s laugh among it.', when: { flag: 'hamza_laughed' } },
-        { text: 'Hamza’s words — “the best I’ve had” — are still making her smile.', when: { flag: 'hamza_defended' } },
+        { text: 'Noor keeps hearing the laughter, and Hamza’s laugh among it.', when: { flag: 'hamza_laughed' } },
+        { text: 'Hamza’s words, “the best I’ve had”, are still making her smile.', when: { flag: 'hamza_defended' } },
       ],
       decision: {
         mode: 'role',
@@ -354,10 +354,10 @@ export const firstRamadan: Adventure = {
             label: '“Noor was really upset about what you said.”',
             effects: { vars: { family: -1 }, flags: ['noor_named'] },
             next: 'eid_morning',
-            beat: 'Hamza told his mother Noor was upset — making Noor the complainant.',
+            beat: 'Hamza told his mother Noor was upset, making Noor the complainant.',
             lesson: { id: 'r-l-messenger', tag: 'Notice this', text: 'Carrying the complaint as hers puts Noor between him and his mother.' },
           },
-          { id: 'self', label: '“I want Noor to feel at home with us, Mum. Comments like that make it hard — for me too.”', effects: { vars: { family: 1, closeness: 1 }, flags: ['hamza_boundary'] }, next: 'eid_morning', beat: 'Hamza set a boundary with his mother in his own voice.' },
+          { id: 'self', label: '“I want Noor to feel at home with us, Mum. Comments like that make it hard, for me too.”', effects: { vars: { family: 1, closeness: 1 }, flags: ['hamza_boundary'] }, next: 'eid_morning', beat: 'Hamza set a boundary with his mother in his own voice.' },
           { id: 'weather', label: 'Lose his nerve and talk about the weather.', effects: { vars: { resentment: 1 }, flags: ['lost_nerve'] }, next: 'last_ten', beat: 'Hamza lost his nerve and never raised it.' },
         ],
       },
@@ -367,7 +367,7 @@ export const firstRamadan: Adventure = {
       id: 'blowup',
       title: 'Everything at once',
       image: slot('adv-ramadan-blowup', 'scene', 'A young wife standing in a kitchen speaking emotionally, a crumpled tea towel in her hand, her husband frozen in the doorway, stunned, half-lit.', 'Noor letting everything out as Hamza stands stunned.'),
-      passages: [{ text: 'It pours out — the group chat, the Fridays, the laughing, the exhaustion. Hamza stands in the kitchen doorway, stunned. He did not know any of this.' }],
+      passages: [{ text: 'It pours out, the group chat, the Fridays, the laughing, the exhaustion. Hamza stands in the kitchen doorway, stunned. He did not know any of this.' }],
       decision: {
         mode: 'role',
         actor: 'A',
@@ -382,7 +382,7 @@ export const firstRamadan: Adventure = {
             beat: 'Hamza went quiet and left the room.',
             lesson: { id: 'r-l-loop', tag: 'Rule 3', text: 'An anxious/avoidant loop is forming here: the more she pursues, the more he retreats.' },
           },
-          { id: 'pause', label: '“I didn’t know any of this. We’re both exhausted — can we talk properly after suhoor?”', effects: { vars: { closeness: 1 } }, next: 'boundary_plan', beat: 'Hamza asked for a pause with a time to come back.' },
+          { id: 'pause', label: '“I didn’t know any of this. We’re both exhausted, can we talk properly after suhoor?”', effects: { vars: { closeness: 1 } }, next: 'boundary_plan', beat: 'Hamza asked for a pause with a time to come back.' },
         ],
       },
     },
@@ -404,7 +404,7 @@ export const firstRamadan: Adventure = {
           { id: 'dua', label: 'Make du’a for the two of you, every night.', next: 'laylatul_qadr', beat: 'One of them made du’a for the marriage every night.' },
         ],
         combos: [
-          { pair: ['reach', 'reach'], next: 'boundary_plan', beat: 'Both of them reached out on the same night — and laughed about it.', effects: { vars: { closeness: 1 } } },
+          { pair: ['reach', 'reach'], next: 'boundary_plan', beat: 'Both of them reached out on the same night, and laughed about it.', effects: { vars: { closeness: 1 } } },
           { pair: ['wait', 'wait'], next: 'end:quiet_eid', beat: 'Both waited for the other. Nobody came.' },
           { pair: ['reach', 'wait'], next: 'one_sided', beat: 'One reached out; the other was still waiting to be reached.' },
           { pair: ['dua', 'dua'], next: 'laylatul_qadr', beat: 'Without knowing, both spent the nights making du’a for the marriage.' },
@@ -423,8 +423,8 @@ export const firstRamadan: Adventure = {
         mode: 'joint',
         prompt: 'Together: what happens with the olive branch?',
         choices: [
-          { id: 'accept', label: 'Take it — and actually talk.', effects: { vars: { closeness: 1 } }, next: 'boundary_plan', beat: 'They accepted the olive branch and talked.' },
-          { id: 'surface', label: 'Take it — but keep things light. No deep talk.', effects: { vars: { resentment: 1 } }, next: 'end:polite_truce', beat: 'They made peace on the surface and left the rest unsaid.' },
+          { id: 'accept', label: 'Take it, and actually talk.', effects: { vars: { closeness: 1 } }, next: 'boundary_plan', beat: 'They accepted the olive branch and talked.' },
+          { id: 'surface', label: 'Take it, but keep things light. No deep talk.', effects: { vars: { resentment: 1 } }, next: 'end:polite_truce', beat: 'They made peace on the surface and left the rest unsaid.' },
         ],
       },
     },
@@ -448,12 +448,12 @@ export const firstRamadan: Adventure = {
       id: 'boundary_plan',
       title: 'A plan for the two of you',
       image: slot('adv-ramadan-boundary', 'scene', 'A husband and wife sitting cross-legged on a rug facing each other, holding hands, a notebook between them, calm and resolved, lanterns behind them.', 'Hamza and Noor making a plan together.'),
-      passages: [{ text: 'Finally, the real conversation. Not about who was right — about what happens next.' }],
+      passages: [{ text: 'Finally, the real conversation. Not about who was right, about what happens next.' }],
       decision: {
         mode: 'joint',
         prompt: 'Together: what will you do for the rest of Ramadan?',
         choices: [
-          { id: 'handle', label: 'Keep hosting — and Hamza answers comments in the moment.', effects: { vars: { family: 1, closeness: 1 }, flags: ['plan_handle'] }, next: 'eid_morning', beat: 'They agreed Hamza would speak up in the moment.' },
+          { id: 'handle', label: 'Keep hosting, and Hamza answers comments in the moment.', effects: { vars: { family: 1, closeness: 1 }, flags: ['plan_handle'] }, next: 'eid_morning', beat: 'They agreed Hamza would speak up in the moment.' },
           { id: 'worship', label: 'Fewer gatherings; more worship at home, together.', effects: { vars: { closeness: 2, family: -1 }, flags: ['plan_worship'] }, next: 'last_ten', beat: 'They chose fewer gatherings and more worship together.' },
           { id: 'cohost', label: 'Ask both mothers to co-host the last iftar.', effects: { vars: { family: 2 }, flags: ['plan_cohost'] }, next: 'eid_morning', beat: 'They invited both mothers to co-host the last iftar.' },
         ],
@@ -473,11 +473,11 @@ export const firstRamadan: Adventure = {
         prompt: 'How do you spend the last ten nights?',
         choices: [
           { id: 'together', label: 'Praying together at home and at the masjid.', effects: { vars: { closeness: 2 }, flags: ['prayed_together'] }, next: 'eid_morning', beat: 'One of them wanted the last ten nights in worship together.' },
-          { id: 'alone', label: 'Each in our own worship — it’s personal.', next: 'eid_morning', beat: 'One of them wanted to keep worship personal.' },
-          { id: 'rest', label: 'Rest — this month has been too much.', effects: { vars: { closeness: -1 } }, next: 'eid_morning', beat: 'One of them needed rest more than anything.' },
+          { id: 'alone', label: 'Each in our own worship, it’s personal.', next: 'eid_morning', beat: 'One of them wanted to keep worship personal.' },
+          { id: 'rest', label: 'Rest, this month has been too much.', effects: { vars: { closeness: -1 } }, next: 'eid_morning', beat: 'One of them needed rest more than anything.' },
         ],
         combos: [
-          { pair: ['together', 'together'], next: 'eid_morning', beat: 'Both wanted the last ten nights together — and had them.', effects: { vars: { resentment: -1 } } },
+          { pair: ['together', 'together'], next: 'eid_morning', beat: 'Both wanted the last ten nights together, and had them.', effects: { vars: { resentment: -1 } } },
           { pair: ['together', 'rest'], next: 'eid_morning', beat: 'One hoped for nights of worship together; the other was too exhausted.', effects: { vars: { resentment: 1 } } },
         ],
         diverge: 'eid_morning',
@@ -514,8 +514,8 @@ export const firstRamadan: Adventure = {
       mood: 'renewed',
       image: slot('adv-ramadan-end-table', 'outcome', 'Two extended families squeezed around one long Eid table in a garden, two mothers laughing together, the young couple at the centre.', 'Both families at one long Eid table.'),
       whatHappened: 'Eid ends with both families around one table, and Hamza’s mother asking Noor for her samosa recipe.',
-      pattern: { name: 'Repair over avoidance', explanation: 'Each time something hurt, someone eventually named it — and the other heard it.' },
-      couldHaveChanged: 'Very little — though deciding the Fridays together from the start would have spared them the hardest week.',
+      pattern: { name: 'Repair over avoidance', explanation: 'Each time something hurt, someone eventually named it, and the other heard it.' },
+      couldHaveChanged: 'Very little, though deciding the Fridays together from the start would have spared them the hardest week.',
       takeaway: 'Families blend when the couple acts as a team first.',
       epilogues: [
         { text: 'Next Ramadan, Hamza calls Noor before he answers his mother.', when: { flag: 'decided_alone' } },
@@ -531,7 +531,7 @@ export const firstRamadan: Adventure = {
       title: 'Their own Ramadan',
       mood: 'tender',
       image: slot('adv-ramadan-end-ours', 'outcome', 'A couple praying side by side on two prayer mats in a softly lit living room at night, lanterns glowing.', 'Hamza and Noor praying side by side at home.'),
-      whatHappened: 'Hamza and Noor end the month with fewer gatherings than his family hoped for — and a closeness neither expected.',
+      whatHappened: 'Hamza and Noor end the month with fewer gatherings than his family hoped for, and a closeness neither expected.',
       pattern: { name: 'Small things said early', explanation: 'Hurts were raised while they were still small, so they stayed small.' },
       couldHaveChanged: 'Including the family a little more might have kept everyone warmer without costing the two of them anything.',
       takeaway: 'A marriage needs its own rhythm, even inside a big family.',
@@ -548,7 +548,7 @@ export const firstRamadan: Adventure = {
       image: slot('adv-ramadan-end-cracks', 'outcome', 'A beautifully laid Eid table with a husband and wife sitting at opposite ends, not looking at each other, decorations still up.', 'Hamza and Noor at opposite ends of an Eid table.'),
       whatHappened: 'Eid looks perfect in the photos. At home, Hamza and Noor barely speak.',
       pattern: { name: 'Resentment by accumulation', explanation: 'Nothing big happened. Many small things went unsaid until they became a wall.' },
-      couldHaveChanged: 'Any one of the small moments — the group chat, the laugh, “I’m fine” — said out loud, kindly, at the time.',
+      couldHaveChanged: 'Any one of the small moments, the group chat, the laugh, “I’m fine”, said out loud, kindly, at the time.',
       takeaway: 'Silence keeps the peace for a day and costs it for a month.',
       epilogues: [
         { text: 'Hamza still doesn’t fully understand what went wrong.', when: { notFlag: 'told_feelings' } },
@@ -564,12 +564,12 @@ export const firstRamadan: Adventure = {
       title: 'Us against them',
       mood: 'bittersweet',
       image: slot('adv-ramadan-end-us', 'outcome', 'A young couple eating Eid breakfast alone together in their small flat, smiling at each other, an unanswered phone glowing on the counter.', 'Hamza and Noor alone at Eid breakfast, a phone ignored.'),
-      whatHappened: 'Hamza and Noor are closer than ever — and his family feel shut out.',
+      whatHappened: 'Hamza and Noor are closer than ever, and his family feel shut out.',
       pattern: { name: 'Closeness through exclusion', explanation: 'They became a team partly by defining themselves against the family.' },
-      couldHaveChanged: 'Bringing the family back in once the two of them felt secure — a call, an invitation, a shared iftar.',
+      couldHaveChanged: 'Bringing the family back in once the two of them felt secure, a call, an invitation, a shared iftar.',
       takeaway: 'Protecting the marriage doesn’t have to mean closing the door.',
       epilogues: [{ text: 'Hamza’s mother keeps calling. Hamza keeps meaning to call back.', when: { var: 'family', lte: -2 } }],
-      guide: [{ id: 'r-e-door', text: 'Our marriage comes first — and we keep the door open to family.' }],
+      guide: [{ id: 'r-e-door', text: 'Our marriage comes first, and we keep the door open to family.' }],
     },
     lonely_hostess: {
       id: 'lonely_hostess',
@@ -577,8 +577,8 @@ export const firstRamadan: Adventure = {
       mood: 'fragile',
       image: slot('adv-ramadan-end-lonely', 'outcome', 'A young woman alone in a kitchen at night surrounded by stacks of washed dishes, laughter and light from the living room behind her.', 'Noor alone in the kitchen while the family laughs next door.'),
       whatHappened: 'Hamza’s family call it the best Ramadan in years. Noor is exhausted and quietly lonely.',
-      pattern: { name: 'Keeping the peace at your spouse’s expense', explanation: 'Family harmony was bought with Noor’s silence — and Hamza didn’t notice the price.' },
-      couldHaveChanged: 'Hamza asking, just once, “How are you finding all this?” — and Noor answering honestly.',
+      pattern: { name: 'Keeping the peace at your spouse’s expense', explanation: 'Family harmony was bought with Noor’s silence, and Hamza didn’t notice the price.' },
+      couldHaveChanged: 'Hamza asking, just once, “How are you finding all this?”, and Noor answering honestly.',
       takeaway: 'A happy family and a happy marriage are not the same thing. You need both.',
       epilogues: [{ text: 'Noor starts dreading next Ramadan in Sha’ban.', when: { var: 'resentment', gte: 3 } }],
       guide: [{ id: 'r-e-check', text: 'Check in with each other during busy family seasons.' }],
@@ -601,7 +601,7 @@ export const firstRamadan: Adventure = {
       image: slot('adv-ramadan-end-quiet', 'outcome', 'Eid morning, a husband and wife getting ready in separate rooms of a flat, a closed door between them.', 'Hamza and Noor getting ready for Eid in separate rooms.'),
       whatHappened: 'Both waited for the other to move first. Eid comes and goes with polite greetings and nothing more.',
       pattern: { name: 'Mutual withdrawal', explanation: 'When both people withdraw, nobody is left to start the repair.' },
-      couldHaveChanged: 'Either one of them reaching out — it did not matter who.',
+      couldHaveChanged: 'Either one of them reaching out, it did not matter who.',
       takeaway: 'Waiting to be reached is a choice too.',
       guide: [{ id: 'r-e-first', text: 'Whoever notices the distance first reaches out first.' }],
     },
@@ -611,7 +611,7 @@ export const firstRamadan: Adventure = {
       mood: 'steady',
       image: slot('adv-ramadan-end-steady', 'outcome', 'A couple on a balcony at night after Eid, tired, sharing a plate of sweets, the city lights below.', 'Hamza and Noor sharing sweets on a balcony after Eid.'),
       whatHappened: 'Some evenings were hard and some were lovely. They end the month tired, a little wiser, and still on the same side.',
-      pattern: { name: 'Learning by doing', explanation: 'They handled some moments well and others not — and noticed the difference.' },
+      pattern: { name: 'Learning by doing', explanation: 'They handled some moments well and others not, and noticed the difference.' },
       couldHaveChanged: 'Talking sooner about what each of them wanted from Ramadan, before the family plans began.',
       takeaway: 'Before a big season, ask each other: what do you hope this will feel like?',
       epilogues: [
@@ -625,7 +625,7 @@ export const firstRamadan: Adventure = {
       title: 'Peace in the kitchen',
       mood: 'tender',
       image: slot('adv-ramadan-end-kitchen', 'outcome', 'An older woman and a young woman laughing while folding samosas together at a kitchen counter, flour everywhere.', 'Noor and her mother-in-law folding samosas together.'),
-      whatHappened: 'The samosa comment becomes the family’s favourite joke — told by Noor.',
+      whatHappened: 'The samosa comment becomes the family’s favourite joke, told by Noor.',
       pattern: { name: 'Turning toward', explanation: 'Instead of withdrawing from the hurt, Noor invited her mother-in-law closer.' },
       couldHaveChanged: 'Hamza and Noor could have talked more as a couple; much of the repair happened between Noor and his mother.',
       takeaway: 'Sometimes the bravest response to a sharp comment is an invitation.',

@@ -229,7 +229,7 @@ function Scenario({
                   who={item.who}
                   answer={picked.label}
                   detail={picked.consequence}
-                  // A gentle read on your own choice only — never a grade on theirs.
+                  // A gentle read on your own choice only, never a grade on theirs.
                   badge={item.own ? copy(`tone.${picked.tone}`) : undefined}
                 />
               ) : null;

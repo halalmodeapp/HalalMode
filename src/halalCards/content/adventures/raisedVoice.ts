@@ -2,7 +2,7 @@ import type { Adventure, Condition } from '../../types.ts';
 import { slot } from '../images.ts';
 
 /**
- * The Raised Voice — two people from very different homes have their first
+ * The Raised Voice, two people from very different homes have their first
  * real argument. Hidden states: safety, understanding, repair.
  */
 export const raisedVoice: Adventure = {
@@ -37,7 +37,7 @@ export const raisedVoice: Adventure = {
         prompt: 'You are Adnan. What do you do?',
         choices: [
           { id: 'stop', label: 'Stop mid-sentence. “I’m shouting. I’m sorry. Let me calm down.”', effects: { vars: { safety: 2, repair: 1 } }, next: 'after', beat: 'Adnan stopped himself mid-shout and apologised.' },
-          { id: 'continue', label: 'Keep going — he’s not done, and he’s not angry with her, really.', effects: { vars: { safety: -2 } }, next: 'after', beat: 'Adnan kept shouting.' },
+          { id: 'continue', label: 'Keep going, he’s not done, and he’s not angry with her, really.', effects: { vars: { safety: -2 } }, next: 'after', beat: 'Adnan kept shouting.' },
           { id: 'slam', label: 'Storm out and slam the door.', effects: { vars: { safety: -1, repair: -1 }, flags: ['slammed'] }, next: 'after', beat: 'Adnan stormed out and slammed the door.' },
         ],
       },
@@ -55,7 +55,7 @@ export const raisedVoice: Adventure = {
         actor: 'B',
         prompt: 'You are Huda. What do you do?',
         choices: [
-          { id: 'tell', label: 'Later, tell Adnan: “When you shout, I feel scared — even if you don’t mean it.”', effects: { vars: { understanding: 2 }, flags: ['named_fear'] }, next: 'apology', beat: 'Huda told Adnan that shouting scared her.' },
+          { id: 'tell', label: 'Later, tell Adnan: “When you shout, I feel scared, even if you don’t mean it.”', effects: { vars: { understanding: 2 }, flags: ['named_fear'] }, next: 'apology', beat: 'Huda told Adnan that shouting scared her.' },
           { id: 'freeze', label: 'Say nothing. Be very careful around him for days.', effects: { vars: { safety: -1 }, flags: ['froze'] }, next: 'apology', beat: 'Huda went quiet and careful for days.' },
           { id: 'mother', label: 'Call her mother and stay there for the night.', effects: { vars: { repair: -1 }, flags: ['left_night'] }, next: 'apology', beat: 'Huda went to her mother’s for the night.' },
         ],
@@ -76,7 +76,7 @@ export const raisedVoice: Adventure = {
         choices: [],
         byRole: {
           A: [
-            { id: 'quick', label: '“Sorry about earlier — we’re good, yeah?” and a hug.', effects: { vars: { repair: -1 } }, next: 'homes', beat: 'Adnan apologised quickly and went for a hug.' },
+            { id: 'quick', label: '“Sorry about earlier, we’re good, yeah?” and a hug.', effects: { vars: { repair: -1 } }, next: 'homes', beat: 'Adnan apologised quickly and went for a hug.' },
             { id: 'ask', label: '“I’m sorry. Can you tell me what it was like for you?”', effects: { vars: { understanding: 2, repair: 1 } }, next: 'homes', beat: 'Adnan apologised and asked what it had been like for her.' },
             { id: 'explain', label: 'Explain that shouting is normal in his family; she shouldn’t take it personally.', effects: { vars: { safety: -1 } }, next: 'homes', beat: 'Adnan explained that shouting was normal in his family.' },
           ],
@@ -98,15 +98,15 @@ export const raisedVoice: Adventure = {
       id: 'homes',
       title: 'The homes we came from',
       image: slot('adv-anger-homes', 'scene', 'A couple sitting on a sofa looking at an old photo album together, pointing at pictures of their childhood homes and families, soft lamp light.', 'Adnan and Huda looking at childhood photos together.'),
-      passages: [{ text: 'A week later, they talk about the homes they each grew up in — the loud one and the quiet one.' }],
+      passages: [{ text: 'A week later, they talk about the homes they each grew up in, the loud one and the quiet one.' }],
       lessons: [{ id: 'rv-l-joint', tag: 'Joint decision', text: 'Choose together. If you differ, talk it through and choose again.' }],
       decision: {
         mode: 'joint',
         prompt: 'Together: what will you agree for arguments?',
         choices: [
           { id: 'signal', label: 'A signal: either says “pause”, and they take twenty minutes apart, then come back.', effects: { vars: { safety: 2, repair: 1 }, flags: ['signal'] }, next: 'second', beat: 'They agreed a pause signal and a twenty-minute break.' },
-          { id: 'volume', label: 'No raised voices, ever — whatever the topic.', effects: { vars: { safety: 2 }, flags: ['volume_rule'] }, next: 'second', beat: 'They agreed no raised voices, ever.' },
-          { id: 'nothing', label: 'Nothing formal — they’ll just try harder.', next: 'second', beat: 'They agreed to just try harder.' },
+          { id: 'volume', label: 'No raised voices, ever, whatever the topic.', effects: { vars: { safety: 2 }, flags: ['volume_rule'] }, next: 'second', beat: 'They agreed no raised voices, ever.' },
+          { id: 'nothing', label: 'Nothing formal, they’ll just try harder.', next: 'second', beat: 'They agreed to just try harder.' },
         ],
       },
     },
@@ -116,7 +116,7 @@ export const raisedVoice: Adventure = {
       turningPoint: true,
       image: slot('adv-anger-second', 'turning_point', 'A couple in a living room mid-disagreement, the husband catching himself with one hand raised in a pause gesture, the wife watching, the tension easing.', 'Adnan catching himself mid-argument.'),
       passages: [
-        { text: 'A month later, another argument — about his sister staying for two weeks. Adnan feels his voice starting to rise.' },
+        { text: 'A month later, another argument, about his sister staying for two weeks. Adnan feels his voice starting to rise.' },
         { text: 'They have a signal now.', when: { flag: 'signal' } },
       ],
       decision: {
@@ -144,7 +144,7 @@ export const raisedVoice: Adventure = {
         prompt: 'You are Huda. What do you do?',
         choices: [
           { id: 'speak', label: 'Say what she needs instead of going silent.', effects: { vars: { understanding: 1, repair: 1 } }, next: { routes: endingRoutes() }, beat: 'Huda said what she needed instead of going silent.' },
-          { id: 'silent', label: 'Go silent — it’s how her family handled it.', effects: { vars: { repair: -1 } }, next: { routes: endingRoutes() }, beat: 'Huda went silent, the way her family always had.' },
+          { id: 'silent', label: 'Go silent, it’s how her family handled it.', effects: { vars: { repair: -1 } }, next: { routes: endingRoutes() }, beat: 'Huda went silent, the way her family always had.' },
           { id: 'help', label: 'Suggest they see a counsellor together.', effects: { vars: { understanding: 1 }, flags: ['counsellor'] }, next: { routes: endingRoutes() }, beat: 'Huda suggested seeing a counsellor together.' },
         ],
       },
@@ -156,7 +156,7 @@ export const raisedVoice: Adventure = {
       image: slot('adv-anger-end-fair', 'outcome', 'A couple in a kitchen, one holding up a hand in a gentle “pause” gesture, the other smiling and nodding, two mugs of tea being made.', 'Adnan and Huda calling a pause with a smile.'),
       whatHappened: '“Pause” has become a family word. Arguments still happen; nobody is frightened by them.',
       pattern: { name: 'A shared way to fight', explanation: 'They built a signal that worked for both their histories.' },
-      couldHaveChanged: 'Little — though talking about their childhood homes before the wedding would have helped.',
+      couldHaveChanged: 'Little, though talking about their childhood homes before the wedding would have helped.',
       takeaway: 'Every couple fights. Couples who last agree how.',
       epilogues: [{ text: 'Adnan’s loud family have started using “pause” too.', when: { var: 'repair', gte: 4 } }],
       guide: [{ id: 'rv-e-pause', text: 'Either of us can say “pause”; we take twenty minutes and come back.' }],
@@ -184,7 +184,7 @@ export const raisedVoice: Adventure = {
       image: slot('adv-anger-end-repeat', 'outcome', 'A couple on opposite ends of a long sofa not speaking, a closed door and a broken mug in the background, cold evening light.', 'Adnan and Huda not speaking on opposite ends of the sofa.'),
       whatHappened: 'The loud arguments and the long silences keep alternating. Each makes the other worse.',
       pattern: { name: 'Shout and freeze', explanation: 'His shouting triggered her silence; her silence fed his frustration.' },
-      couldHaveChanged: 'A pause signal — and both naming their pattern.',
+      couldHaveChanged: 'A pause signal, and both naming their pattern.',
       takeaway: 'His loud and her quiet are two halves of one pattern. Change it together.',
       guide: [{ id: 'rv-e-pattern', text: 'We name our conflict pattern out loud and work on it together.' }],
     },
@@ -193,7 +193,7 @@ export const raisedVoice: Adventure = {
       image: slot('adv-anger-end-counsel', 'outcome', 'A couple sitting together on a sofa in a calm counsellor’s office, the counsellor in a chair opposite, the couple holding hands.', 'Adnan and Huda with a counsellor.'),
       whatHappened: 'They start seeing a Muslim counsellor together. It is the best decision of their first year.',
       pattern: { name: 'Seeking help early', explanation: 'They treated a pattern as something to learn about, not something shameful.' },
-      couldHaveChanged: 'Nothing — asking for help was strength.',
+      couldHaveChanged: 'Nothing, asking for help was strength.',
       takeaway: 'Getting help early is a sign of how much you care.',
       guide: [{ id: 'rv-e-help', text: 'We are not too proud to get help with our marriage.' }],
     },

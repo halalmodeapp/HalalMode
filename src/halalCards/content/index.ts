@@ -42,6 +42,9 @@ export const ADVENTURES: Adventure[] = [
 
 export const ALL_ACTIVITIES: Activity[] = [...LAB_LESSONS, ...QUIZZES, ...ADVENTURES];
 
+/** Public copy should always reflect the registered catalogue, not a stale number. */
+export const HALAL_CARDS_ACTIVITY_COUNT = ALL_ACTIVITIES.length;
+
 const byId = new Map(ALL_ACTIVITIES.map((activity) => [activity.id, activity]));
 
 export function findActivity(id: string): Activity | undefined {

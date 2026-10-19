@@ -2,7 +2,7 @@ import type { Adventure, Condition } from '../../types.ts';
 import { slot } from '../images.ts';
 
 /**
- * Background Noise — two years married, not unhappy, just busy, and one of
+ * Background Noise, two years married, not unhappy, just busy, and one of
  * them has quietly stopped sharing her day. Hidden states: connection,
  * loneliness, effort.
  */
@@ -12,7 +12,7 @@ export const backgroundNoise: Adventure = {
   title: 'Background Noise',
   tagline: 'Not unhappy. Just busy. And she’s stopped telling him about her day.',
   description:
-    'Two years in, Ibrahim and Sumayya are fine — busy jobs, full weekends, a comfortable routine. Ibrahim has not noticed that Sumayya stopped telling him about her day. Play both of them through a forgotten anniversary, a friend who listens better, and a weekend with no phones.',
+    'Two years in, Ibrahim and Sumayya are fine, busy jobs, full weekends, a comfortable routine. Ibrahim has not noticed that Sumayya stopped telling him about her day. Play both of them through a forgotten anniversary, a friend who listens better, and a weekend with no phones.',
   minutes: 13,
   themes: ['Feeling ignored', 'Affection', 'Small bids for attention'],
   cover: slot('concept-ignored-cover', 'cover', 'A couple on a sofa, the husband watching football and the wife talking to him while he nods without looking, an untouched slice of cake.', 'A wife talking while her husband watches TV without looking.'),
@@ -56,7 +56,7 @@ export const backgroundNoise: Adventure = {
         actor: 'B',
         prompt: 'You are Sumayya. What do you do?',
         choices: [
-          { id: 'retry', label: 'Try again — the story is still funny.', effects: { vars: { effort: 1, connection: 1 } }, next: 'anniversary', beat: 'Sumayya tried telling him again.' },
+          { id: 'retry', label: 'Try again, the story is still funny.', effects: { vars: { effort: 1, connection: 1 } }, next: 'anniversary', beat: 'Sumayya tried telling him again.' },
           { id: 'friend', label: 'Tell her friend Asma instead.', effects: { vars: { loneliness: 1 }, flags: ['asma'] }, next: 'anniversary', beat: 'Sumayya told her friend instead.' },
           { id: 'say', label: '“I feel like you don’t really hear me lately.”', effects: { vars: { effort: 1 }, flags: ['named_it'] }, next: 'anniversary', beat: 'Sumayya told him she felt unheard lately.' },
         ],
@@ -68,7 +68,7 @@ export const backgroundNoise: Adventure = {
       turningPoint: true,
       image: slot('adv-noise-anniversary', 'turning_point', 'A woman at a kitchen table at night with two plates and a small homemade cake, one candle, checking the clock, the chair opposite empty.', 'Sumayya waiting with a small cake.'),
       passages: [
-        { text: 'It is their anniversary. Sumayya made a cake. Ibrahim is working late — he forgot.' },
+        { text: 'It is their anniversary. Sumayya made a cake. Ibrahim is working late, he forgot.' },
         { text: 'She already told him she felt unheard. It sits in the room like a third person.', when: { flag: 'named_it' } },
       ],
       decision: {
@@ -82,7 +82,7 @@ export const backgroundNoise: Adventure = {
             { id: 'tomorrow', label: '“Let’s celebrate properly this weekend.”', effects: { vars: { effort: 1 } }, next: 'asma', beat: 'Ibrahim promised a proper celebration at the weekend.' },
           ],
           B: [
-            { id: 'show', label: 'Tell him it hurt — and that she wants this to change.', effects: { vars: { effort: 1 } }, next: 'asma', beat: 'Sumayya told him it hurt and she wanted change.' },
+            { id: 'show', label: 'Tell him it hurt, and that she wants this to change.', effects: { vars: { effort: 1 } }, next: 'asma', beat: 'Sumayya told him it hurt and she wanted change.' },
             { id: 'fine', label: '“It’s fine.” Put the cake away.', effects: { vars: { loneliness: 2 }, flags: ['put_away'] }, next: 'asma', beat: 'Sumayya said it was fine and put the cake away.' },
             { id: 'cry', label: 'Cry, without explaining.', effects: { vars: { loneliness: 1 } }, next: 'asma', beat: 'Sumayya cried without explaining.' },
           ],
@@ -124,7 +124,7 @@ export const backgroundNoise: Adventure = {
         actor: 'A',
         prompt: 'You are Ibrahim. What do you do?',
         choices: [
-          { id: 'weekend', label: 'Plan a weekend away — no phones.', effects: { vars: { effort: 2 }, flags: ['planned'] }, next: 'weekend', beat: 'Ibrahim planned a weekend away with no phones.' },
+          { id: 'weekend', label: 'Plan a weekend away, no phones.', effects: { vars: { effort: 2 }, flags: ['planned'] }, next: 'weekend', beat: 'Ibrahim planned a weekend away with no phones.' },
           { id: 'daily', label: 'Start a small habit: ten minutes each evening, phones away, “tell me your day”.', effects: { vars: { effort: 1, connection: 1 }, flags: ['ritual'] }, next: 'weekend', beat: 'Ibrahim started a ten-minute evening ritual.' },
           { id: 'fine', label: 'Decide it’s a phase. Marriages have them.', effects: { vars: { loneliness: 1 } }, next: 'weekend', beat: 'Ibrahim decided it was just a phase.' },
         ],
@@ -135,7 +135,7 @@ export const backgroundNoise: Adventure = {
       title: 'No phones',
       turningPoint: true,
       image: slot('adv-noise-weekend', 'turning_point', 'A couple walking along a quiet coastal path in jackets, phones nowhere in sight, the wife laughing at something the husband said, sea in the background.', 'Ibrahim and Sumayya walking a coastal path, no phones.'),
-      passages: [{ text: 'A weekend with no phones — whether planned or simply because the signal is bad at her parents’ village.' }],
+      passages: [{ text: 'A weekend with no phones, whether planned or simply because the signal is bad at her parents’ village.' }],
       lessons: [{ id: 'bn-l-joint', tag: 'Joint decision', text: 'Choose together; if you differ, talk it through and choose again.' }],
       decision: {
         mode: 'joint',
@@ -157,7 +157,7 @@ export const backgroundNoise: Adventure = {
         actor: 'A',
         prompt: 'You are Ibrahim. What happens?',
         choices: [
-          { id: 'close_book', label: 'Close his book. “Go on — tell me.”', effects: { vars: { connection: 1 } }, next: { routes: endingRoutes() }, beat: 'Ibrahim put everything down to hear her story.' },
+          { id: 'close_book', label: 'Close his book. “Go on, tell me.”', effects: { vars: { connection: 1 } }, next: { routes: endingRoutes() }, beat: 'Ibrahim put everything down to hear her story.' },
           { id: 'phone', label: 'Listen while finishing an email.', effects: { vars: { loneliness: 1 } }, next: { routes: endingRoutes() }, beat: 'Ibrahim half-listened while finishing an email.' },
         ],
       },
@@ -170,7 +170,7 @@ export const backgroundNoise: Adventure = {
       whatHappened: 'Ten minutes a day became the best part of both their days.',
       pattern: { name: 'Turning toward bids', explanation: 'Small, daily attention rebuilt what busyness had worn down.' },
       couldHaveChanged: 'Noticing the first unshared story.',
-      takeaway: 'Marriages rarely end in one fight. They fade from ignored small moments — and recover the same way.',
+      takeaway: 'Marriages rarely end in one fight. They fade from ignored small moments, and recover the same way.',
       epilogues: [{ text: 'Asma says Sumayya seems happier. She is.', when: { flag: 'asma' } }],
       guide: [{ id: 'bn-e-ten', text: 'Ten minutes a day, phones down: “tell me about your day”.' }],
     },
@@ -191,14 +191,14 @@ export const backgroundNoise: Adventure = {
       pattern: { name: 'Emotional absence', explanation: 'Presence in the same house is not the same as presence in someone’s life.' },
       couldHaveChanged: 'Ibrahim noticing; Sumayya saying it out loud.',
       takeaway: 'Loneliness inside a marriage is a warning, not a phase.',
-      guide: [{ id: 'bn-e-alone', text: 'If either of us feels alone, we say so — and the other stops everything.' }],
+      guide: [{ id: 'bn-e-alone', text: 'If either of us feels alone, we say so, and the other stops everything.' }],
     },
     honest_cake: {
       id: 'honest_cake', title: 'Cake at midnight', mood: 'tender',
       image: slot('adv-noise-end-cake', 'outcome', 'A couple sharing a small cake at a kitchen table at midnight, one candle lit, holding forks, smiling softly.', 'Ibrahim and Sumayya sharing cake at midnight.'),
       whatHappened: 'The forgotten anniversary became the night they started really talking again.',
       pattern: { name: 'Repair after a miss', explanation: 'He owned it; she said what it meant. The miss became a turning point.' },
-      couldHaveChanged: 'Not forgetting — but the repair mattered more.',
+      couldHaveChanged: 'Not forgetting, but the repair mattered more.',
       takeaway: 'You will forget things. What matters is the repair.',
       guide: [{ id: 'bn-e-repair', text: 'When one of us forgets something important, we own it without excuses.' }],
     },

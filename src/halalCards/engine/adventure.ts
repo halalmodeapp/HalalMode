@@ -231,8 +231,8 @@ export function canLetStoryDecide(adventure: Adventure, state: AdventureState): 
 
 /**
  * Two people who keep choosing differently can hand the call to the story: it
- * takes one of their last two choices — alternating whose by step, so neither
- * always wins — as if both had picked it.
+ * takes one of their last two choices, alternating whose by step, so neither
+ * always wins, as if both had picked it.
  */
 export function letStoryDecide(adventure: Adventure, state: AdventureState): AdventureState {
   if (!canLetStoryDecide(adventure, state)) throw new Error('The story cannot decide here.');
@@ -263,7 +263,7 @@ export function variableReadings(adventure: Adventure, state: AdventureState) {
 }
 
 // ---------------------------------------------------------------------------
-// Validation and exploration — used by tests, and by anyone writing a story
+// Validation and exploration, used by tests, and by anyone writing a story
 // ---------------------------------------------------------------------------
 
 function allChoices(decision: StoryDecision): StoryChoice[] {
@@ -323,7 +323,7 @@ export function validateAdventure(adventure: Adventure): string[] {
 export interface Exploration {
   /** Ending ids some playthrough actually reaches. */
   endings: Set<string>;
-  /** Distinct ending-plus-epilogue combinations — what a couple can read at the end. */
+  /** Distinct ending-plus-epilogue combinations, what a couple can read at the end. */
   outcomes: Set<string>;
   scenesVisited: Set<string>;
   /** Positions where no choice was available. */
@@ -332,8 +332,8 @@ export interface Exploration {
 }
 
 /**
- * Plays every combination of choices — honouring conditions, effects and
- * combos — to prove what can really happen. Memoised on the full story
+ * Plays every combination of choices, honouring conditions, effects and
+ * combos, to prove what can really happen. Memoised on the full story
  * state, so it stays fast on large branching stories.
  */
 export function exploreAdventure(adventure: Adventure, limit = 200_000): Exploration {

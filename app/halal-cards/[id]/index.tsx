@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import type { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fetchConnection } from '@/api/connections';
@@ -91,7 +91,14 @@ export default function HalalCardsHub() {
   const played = rows.filter((item) => item.cue === 'finished').slice(0, 6);
   const agreed = guide.query.data?.filter((entry) => entry.agreed) ?? [];
   const pending = guide.query.data?.filter((entry) => !entry.agreed).length ?? 0;
-  const enter = (index: number) => (reducedMotion ? undefined : FadeInDown.delay(60 * index).springify().damping(18));
+  const enter = (index: number) => (
+    reducedMotion
+      ? undefined
+      : FadeInDown
+        .delay(110 * index)
+        .duration(900)
+        .easing(Easing.out(Easing.cubic))
+  );
   const counts: Record<ActivityKind, string> = {
     lab: copy('lessons', { count: LAB_LESSONS.length }),
     quiz: copy('decks', { count: QUIZZES.filter((quiz) => inTrack(quiz, access.data?.track ?? 'getting_to_know')).length }),
@@ -101,7 +108,7 @@ export default function HalalCardsHub() {
   return (
     <Screen style={styles.screen}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* The title fills the top of the screen — a header, not a card. */}
+        {/* The title fills the top of the screen, a header, not a card. */}
         <View style={styles.hero}>
           <Illustration image={HUB_HERO} aspectRatio={4 / 5} rounded={false} style={styles.heroImage}>
             <View style={styles.heroText}>
@@ -185,7 +192,7 @@ export default function HalalCardsHub() {
                 onPress={() => router.push(cardsPaths.section(id, kind) as never)}
                 style={({ pressed }) => [styles.gate, pressed && styles.pressed]}
               >
-                <Illustration {...sectionCard(kind)} aspectRatio={16 / 9} rounded={false} thumb>
+                <Illustration {...sectionCard(kind)} aspectRatio={16 / 9} rounded={false} thumb cropZoom={1.3}>
                   <OverlayText kind="eyebrow">{counts[kind]}</OverlayText>
                 </Illustration>
                 <View style={styles.gateBody}>
@@ -309,7 +316,7 @@ const styles = StyleSheet.create({
   journalMark: { fontSize: 18, color: color.gold },
   journalTitle: { fontFamily: font.display, fontSize: 22, color: color.ink },
   lines: { marginVertical: space.xs },
-  line: { borderBottomWidth: 1, borderBottomColor: 'rgba(138,106,52,0.22)', paddingVertical: 6 },
+  line: { borderBottomWidth: 1, borderBottomColor: 'rgba(184,145,79,0.22)', paddingVertical: 6 },
   lineText: { fontFamily: font.displayItalic, fontSize: 14, color: color.inkSoft },
   gateBlock: { gap: space.md },
   gateHeading: { flexDirection: 'row', alignItems: 'baseline', gap: space.md },

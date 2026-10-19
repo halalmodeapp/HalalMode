@@ -4,7 +4,7 @@ import type { Activity } from './types.ts';
  * Translating Halal Cards content.
  *
  * Every member-facing string in an activity has a stable key built from its
- * place in the activity — `adv-fajr-alarm.scenes.alarm.decision.choices.wake.label`.
+ * place in the activity, `adv-fajr-alarm.scenes.alarm.decision.choices.wake.label`.
  * Array items with an `id` are keyed by that id, everything else by position,
  * so adding a choice or a scene never renumbers the rest.
  *

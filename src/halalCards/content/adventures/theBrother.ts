@@ -2,7 +2,7 @@ import type { Adventure, Condition } from '../../types.ts';
 import { slot } from '../images.ts';
 
 /**
- * The Brother — a sibling in debt, a large loan, and whose money it is.
+ * The Brother, a sibling in debt, a large loan, and whose money it is.
  * Hidden states: partnership, family, trust.
  */
 export const theBrother: Adventure = {
@@ -11,7 +11,7 @@ export const theBrother: Adventure = {
   title: 'The Brother',
   tagline: 'Her brother is drowning in debt. She wants to help. He has doubts.',
   description:
-    'Naila’s younger brother Faisal is in serious debt and asks to borrow £8,000 — most of their savings. Naila wants to help; Hamid is not sure it will. Play both of them through the request, the loan (or not), the second request, and a family that thinks Hamid is heartless.',
+    'Naila’s younger brother Faisal is in serious debt and asks to borrow £8,000, most of their savings. Naila wants to help; Hamid is not sure it will. Play both of them through the request, the loan (or not), the second request, and a family that thinks Hamid is heartless.',
   minutes: 13,
   themes: ['Family pressure', 'Money', 'Boundaries'],
   cover: slot('concept-brother-cover', 'cover', 'A young man sitting with his head down on his sister’s sofa, the sister holding an envelope, her husband standing in the kitchen doorway.', 'A brother asking his sister for help as her husband watches.'),
@@ -57,7 +57,7 @@ export const theBrother: Adventure = {
         choices: [
           { id: 'gentle', label: '“I want to help him too. I just want to make sure it actually helps.”', effects: { vars: { partnership: 1 } }, next: 'decide', beat: 'Hamid said he wanted to help in a way that actually helped.' },
           { id: 'flat', label: '“Absolutely not. He’ll waste it.”', effects: { vars: { partnership: -2, family: -1 } }, next: 'decide', beat: 'Hamid flatly refused.' },
-          { id: 'quiet', label: 'Say nothing and let Naila decide — it’s her brother.', effects: { vars: { trust: -1 }, flags: ['abdicated'] }, next: 'decide', beat: 'Hamid stayed quiet and left it to Naila.' },
+          { id: 'quiet', label: 'Say nothing and let Naila decide, it’s her brother.', effects: { vars: { trust: -1 }, flags: ['abdicated'] }, next: 'decide', beat: 'Hamid stayed quiet and left it to Naila.' },
         ],
       },
     },
@@ -75,7 +75,7 @@ export const theBrother: Adventure = {
           { id: 'conditions', label: 'A loan with conditions: a debt advisor, a written repayment plan.', effects: { vars: { partnership: 2, trust: 1 }, flags: ['conditions'] }, next: 'family_reacts', beat: 'They offered a loan with conditions and a debt advisor.' },
           { id: 'gift', label: 'A smaller gift they can afford to lose, plus help finding advice.', effects: { vars: { partnership: 1, family: 1 }, flags: ['gift'] }, next: 'family_reacts', beat: 'They gave a smaller gift and help finding advice.' },
           { id: 'full', label: 'The full £8,000, no conditions.', effects: { vars: { family: 2 }, flags: ['full'] }, next: 'family_reacts', beat: 'They gave the full amount with no conditions.' },
-          { id: 'no', label: 'No money — but they’ll help him find free debt advice.', effects: { vars: { family: -1 }, flags: ['said_no'] }, next: 'family_reacts', beat: 'They declined to lend but offered to help with advice.' },
+          { id: 'no', label: 'No money, but they’ll help him find free debt advice.', effects: { vars: { family: -1 }, flags: ['said_no'] }, next: 'family_reacts', beat: 'They declined to lend but offered to help with advice.' },
         ],
       },
     },
@@ -184,7 +184,7 @@ export const theBrother: Adventure = {
       pattern: { name: 'Financial secrecy', explanation: 'Hidden money broke more trust than any loan could cost.' },
       couldHaveChanged: 'Showing Hamid the message.',
       takeaway: 'Hidden money is a hidden wound.',
-      guide: [{ id: 'tb-e-secret', text: 'No secret money between us — ever.' }],
+      guide: [{ id: 'tb-e-secret', text: 'No secret money between us, ever.' }],
     },
     scapegoat: {
       id: 'scapegoat', title: 'The villain', mood: 'strained',
