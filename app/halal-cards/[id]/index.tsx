@@ -28,6 +28,8 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useI18n } from '@/i18n';
 import { queryKeys } from '@/lib/queryClient';
 import { useSession } from '@/state/session';
+import { rcClaudePaths } from '@/components/relationshipChallengeClaude/paths';
+import { rcCopy } from '@/halalCards/relationshipChallengeClaude/strings';
 import { alpha, color, font, layout, radius, shadow, space } from '@/theme/tokens';
 
 /**
@@ -193,6 +195,20 @@ export default function HalalCardsHub() {
               </Pressable>
             </Animated.View>
           ))}
+
+          {/* Relationship Challenge Claude (comparison build): one additive entry, see docs/relationship-challenge/claude/HANDOFF.md. */}
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push(rcClaudePaths.lobby(id) as never)}
+            style={({ pressed }) => [styles.sessionRow, pressed && styles.pressed]}
+          >
+            <View style={styles.flex}>
+              <Text variant="micro">{rcCopy(language, 'brandTrack')}</Text>
+              <Text style={styles.cardTitle}>{rcCopy(language, 'lobby.title')}</Text>
+              <Text variant="caption">{rcCopy(language, 'lobby.intro')}</Text>
+            </View>
+            <Text style={styles.chevron}>›</Text>
+          </Pressable>
 
           {played.length ? (
             <Section title={copy('played')}>
