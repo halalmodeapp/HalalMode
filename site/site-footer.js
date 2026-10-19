@@ -5,25 +5,25 @@
  * from the same links in src/lib/publicLinks.ts. */
 (function () {
   'use strict';
-  var LINKS = [
+  const LINKS = [
     ['/how-it-works', 'navHow', 'How it works'],
     ['/refer', 'navRefer', 'Refer your friends'],
   ];
-  var EMAIL = 'hello@halalmo.de';
-  var here = location.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
+  const EMAIL = 'hello@halalmo.de';
+  const here = location.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
 
   function el(tag, attrs, text) {
-    var node = document.createElement(tag);
-    for (var key in attrs) node.setAttribute(key, attrs[key]);
+    const node = document.createElement(tag);
+    for (const key in attrs) node.setAttribute(key, attrs[key]);
     if (text) node.textContent = text;
     return node;
   }
 
   document.querySelectorAll('[data-site-footer]').forEach(function (footer) {
     footer.textContent = '';
-    var copy = el('span', { class: 'footer-copy' });
+    const copy = el('span', { class: 'footer-copy' });
     copy.append('© ' + new Date().getFullYear() + ' ', el('span', { 'data-brand-name': '' }, 'Halal Mode'));
-    var links = el('span', { class: 'footer-links' });
+    const links = el('span', { class: 'footer-links' });
     LINKS.forEach(function (link) {
       if (link[0] === here) return;
       links.append(el('a', { href: link[0], 'data-i18n': link[1] }, link[2]), ' · ');

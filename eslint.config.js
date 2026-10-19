@@ -13,6 +13,7 @@ module.exports = defineConfig([
       '**/output/**',
       '.claude/**',
       'site/logo-effect.js',
+      'site/halftone.js',
       // This old staging-only helper is not loaded by any shipped route.
       'site/stage.js',
       'supabase/functions/**',
