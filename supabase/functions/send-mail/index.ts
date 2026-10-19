@@ -215,7 +215,6 @@ function notJoinedEmail(locale: string) {
 // Premium reserved so far, and a fresh 30-day link to their page.
 const JOINED: Record<string, {
   subject: string; counted: string; next: string; top: string; months: string; month: string; button: string; expiry: string;
-  monthsLaunched: string; monthLaunched: string;
   rewards: Record<number, string>;
 }> = {
   en: {
@@ -225,8 +224,6 @@ const JOINED: Record<string, {
     top: 'You have reached the top reward: 1 year of Premium, free.',
     months: 'Premium reserved for you so far: {months} months.',
     month: 'Premium reserved for you so far: 1 month.',
-    monthsLaunched: 'Premium you’ve earned so far: {months} months.',
-    monthLaunched: 'Premium you’ve earned so far: 1 month.',
     button: 'See my progress',
     expiry: 'This link works for 30 days.',
     rewards: { 3: '3 months free', 5: '6 months free', 10: '1 year free' },
@@ -238,16 +235,13 @@ const JOINED: Record<string, {
     top: 'وصلت إلى أعلى مكافأة: سنة من بريميوم مجانًا.',
     months: 'بريميوم المحجوز لك حتى الآن: {months} أشهر.',
     month: 'بريميوم المحجوز لك حتى الآن: شهر واحد.',
-    monthsLaunched: 'بريميوم الذي كسبته حتى الآن: {months} أشهر.',
-    monthLaunched: 'بريميوم الذي كسبته حتى الآن: شهر واحد.',
     button: 'اعرض تقدّمي',
     expiry: 'يعمل هذا الرابط لمدة 30 يومًا.',
     rewards: { 3: '3 أشهر مجانًا', 5: '6 أشهر مجانًا', 10: 'سنة مجانًا' },
   },
 };
 
-/** `launched`: the launch switch (public.launch_state), as on the site and in the app. */
-function referralJoinedEmail(locale: string, progress: Progress, token: string, launched: boolean) {
+function referralJoinedEmail(locale: string, progress: Progress, token: string) {
   const words = JOINED[locale] ?? JOINED.en;
   const joined = Math.max(0, progress.referral_count);
   const goal = joined >= 10 ? 10 : joined >= 5 ? 10 : joined >= 3 ? 5 : 3;
@@ -256,9 +250,7 @@ function referralJoinedEmail(locale: string, progress: Progress, token: string, 
   const lines = [fill(words.counted, { joined, goal })];
   lines.push(joined >= 10 ? words.top : fill(words.next, { left: goal - joined, reward: words.rewards[goal] }));
   if (progress.reward_months > 0) {
-    lines.push(progress.reward_months === 1
-      ? (launched ? words.monthLaunched : words.month)
-      : fill(launched ? words.monthsLaunched : words.months, { months: progress.reward_months }));
+    lines.push(progress.reward_months === 1 ? words.month : fill(words.months, { months: progress.reward_months }));
   }
   const link = `https://halalmo.de/refer?verify=${encodeURIComponent(token)}`;
   return {
@@ -298,8 +290,6 @@ Deno.serve(async (request) => {
   if (!apiKey || !operator) return new Response('RESEND_API_KEY and OPERATOR_EMAIL are not set', { status: 503 });
 
   const secret = await client.rpc('mail_link_secret_service');
-  const launch = await client.rpc('launch_state');
-  const launched = (launch.data as { launched?: unknown } | null)?.launched === true;
   const claimed = await client.rpc('claim_mail_service', { p_limit: 20 });
   if (claimed.error || secret.error) return new Response('claim failed', { status: 500 });
 
@@ -323,7 +313,7 @@ Deno.serve(async (request) => {
         const mail = notJoinedEmail(item.locale);
         error = await send(apiKey, item.to, mail.subject, mail.html, `mail-${item.id}`);
       } else if (item.kind === 'referral_joined' && item.to && item.progress && item.verification?.token) {
-        const mail = referralJoinedEmail(item.locale, item.progress, item.verification.token, launched);
+        const mail = referralJoinedEmail(item.locale, item.progress, item.verification.token);
         error = await send(apiKey, item.to, mail.subject, mail.html, `mail-${item.id}`);
       } else {
         error = 'nothing to send';

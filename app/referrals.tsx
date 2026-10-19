@@ -67,7 +67,7 @@ function ShareCard({ progress }: { progress: Extract<ReferralProgress, { state: 
       ? t('referrals.rewardMonth1')
       : progress.rewardMonths > 1
         ? t('referrals.rewardMonths', { months: progress.rewardMonths })
-        : t('referrals.noReward');
+        : null;
 
   // There is no clipboard module in the native build, so on a phone this
   // opens the share sheet, which has Copy alongside every app.
@@ -91,7 +91,7 @@ function ShareCard({ progress }: { progress: Extract<ReferralProgress, { state: 
   return (
     <View style={styles.card}>
       <Text variant="displaySmall">{t('referrals.linkTitle')}</Text>
-      <Text variant="bodySmall" style={styles.reward}>{reward}</Text>
+      {reward ? <Text variant="bodySmall" style={styles.reward}>{reward}</Text> : null}
       <Text variant="micro" style={styles.linkLabel}>{t('referrals.linkLabel')}</Text>
       <View style={styles.linkBox}>
         <Text selectable style={styles.linkText} accessibilityLabel={t('referrals.linkLabel')}>

@@ -3,7 +3,6 @@ import { I18nManager, Platform, View } from 'react-native';
 
 import { type TranslationKey } from '@/i18n/catalog';
 import { brandNameFor, getLocale, premiumWordFor, type AppLocale } from '@/i18n/locales';
-import { loadLaunchState, useLaunched } from '@/lib/launch';
 import { LTR_LAYOUT, LTR_WEB_PROPS } from '@/lib/rtl';
 import { useSession } from '@/state/session';
 
@@ -28,11 +27,6 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const desiredRTL = locale.direction === 'rtl';
   // Only a phone needs a restart to flip layout direction; the web app redraws.
   const nativeRestartRequired = Platform.OS !== 'web' && I18nManager.isRTL !== desiredRTL;
-  // After launch, copy with an after-launch version (`<key>Launched`) uses it.
-  const launched = useLaunched();
-  useEffect(() => {
-    void loadLaunchState();
-  }, []);
 
   useEffect(() => {
     // A browser flips a page from the document element, not from a style on
@@ -62,7 +56,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const value = useMemo<I18nValue>(() => {
     const catalog = locale.catalog;
     const t: Translate = (key, params) => {
-      let message: string = (launched ? catalog[`${key}Launched` as TranslationKey] : undefined) ?? catalog[key];
+      let message: string = catalog[key];
       for (const [name, replacement] of Object.entries(params ?? {})) {
         message = message.replaceAll(`{{${name}}}`, String(replacement));
       }
@@ -86,7 +80,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       t,
       nativeRestartRequired,
     };
-  }, [desiredRTL, language, launched, locale, nativeRestartRequired]);
+  }, [desiredRTL, language, locale, nativeRestartRequired]);
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
 
