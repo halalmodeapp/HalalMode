@@ -159,7 +159,7 @@ test('How it works ships readable, generated-count fallback copy', () => {
   for (const file of ['site/how-it-works.html']) {
     const html = readFileSync(`${root}/${file}`, 'utf8');
     assert.match(html, new RegExp(`<html\\b[^>]*data-activity-count="${HALAL_CARDS_ACTIVITY_COUNT}"`), file);
-    assert.match(html, new RegExp(`<p[^>]*data-i18n="cardsBody">${HALAL_CARDS_ACTIVITY_COUNT} guided quizzes, activities and adventures`), file);
+    assert.match(html, new RegExp(`<p[^>]*data-i18n="cardsBody">Halal Cards give you practical tools for a healthy, lasting marriage: ${HALAL_CARDS_ACTIVITY_COUNT} interactive quizzes`), file);
     assert.doesNotMatch(html, /activity-count\.js|\{\{count\}\}|\{\{languages\}\}/, file);
   }
 });

@@ -52,7 +52,8 @@ export function ShiningWordmark(props: WordmarkProps) {
         webkitMaskImage: HEART_MASK, webkitMaskSize: '100% 100%', webkitMaskRepeat: 'no-repeat', webkitMaskPosition: 'center',
       } as Partial<CSSStyleDeclaration>);
       const mount = document.createElement('div');
-      Object.assign(mount.style, { position: 'absolute', inset: '-15.8%' });
+      // Lifted so the pink chrome reads light, as on halalmo.de (logo-effect.css).
+      Object.assign(mount.style, { position: 'absolute', inset: '-15.8%', filter: 'brightness(1.45) saturate(1.05)' });
       layer.appendChild(mount);
       element.appendChild(layer);
 
@@ -63,8 +64,8 @@ export function ShiningWordmark(props: WordmarkProps) {
           u_isImage: true,
           u_imageAspectRatio: 988.77 / 139.6,
           u_shape: LiquidMetalShapes.diamond,
-          u_colorBack: getShaderColorFromString('#aaaaac'),
-          u_colorTint: getShaderColorFromString('#ffffff'),
+          u_colorBack: getShaderColorFromString('#ffffff'), // white base keeps it light
+          u_colorTint: getShaderColorFromString('#FC3C6C'), // Halal Pink chrome
           u_repetition: 2.72,
           u_softness: 1,
           u_shiftRed: 0.3,

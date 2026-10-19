@@ -35,8 +35,8 @@ function mountLogo(link, image) {
       u_isImage: true,
       u_imageAspectRatio: 988.77 / 139.6,
       u_shape: LiquidMetalShapes.diamond,
-      u_colorBack: getShaderColorFromString('#aaaaac'),
-      u_colorTint: getShaderColorFromString('#ffffff'),
+      u_colorBack: getShaderColorFromString('#ffffff'), // white base keeps it light
+      u_colorTint: getShaderColorFromString('#FC3C6C'), // Halal Pink chrome
       u_repetition: 2.72,
       u_softness: 1,
       u_shiftRed: .3,
