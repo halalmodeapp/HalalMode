@@ -19,7 +19,7 @@ export const CATEGORY_LABELS: Record<QuestionCategory, string> = {
  * The question library.
  *
  * Every one is written to be answerable in a paragraph and impossible to answer
- * with a yes or a no — that is the bar the reference set, and it is what makes
+ * with a yes or a no, that is the bar the reference set, and it is what makes
  * the double-blind reveal worth doing.
  */
 export const QUESTION_LIBRARY: CompatibilityQuestion[] = [
@@ -62,8 +62,8 @@ export const QUESTION_LIBRARY: CompatibilityQuestion[] = [
   {
     id: 'q7',
     category: 'home',
-    text: 'How much of our life is shared publicly — photos, names, anything?',
-    textAr: 'ما مقدار ما نشاركه من حياتنا علنًا — الصور، الأسماء، أي شيء؟',
+    text: 'How much of our life is shared publicly, photos, names, anything?',
+    textAr: 'ما مقدار ما نشاركه من حياتنا علنًا, الصور، الأسماء، أي شيء؟',
   },
   {
     id: 'q8',
@@ -86,7 +86,7 @@ export const QUESTION_LIBRARY: CompatibilityQuestion[] = [
   {
     id: 'q11',
     category: 'money',
-    text: 'What does "enough" look like to you — and what would we never borrow for?',
+    text: 'What does "enough" look like to you, and what would we never borrow for?',
     textAr: 'ما معنى «الكفاية» بالنسبة لك، وما الذي لن نستدين من أجله أبدًا؟',
   },
   {

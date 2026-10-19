@@ -7,8 +7,8 @@ import { attachListTranslations } from './translations';
  * Three jobs, one list:
  *
  *   A member who says no to location is not stuck. Onboarding used to accept
- *   the device's answer and nothing else, so "Don't Allow" — which iOS only
- *   offers once — locked that person out of the app for good.
+ *   the device's answer and nothing else, so "Don't Allow", which iOS only
+ *   offers once, locked that person out of the app for good.
  *
  *   The web works at all. A browser will give coordinates but has no way to
  *   turn them into a city name, so on the web every member failed the location
@@ -19,7 +19,7 @@ import { attachListTranslations } from './translations';
  *
  * Country names are spelled exactly as in `COUNTRIES`, because matching compares
  * a member's country with the countries other people said they would accept.
- * Coordinates are city centres to two decimal places — about a kilometre, which
+ * Coordinates are city centres to two decimal places, about a kilometre, which
  * is far finer than any distance preference in the app.
  */
 export interface City {
@@ -612,6 +612,9 @@ export function nearestPlace(
   longitude: number,
   withinKm = 150,
 ): ResolvedPlace | null {
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)
+    || Math.abs(latitude) > 90 || Math.abs(longitude) > 180
+    || !Number.isFinite(withinKm) || withinKm < 0) return null;
   let best: { city: City; country: string; km: number } | null = null;
   for (const entry of CITY_COUNTRIES) {
     for (const city of entry.cities) {

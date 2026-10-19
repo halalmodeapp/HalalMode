@@ -22,7 +22,7 @@ export interface SliderProps {
   accessibilityLabel: string;
 }
 
-/** Single-thumb slider — the "Nearby radius" control. */
+/** Single-thumb slider, the "Nearby radius" control. */
 export function Slider({
   min,
   max,
@@ -38,7 +38,7 @@ export function Slider({
   const current = useSharedValue(value);
   const dragging = useSharedValue(false);
 
-  // Effect, not render-time assignment — see RangeSlider for the reasoning.
+  // Effect, not render-time assignment, see RangeSlider for the reasoning.
   useEffect(() => {
     if (dragging.value) return;
     current.value = value;

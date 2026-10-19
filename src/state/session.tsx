@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -22,13 +23,15 @@ interface SessionValue {
   language: Language;
   setTier: (tier: MembershipTier) => void;
   setLanguage: (language: Language) => void;
+  entitlementStatus: 'loading' | 'ready' | 'error';
+  refreshEntitlement: () => Promise<void>;
   ready: boolean;
 }
 
 const SessionContext = createContext<SessionValue | null>(null);
 
 /**
- * Lightweight local session preferences — tier and language.
+ * Lightweight local session preferences, tier and language.
  *
  * Tier is mirrored here for instant UI response, but it is not the source of
  * truth: every limit that matters (round size, keeps, open connections) is
@@ -39,7 +42,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const userId = user?.id;
   const [tier, setTierState] = useState<MembershipTier>('free');
   const [language, setLanguageState] = useState<Language>('en');
+  const [entitlementStatus, setEntitlementStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [ready, setReady] = useState(false);
+  const entitlementRequest = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,28 +79,46 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  useEffect(() => {
-    if (USE_MOCKS) return;
-    if (!userId || !supabase) {
+  const refreshEntitlement = useCallback(async () => {
+    const request = ++entitlementRequest.current;
+    if (USE_MOCKS) {
+      setEntitlementStatus('ready');
+      return;
+    }
+    if (!userId) {
       setTierState('free');
+      setEntitlementStatus('ready');
+      return;
+    }
+    if (!supabase) {
+      setTierState('free');
+      setEntitlementStatus('error');
       return;
     }
 
-    let cancelled = false;
-    void (async () => {
-      try {
-        const { data, error } = await supabase.rpc('get_my_membership_entitlement');
-        if (cancelled) return;
-        const payload = data as { tier?: unknown } | null;
-        const tier = error ? undefined : normalizeMembershipTier(payload?.tier);
-        // A missing/failed entitlement response never gives client-side Premium.
-        setTierState(tier ?? 'free');
-      } catch {
-        if (!cancelled) setTierState('free');
-      }
-    })();
-    return () => { cancelled = true; };
+    setEntitlementStatus('loading');
+    try {
+      const { data, error } = await supabase.rpc('get_my_membership_entitlement');
+      if (request !== entitlementRequest.current) return;
+      if (error) throw error;
+      const payload = data as { tier?: unknown } | null;
+      const nextTier = normalizeMembershipTier(payload?.tier);
+      if (!nextTier) throw new Error('Membership entitlement response is invalid.');
+      setTierState(nextTier);
+      setEntitlementStatus('ready');
+    } catch {
+      if (request !== entitlementRequest.current) return;
+      // Fail closed for access, but keep the failure distinct from a genuine
+      // free entitlement so Settings can explain it and offer a retry.
+      setTierState('free');
+      setEntitlementStatus('error');
+    }
   }, [userId]);
+
+  useEffect(() => {
+    void refreshEntitlement();
+    return () => { entitlementRequest.current += 1; };
+  }, [refreshEntitlement]);
 
   const persist = useCallback((next: { tier: MembershipTier; language: Language }) => {
     void AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next)).catch(() => {});
@@ -118,8 +141,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ tier, language, setTier, setLanguage, ready }),
-    [tier, language, setTier, setLanguage, ready]
+    () => ({ tier, language, setTier, setLanguage, entitlementStatus, refreshEntitlement, ready }),
+    [tier, language, setTier, setLanguage, entitlementStatus, refreshEntitlement, ready]
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

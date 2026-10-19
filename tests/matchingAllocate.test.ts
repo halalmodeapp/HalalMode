@@ -781,7 +781,7 @@ test('edges without directional data are never counted as reaches', () => {
 // that handicap by hand to pin where the balance actually falls.
 
 // Both quality and utility carry the decay in production, and the comparator
-// reads quality first — so a helper that decays only one of them would be
+// reads quality first, so a helper that decays only one of them would be
 // testing something the allocator never sees.
 function repeat(a: string, b: string, raw: number, showings: number): ScoredEdge {
   const decay = Math.pow(DEFAULT_MATCHING_CONFIG.repeat_decay, showings);

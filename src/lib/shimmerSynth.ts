@@ -6,8 +6,8 @@
  * technically different every time and audibly identical every time.
  *
  * So the whole voice is now redrawn per render: a new key, a new mode, a new
- * texture, a new tremolo character. Two shimmers should sound related — same
- * family, same restraint — without sounding like the same recording.
+ * texture, a new tremolo character. Two shimmers should sound related, same
+ * family, same restraint, without sounding like the same recording.
  *
  * The amplitude envelope (level to five seconds, silent by ten) is baked into
  * the samples rather than applied by a volume timer, so the fade is
@@ -18,15 +18,15 @@ const SAMPLE_RATE = 22050;
 export const SHIMMER_DURATION_S = 10;
 const FADE_BEGINS_S = 5;
 
-/** Peak level. Deliberately low — this sits under the interface. */
+/** Peak level. Deliberately low, this sits under the interface. */
 const PEAK = 0.3;
 
 /**
  * Interval sets in semitones. All are gapped or symmetrical, so none of them
- * resolve to a tonic — a shimmer should never sound like a tune.
+ * resolve to a tonic, a shimmer should never sound like a tune.
  */
 const MODES: number[][] = [
-  [0, 2, 4, 7, 9],       // major pentatonic — the reference's own
+  [0, 2, 4, 7, 9],       // major pentatonic, the reference's own
   [0, 3, 5, 7, 10],      // minor pentatonic
   [0, 2, 4, 6, 8, 10],   // whole tone
   [0, 2, 3, 7, 8],       // hirajoshi
@@ -84,7 +84,7 @@ function drawVoice(): Voice {
         ? [0.45, 1.10]
         : [0.20, 0.75];
 
-  // Sparse and bell-like, or dense and glittering — never the same balance.
+  // Sparse and bell-like, or dense and glittering, never the same balance.
   const grainCount =
     texture === 'bell'
       ? Math.floor(between(26, 48))
@@ -128,7 +128,7 @@ function render(): Float32Array {
 
     // Weighted toward the start, so the shimmer is densest while it is at full
     // level and thins out as the fade takes hold. The exponent must be greater
-    // than one to skew early — below one skews the other way.
+    // than one to skew early, below one skews the other way.
     const start = Math.floor(Math.pow(Math.random(), 1.7) * (total - length));
 
     const omega = (2 * Math.PI * frequency) / SAMPLE_RATE;

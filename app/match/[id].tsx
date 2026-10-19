@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { Image } from 'expo-image';
+import { ProfileImage as Image } from '@/components/ui/ProfileImage';
+import { getProfilePhotoSource } from '@/data/demoProfilePhotos';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
 import * as Haptics from 'expo-haptics';
@@ -36,7 +37,7 @@ const NEXT_ROUTE: Record<ConnectionStage, string> = {
  */
 export default function MatchScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { isRTL, t } = useI18n();
+  const { isRTL, t, brandName } = useI18n();
   const reducedMotion = useReducedMotion();
   const matchId = Array.isArray(id) ? id[0] : id;
   const {
@@ -105,7 +106,7 @@ export default function MatchScreen() {
 
   return (
     <Screen style={isRTL ? styles.rtl : undefined}>
-      {/* A takeover, not a drill-down — so it dismisses rather than reverses. */}
+      {/* A takeover, not a drill-down, so it dismisses rather than reverses. */}
       <ScreenHeader
         action="close"
         onAction={() => router.replace('/(tabs)/connections')}
@@ -119,7 +120,7 @@ export default function MatchScreen() {
       <Confetti />
 
       <Animated.View entering={reducedMotion ? undefined : FadeIn.duration(400)} style={styles.body}>
-        <Text variant="micro">Halal Mode</Text>
+        <Text variant="micro">{brandName}</Text>
         <Text variant="display" center style={styles.title}>
           {t('match.title')}
         </Text>
@@ -130,7 +131,8 @@ export default function MatchScreen() {
         >
           <View style={[styles.plate, styles.plateLeft]}>
             <Image
-              source={self.photos[0]}
+              source={getProfilePhotoSource(self.id, self.photos, 0)}
+              storagePath={self.photoMedia?.[0]?.storagePath}
               style={styles.avatar}
               contentFit="cover"
               accessibilityIgnoresInvertColors
@@ -144,7 +146,8 @@ export default function MatchScreen() {
 
           <View style={[styles.plate, styles.plateRight]}>
             <Image
-              source={profile.photos[0]}
+              source={getProfilePhotoSource(profile.id, profile.photos, 0)}
+              storagePath={profile.photoMedia?.[0]?.storagePath}
               style={styles.avatar}
               contentFit="cover"
               accessibilityIgnoresInvertColors

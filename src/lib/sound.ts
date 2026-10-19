@@ -9,7 +9,7 @@ import { SHIMMER_DURATION_S, synthesiseShimmerWav } from '@/lib/shimmerSynth';
  * Two rules shape this module:
  *
  * 1. **Never interrupt the user's own audio.** Someone browsing introductions
- *    with a Quran recitation or a podcast playing should keep hearing it — a UI
+ *    with a Quran recitation or a podcast playing should keep hearing it, a UI
  *    blip is not worth stealing the audio session for. Hence `mixWithOthers`.
  * 2. **Respect the silent switch.** `playsInSilentMode: false` means a phone on
  *    silent stays silent. That matters more than usual for this app, which
@@ -68,7 +68,7 @@ async function configure(): Promise<void> {
 }
 
 /**
- * The balloon pop. Synthesised rather than sampled — see `assets/audio`.
+ * The balloon pop. Synthesised rather than sampled, see `assets/audio`.
  *
  * Seeks to zero before playing so rapid taps retrigger cleanly instead of
  * being swallowed while the previous one finishes.
@@ -77,7 +77,7 @@ export function playPop(): void {
   if (!enabled) return;
   void configure();
 
-  // Never the same variant twice in a row — back-to-back repeats are exactly
+  // Never the same variant twice in a row, back-to-back repeats are exactly
   // what gives the game away that this is a sample.
   let index = Math.floor(Math.random() * POP_SOURCES.length);
   if (index === lastPopIndex) index = (index + 1) % POP_SOURCES.length;
@@ -100,7 +100,7 @@ export function playPop(): void {
 /**
  * The chosen-one shimmer.
  *
- * Synthesised fresh on every call — ten seconds, at level for five and fading
+ * Synthesised fresh on every call, ten seconds, at level for five and fading
  * to silence by ten, then done. Because the envelope is rendered into the
  * samples themselves, the fade is sample-accurate; there is no volume timer to
  * drift or stall.
@@ -133,7 +133,7 @@ export function startShimmer(): void {
       shimmerPlayer.volume = 1;
       shimmerPlayer.play();
 
-      // Nothing loops, so it ends on its own — this just releases the handles.
+      // Nothing loops, so it ends on its own, this just releases the handles.
       fadeTimer = setTimeout(() => {
         if (mine === generation) stopShimmer();
       }, SHIMMER_DURATION_S * 1000 + 250);
@@ -201,7 +201,7 @@ export function stopShimmer(): void {
   try {
     shimmerPlayer?.pause();
   } catch {
-    // Ignore — the player may already be released.
+    // Ignore, the player may already be released.
   }
   shimmerOn = false;
 }

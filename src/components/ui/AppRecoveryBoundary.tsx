@@ -68,7 +68,7 @@ export function AppRecoveryBoundary({ children }: { children: ReactNode }) {
   return (
     <RecoveryBoundary
       // Its own words. This used to borrow the Connections error, so a crash
-      // anywhere — onboarding, a profile, a chat — told the member their
+      // anywhere, onboarding, a profile, a chat, told the member their
       // connections had failed to load.
       message={t('common.crashBody')}
       retryHint={t('common.retryHint')}

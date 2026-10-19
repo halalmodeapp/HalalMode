@@ -43,8 +43,8 @@ test('v1 does not concentrate exposure more than the previous ordering', () => {
   // A deliberately weak assertion, because the measurement says a strong one
   // would be dishonest. Once the pool can supply full sets, exposure is already
   // close to even (Gini ~0.11) and there is very little concentration left for
-  // fairness to remove. What matters is that ranking by quality — which does
-  // favour frequently-kept members — is not allowed to make it worse.
+  // fairness to remove. What matters is that ranking by quality, which does
+  // favour frequently-kept members, is not allowed to make it worse.
   //
   // The real gains in this regime are quality and zero-match share, asserted
   // in the tests below.

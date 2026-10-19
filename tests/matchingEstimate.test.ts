@@ -104,7 +104,7 @@ test('behaviour displaces compatibility only as evidence accumulates', () => {
     config
   );
 
-  // Same 90% keep rate, more evidence — the estimate must move further from
+  // Same 90% keep rate, more evidence, the estimate must move further from
   // the neutral compatibility baseline, not jump there immediately.
   assert.ok(settled > early, 'more evidence should weigh behaviour more heavily');
   assert.ok(early > compat, 'a strong keep rate should still lift the estimate');
@@ -137,7 +137,7 @@ test('estimates stay inside the probability clamp', () => {
   assert.ok(directionalEstimate(0, weak, NO_PAIR_HISTORY, config) >= config.p_min);
 });
 
-test('not being picked is situational — a pair may return after cooldown', () => {
+test('not being picked is situational, a pair may return after cooldown', () => {
   const now = new Date('2026-03-01T00:00:00Z');
   const history: PairHistory = {
     timesShown: 1,
@@ -283,7 +283,7 @@ test('a pass lowers rank without closing the pair', () => {
     assert.equal(
       mayResurface(history, 0.6, null, null, new Date('2026-03-01T00:00:00Z'), config),
       true,
-      'a passed pair is ranked down, never retired — only a member closes a pair'
+      'a passed pair is ranked down, never retired, only a member closes a pair'
     );
   }
 });

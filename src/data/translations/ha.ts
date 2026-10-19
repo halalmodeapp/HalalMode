@@ -401,11 +401,11 @@ export const ha: ListTranslations = {
     q4: 'Idan muka saɓa da gaske, me ke faruwa a mintuna goma na farko?',
     q5: 'A ina za mu zauna bayan shekara biyar, kuma iyalin wa zai kasance kusa?',
     q6: 'Ta yaya za mu kare lokutan da suke namu kaɗai?',
-    q7: 'Nawa daga rayuwarmu za a nuna a fili — hotuna, sunaye, ko wani abu?',
+    q7: 'Nawa daga rayuwarmu za a nuna a fili, hotuna, sunaye, ko wani abu?',
     q8: 'Idan muka saɓa a kan wani hukunci na addini, malamai da ra’ayoyin wa za mu bi?',
     q9: 'Me iyayenku suka yi daidai, kuma me ba za mu maimaita ba?',
     q10: 'Yaya gaskiyarmu take game da lafiya, magani, da abubuwan da muke gyarawa?',
-    q11: 'Yaya "isasshe" yake a gare ku — kuma me ba za mu taɓa ciyo bashi saboda shi ba?',
+    q11: 'Yaya "isasshe" yake a gare ku, kuma me ba za mu taɓa ciyo bashi saboda shi ba?',
     q12: 'Idan ɗaya daga cikinmu ya zaɓi tsakanin burinsa da ƙaura, ta yaya za mu yanke shawara?',
   },
   openers: [

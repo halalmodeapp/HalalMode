@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { router } from 'expo-router';
 import { Linking, Pressable, StyleSheet, Switch, View } from 'react-native';
 
 import { fetchMyReadReceipts, fetchMySampleMembers, requestAccountDeletion, setMyReadReceipts, setMySampleMembers, setMyTestPremium, setProfilePaused } from '@/api/account';
+import { fetchMyHighLatitudeFajrSettings, setMyHighLatitudeFajrMethod, type HighLatitudeFajrSettings } from '@/api/profile';
 import { disableMyNotifications, enableMyNotifications, fetchMyNotificationConsent } from '@/api/notifications';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -40,9 +42,12 @@ export function SettingsTab({
   profilePaused: boolean;
 }) {
   const { t, isRTL, localeTag, nativeRestartRequired } = useI18n();
-  const { tier, setTier, language } = useSession();
+  const { tier, setTier, language, entitlementStatus, refreshEntitlement } = useSession();
   const [languageOpen, setLanguageOpen] = useState(false);
   const { signOut } = useAuth();
+  const accountActionRunning = useRef(false);
+  const deletionRequested = useRef(false);
+  const [accountActionPending, setAccountActionPending] = useState(false);
   const { pushNotifications } = useFeatureFlags();
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -64,6 +69,21 @@ export function SettingsTab({
     },
   });
   const sampleMembersQuery = useQuery({ queryKey: ['sample-members'], queryFn: fetchMySampleMembers });
+  const fajrSettingsQuery = useQuery({
+    queryKey: queryKeys.highLatitudeFajrSettings,
+    queryFn: fetchMyHighLatitudeFajrSettings,
+  });
+  const fajrMethod = useMutation({
+    mutationFn: setMyHighLatitudeFajrMethod,
+    onSuccess: (_, method) => {
+      queryClient.setQueryData<HighLatitudeFajrSettings>(
+        queryKeys.highLatitudeFajrSettings,
+        (current) => current ? { ...current, method } : current,
+      );
+      toast.show(`✓ ${t('filters.saved')}`);
+    },
+    onError: () => showNotice(t('settings.activityErrorTitle'), t('settings.activityErrorBody')),
+  });
   const sampleMembers = useMutation({
     mutationFn: setMySampleMembers,
     onSuccess: () => {
@@ -140,12 +160,38 @@ export function SettingsTab({
   };
 
   const confirmDeletion = async () => {
+    if (accountActionRunning.current) return;
+    accountActionRunning.current = true;
+    setAccountActionPending(true);
     try {
-      await requestAccountDeletion();
+      if (!deletionRequested.current) {
+        await requestAccountDeletion();
+        deletionRequested.current = true;
+      }
       setDeleteConfirm(false);
       await signOut();
     } catch {
-      showNotice(t('settings.deleteErrorTitle'), t('settings.deleteErrorBody'));
+      showNotice(
+        deletionRequested.current ? t('settings.signOut') : t('settings.deleteErrorTitle'),
+        t('profile.connectionError'),
+      );
+    } finally {
+      accountActionRunning.current = false;
+      setAccountActionPending(false);
+    }
+  };
+
+  const signOutSafely = async () => {
+    if (accountActionRunning.current) return;
+    accountActionRunning.current = true;
+    setAccountActionPending(true);
+    try {
+      await signOut();
+    } catch {
+      showNotice(t('settings.signOut'), t('profile.connectionError'));
+    } finally {
+      accountActionRunning.current = false;
+      setAccountActionPending(false);
     }
   };
 
@@ -219,6 +265,37 @@ export function SettingsTab({
         ) : null}
       </Section>
 
+      {fajrSettingsQuery.data?.isHighLatitude ? (
+        <Section eyebrow={t('settings.preferences')} title={t('settings.highLatitudeFajrTitle')}>
+          <Text variant="caption" style={styles.fajrMethodIntro}>
+            {t('settings.highLatitudeFajrBody')}
+          </Text>
+          <HighLatitudeMethodOption
+            title={t('settings.fajrMethod.oneSeventh')}
+            subtitle={t('settings.fajrMethod.oneSeventhBody')}
+            selected={fajrSettingsQuery.data.method === 'one_seventh'}
+            disabled={fajrMethod.isPending}
+            testID="settings.highLatitudeFajr.oneSeventh"
+            onPress={() => fajrMethod.mutate('one_seventh')}
+          />
+          <HighLatitudeMethodOption
+            title={t('settings.fajrMethod.reference45')}
+            subtitle={t('settings.fajrMethod.reference45Body')}
+            selected={fajrSettingsQuery.data.method === 'reference_latitude_45'}
+            disabled={fajrMethod.isPending}
+            testID="settings.highLatitudeFajr.reference45"
+            onPress={() => fajrMethod.mutate('reference_latitude_45')}
+          />
+        </Section>
+      ) : null}
+      {fajrSettingsQuery.isError ? (
+        <InlineNotice
+          message={t('settings.highLatitudeFajrLoadError')}
+          actionLabel={t('common.tryAgain')}
+          onAction={() => void fajrSettingsQuery.refetch()}
+        />
+      ) : null}
+
       <Section
         eyebrow={t('settings.privacy')}
         title={t('settings.privacyTitle')}
@@ -263,12 +340,23 @@ export function SettingsTab({
               </SurfaceToneProvider>
             </View>
           </View>
-          <View style={[styles.planBadge, isPremium && styles.planBadgeActive]}>
-            <Text style={[styles.planBadgeLabel, isPremium && styles.planBadgeLabelActive]}>
-              {isPremium ? t('settings.active') : t('settings.preview')}
-            </Text>
-          </View>
+          {entitlementStatus !== 'error' ? (
+            <View style={[styles.planBadge, isPremium && styles.planBadgeActive]}>
+              <Text style={[styles.planBadgeLabel, isPremium && styles.planBadgeLabelActive]}>
+                {entitlementStatus === 'loading'
+                  ? t('common.loading')
+                  : isPremium ? t('settings.active') : t('settings.preview')}
+              </Text>
+            </View>
+          ) : null}
         </View>
+        {entitlementStatus === 'error' ? (
+          <InlineNotice
+            message={t('settings.membershipLoadError')}
+            actionLabel={t('common.tryAgain')}
+            onAction={() => void refreshEntitlement()}
+          />
+        ) : null}
         <View style={styles.featureList}>
           {premiumFeatures.map((feature) => (
             <View key={feature} style={[styles.featureRow, isRTL && styles.rowReverse]}>
@@ -303,6 +391,11 @@ export function SettingsTab({
           title={t('settings.security')}
           subtitle={t('settings.securityBody')}
           onPress={() => setPage('security')}
+        />
+        <SettingRow
+          title={t('referrals.title')}
+          subtitle={t('referrals.intro')}
+          onPress={() => router.push('/referrals')}
         />
       </Section>
 
@@ -373,7 +466,7 @@ export function SettingsTab({
               onPress={() => {
                 // A real address rather than a ticketing system. The Terms and
                 // the Privacy Notice both tell members to write here, and both
-                // promise a person reads it — so this has to go somewhere a
+                // promise a person reads it, so this has to go somewhere a
                 // person actually is.
                 void Linking.openURL(
                   `mailto:hello@halalmo.de?subject=${encodeURIComponent(t('settings.supportSubject'))}`
@@ -413,7 +506,7 @@ export function SettingsTab({
           </View>
         ) : null}
         <View style={styles.signOutWrap}>
-          <Button label={t('settings.signOut')} variant="secondary" onPress={() => void signOut()} />
+          <Button label={t('settings.signOut')} variant="secondary" loading={accountActionPending} onPress={() => void signOutSafely()} />
         </View>
       </Section>
 
@@ -424,6 +517,7 @@ export function SettingsTab({
           trailing={
             <Button
               testID={testIds.settings.delete}
+              disabled={accountActionPending}
               label={t('settings.deleteAction')}
               variant="quiet"
               block={false}
@@ -590,6 +684,49 @@ function SettingRow({
   return <View style={[styles.row, isRTL && styles.rowReverse]}>{content}</View>;
 }
 
+function HighLatitudeMethodOption({
+  title,
+  subtitle,
+  selected,
+  disabled,
+  testID,
+  onPress,
+}: {
+  title: string;
+  subtitle: string;
+  selected: boolean;
+  disabled: boolean;
+  testID: string;
+  onPress: () => void;
+}) {
+  const { isRTL } = useI18n();
+  return (
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityLabel={title}
+      accessibilityHint={subtitle}
+      accessibilityState={{ checked: selected, disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      testID={testID}
+      style={({ pressed }) => [
+        styles.fajrMethodOption,
+        isRTL && styles.rowReverse,
+        selected && styles.fajrMethodOptionSelected,
+        pressed && !disabled && styles.openRowPressed,
+      ]}
+    >
+      <View style={styles.fajrMethodCopy}>
+        <Text style={styles.rowTitle}>{title}</Text>
+        <Text variant="caption" style={styles.rowSubtitle}>{subtitle}</Text>
+      </View>
+      <View style={[styles.fajrRadio, selected && styles.fajrRadioSelected]}>
+        {selected ? <View style={styles.fajrRadioDot} /> : null}
+      </View>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   rtl: RTL_LAYOUT,
   rowReverse: { flexDirection: 'row-reverse' },
@@ -628,12 +765,35 @@ const styles = StyleSheet.create({
   rowTitleLine: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 7 },
   rowTitle: { fontFamily: font.bodyBold, fontSize: 13.5, color: color.ink },
   rowSubtitle: { lineHeight: 19, color: color.muted },
+  fajrMethodIntro: { lineHeight: 19, color: color.muted, paddingTop: 14 },
+  fajrMethodOption: {
+    minHeight: 68,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 13,
+    borderTopWidth: 1,
+    borderTopColor: alpha.lineFaint,
+  },
+  fajrMethodOptionSelected: { backgroundColor: color.sandLight },
+  fajrMethodCopy: { flex: 1, gap: 4 },
+  fajrRadio: {
+    width: 21,
+    height: 21,
+    borderWidth: 1.5,
+    borderColor: color.faint,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fajrRadioSelected: { borderColor: color.ink },
+  fajrRadioDot: { width: 11, height: 11, borderRadius: 6, backgroundColor: color.ink },
   rowControl: { alignItems: 'flex-end', justifyContent: 'center' },
   badge: {
     borderRadius: radius.pill,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    backgroundColor: 'rgba(138,106,52,0.12)',
+    backgroundColor: 'rgba(184,145,79,0.12)',
     color: color.gold,
     fontFamily: font.bodyBold,
     fontSize: 8.5,
@@ -713,7 +873,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(138,106,52,0.12)',
+    backgroundColor: 'rgba(184,145,79,0.12)',
   },
   benefitMarkLabel: { fontFamily: font.bodyBold, fontSize: 10, color: color.gold },
   benefitText: { flex: 1, gap: 3 },

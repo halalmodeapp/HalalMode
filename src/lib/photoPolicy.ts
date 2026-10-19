@@ -3,7 +3,7 @@
  *
  * A modern phone camera hands you roughly 4032x3024 and four megabytes, and a
  * member may add six of those. Stored and served untouched that is 24MB per
- * member, paid for twice — once to keep and once every time somebody looks.
+ * member, paid for twice, once to keep and once every time somebody looks.
  * Nothing on screen is ever more than a phone's width, so all but a fraction of
  * those pixels are downloaded and thrown away.
  *
@@ -21,7 +21,7 @@ export const PHOTO_JPEG_QUALITY = 0.8;
  * The size to resize to, or null when the photo is already small enough.
  *
  * Only the long edge is given so the aspect ratio is preserved by the
- * manipulator rather than recomputed here — a rounded pair of dimensions is how
+ * manipulator rather than recomputed here, a rounded pair of dimensions is how
  * a photo ends up a pixel off square and very slightly stretched.
  */
 export function photoResizeTarget(

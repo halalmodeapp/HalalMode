@@ -407,11 +407,11 @@ export const fr: ListTranslations = {
     q4: 'Quand nous sommes en profond désaccord, que se passe-t-il pendant les dix premières minutes ?',
     q5: 'Où vivons-nous dans cinq ans, et quelle famille habite près de nous ?',
     q6: 'Comment protégeons-nous les heures qui n’appartiennent qu’à nous ?',
-    q7: 'Quelle part de notre vie partageons-nous publiquement — photos, noms, quoi que ce soit ?',
+    q7: 'Quelle part de notre vie partageons-nous publiquement, photos, noms, quoi que ce soit ?',
     q8: 'Quels savants et quels avis suivons-nous quand nous ne sommes pas d’accord sur une règle ?',
     q9: 'Qu’est-ce que tes parents ont bien fait, et que ne répéterons-nous pas ?',
     q10: 'À quel point sommes-nous honnêtes sur la santé, la thérapie et ce que nous essayons d’améliorer ?',
-    q11: 'À quoi ressemble « assez » pour toi — et pour quoi n’emprunterions-nous jamais ?',
+    q11: 'À quoi ressemble « assez » pour toi, et pour quoi n’emprunterions-nous jamais ?',
     q12: 'Si l’un de nous devait choisir entre une vocation et un déménagement, comment déciderions-nous ?',
   },
   openers: [

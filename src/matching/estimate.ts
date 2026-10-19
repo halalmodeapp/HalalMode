@@ -1,5 +1,5 @@
 /**
- * Estimation — stage one of three.
+ * Estimation, stage one of three.
  *
  * Produces `P(A picks B)` and `P(B picks A)` for an eligible pair, then combines
  * them into a single reciprocal score. This module knows nothing about
@@ -16,9 +16,9 @@ import type { MatchingConfig } from './config.ts';
 /** The half of a member the estimator needs. All of it is server-side. */
 export interface MemberSignals {
   id: string;
-  /** Qualified appearances — `selection_scores.times_shown`. */
+  /** Qualified appearances, `selection_scores.times_shown`. */
   timesShown: number;
-  /** Times kept when shown — `selection_scores.times_kept`. */
+  /** Times kept when shown, `selection_scores.times_kept`. */
   timesKept: number;
   /** From the `match_health` view. */
   roundsSinceLastMutual: number;
@@ -39,14 +39,14 @@ export interface MemberSignals {
    * one that reliably will not.
    *
    * Zero for a member with no history, and reset when their profile materially
-   * changes — someone who improves their photos should not be held to what last
+   * changes, someone who improves their photos should not be held to what last
    * month's behaviour implied.
    */
   oneSidedPickRate: number;
   /** Qualified exposures inside the current fairness window. */
   exposuresInWindow: number;
   /**
-   * Introductions this member is entitled to each round — 5 free, 10 premium.
+   * Introductions this member is entitled to each round, 5 free, 10 premium.
    *
    * Fairness is measured against a member's own entitlement rather than one
    * flat number. A single target cannot serve both tiers: set it to the free
@@ -63,7 +63,7 @@ export interface PairHistory {
   lastReciprocalScore: number | null;
   /**
    * Deliberate passes, counted only once each has expired. A pass still inside
-   * its cooldown never reaches here at all — the pair is filtered out upstream.
+   * its cooldown never reaches here at all, the pair is filtered out upstream.
    */
   explicitPassCount: number;
   /**
@@ -102,7 +102,7 @@ export function clamp(value: number, low: number, high: number): number {
  * How often this member is kept when shown.
  *
  * Returns the neutral 0.5 until there is anything to average, so a member with
- * no history is never treated as unpopular — only as unknown. Confidence, not
+ * no history is never treated as unpopular, only as unknown. Confidence, not
  * this function, decides how much the value is trusted.
  */
 export function appeal(member: MemberSignals): number {
@@ -139,7 +139,7 @@ export function confidence(member: MemberSignals, config: MatchingConfig): numbe
  * The lift is capped at 1 rather than allowed to exceed it, so a soft-selected
  * pair can climb back to where a never-shown pair sits and no further. It also
  * reaches further than rank: the prior feeds the directional estimate, which
- * feeds the reciprocal score, which is what the cooldown is scaled from — so
+ * feeds the reciprocal score, which is what the cooldown is scaled from, so
  * one lift both raises the pair and brings it back sooner.
  */
 export function pairPrior(history: PairHistory, config: MatchingConfig): number {
@@ -154,7 +154,7 @@ export function pairPrior(history: PairHistory, config: MatchingConfig): number 
  * P(viewer picks subject).
  *
  * `compat` is the directional compatibility of the subject against the viewer's
- * stated preferences, already normalised to [0,1] by the caller — it is
+ * stated preferences, already normalised to [0,1] by the caller, it is
  * computed in SQL where the preference rows live and never leave the server.
  *
  * Viewer selectivity is deliberately absent. Members keep exactly one of five,
@@ -257,7 +257,7 @@ export function allowedAppearances(score: number, config: MatchingConfig): numbe
 /**
  * Days before this pair may be shown again. Inverted: a promising pair comes
  * back within days, an unlikely one waits weeks. The gap between them is the
- * point — a long wait on a weak pair frees the slot for somebody new.
+ * point, a long wait on a weak pair frees the slot for somebody new.
  */
 export function pairCooldownDays(score: number, config: MatchingConfig): number {
   const span = config.max_repeat_cooldown_days - config.min_repeat_cooldown_days;
@@ -274,7 +274,7 @@ export function evaluatePairResurface(
 ): PairResurfaceDecision {
   if (retiredAt) return { eligible: false, retirementReason: null };
   // The hard ceiling. Reached it and the pair is done, whatever the score says
-  // — at some point the answer has been asked for often enough.
+  //, at some point the answer has been asked for often enough.
   if (history.timesShown >= config.max_pair_appearances) {
     return { eligible: false, retirementReason: 'repeat_limit' };
   }

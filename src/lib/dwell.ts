@@ -1,8 +1,8 @@
 /**
  * Inferring a deliberate pass from how a whole set was read.
  *
- * The alternative was a second button on every face — "not now" beside "no,
- * really" — which turns a calm screen into an interrogation and gets answered
+ * The alternative was a second button on every face, "not now" beside "no,
+ * really", which turns a calm screen into an interrogation and gets answered
  * by mood as much as by meaning. Time spent reading is the one signal already
  * being produced honestly, because nobody is performing it.
  *
@@ -20,13 +20,13 @@
  * It is still only a guess, so nothing here decides anything on its own: the
  * member is asked once, before the round is submitted, and the answer they give
  * is what gets recorded. Everything below exists to make that question worth
- * asking — never to answer it.
+ * asking, never to answer it.
  *
  * Timings never leave the device. What travels is the confirmed decision.
  */
 
 export interface DwellRecord {
-  /** The introduction, not the member — nothing here is keyed on a person. */
+  /** The introduction, not the member, nothing here is keyed on a person. */
   introductionId: string;
   /** Total time on the profile across every visit this round. */
   totalMs: number;
@@ -41,7 +41,7 @@ export interface DwellThresholds {
    */
   minSetSize: number;
   /**
-   * Below this a profile was not read — a mis-tap, or a screen opened and
+   * Below this a profile was not read, a mis-tap, or a screen opened and
    * immediately backed out of. Counted as never opened, which is what it
    * amounts to, rather than as the shortest read.
    */
@@ -80,7 +80,7 @@ export function inferPassCandidate(
 
   if (unread.length === 0) {
     // Everyone was read. The shortest is the answer, and it has to be the
-    // shortest on its own — two people tied at the bottom single out neither,
+    // shortest on its own, two people tied at the bottom single out neither,
     // and picking between them by array order would be inventing a decision.
     let shortest: { id: string; ms: number } | null = null;
     let tied = false;
@@ -113,7 +113,7 @@ export function inferPassCandidate(
  * Picks the profile that was read most among those let go.
  *
  * A free member keeps one of five. The person they read for longest after the
- * one they kept is not a rejection — they are a casualty of the budget, and
+ * one they kept is not a rejection, they are a casualty of the budget, and
  * recording that as an ordinary release throws away the strongest positive
  * signal a round produces.
  *
@@ -201,13 +201,13 @@ export class DwellLedger {
   }
 
   /**
-   * The app went away — a call, a notification, a phone put in a pocket.
+   * The app went away, a call, a notification, a phone put in a pocket.
    *
    * Nothing else notices this. Navigation is what closes a profile, and
    * backgrounding is not navigation, so without this the profile that happened
    * to be open keeps accruing time for as long as the app is gone. Since the
    * decision is "who was read least", an hour banked against one person moves
-   * somebody else to the bottom of the set — the wrong person gets asked about.
+   * somebody else to the bottom of the set, the wrong person gets asked about.
    */
   pause(): void {
     this.pausedOn = this.bank();

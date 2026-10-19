@@ -1,5 +1,6 @@
 import Svg, { Path, Rect } from 'react-native-svg';
 
+import { useI18n } from '@/i18n';
 import { color } from '@/theme/tokens';
 
 export interface WordmarkProps {
@@ -12,12 +13,13 @@ export interface WordmarkProps {
  * the header never waits on an asset load. Intrinsic ratio is 988.77 × 139.6.
  */
 export function Wordmark({ width = 114, fill = color.ink }: WordmarkProps) {
+  const { brandName } = useI18n();
   return (
     <Svg
       width={width}
       height={(width * 139.6) / 988.77}
       viewBox="0 0 988.77 139.6"
-      accessibilityLabel="Halal Mode"
+      accessibilityLabel={brandName}
     >
       {/* The heart glyph that replaces the O. */}
       <Path

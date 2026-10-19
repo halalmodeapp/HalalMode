@@ -1,4 +1,5 @@
-import { Image } from 'expo-image';
+import { ProfileImage as Image } from '@/components/ui/ProfileImage';
+import { getProfilePhotoGallery, getProfilePhotoSource } from '@/data/demoProfilePhotos';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -83,7 +84,8 @@ export default function IntroductionDetailScreen() {
           style={styles.hero}
         >
           <Image
-            source={profile.photos[0]}
+            source={getProfilePhotoSource(profile.id, profile.photos, 0)}
+            storagePath={profile.photoMedia?.[0]?.storagePath}
             style={StyleSheet.absoluteFill}
             contentFit="cover"
             transition={220}
@@ -92,7 +94,9 @@ export default function IntroductionDetailScreen() {
           <View style={[styles.photoBadge, isRTL && styles.rowRTL]}>
             <View style={styles.photoBadgeIcon} />
             <Text style={styles.photoBadgeLabel}>
-              {t('intro.photoCount', { count: number(profile.photos.length) })}
+              {t('intro.photoCount', {
+                count: number(getProfilePhotoGallery(profile.id, profile.photos).length),
+              })}
             </Text>
           </View>
           <LinearGradient
@@ -122,6 +126,7 @@ export default function IntroductionDetailScreen() {
             <AudioGreeting
               durationSeconds={profile.audioDurationSeconds}
               url={profile.audioGreetingUrl}
+              storagePath={profile.audioGreetingStoragePath}
             />
           </View>
         ) : null}

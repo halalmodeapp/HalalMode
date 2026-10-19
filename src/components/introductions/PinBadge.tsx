@@ -22,7 +22,7 @@ const AMBIENT_DISTANCE = 2.4;
 
 /**
  * The badge sits at the upper-right of the face, so the circle's centre lies
- * down and to the left — a unit vector of (-1, +1) normalised.
+ * down and to the left, a unit vector of (-1, +1) normalised.
  */
 const DIRECTION = { x: -Math.SQRT1_2, y: Math.SQRT1_2 };
 
@@ -38,7 +38,7 @@ export interface PinBadgeProps {
  * The pin that appears over each face in pop mode.
  *
  * Tapping it drives the pin inward toward the centre of the portrait and back
- * out — the balloon bursts at the end of the inward stroke, so the pin is seen
+ * out, the balloon bursts at the end of the inward stroke, so the pin is seen
  * to actually make contact rather than the face simply vanishing under it.
  *
  * It sits at the upper-right so it never covers the eyes, and carries its own

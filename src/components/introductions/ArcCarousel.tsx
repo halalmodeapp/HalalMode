@@ -1,4 +1,5 @@
-import { Image } from 'expo-image';
+import { ProfileImage as Image } from '@/components/ui/ProfileImage';
+import { getProfilePhotoSource } from '@/data/demoProfilePhotos';
 import { memo, useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
@@ -33,7 +34,7 @@ export interface ArcSlot {
 
 /**
  * Lays the live introductions out along a shallow arc beneath the hero card,
- * or — once the set is larger than five — across two centred rows.
+ * or, once the set is larger than five, across two centred rows.
  *
  * This is the geometry from the reference prototype, extracted so it can be
  * unit-tested and reused by the Premium layout without duplication.
@@ -107,7 +108,7 @@ const ArcFace = memo(function ArcFace({
 }: ArcFaceProps) {
   const { t } = useI18n();
   const { introduction, isActive, size } = slot;
-  const photo = introduction.profile.photos[0];
+  const photo = getProfilePhotoSource(introduction.profile.id, introduction.profile.photos, 0);
 
   const x = useDerivedValue(
     () => reducedMotion ? slot.x : withSpring(slot.x, motion.arc),
@@ -186,6 +187,7 @@ const ArcFace = memo(function ArcFace({
         >
           <Image
             source={photo}
+            storagePath={introduction.profile.photoMedia?.[0]?.storagePath}
             style={styles.photo}
             contentFit="cover"
             transition={200}

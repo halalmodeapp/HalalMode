@@ -21,14 +21,14 @@ import { RTL_LAYOUT } from '@/lib/rtl';
  * a member was promised is the fixed point here, not the folder layout.
  */
 export function LegalDocumentScreen({ slug }: { slug: 'terms' | 'privacy' }) {
-  const { isRTL } = useI18n();
+  const { isRTL, brandName } = useI18n();
   const doc = LEGAL_DOCUMENTS[slug];
   const other = slug === 'terms' ? 'privacy' : 'terms';
 
   return (
     <Screen>
       <ScrollView contentContainerStyle={[styles.content, isRTL && styles.rtl]}>
-        <Text variant="microAccent">Halal Mode</Text>
+        <Text variant="microAccent">{brandName}</Text>
         <Text variant="display" style={styles.title}>{doc.title}</Text>
         <Text variant="caption" style={styles.updated}>Last updated {doc.updated}</Text>
         <Text variant="body" style={styles.intro}>{doc.intro}</Text>

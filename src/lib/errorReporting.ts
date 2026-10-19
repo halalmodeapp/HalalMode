@@ -2,13 +2,14 @@ import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
 import { supabase, USE_MOCKS } from '@/lib/supabase';
+import { sanitizeClientError } from '@/lib/sanitizeClientError';
 
 /**
  * Tells the server when something broke, so a fault is visible to somebody.
  *
  * A crash for a member abroad at 2am currently leaves no trace: they see a
  * broken screen, close the app, and nobody ever learns why. This is the
- * smallest thing that fixes that — no third-party service, no extra key
+ * smallest thing that fixes that, no third-party service, no extra key
  * shipped to the client, and no other company holding data about Muslim people
  * looking for a spouse.
  *
@@ -33,16 +34,7 @@ function appVersion(): string | undefined {
   return typeof version === 'string' ? version : undefined;
 }
 
-/**
- * The message only. An Error's stack carries file paths and sometimes
- * interpolated values, so it is deliberately dropped rather than trimmed.
- */
-function messageOf(error: unknown): string {
-  if (error instanceof Error && error.message) return error.message;
-  if (typeof error === 'string') return error;
-  return 'Unknown error';
-}
-
+/** Report a privacy-safe diagnostic for an allowlisted screen label. */
 export function reportError(error: unknown, screen?: string): void {
   if (USE_MOCKS || !supabase) return;
 
@@ -52,8 +44,8 @@ export function reportError(error: unknown, screen?: string): void {
 
   const client = supabase;
   safely(async () => client.rpc('report_client_error', {
-    p_message: messageOf(error).slice(0, 500),
-    p_screen: screen ?? null,
+    p_message: sanitizeClientError(error),
+    p_screen: screen && /^[a-z0-9/_-]{1,40}$/i.test(screen) ? screen : null,
     p_platform: platform ?? null,
     p_app_version: appVersion() ?? null,
   }));
@@ -64,7 +56,7 @@ export function reportError(error: unknown, screen?: string): void {
  * Catches what never reaches a component: a rejected promise nobody awaited,
  * and on native the errors that would otherwise only reach a red screen.
  *
- * Installed once at startup. Safe to call again — the handler replaces itself
+ * Installed once at startup. Safe to call again, the handler replaces itself
  * rather than stacking.
  */
 let installed = false;

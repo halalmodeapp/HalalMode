@@ -1,6 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -17,6 +18,7 @@ import { EmptyState, ErrorState, InlineNotice, LoadingState } from '@/components
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ReadinessChecklist } from '@/components/readiness/ReadinessChecklist';
 import { Screen } from '@/components/ui/Screen';
+import { StretchScrollView } from '@/components/ui/StretchScrollView';
 import { Text } from '@/components/ui/Text';
 import { useNextFajr } from '@/hooks/useNextFajr';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -58,6 +60,20 @@ const NARROWING_CRITERION_KEYS: Record<NarrowingCriterion, TranslationKey> = {
   sect: 'filters.sect',
 };
 
+function DailyScrollScreen({ children, isRTL }: { children: ReactNode; isRTL: boolean }) {
+  return (
+    <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
+      <StretchScrollView
+        contentContainerStyle={styles.dailyScrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {children}
+      </StretchScrollView>
+    </Screen>
+  );
+}
+
 export default function DailyScreen() {
   const { t, isRTL, localeTag } = useI18n();
   // Back from Settings or Profile: undo any page scroll a phone keyboard left
@@ -74,6 +90,7 @@ export default function DailyScreen() {
   const testerQuery = useQuery({ queryKey: ['sample-members'], queryFn: fetchMySampleMembers });
   const { user } = useAuth();
   const { tier } = useSession();
+  const headerProfile = useQuery({ queryKey: queryKeys.profile('me'), queryFn: fetchMyProfile });
   const readinessQuery = useQuery({
     queryKey: queryKeys.profileReadiness,
     queryFn: fetchMyProfileReadiness,
@@ -84,7 +101,7 @@ export default function DailyScreen() {
     emptyReason,
     narrowingCriterion,
     nextSetCity,
-    owed,
+    nextFajrAt,
     owedAll,
     isLoading,
     error,
@@ -162,7 +179,7 @@ export default function DailyScreen() {
   // Tell the gate to look again; do not navigate. AuthGate owns where a member
   // belongs. When this screen navigated too, a brand-new member was caught
   // between them: the round fetched before they existed said "consent needed",
-  // so this screen sent them to agree, and the gate — which knew they just had —
+  // so this screen sent them to agree, and the gate, which knew they just had,
   // sent them straight back, forever, until React stopped the loop and their
   // first sight of the app was an error screen.
   useEffect(() => {
@@ -171,15 +188,9 @@ export default function DailyScreen() {
     }
   }, [emptyReason, queryClient]);
 
-  // Under "resets at Fajr in London": yes, but when. Re-reads once a minute
-  // until the last minute, so the phone is not woken every second for a number
-  // that has not changed.
-  // Counts to the member's own next Fajr — the same moment the "Nothing more
-  // today" screen counts to — rather than 24 hours after the set opened, which
-  // drifted from "resets at Fajr" by minutes or more.
-  const headerProfile = useQuery({ queryKey: queryKeys.profile('me'), queryFn: fetchMyProfile });
-  const headerFajr = useNextFajr(headerProfile.data?.city);
-  const resetsAt = headerFajr?.toISOString() ?? round?.expiresAt;
+  // Use the exact server-generated end of this member's round. The scheduler
+  // calculates that instant as their next Fajr with the shared astronomy code.
+  const resetsAt = round?.expiresAt;
   const [countdown, setCountdown] = useState(() => countdownTo(resetsAt));
   useEffect(() => {
     setCountdown(countdownTo(resetsAt));
@@ -276,23 +287,23 @@ export default function DailyScreen() {
 
   if (isLoading) {
     return (
-      <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
+      <DailyScrollScreen isRTL={isRTL}>
         <BrandHeader />
         <LoadingState label={t('daily.loading')} />
-      </Screen>
+      </DailyScrollScreen>
     );
   }
 
   if (error) {
     return (
-      <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
+      <DailyScrollScreen isRTL={isRTL}>
         <BrandHeader />
         <ErrorState
           title={t('daily.loadErrorTitle')}
           message={t('daily.loadErrorBody')}
           onRetry={refresh}
         />
-      </Screen>
+      </DailyScrollScreen>
     );
   }
 
@@ -303,7 +314,7 @@ export default function DailyScreen() {
   if (emptyReason === 'answers_owed' && owedAll.length > 0) {
     const names = listNames(owedAll.map((item) => item.name), localeTag);
     return (
-      <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
+      <DailyScrollScreen isRTL={isRTL}>
         <BrandHeader />
         <View style={styles.readinessEmpty}>
           <EmptyState
@@ -318,7 +329,7 @@ export default function DailyScreen() {
             />
           ))}
         </View>
-      </Screen>
+      </DailyScrollScreen>
     );
   }
 
@@ -333,7 +344,7 @@ export default function DailyScreen() {
       router.push({ pathname: '/(tabs)/you', params: { tab: step === 'preferences' ? 'private' : 'profile' } });
     const next = steps.find((step) => !step.done);
     return (
-      <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
+      <DailyScrollScreen isRTL={isRTL}>
         <BrandHeader />
         <View style={styles.readinessGate}>
           <Text variant="display" style={styles.gateTitle}>{t('readiness.gateTitle')}</Text>
@@ -345,22 +356,22 @@ export default function DailyScreen() {
             onPress={() => openStep(next?.id ?? 'photo')}
           />
         </View>
-      </Screen>
+      </DailyScrollScreen>
     );
   }
 
   if (emptyReason === 'legal_consent_required') {
     return (
-      <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
+      <DailyScrollScreen isRTL={isRTL}>
         <BrandHeader />
         <LoadingState label={t('legal.redirecting')} />
-      </Screen>
+      </DailyScrollScreen>
     );
   }
 
   // The same screen as the moment after choosing, so a reload looks the same.
   if (emptyReason === 'set_complete' && (!round || round.introductions.length === 0)) {
-    return <SetCompleteState onReset={reset} waitingForConnection={false} />;
+    return <SetCompleteState onReset={reset} waitingForConnection={false} nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
   }
 
   if (!round || round.introductions.length === 0) {
@@ -378,7 +389,7 @@ export default function DailyScreen() {
     // their own dawn, which is the app working exactly as intended.
     if (emptyReason === 'next_set_scheduled') {
       return (
-        <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
+        <DailyScrollScreen isRTL={isRTL}>
           <BrandHeader />
           <EmptyState
             title={t('daily.nextSetTitle')}
@@ -388,13 +399,14 @@ export default function DailyScreen() {
                 : t('daily.nextSetBodyPlain')
             }
           />
-        </Screen>
+          <FajrCountdown nextFajrAt={nextFajrAt} />
+        </DailyScrollScreen>
       );
     }
 
     if (filtersTooNarrow) {
       return (
-        <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
+        <DailyScrollScreen isRTL={isRTL}>
           <BrandHeader />
           <EmptyState
             title={t('daily.filtersTooNarrowTitle')}
@@ -402,7 +414,7 @@ export default function DailyScreen() {
               criterion: t(NARROWING_CRITERION_KEYS[narrowingCriterion]),
             })}
           />
-        </Screen>
+        </DailyScrollScreen>
       );
     }
 
@@ -422,21 +434,21 @@ export default function DailyScreen() {
           : 'daily.noSuitableBody';
     // Nobody today is not an error: it is a wait until the next Fajr, which
     // the member can be reminded of.
-    if (emptyReason === 'waiting_for_first_set') return <FajrWaitState firstSet />;
-    if (emptyTitle === 'daily.noSuitableTitle') return <FajrWaitState />;
+    if (emptyReason === 'waiting_for_first_set') return <FajrWaitState firstSet nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
+    if (emptyTitle === 'daily.noSuitableTitle') return <FajrWaitState nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
     return (
-      <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
+      <DailyScrollScreen isRTL={isRTL}>
         <BrandHeader />
         <EmptyState
           title={t(emptyTitle)}
           message={t(emptyBody)}
         />
-      </Screen>
+      </DailyScrollScreen>
     );
   }
 
   if (submitted) {
-    return <SetCompleteState onReset={reset} waitingForConnection={waitingForConnection} />;
+    return <SetCompleteState onReset={reset} waitingForConnection={waitingForConnection} nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
   }
 
   const activeChosen = !!active && selected.includes(active.id);
@@ -450,7 +462,13 @@ export default function DailyScreen() {
 
   return (
     <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
-      <BrandHeader />
+      <StretchScrollView
+        style={styles.dailyScroll}
+        contentContainerStyle={styles.dailyScrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <BrandHeader />
 
       <View style={[styles.headline, isRTL && styles.rowReverse]}>
         <View style={styles.headlineText}>
@@ -531,7 +549,7 @@ export default function DailyScreen() {
         ) : null}
       </View>
 
-      <View style={styles.footer}>
+        <View style={styles.footer}>
         <View style={[styles.captionRow, wideLayout && styles.captionRowWide, isRTL && styles.rowReverse]}>
           <Text
             variant="caption"
@@ -583,7 +601,8 @@ export default function DailyScreen() {
             style={styles.primaryAction}
           />
         </View>
-      </View>
+        </View>
+      </StretchScrollView>
 
       <FirstChoiceDialog
         visible={pendingId !== null}
@@ -642,17 +661,28 @@ export default function DailyScreen() {
 }
 
 /**
- * The end of the round. Deliberately a dead end — no refresh, no "see more".
+ * The end of the round. Deliberately a dead end, no refresh, no "see more".
  * The reference is explicit that the empty state should close the session.
  */
 /**
  * A large clock counting down to this member's own next Fajr, to the second:
  * HH:MM:SS under a small label.
  */
-function FajrCountdown({ lead }: { lead?: string }) {
+function FajrCountdown({ lead, nextFajrAt }: { lead?: string; nextFajrAt?: string | null }) {
+  const scheduled = nextFajrAt ? new Date(nextFajrAt) : null;
+  if (scheduled && Number.isFinite(scheduled.getTime())) {
+    return <FajrCountdownClock lead={lead} nextFajr={scheduled} />;
+  }
+  return <CalculatedFajrCountdown lead={lead} />;
+}
+
+function CalculatedFajrCountdown({ lead }: { lead?: string }) {
+  const nextFajr = useNextFajr();
+  return <FajrCountdownClock lead={lead} nextFajr={nextFajr} />;
+}
+
+function FajrCountdownClock({ lead, nextFajr }: { lead?: string; nextFajr: Date | null }) {
   const { t } = useI18n();
-  const profileQuery = useQuery({ queryKey: queryKeys.profile('me'), queryFn: fetchMyProfile });
-  const nextFajr = useNextFajr(profileQuery.data?.city);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -680,7 +710,7 @@ function FajrCountdown({ lead }: { lead?: string }) {
  * Fajr, and on the phone apps a one-tap reminder: the Fajr notification says
  * the new set is ready and that it is time to pray.
  */
-function FajrWaitState({ firstSet = false }: { firstSet?: boolean }) {
+function FajrWaitState({ firstSet = false, nextFajrAt }: { firstSet?: boolean; nextFajrAt?: string | null }) {
   const { t, isRTL, localeTag } = useI18n();
   const queryClient = useQueryClient();
   const native = Platform.OS !== 'web';
@@ -705,7 +735,7 @@ function FajrWaitState({ firstSet = false }: { firstSet?: boolean }) {
     }
   };
   return (
-    <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
+    <DailyScrollScreen isRTL={isRTL}>
       <BrandHeader />
       <Animated.View entering={FadeIn.duration(300)} style={styles.complete}>
         {/* "No one fitted" only when matching ran and found nobody. */}
@@ -714,6 +744,7 @@ function FajrWaitState({ firstSet = false }: { firstSet?: boolean }) {
         )}
         {/* One sentence that runs straight into the clock. */}
         <FajrCountdown
+          nextFajrAt={nextFajrAt}
           lead={firstSet
             ? (city ? t('daily.firstSetTitleCity', { city }) : t('daily.firstSetTitle'))
             : (city ? t('daily.nextAtFajrCity', { city }) : t('daily.nextAtFajr'))}
@@ -730,15 +761,19 @@ function FajrWaitState({ firstSet = false }: { firstSet?: boolean }) {
           </View>
         )}
       </Animated.View>
-    </Screen>
+    </DailyScrollScreen>
   );
 }
 
-function SetCompleteState({ onReset, waitingForConnection }: { onReset: () => void; waitingForConnection: boolean }) {
+function SetCompleteState({ onReset, waitingForConnection, nextFajrAt }: {
+  onReset: () => void;
+  waitingForConnection: boolean;
+  nextFajrAt?: string | null;
+}) {
   const { t, isRTL } = useI18n();
   const city = useQuery({ queryKey: queryKeys.profile('me'), queryFn: fetchMyProfile }).data?.city;
   return (
-    <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
+    <DailyScrollScreen isRTL={isRTL}>
       <BrandHeader />
       <Animated.View entering={FadeIn.duration(300)} style={styles.complete}>
         <Text variant="micro">{t('daily.completeLabel')}</Text>
@@ -748,7 +783,7 @@ function SetCompleteState({ onReset, waitingForConnection }: { onReset: () => vo
         <Text variant="bodySmall" center style={styles.completeBody}>
           {t('daily.completeBody')}
         </Text>
-        <FajrCountdown lead={city ? t('daily.nextAtFajrCity', { city }) : t('daily.nextAtFajr')} />
+        <FajrCountdown nextFajrAt={nextFajrAt} lead={city ? t('daily.nextAtFajrCity', { city }) : t('daily.nextAtFajr')} />
         {waitingForConnection ? <InlineNotice message={t('daily.waitingConnection')} /> : null}
         {USE_MOCKS ? (
           <Button
@@ -759,12 +794,14 @@ function SetCompleteState({ onReset, waitingForConnection }: { onReset: () => vo
           />
         ) : null}
       </Animated.View>
-    </Screen>
+    </DailyScrollScreen>
   );
 }
 
 const styles = StyleSheet.create({
   rtl: RTL_LAYOUT,
+  dailyScroll: { flex: 1 },
+  dailyScrollContent: { flexGrow: 1, width: '100%' },
   remind: { width: '100%', maxWidth: 360, gap: 10, marginTop: 8 },
   fajrLead: { color: color.inkSoft, maxWidth: 420 },
   fajrClock: { alignItems: 'center', gap: 4, marginVertical: 18 },

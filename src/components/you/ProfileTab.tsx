@@ -27,7 +27,6 @@ import {
   deleteProfilePhoto,
   PROFILE_PHOTO_BUCKET,
   VOICE_INTRODUCTION_BUCKET,
-  type ProfilePhotoMimeType,
   reorderProfilePhotos,
   uploadProfilePhoto,
   uploadVoiceIntroduction,
@@ -44,7 +43,7 @@ import { testIds } from '@/lib/testIds';
 
 import { BIO_MIN_LENGTH, getProfileReadiness, readinessSteps } from '@/lib/profileReadiness';
 import { ReadinessChecklist } from '@/components/readiness/ReadinessChecklist';
-import { placeFromDevice } from '@/lib/deviceLocation';
+import { browserDeviceCoordinates, nativeDevicePlace, placeFromDevice } from '@/lib/deviceLocation';
 import { CITY_GROUPS, placeForCity } from '@/data/cities';
 import { useI18n, type Translate } from '@/i18n';
 import { useSession } from '@/state/session';
@@ -438,6 +437,23 @@ export function ProfileTab({
     setUpdatingLocation(true);
     setLocationError(null);
     try {
+      if (Platform.OS === 'web') {
+        const coordinates = await browserDeviceCoordinates();
+        const resolved = placeFromDevice(undefined, coordinates);
+        if (!resolved) {
+          setLocationError(t('profile.locationUnavailable'));
+          return;
+        }
+        await updateMyLocation(resolved);
+        toast.show(`✓ ${t('filters.saved')}`);
+        queryClient.setQueryData<Profile>(queryKeys.profile('me'), (current) =>
+          current ? { ...current, city: resolved.city, country: resolved.country } : current
+        );
+        void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.round });
+        return;
+      }
+
       const permission = await Location.requestForegroundPermissionsAsync();
       if (permission.status !== 'granted') {
         setLocationError(t('profile.locationPermissionRequired'));
@@ -452,11 +468,10 @@ export function ProfileTab({
         return;
       }
 
-      const position = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-      const places = await Location.reverseGeocodeAsync(position.coords).catch(() => []);
-      const resolved = placeFromDevice(places[0], position.coords);
+      const resolved = await nativeDevicePlace(
+        () => Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+        coordinates => Location.reverseGeocodeAsync(coordinates),
+      );
       if (!resolved) {
         setLocationError(t('profile.locationUnavailable'));
         return;
@@ -506,6 +521,13 @@ export function ProfileTab({
    */
   const askForLocation = useCallback(async () => {
     if (updatingLocation) return;
+    // Safari can reject Expo's permission preflight when it is not called
+    // directly from the browser gesture. Let the explainer's Continue button
+    // make the native geolocation request instead.
+    if (Platform.OS === 'web') {
+      setLocationExplainer(true);
+      return;
+    }
     const existing = await Location.getForegroundPermissionsAsync().catch(() => null);
     if (existing?.granted) {
       void refreshDeviceLocation();
@@ -774,6 +796,7 @@ export function ProfileTab({
 
         <PhotoReorderGrid
           photos={media}
+          profileId={profile.id}
           onReorder={reorderPhotos}
           onRemove={removePhoto}
           onAdd={() => void addPhoto('library')}
@@ -833,7 +856,11 @@ export function ProfileTab({
         <Text variant="micro">{t('profile.voice')}</Text>
         {voiceUrl && !recorderState.isRecording ? (
           <View style={styles.voicePlayer}>
-            <AudioGreeting durationSeconds={voiceDuration} url={voiceUrl} />
+            <AudioGreeting
+              durationSeconds={voiceDuration}
+              url={voiceUrl}
+              storagePath={profile.audioGreetingStoragePath}
+            />
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('profile.recordAgain')}
@@ -957,7 +984,11 @@ export function ProfileTab({
             cancelLabel={t('permission.notNow')}
             onContinue={() => {
               setLocationExplainer(false);
-              void refreshDeviceLocation();
+              if (Platform.OS === 'web') {
+                void refreshDeviceLocation();
+              } else {
+                setTimeout(() => void refreshDeviceLocation(), 120);
+              }
             }}
             onCancel={() => setLocationExplainer(false)}
             testID={testIds.you.locationExplainer}

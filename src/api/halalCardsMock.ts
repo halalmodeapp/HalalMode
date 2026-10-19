@@ -22,8 +22,8 @@ import type {
  *
  * Mirrors the server's rules (sealing, versions, one open game per activity,
  * expiring invitations, open-stage only) and plays the other seat with the
- * real engine, a beat behind, so the whole flow — invite, accept, private
- * answers, turns, reveals, endings, the Journal — can be walked on one phone.
+ * real engine, a beat behind, so the whole flow, invite, accept, private
+ * answers, turns, reveals, endings, the Journal, can be walked on one phone.
  * The partner sometimes moves on first, which is exactly the case the
  * catch-up screens exist for.
  */

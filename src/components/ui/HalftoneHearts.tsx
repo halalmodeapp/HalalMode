@@ -122,28 +122,49 @@ export function HalftoneHearts() {
     };
 
     if (reducedMotion) {
-      draw(start + 3);
-      window.addEventListener('resize', resize);
-      return () => window.removeEventListener('resize', resize);
+      const drawStatic = () => {
+        resize();
+        draw(start + 3);
+      };
+      drawStatic();
+      window.addEventListener('resize', drawStatic);
+      return () => window.removeEventListener('resize', drawStatic);
     }
 
     let frame = 0;
     let last = 0;
     const tick = (time: number) => {
+      frame = 0;
+      if (document.hidden) return;
+      if (time - last >= 1000 / FPS) {
+        last = time;
+        draw(time / 1000);
+      }
       frame = requestAnimationFrame(tick);
-      if (time - last < 1000 / FPS || document.hidden) return;
-      last = time;
-      draw(time / 1000);
     };
-    frame = requestAnimationFrame(tick);
+    const schedule = () => {
+      if (!document.hidden && !frame) frame = requestAnimationFrame(tick);
+    };
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(frame);
+        frame = 0;
+      } else {
+        last = 0;
+        schedule();
+      }
+    };
     const onResize = () => {
       resize();
       hearts = hearts.map((heart) => ({ ...heart, x: Math.min(heart.x, width), y: Math.min(heart.y, height) }));
     };
+    schedule();
     window.addEventListener('resize', onResize);
+    document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener('resize', onResize);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, [reducedMotion]);
 

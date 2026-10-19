@@ -38,7 +38,7 @@ export async function setCardsTrack(connectionId: string, track: CardsTrack): Pr
   if (error) throw error;
 }
 
-/** The light list — no state, no answers — for the hub and the chat. */
+/** The light list, no state, no answers, for the hub and the chat. */
 export async function fetchCardsSummary(connectionId: string): Promise<CardsSummary[]> {
   if (USE_MOCKS) return mock.summary(connectionId);
   const { data, error } = await requireSupabase().rpc('get_halal_cards_summary', { p_connection_id: connectionId });

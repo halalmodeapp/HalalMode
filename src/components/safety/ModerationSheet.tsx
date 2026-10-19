@@ -14,7 +14,7 @@ const SUPPORT_ADDRESS = 'safety@halalmo.de';
 /**
  * What happens when somebody reports a person, in plain words.
  *
- * Reporting itself lives where the concern does — on the introduction and in
+ * Reporting itself lives where the concern does, on the introduction and in
  * the conversation, one tap from the person being reported, so nobody has to
  * describe who they mean. What was missing was this: an explanation of what a
  * report does, what it does not do, and who to write to when the situation is

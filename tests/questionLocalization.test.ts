@@ -25,7 +25,7 @@ test('question copy falls back safely to English for a future locale', () => {
 test('the client question library and the server catalogue cannot drift apart', () => {
   // The prompts ship with the app; the server keeps its own catalogue and
   // validates picked ids against it. A question in one and not the other is a
-  // button that fails on submit, so the two lists are compared here — the same
+  // button that fails on submit, so the two lists are compared here, the same
   // guard the matching config and the waitlist age ranges already have.
   const library = readFileSync(resolve(process.cwd(), 'src/data/questions.ts'), 'utf8');
   const clientIds = [...library.matchAll(/id:\s*'([a-z0-9_-]+)'/gu)]

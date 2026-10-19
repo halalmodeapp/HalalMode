@@ -9,8 +9,8 @@ import { alpha, color, space } from '@/theme/tokens';
 
 export interface ScreenHeaderProps {
   /**
-   * `back` for drilling down and returning — a profile, a step in a flow.
-   * `close` for full-screen takeovers that are dismissed rather than reversed —
+   * `back` for drilling down and returning, a profile, a step in a flow.
+   * `close` for full-screen takeovers that are dismissed rather than reversed,
    * the gallery, the match reveal.
    */
   action?: 'back' | 'close';

@@ -7,7 +7,7 @@ type Names = { en: string; ar: string; t: CatalogOption['t'] };
  * Sect, with its major schools of law (madhhabs) under it.
  *
  * Choosing the group itself ("Sunni") is a full answer; the madhhab beneath it
- * is optional detail. Only the large schools are listed — madhhabs, not
+ * is optional detail. Only the large schools are listed, madhhabs, not
  * movements, so no Salafi, Sufi, Deobandi and the like. The ids must match
  * `public.sect_of_detail` (migration 0156).
  */
@@ -33,7 +33,7 @@ const DETAILS: Record<Exclude<Sect, 'prefer_not_to_say'>, [string, Names][]> = {
 const GROUP_NAMES = { sunni: SUNNI, shia: SHIA, other: OTHER } as const;
 
 /**
- * Each group lists itself first ("Sunni — any") so the broad answer is one
+ * Each group lists itself first ("Sunni, any") so the broad answer is one
  * tap, then its traditions. An id is either a Sect or a detail id.
  */
 export const SECT_GROUPS: readonly CatalogGroup[] = (Object.keys(DETAILS) as (keyof typeof DETAILS)[]).map((sect) => ({

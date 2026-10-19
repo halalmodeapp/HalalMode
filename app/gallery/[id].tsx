@@ -1,4 +1,9 @@
-import { Image } from 'expo-image';
+import { ProfileImage as Image } from '@/components/ui/ProfileImage';
+import {
+  getProfilePhotoGallery,
+  getProfilePhotoSource,
+  type ProfilePhotoSource,
+} from '@/data/demoProfilePhotos';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -34,6 +39,7 @@ import {
 import { getGalleryState, safeGalleryIndex } from '@/lib/galleryState';
 import { testIds } from '@/lib/testIds';
 import { useRound } from '@/state/round';
+import { usePrivateMedia } from '@/hooks/usePrivateMedia';
 import { color, font, layout, radius } from '@/theme/tokens';
 
 export default function GalleryScreen() {
@@ -52,7 +58,9 @@ export default function GalleryScreen() {
   const [zoomed, setZoomed] = useState(false);
   const frame = photoFrame(width, stageHeight || window.height - 200);
   const introduction = round?.introductions.find((item) => item.id === id);
-  const photos = introduction?.profile.photos ?? [];
+  const photos = introduction
+    ? getProfilePhotoGallery(introduction.profile.id, introduction.profile.photos)
+    : [];
   const galleryState = getGalleryState(!!introduction, photos.length);
   const safeIndex = safeGalleryIndex(index, photos.length);
   const number = (value: number) => new Intl.NumberFormat(localeTag).format(value);
@@ -76,11 +84,11 @@ export default function GalleryScreen() {
     setIndex(safeGalleryIndex(Math.round(event.nativeEvent.contentOffset.x / width), photos.length));
   };
 
-  const goTo = useCallback((next: number) => {
+  const goTo = (next: number) => {
     const target = safeGalleryIndex(next, photos.length);
     listRef.current?.scrollToOffset({ offset: target * width, animated: true });
     setIndex(target);
-  }, [photos.length, width]);
+  };
   const swipeTo = (distance: number, velocity: number) => {
     const current = safeGalleryIndex(index, photos.length);
     if (distance < -40 || velocity < -500) goTo(Math.min(photos.length - 1, current + 1));
@@ -133,7 +141,7 @@ export default function GalleryScreen() {
         style={styles.stage}
         ref={listRef}
         data={photos}
-        keyExtractor={(item) => item}
+        keyExtractor={(_, photoIndex) => introduction.profile.photoMedia?.[photoIndex]?.storagePath ?? `${id}-${photoIndex}`}
         horizontal
         pagingEnabled
         // Web uses the gesture on each slide so a mouse drag pages reliably;
@@ -150,7 +158,8 @@ export default function GalleryScreen() {
         {...galleryListPerformancePolicy}
         renderItem={({ item, index: photoIndex }) => (
           <GallerySlide
-            photo={item}
+            photo={getProfilePhotoSource(introduction.profile.id, photos, photoIndex)}
+            storagePath={introduction.profile.photoMedia?.[photoIndex]?.storagePath}
             index={photoIndex}
             width={width}
             frame={frame}
@@ -205,22 +214,28 @@ export default function GalleryScreen() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={[styles.thumbs, { paddingBottom: insets.bottom + 20 }]}
       >
-        {photos.map((photo, thumbIndex) => (
-          <Pressable
-            key={photo}
-            accessibilityRole="button"
-            accessibilityLabel={t('gallery.photoA11y', { count: number(thumbIndex + 1) })}
-            onPress={() => goTo(thumbIndex)}
-            style={[styles.thumb, thumbIndex === safeIndex && styles.thumbActive]}
-          >
-            <Image
-              source={photo}
-              style={StyleSheet.absoluteFill}
-              contentFit="cover"
-              accessibilityIgnoresInvertColors
-            />
-          </Pressable>
-        ))}
+        {photos.map((photo, thumbIndex) => {
+          const thumbnailSource = getProfilePhotoSource(introduction.profile.id, photos, thumbIndex);
+          return (
+            <Pressable
+              key={`${photo}-${thumbIndex}`}
+              accessibilityRole="button"
+              accessibilityLabel={t('gallery.photoA11y', { count: number(thumbIndex + 1) })}
+              onPress={() => goTo(thumbIndex)}
+              style={[styles.thumb, thumbIndex === safeIndex && styles.thumbActive]}
+            >
+              <Image
+                source={thumbnailSource}
+                storagePath={introduction.profile.photoMedia?.[thumbIndex]?.storagePath}
+                recyclingKey={`gallery-thumb-${introduction.profile.id}-${thumbIndex}-${String(thumbnailSource)}`}
+                style={StyleSheet.absoluteFill}
+                contentFit="cover"
+                {...galleryImagePerformancePolicy}
+                accessibilityIgnoresInvertColors
+              />
+            </Pressable>
+          );
+        })}
       </ScrollView>
     </View>
   );
@@ -272,6 +287,7 @@ function photoFrame(width: number, height: number): { width: number; height: num
 
 function GallerySlide({
   photo,
+  storagePath,
   index,
   width,
   frame,
@@ -280,7 +296,8 @@ function GallerySlide({
   onZoomChange,
   onSwipe,
 }: {
-  photo: string;
+  photo: ProfilePhotoSource;
+  storagePath?: string;
   index: number;
   width: number;
   frame: { width: number; height: number };
@@ -290,6 +307,8 @@ function GallerySlide({
   onSwipe: (distance: number, velocity: number) => void;
 }) {
   const { t } = useI18n();
+  const media = usePrivateMedia(photo, 'profile-photos', storagePath);
+  const displayPhoto = (media.privateMedia ? media.url ?? '' : photo) as ProfilePhotoSource;
   const [attempt, setAttempt] = useState(0);
   const [failed, setFailed] = useState(false);
 
@@ -348,7 +367,7 @@ function GallerySlide({
     });
 
   // One drag, two meanings, decided by the live zoom level. Zoomed in, it
-  // moves the photo around. Zoomed out on the web, it turns the page — a mouse
+  // moves the photo around. Zoomed out on the web, it turns the page, a mouse
   // cannot flick a paging list. On a phone the list pages natively, so the drag
   // is only switched on once the photo is zoomed.
   const drag = Gesture.Pan()
@@ -398,12 +417,13 @@ function GallerySlide({
       <GestureDetector gesture={Gesture.Exclusive(doubleTap, Gesture.Simultaneous(pinch, rotate, drag))}>
         <View style={frame}>
         {/* The card itself grows, rounded corners and all, past its resting size
-            — not just the picture inside a fixed frame. */}
+, not just the picture inside a fixed frame. */}
         <Animated.View style={[StyleSheet.absoluteFill, styles.photo, zoomStyle]}>
             <Image
-              key={galleryRetryKey(photo, attempt)}
+              key={galleryRetryKey(String(photo), attempt)}
               testID={`gallery-photo-${index + 1}`}
-              source={photo}
+              source={displayPhoto}
+              storagePath={storagePath}
               style={StyleSheet.absoluteFill}
               contentFit="cover"
               contentPosition="center"
@@ -411,11 +431,12 @@ function GallerySlide({
               {...galleryImagePerformancePolicy}
               accessibilityIgnoresInvertColors
               onError={() => setFailed(true)}
+              onLoad={() => setFailed(false)}
             />
         </Animated.View>
         </View>
       </GestureDetector>
-      {failed ? (
+      {failed || !displayPhoto ? (
         <View style={styles.errorOverlay} accessibilityRole="alert">
           <Text variant="bodySmall" center style={styles.errorText}>{t('gallery.photoUnavailable')}</Text>
           <Pressable
@@ -425,6 +446,7 @@ function GallerySlide({
             onPress={() => {
               setFailed(false);
               setAttempt((current) => current + 1);
+              media.retry();
             }}
             style={styles.retry}
           >
@@ -532,7 +554,7 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 8,
     overflow: 'hidden',
-    opacity: 0.45,
+    opacity: 0.82,
     borderWidth: 1,
     borderColor: 'transparent',
   },

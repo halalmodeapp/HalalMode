@@ -401,11 +401,11 @@ export const ms: ListTranslations = {
     q4: 'Apabila kita berselisih teruk, apa yang berlaku dalam sepuluh minit pertama?',
     q5: 'Di mana kita tinggal lima tahun lagi, dan keluarga siapa yang berdekatan?',
     q6: 'Bagaimana kita menjaga waktu yang hanya milik kita berdua?',
-    q7: 'Berapa banyak kehidupan kita dikongsi secara terbuka — gambar, nama, apa sahaja?',
+    q7: 'Berapa banyak kehidupan kita dikongsi secara terbuka, gambar, nama, apa sahaja?',
     q8: 'Ulama dan pandangan siapa yang kita ikuti apabila kita berbeza tentang sesuatu hukum?',
     q9: 'Apa yang ibu bapa kamu lakukan dengan betul, dan apa yang tidak akan kita ulangi?',
     q10: 'Sejauh mana kita jujur tentang kesihatan, terapi dan perkara yang sedang kita perbaiki?',
-    q11: 'Bagaimana rupa “cukup” bagi kamu — dan untuk apa kita tidak akan berhutang?',
+    q11: 'Bagaimana rupa “cukup” bagi kamu, dan untuk apa kita tidak akan berhutang?',
     q12: 'Jika salah seorang daripada kita perlu memilih antara panggilan hidup dan berpindah, bagaimana kita membuat keputusan?',
   },
   openers: [

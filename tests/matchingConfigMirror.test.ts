@@ -16,7 +16,7 @@ import {
  * drifted apart twice.
  *
  * Migration 0068 was written because `matching_config` sat empty for four
- * versions while the code carried the real defaults — the app behaved correctly
+ * versions while the code carried the real defaults, the app behaved correctly
  * and the recorded configuration described none of it. The second drift was the
  * reverse: the stored configuration grew the graded scorer's keys, the mirror
  * here grew the allocator's, and neither learned the other's. Nothing failed,
@@ -54,12 +54,12 @@ test('the stored configuration and the code mirror hold exactly the same keys', 
   assert.deepEqual(
     stored.filter((k) => !code.includes(k)),
     [],
-    `${file} stores keys this module does not declare — resolveStoredConfig would reject the live config`
+    `${file} stores keys this module does not declare, resolveStoredConfig would reject the live config`
   );
   assert.deepEqual(
     code.filter((k) => !stored.includes(k)),
     [],
-    `this module declares keys ${file} does not store — those knobs cannot be tuned without a deploy`
+    `this module declares keys ${file} does not store, those knobs cannot be tuned without a deploy`
   );
 });
 
@@ -74,7 +74,7 @@ test('the stored values are the ones the code would have chosen', () => {
   const { params } = latestStoredConfig();
   const resolved = resolveStoredConfig(params);
 
-  // Not a requirement in general — the database is allowed to diverge, that is
+  // Not a requirement in general, the database is allowed to diverge, that is
   // the point of tuning it. But every divergence should be deliberate, so this
   // pins the ones that exist today and will fail loudly on an accidental one.
   assert.deepEqual(resolved, DEFAULT_MATCHING_CONFIG);

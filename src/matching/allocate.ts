@@ -1,9 +1,9 @@
 /**
- * Allocation — stage two of three.
+ * Allocation, stage two of three.
  *
  * Reciprocal sets are built across the whole pool at once. Generating each
  * member's list independently cannot guarantee reciprocity, and the previous
- * approach — keeping only pairs inside *both* sides' top-N — systematically
+ * approach, keeping only pairs inside *both* sides' top-N, systematically
  * under-filled sets, because popular members crowded each other out of their
  * own lists.
  *
@@ -30,20 +30,20 @@ export interface ScoredEdge {
    *
    * Reported rather than ranked on. Novelty is already priced into `quality`
    * and `utility` through repeat_decay, which multiplies a pair's score by 0.7
-   * for every showing it has had — so a repeat has to be about 1.4x better than
+   * for every showing it has had, so a repeat has to be about 1.4x better than
    * a fresh alternative to outrank it, and roughly 2x after a second showing.
    *
    * That is the intended shape: new faces win the close calls and most of the
    * middle, and a genuinely strong pair can still come back. Ranking on
    * freshness outright would throw away the second half of that, which is the
-   * part worth keeping — a 0.9 pair losing to a 0.4 one helps nobody.
+   * part worth keeping, a 0.9 pair losing to a 0.4 one helps nobody.
    */
   fresh: boolean;
   /**
    * The two directional estimates: P(a picks b) and P(b picks a).
    *
    * The reciprocal score deliberately collapses these, but composition needs
-   * them apart — an edge where one side wants the other far more is a reach,
+   * them apart, an edge where one side wants the other far more is a reach,
    * and a set made entirely of reaches produces no matches at all.
    */
   forward?: number;
@@ -142,7 +142,7 @@ export function qualityBand(quality: number, width: number): number {
  * Greedy on sorted weights is the standard half-approximation for weighted
  * b-matching in the worst case, and does considerably better than that on a
  * graph with degrees capped at five to ten. The objective here is not pure
- * weight maximisation anyway — it is weight subject to fairness — so exactness
+ * weight maximisation anyway, it is weight subject to fairness, so exactness
  * would buy little against a target that is itself a judgement call.
  */
 /**
@@ -150,7 +150,7 @@ export function qualityBand(quality: number, width: number): number {
  *
  * The goal is that a member's favourite in their set picks them back. The
  * greedy allocators take the highest-scoring edges in order, which fills a set
- * with five near-equals — so a member's favourite is surrounded by four rivals,
+ * with five near-equals, so a member's favourite is surrounded by four rivals,
  * and the same is true for them. Measured against a predictive estimator, that
  * lands at or below random chance.
  *
@@ -159,7 +159,7 @@ export function qualityBand(quality: number, width: number): number {
  * with room proposes down their own preference list, and the person proposed to
  * holds the best offer by *their* estimate, dropping a weaker one they were
  * holding. When it settles, nobody is left wanting someone who also wants them
- * more than their current partner — that is what makes round one each member's
+ * more than their current partner, that is what makes round one each member's
  * strongest available mutual pair rather than merely their highest score.
  *
  * Five rounds give five slots. Round one is the anchor, rounds two to five are
@@ -292,7 +292,7 @@ function stableRounds(input: {
 
   // Anyone the rounds left short, filled from whatever is still free.
   //
-  // Pairing can strand a member whose whole shortlist was taken by others —
+  // Pairing can strand a member whose whole shortlist was taken by others,
   // rare, but it showed up on thin shortlists, where two members finished with
   // nothing while the greedy allocator left none. Nobody should end a round
   // empty because the algorithm ran out of turns, so this sweeps up the
@@ -337,8 +337,8 @@ export function allocate(input: AllocationInput): AllocationResult {
   const ordered = [...eligible].sort(compareEdges(seed, config.quality_band_width));
 
   // Pairing rather than greedy edge-picking. It returns complete sets, so the
-  // fairness, exploration, repair and composition passes below — all of which
-  // exist to patch up greedy's leftovers — do not apply and are skipped rather
+  // fairness, exploration, repair and composition passes below, all of which
+  // exist to patch up greedy's leftovers, do not apply and are skipped rather
   // than run against a plan they were not written for.
   if (config.allocator === 'stable_rounds_v1') {
     const paired = stableRounds({ ordered, capacities, seed });
@@ -460,7 +460,7 @@ interface AnchorInput {
 }
 
 /**
- * Anchor pass — one strong edge each, before anyone gets a second.
+ * Anchor pass, one strong edge each, before anyone gets a second.
  *
  * Sorting globally and taking greedily maximises the *total* of the edge
  * weights, which is not the goal. The goal is that each member's set contains
@@ -469,13 +469,13 @@ interface AnchorInput {
  * person and three mediocre ones for another beats an even split on total.
  *
  * So each member first claims their single best available partner, processed
- * most-constrained-first — a member with three options loses their best to
+ * most-constrained-first, a member with three options loses their best to
  * someone with thirty far more often than the reverse, so serving the
  * constrained first costs the flexible almost nothing.
  *
  * This is the tractable stand-in for maximising mutual first choices. Ranking
- * probabilities are set-dependent — B may be A's first choice in one set and
- * third in another — so scoring pairs independently and then allocating is
+ * probabilities are set-dependent, B may be A's first choice in one set and
+ * third in another, so scoring pairs independently and then allocating is
  * circular. Guaranteeing each member one high-reciprocity edge captures most of
  * the benefit without needing a choice model.
  *
@@ -610,12 +610,12 @@ function reachGap(edge: ScoredEdge, id: string): number {
  *
  * Some members reach almost exclusively for people who will not reach back.
  * Round after round they choose, nothing comes of it, and nothing about the
- * experience tells them why — because it must not. A set made entirely of
+ * experience tells them why, because it must not. A set made entirely of
  * reaches is one that reliably produces no match.
  *
  * So a few of the most lopsided edges are traded for more evenly matched ones.
  * Deliberately a few: `max_reach_edges` is never zero, so nobody is stopped
- * from aiming high — only from spending every slot doing it. Most members never
+ * from aiming high, only from spending every slot doing it. Most members never
  * reach the threshold at all.
  *
  * This is the one part of the system that could become a ranking if it were
@@ -704,7 +704,7 @@ interface ExplorationInput {
  * rather than reinforce it.
  *
  * Three constraints keep the cost honest. It never touches a member's strongest
- * introduction — only positions from `exploration_min_slot` onward. The
+ * introduction, only positions from `exploration_min_slot` onward. The
  * substitute must still clear the score floor, so an experiment is never an
  * incompatible pair. And every swap frees both sides' capacity before spending
  * it again, so reciprocity and limits hold exactly as before.
@@ -919,7 +919,7 @@ export function pairKey(a: string, b: string): string {
  * Final gate before anything is written.
  *
  * Reciprocity and capacity are structural promises, so they are asserted rather
- * than assumed. A violation means the round is discarded, not repaired — a
+ * than assumed. A violation means the round is discarded, not repaired, a
  * silently one-sided introduction is worse than no round at all.
  */
 export function verifyAllocation(

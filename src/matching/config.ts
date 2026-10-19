@@ -29,7 +29,7 @@ export interface MatchingConfig {
   w_compat: number;
   /** Weight on how often the subject is kept when shown. */
   w_appeal: number;
-  /** Weight on the pair's own history — decays with repeated appearances. */
+  /** Weight on the pair's own history, decays with repeated appearances. */
   w_pair: number;
   /**
    * Qualified appearances at which the behavioural estimate is fully trusted.
@@ -43,7 +43,7 @@ export interface MatchingConfig {
 
   // --- Reciprocal score ---------------------------------------------------
   reciprocal_combiner: 'geometric' | 'arithmetic' | 'min';
-  /** Extra penalty for lopsided pairs. Ships at 0 — see combine(). */
+  /** Extra penalty for lopsided pairs. Ships at 0, see combine(). */
   imbalance_lambda: number;
   /** Hard floor. No exposure need can push an edge below this into a round. */
   min_reciprocal_score: number;
@@ -71,7 +71,7 @@ export interface MatchingConfig {
   // how soon, both scale with how plausible a mutual pick looks.
   repeat_decay: number;
   /**
-   * Flat cooldown for writers with no score to go on — the historical backfill,
+   * Flat cooldown for writers with no score to go on, the historical backfill,
    * and the pre-v1 generator. Anything that knows the pair's estimate uses the
    * range below instead.
    */
@@ -86,14 +86,14 @@ export interface MatchingConfig {
   max_pair_appearances: number;
   /**
    * The estimate at which a pair earns full patience. Deliberately well under
-   * 1.0, which no real pair reaches — anchoring there would make almost every
+   * 1.0, which no real pair reaches, anchoring there would make almost every
    * pair look unpromising and collapse the range to its floor.
    */
   repeat_generous_score: number;
   /**
    * Shapes the curve between the floor and the anchor. Above 1 the short waits
    * and full allowances are concentrated at the very top, so a merely decent
-   * pair is treated much more like a weak one than like a strong one — which is
+   * pair is treated much more like a weak one than like a strong one, which is
    * the intent. Repetition should be a reward for the few, not a default.
    */
   repeat_generosity_curve: number;
@@ -137,7 +137,7 @@ export interface MatchingConfig {
   reach_gap_threshold: number;
   /**
    * Reaches a member may hold at once when their picks are consistently
-   * unreturned. Never zero — nobody is stopped from aiming high, they are only
+   * unreturned. Never zero, nobody is stopped from aiming high, they are only
    * stopped from aiming high with every slot they have.
    */
   max_reach_edges: number;
@@ -153,7 +153,7 @@ export interface MatchingConfig {
    * 'greedy_global_v1' is the Matcher V2 baseline and maximises total weight.
    * 'anchored_maxmin_v1' is the Matcher V3 selector and first gives members
    * their best available partner,
-   * then fills greedily — the objective that actually serves mutual first
+   * then fills greedily, the objective that actually serves mutual first
    * choices. Both are kept so the two can be compared in shadow.
    */
   allocator: 'greedy_global_v1' | 'anchored_maxmin_v1' | 'stable_rounds_v1';
@@ -191,12 +191,12 @@ export interface MatchingConfig {
   // --- Saying no -----------------------------------------------------------
   /**
    * Days an explicit pass holds before the pair may be considered again. A pass
-   * is a real no, but not a permanent one — people change, and so do reasons.
+   * is a real no, but not a permanent one, people change, and so do reasons.
    */
   explicit_pass_cooldown_days: number;
   /**
    * What each pass multiplies the pair prior by, from the first onward. A no
-   * costs rank rather than closing the pair — only a member closes a pair, by
+   * costs rank rather than closing the pair, only a member closes a pair, by
    * hiding someone.
    */
   repeat_pass_penalty: number;
@@ -214,8 +214,8 @@ export interface MatchingConfig {
    */
   explicit_pass_first_cooldown_days: number;
   /**
-   * What each soft select multiplies the pair prior by. Above 1 — it is a lift,
-   * never a penalty — and capped at what a never-shown pair would score.
+   * What each soft select multiplies the pair prior by. Above 1, it is a lift,
+   * never a penalty, and capped at what a never-shown pair would score.
    */
   soft_select_lift: number;
 }
@@ -392,7 +392,7 @@ export function validateConfig(config: MatchingConfig): MatchingConfig {
       || !Number.isInteger(config.min_repeat_cooldown_days)
       || !Number.isInteger(config.max_repeat_cooldown_days)
       || config.max_repeat_cooldown_days < config.min_repeat_cooldown_days
-      // At or below the floor the range would invert — every pair would read
+      // At or below the floor the range would invert, every pair would read
       // as maximally promising, which is the opposite of the intent.
       || config.repeat_generous_score <= config.min_reciprocal_score
       || config.repeat_generous_score > 1
@@ -464,7 +464,7 @@ export function validateConfig(config: MatchingConfig): MatchingConfig {
   }
   // A zero cooldown would make a pass meaningless. A penalty of 1 would make a
   // second pass cost nothing, and 0 would be a permanent removal wearing a
-  // multiplier's clothes — the thing this deliberately is not.
+  // multiplier's clothes, the thing this deliberately is not.
   if (config.explicit_pass_cooldown_days < 1
       || !Number.isInteger(config.explicit_pass_cooldown_days)
       || !(config.repeat_pass_penalty > 0 && config.repeat_pass_penalty <= 1)

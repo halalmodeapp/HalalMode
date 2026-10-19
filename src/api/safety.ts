@@ -73,7 +73,7 @@ export async function blockIntroductionMember(introductionId: string): Promise<v
 }
 
 /**
- * Hiding is mutual, permanent and silent, and carries no moderation meaning —
+ * Hiding is mutual, permanent and silent, and carries no moderation meaning,
  * it is for recognising someone from life rather than for anything they did.
  * Keyed on the relationship like every other action here, so the server derives
  * who is being hidden instead of trusting an id from the client.

@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'r
 import { I18nManager, Platform, View } from 'react-native';
 
 import { type TranslationKey } from '@/i18n/catalog';
-import { getLocale, type AppLocale } from '@/i18n/locales';
+import { brandNameFor, getLocale, premiumWordFor, type AppLocale } from '@/i18n/locales';
 import { LTR_LAYOUT, LTR_WEB_PROPS } from '@/lib/rtl';
 import { useSession } from '@/state/session';
 
@@ -12,6 +12,8 @@ export type Translate = (key: TranslationKey, params?: TranslationParams) => str
 interface I18nValue {
   language: AppLocale;
   localeTag: string;
+  brandName: string;
+  premiumWord: string;
   isRTL: boolean;
   t: Translate;
   nativeRestartRequired: boolean;
@@ -28,7 +30,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // A browser flips a page from the document element, not from a style on
-    // each view — so this is where Arabic actually becomes right-to-left on
+    // each view, so this is where Arabic actually becomes right-to-left on
     // web. `lang` goes with it: it is what picks the right font shaping and
     // what a screen reader reads the page in.
     if (Platform.OS !== 'web' || typeof document === 'undefined') return;
@@ -39,7 +41,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Guarded because these are native-only. react-native-web ships an
     // I18nManager with `isRTL` and nothing else, so calling the rest throws at
-    // startup and takes the whole tree with it — the app rendered nothing at
+    // startup and takes the whole tree with it, the app rendered nothing at
     // all in a browser until this check existed. On a device every one of them
     // is present and this costs a typeof.
     I18nManager.allowRTL?.(true);
@@ -61,7 +63,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       if (__DEV__ && message.includes('{{')) {
         // Shipped once: copy gained a {{name}} and the call site was never given
         // the parameter, so a confirmation dialog asked "Stop seeing {{name}}?".
-        // Nothing failed — every test checked that keys exist, not that they
+        // Nothing failed, every test checked that keys exist, not that they
         // were filled in. Loud in development, silent for members either way.
         console.error(
           `i18n: "${key}" still contains a placeholder after substitution: ${message}`
@@ -72,6 +74,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     return {
       language,
       localeTag: locale.tag,
+      brandName: brandNameFor(language),
+      premiumWord: premiumWordFor(language),
       isRTL: desiredRTL,
       t,
       nativeRestartRequired,

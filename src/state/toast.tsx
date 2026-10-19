@@ -26,8 +26,8 @@ const VISIBLE_MS = 4_000;
  * A brief message that outlives the screen that asked for it.
  *
  * Mounted above the router on purpose. The messages worth showing this way tend
- * to accompany something that also navigates — hiding somebody closes their
- * profile and returns you to the set — and a notice living inside the screen
+ * to accompany something that also navigates, hiding somebody closes their
+ * profile and returns you to the set, and a notice living inside the screen
  * being left would be unmounted before it could be read.
  */
 export function ToastProvider({ children }: { children: ReactNode }) {

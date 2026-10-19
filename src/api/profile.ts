@@ -5,6 +5,57 @@ import type { PrivatePreferences, Profile } from '@/types';
 import { isReadinessIssue, type ProfileReadinessIssue } from '@/lib/profileReadiness';
 import type { DeviceLocationUpdate } from '@/lib/deviceLocation';
 import { profilePatchToRow } from '@/lib/profilePatch';
+import { coordsForCityName } from '@/data/cities';
+import {
+  DEFAULT_HIGH_LATITUDE_FAJR_METHOD,
+  type HighLatitudeFajrMethod,
+} from '@/lib/prayerTimes';
+
+export interface HighLatitudeFajrSettings {
+  isHighLatitude: boolean;
+  method: HighLatitudeFajrMethod;
+  /** Exact saved profile location, returned only by the owner-only RPC. */
+  latitude: number | null;
+  longitude: number | null;
+}
+
+let mockHighLatitudeFajrMethod: HighLatitudeFajrMethod = DEFAULT_HIGH_LATITUDE_FAJR_METHOD;
+
+export async function fetchMyHighLatitudeFajrSettings(): Promise<HighLatitudeFajrSettings> {
+  if (USE_MOCKS) {
+    const coords = coordsForCityName(MOCK_SELF.city);
+    return {
+      isHighLatitude: coords ? Math.abs(coords.latitude) >= 45 : false,
+      method: mockHighLatitudeFajrMethod,
+      latitude: coords?.latitude ?? null,
+      longitude: coords?.longitude ?? null,
+    };
+  }
+
+  const { data, error } = await requireSupabase().rpc('get_my_high_latitude_fajr_settings');
+  if (error) throw error;
+  const row = (Array.isArray(data) ? data[0] : data) as Record<string, unknown> | null;
+  if (!row) throw new Error('High-latitude Fajr settings are unavailable.');
+  return {
+    isHighLatitude: row.is_high_latitude === true,
+    method: row.method === 'reference_latitude_45'
+      ? 'reference_latitude_45'
+      : DEFAULT_HIGH_LATITUDE_FAJR_METHOD,
+    latitude: typeof row.latitude === 'number' ? row.latitude : null,
+    longitude: typeof row.longitude === 'number' ? row.longitude : null,
+  };
+}
+
+export async function setMyHighLatitudeFajrMethod(method: HighLatitudeFajrMethod): Promise<void> {
+  if (USE_MOCKS) {
+    mockHighLatitudeFajrMethod = method;
+    return;
+  }
+  const { error } = await requireSupabase().rpc('set_my_high_latitude_fajr_method', {
+    p_method: method,
+  });
+  if (error) throw error;
+}
 
 export interface ProfileReadinessStatus {
   ready: boolean;
@@ -152,7 +203,7 @@ export async function updateMyLocation(location: DeviceLocationUpdate): Promise<
 /**
  * Private preferences never leave the owner's session. RLS restricts this table
  * to `auth.uid() = user_id`, and the matcher reads it only inside a security-
- * definer function that returns matches — never the preference rows themselves.
+ * definer function that returns matches, never the preference rows themselves.
  */
 export async function fetchMyPreferences(): Promise<PrivatePreferences> {
   if (USE_MOCKS) return MOCK_PREFERENCES;
@@ -200,7 +251,7 @@ function profileFromRow(raw: Record<string, unknown>): Profile {
     id: String(row.id),
     // `String(null)` is the word "null" and `String(undefined)` is the word
     // "undefined". Both columns are nullable, and both are edited in a text
-    // field — so an unset name arrived on screen as the literal word, ready to
+    // field, so an unset name arrived on screen as the literal word, ready to
     // be saved as somebody's name the moment they pressed the button.
     name: String(row.name ?? ''),
     firstName: String(row.first_name ?? ''),

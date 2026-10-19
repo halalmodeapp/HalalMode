@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Wordmark } from '@/components/brand/Wordmark';
+import { useI18n } from '@/i18n';
 import { LTR_LAYOUT, LTR_WEB_PROPS } from '@/lib/rtl';
 import { useSurfaceTone } from '@/theme/tone';
 import { color, font } from '@/theme/tokens';
@@ -13,6 +14,7 @@ const RATIO = 139.6 / 988.77;
  * width: capitals as tall as the logo's ascenders, baseline on its bottom.
  */
 export function PremiumWord({ logoWidth, dark }: { logoWidth: number; dark?: boolean }) {
+  const { premiumWord } = useI18n();
   const height = logoWidth * RATIO;
   const size = height * 1.12;
   const tint = dark ? color.goldOnDark : color.gold;
@@ -26,7 +28,7 @@ export function PremiumWord({ logoWidth, dark }: { logoWidth: number; dark?: boo
         marginLeft: height * 0.45,
       }}
     >
-      <Text style={[styles.word, { fontSize: size, lineHeight: size, color: tint }]}>Premium</Text>
+      <Text style={[styles.word, { fontSize: size, lineHeight: size, color: tint }]}>{premiumWord}</Text>
       {/* A small sparkle at the top right of the word. */}
       <Text
         accessibilityElementsHidden
@@ -45,9 +47,10 @@ export function PremiumWord({ logoWidth, dark }: { logoWidth: number; dark?: boo
  * black card.
  */
 export function PremiumLogo({ width = 150 }: { width?: number }) {
+  const { t } = useI18n();
   const dark = useSurfaceTone() === 'dark';
   return (
-    <View accessible accessibilityRole="header" accessibilityLabel="Halal Mode Premium" style={[styles.row, LTR_LAYOUT]} {...LTR_WEB_PROPS}>
+    <View accessible accessibilityRole="header" accessibilityLabel={t('settings.premium')} style={[styles.row, LTR_LAYOUT]} {...LTR_WEB_PROPS}>
       <Wordmark width={width} fill={dark ? color.white : color.ink} />
       <PremiumWord logoWidth={width} dark={dark} />
     </View>

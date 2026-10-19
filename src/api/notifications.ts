@@ -1,9 +1,11 @@
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
+import type { DevicePushToken } from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { supportsRemotePushRuntime } from '@/lib/notificationRuntime';
 import { requireSupabase, USE_MOCKS } from '@/lib/supabase';
+import { brandNameFor, supportedLocales } from '@/i18n/locales';
 
 export type NotificationPermissionError =
   | 'unsupported_device'
@@ -28,6 +30,15 @@ export async function enableMyNotifications(locale: string): Promise<void> {
   // after confirming a production/development build runtime, so Settings can
   // still render safely in Expo Go and in browser previews.
   const Notifications = await import('expo-notifications');
+  if (Platform.OS === 'android') {
+    const appLocale = supportedLocales.find(
+      (supported) => locale === supported || locale.startsWith(`${supported}-`)
+    ) ?? 'en';
+    await Notifications.setNotificationChannelAsync('default', {
+      name: brandNameFor(appLocale),
+      importance: Notifications.AndroidImportance.DEFAULT,
+    });
+  }
   const existing = await Notifications.getPermissionsAsync();
   const permission = existing.status === 'granted'
     ? existing
@@ -41,8 +52,37 @@ export async function enableMyNotifications(locale: string): Promise<void> {
   const token = await Notifications.getExpoPushTokenAsync({ projectId });
   const platform = Platform.OS;
   if (platform !== 'ios' && platform !== 'android') throw new Error('unsupported_device' satisfies NotificationPermissionError);
+  await registerNotificationDevice(token.data, platform, locale);
+}
+
+/** Keep the app's Expo token current after APNs or FCM rotates its token. */
+export async function refreshMyNotificationToken(devicePushToken: DevicePushToken, locale: string): Promise<void> {
+  if (USE_MOCKS || !Device.isDevice) return;
+  if (!supportsRemotePushRuntime(Platform.OS, Constants.executionEnvironment)) return;
+  if (Platform.OS !== 'ios' && Platform.OS !== 'android') return;
+
+  const Notifications = await import('expo-notifications');
+  const permission = await Notifications.getPermissionsAsync();
+  if (permission.status !== 'granted') return;
+
+  const projectId = Constants.expoConfig?.extra?.eas?.projectId as string | undefined;
+  if (!projectId || /^0{8}-0{4}-0{4}-0{4}-0{12}$/.test(projectId)) return;
+
+  const client = requireSupabase();
+  const consent = await client.rpc('get_my_notification_consent');
+  if (consent.error || consent.data !== true) return;
+
+  // Reuse the rotated native token. This avoids another native token read from
+  // inside Expo's token-rotation callback and converts it to our Expo token.
+  const token = await Notifications.getExpoPushTokenAsync({ projectId, devicePushToken });
+  const stillConsented = await client.rpc('get_my_notification_consent');
+  if (stillConsented.error || stillConsented.data !== true) return;
+  await registerNotificationDevice(token.data, Platform.OS, locale);
+}
+
+async function registerNotificationDevice(token: string, platform: 'ios' | 'android', locale: string) {
   const { error } = await requireSupabase().rpc('register_my_notification_device', {
-    p_token: token.data,
+    p_token: token,
     p_platform: platform,
     p_locale: locale.split('-')[0],
   });

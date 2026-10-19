@@ -3,7 +3,7 @@ import type { CatalogGroup, CatalogOption } from './catalogOption';
 import { UNSTATED } from './matchingOptions';
 
 /**
- * Heritage: up to three countries a member or their family are from — every
+ * Heritage: up to three countries a member or their family are from, every
  * country, so nobody is missing. Stored as ISO 3166-1 codes (migration 0175);
  * the device names each one in the language on screen, falling back to the
  * English name here where it cannot.

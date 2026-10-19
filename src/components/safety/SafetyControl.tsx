@@ -18,6 +18,7 @@ import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
 import { useToast } from '@/state/toast';
 import { queryKeys } from '@/lib/queryClient';
+import { clearPrivateMediaCache } from '@/lib/privateMediaCache';
 import { testIds } from '@/lib/testIds';
 import { alpha, color, layout, radius, shadow, space } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
@@ -94,6 +95,8 @@ export function SafetyControl({
         queryClient.removeQueries({ queryKey: queryKeys.connection(scope.id) });
         await queryClient.invalidateQueries({ queryKey: queryKeys.connections });
       }
+      queryClient.removeQueries({ queryKey: ['private-media'] });
+      await clearPrivateMediaCache();
       await queryClient.invalidateQueries({ queryKey: queryKeys.round });
       onBlocked?.();
       if (action.kind === 'hide') {

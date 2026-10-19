@@ -23,6 +23,8 @@ export interface CurrentRoundState {
    * names whose dawn they are waiting for, and there is no round to carry it.
    */
   city?: string | null;
+  /** Authoritative server-scheduled Fajr for upcoming or completed rounds. */
+  nextFajrAt?: string | null;
   /** Set only with `answers_owed`: whose questions to go back to. */
   owed?: OwedAnswers | null;
   /** Everyone still owed answers, oldest first; `owed` is the first of them. */
@@ -50,6 +52,7 @@ export async function fetchCurrentRoundState(
       status: 'ready',
       round: buildMockRound(TIER_LIMITS[tier].introductions),
       narrowingCriterion: null,
+      nextFajrAt: null,
     };
   }
 
@@ -58,16 +61,16 @@ export async function fetchCurrentRoundState(
   if (error) throw error;
 
   // Nobody to meet yet: ask for a set of sample members instead. The server
-  // decides whether this member gets one — it is behind its own flag, once a
-  // day, and never for a member who has a real round — so asking costs one
+  // decides whether this member gets one, it is behind its own flag, once a
+  // day, and never for a member who has a real round, so asking costs one
   // call and the answer is usually no. See migration 0148.
   // A member still waiting for their first real set (migration 0185) asks too.
   const emptyStatus = (data as { status?: unknown } | null)?.status;
   if (emptyStatus === 'no_suitable_introductions' || emptyStatus === 'waiting_for_first_set') {
     const sample = await client.rpc('request_demo_round');
     const answer = sample.data as { created?: unknown; reason?: unknown } | null;
-    // "has_round" counts too. Two requests at once — which the app makes on
-    // first load — race: one creates the set, the other is told a set already
+    // "has_round" counts too. Two requests at once, which the app makes on
+    // first load, race: one creates the set, the other is told a set already
     // exists. Treating that as "nothing" let the loser's empty answer overwrite
     // the winner's, and the member saw "No suitable introductions" beside a set
     // that was sitting there.
@@ -78,7 +81,7 @@ export async function fetchCurrentRoundState(
   }
 
   const payload = data && typeof data === 'object'
-    ? data as { status?: unknown; round?: IntroductionRound | null; criterion?: unknown; city?: unknown; owed?: OwedAnswers | null; owedAll?: OwedAnswers[] }
+    ? data as { status?: unknown; round?: IntroductionRound | null; criterion?: unknown; city?: unknown; nextFajrAt?: unknown; owed?: OwedAnswers | null; owedAll?: OwedAnswers[] }
     : {};
   const round = payload.round ?? undefined;
   const status = normalizeDailyRoundStatus(payload.status);
@@ -92,6 +95,7 @@ export async function fetchCurrentRoundState(
       // Only meaningful while waiting for a set to open, which is the one state
       // with no round to carry it.
       city: typeof payload.city === 'string' ? payload.city : null,
+      nextFajrAt: typeof payload.nextFajrAt === 'string' ? payload.nextFajrAt : null,
       owed: payload.owed && typeof payload.owed.connectionId === 'string' ? payload.owed : null,
       owedAll: Array.isArray(payload.owedAll)
         ? payload.owedAll.filter((item) => typeof item?.connectionId === 'string' && typeof item?.name === 'string')
@@ -101,6 +105,7 @@ export async function fetchCurrentRoundState(
   return {
     status: round.introductions.length > 0 ? 'ready' : status,
     narrowingCriterion,
+    nextFajrAt: null,
     round: {
       ...round,
       introductions: await Promise.all(
@@ -117,7 +122,7 @@ export async function fetchCurrentRoundState(
  * Commits the member's keeps for the round.
  *
  * Selections are written privately. The other side is told nothing unless and
- * until they select back — no read receipts, no "someone likes you" nudge.
+ * until they select back, no read receipts, no "someone likes you" nudge.
  * `mutualProfileIds` contains mutuals that received an active conversation
  * slot. `waitingMutualProfileIds` contains earned mutuals held privately until
  * both members have capacity; older clients can safely ignore that new field.
@@ -156,7 +161,7 @@ export async function submitKeeps(
 
 /**
  * Records that an introduction was released. Fire-and-forget from the UI's
- * point of view — the arc animates immediately and this reconciles behind it.
+ * point of view, the arc animates immediately and this reconciles behind it.
  *
  * The server uses release events to tune the private selection score. Nobody is
  * ever told they were passed over.
@@ -197,7 +202,7 @@ export async function softSelectIntroduction(introductionId: string): Promise<vo
  * months later, also holds them apart.
  *
  * The subject is told nothing, here or ever. The only thing that reaches the
- * server is the decision — how long anyone read anything stays on the device.
+ * server is the decision, how long anyone read anything stays on the device.
  */
 export async function passIntroduction(introductionId: string): Promise<void> {
   if (USE_MOCKS) return;

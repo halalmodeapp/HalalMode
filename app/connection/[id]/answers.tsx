@@ -29,7 +29,7 @@ import { RTL_LAYOUT } from '@/lib/rtl';
 import { errorMessage } from '@/lib/errorMessage';
 
 /**
- * Step 2 of 3 — answer each question in turn; theirs wait for the recap.
+ * Step 2 of 3, answer each question in turn; theirs wait for the recap.
  *
  * The rule the whole screen enforces: their words stay sealed until yours are
  * committed, and yours cannot be edited afterwards. That asymmetry is what

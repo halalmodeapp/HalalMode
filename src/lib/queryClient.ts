@@ -1,10 +1,8 @@
 import { QueryClient } from '@tanstack/react-query';
 
 /**
- * A round changes at most once a day, and the product's whole point is that
- * there is nothing new to pull down. Stale data is refreshed when the app
- * returns to the foreground so private signed media URLs are rotated safely.
- * Chat overrides this per-query where realtime matters.
+ * Stale screen data refreshes on return to the app. Private media has its own
+ * account-scoped cache; renewing a link never refetches a profile or round.
  */
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -12,6 +10,7 @@ export const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000,
       gcTime: 30 * 60 * 1000,
       refetchOnWindowFocus: true,
+      refetchIntervalInBackground: false,
       retry: 1,
     },
   },
@@ -21,6 +20,7 @@ export const queryKeys = {
   session: ['session'] as const,
   profile: (id: string) => ['profile', id] as const,
   profileReadiness: ['profile-readiness'] as const,
+  highLatitudeFajrSettings: ['high-latitude-fajr-settings'] as const,
   legalConsent: ['legal-consent'] as const,
   preferences: ['preferences'] as const,
   round: ['round'] as const,
@@ -34,4 +34,5 @@ export const queryKeys = {
   cardsSession: (sessionId: string) => ['halal-cards', 'session', sessionId] as const,
   cardsGuide: (connectionId: string) => ['halal-cards', 'guide', connectionId] as const,
   cardsAttention: ['halal-cards', 'attention'] as const,
+  referralProgress: ['referral-progress'] as const,
 };

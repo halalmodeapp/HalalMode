@@ -1,9 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Image } from 'expo-image';
-import Animated, { FadeIn } from 'react-native-reanimated';
-import { router, useLocalSearchParams } from 'expo-router';
+import { ProfileImage as Image } from '@/components/ui/ProfileImage';
+import {
+  getProfilePhotoSource,
+  type ProfilePhotoSource,
+} from '@/data/demoProfilePhotos';
+import Animated, {
+  cancelAnimation,
+  Easing,
+  FadeIn,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
+import { router, useIsFocused, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AppState,
   FlatList,
   KeyboardAvoidingView,
   Modal,
@@ -19,7 +32,6 @@ import {
   fetchConnection,
   fetchMessagesPage,
   markMessagesRead,
-  messageFromRow,
   sendMessage,
 } from '@/api/connections';
 import { AudioGreeting } from '@/components/introductions/AudioGreeting';
@@ -33,16 +45,21 @@ import { showNotice } from '@/lib/notice';
 import { shuffledOpeners } from '@/data/openers';
 import { useI18n } from '@/i18n';
 import { cardsCopy } from '@/halalCards/copy';
+import { HUB_HERO } from '@/halalCards/content/images';
 import { useCardsAttention } from '@/halalCards/hooks';
+import { ILLUSTRATIONS, THUMBNAILS } from '@/halalCards/illustrations';
 import { cardsPaths } from '@/halalCards/navigation';
 import { queryKeys } from '@/lib/queryClient';
+import { mergeMessages } from '@/lib/mergeMessages';
+import { clearPrivateMediaCache } from '@/lib/privateMediaCache';
 import { trackProductEvent } from '@/lib/analytics';
 import { enqueueMessage, getPendingMessages, removePendingMessage } from '@/lib/messageOutbox';
 import { retryAllInOrder } from '@/lib/retryPolicy';
-import { supabase, USE_MOCKS } from '@/lib/supabase';
+import { USE_MOCKS } from '@/lib/supabase';
 import { testIds } from '@/lib/testIds';
 import { useAuth } from '@/state/auth';
 import { useFeatureFlags } from '@/state/featureFlags';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { alpha, color, font, radius, space } from '@/theme/tokens';
 import type { ChatMessage } from '@/types';
 import type { MessagePage } from '@/api/connections';
@@ -52,14 +69,26 @@ type ConversationItem =
   | { kind: 'day'; id: string; date: string }
   | { kind: 'message'; id: string; message: ChatMessage; isLastOutgoing: boolean };
 
+const CARDS_ROW_IMAGE = THUMBNAILS[HUB_HERO.id] ?? ILLUSTRATIONS[HUB_HERO.id];
+
 export default function ChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isRTL, language, t } = useI18n();
   const { user } = useAuth();
+  const isFocused = useIsFocused();
+  const [foreground, setForeground] = useState(AppState.currentState === 'active');
+  const visible = isFocused && foreground;
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', state => setForeground(state === 'active'));
+    return () => subscription.remove();
+  }, []);
   const { inChatVoiceNotes, liveCalling } = useFeatureFlags();
+  const reducedMotion = useReducedMotion();
   const queryClient = useQueryClient();
   const listRef = useRef<FlatList<ConversationItem>>(null);
   const shouldScrollToEndRef = useRef(true);
+  const lastMarkedIncomingIdRef = useRef<string | null>(null);
+  const markingIncomingIdRef = useRef<string | null>(null);
   const [draft, setDraft] = useState('');
   const [callState, setCallState] = useState<
     'calling' | 'connected' | 'unavailable' | null
@@ -69,6 +98,42 @@ export default function ChatScreen() {
   const [retryFailed, setRetryFailed] = useState(false);
   const outboxMemberId = USE_MOCKS ? 'mock' : user?.id;
   const cardsWaiting = useCardsAttention().data?.[id] ?? 0;
+  const cardsRowShine = useSharedValue(-1);
+
+  useEffect(() => {
+    cancelAnimation(cardsRowShine);
+    cardsRowShine.value = -1;
+    if (reducedMotion || !visible) return;
+
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const schedule = () => {
+      timer = setTimeout(() => {
+        if (stopped) return;
+        cardsRowShine.value = withSequence(
+          withTiming(1, { duration: 850, easing: Easing.inOut(Easing.cubic) }),
+          withTiming(-1, { duration: 0 }),
+        );
+        schedule();
+      }, 20_000 + Math.floor(Math.random() * 10_001));
+    };
+    schedule();
+
+    return () => {
+      stopped = true;
+      if (timer) clearTimeout(timer);
+      cancelAnimation(cardsRowShine);
+      cardsRowShine.value = -1;
+    };
+  }, [cardsRowShine, reducedMotion, visible]);
+
+  const cardsRowShineStyle = useAnimatedStyle(() => ({
+    opacity: cardsRowShine.value < -0.99 ? 0 : 1,
+    transform: [
+      { translateX: -96 + (cardsRowShine.value + 1) * 112 },
+      { skewX: '-18deg' },
+    ],
+  }));
 
   const refreshPendingCount = useCallback(async () => {
     if (!outboxMemberId) {
@@ -88,6 +153,7 @@ export default function ChatScreen() {
     queryFn: () => fetchMessagesPage(id),
     // Conversation is the one place freshness matters.
     staleTime: 0,
+    refetchInterval: visible ? 5_000 : false,
   });
   const connection = connectionQuery.data;
   const messages = useMemo(
@@ -96,58 +162,32 @@ export default function ChatScreen() {
   );
 
   useEffect(() => {
+    if (!visible) return;
     void markMessagesRead(id).then(() => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.messages(id) });
-    });
-  }, [id, queryClient]);
+    }).catch(() => {});
+  }, [id, queryClient, visible]);
+
+  useEffect(() => {
+    if (!visible) return;
+    const newestUnread = [...messages].reverse().find((message) => message.sender === 'them' && !message.readAt);
+    if (!newestUnread
+        || newestUnread.id === lastMarkedIncomingIdRef.current
+        || newestUnread.id === markingIncomingIdRef.current) return;
+    markingIncomingIdRef.current = newestUnread.id;
+    void markMessagesRead(id)
+      .then(() => {
+        lastMarkedIncomingIdRef.current = newestUnread.id;
+        void queryClient.invalidateQueries({ queryKey: queryKeys.messages(id) });
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (markingIncomingIdRef.current === newestUnread.id) markingIncomingIdRef.current = null;
+      });
+  }, [id, messages, queryClient, visible]);
 
   useEffect(() => setNow(Date.now()), []);
   useEffect(() => { void refreshPendingCount(); }, [refreshPendingCount]);
-
-  useEffect(() => {
-    if (USE_MOCKS || !supabase) return;
-    const client = supabase;
-    const channel = client
-      .channel(`messages:${id}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'messages', filter: `connection_id=eq.${id}` },
-        (payload) => {
-          void client.auth.getUser().then(({ data, error: authError }) => {
-            if (authError || !data.user) return;
-            queryClient.setQueryData<MessagePage>(queryKeys.messages(id), (current) => {
-              if (!current) return current;
-              if (payload.eventType === 'DELETE') {
-                return { ...current, messages: current.messages.filter((item) => item.id !== String(payload.old.id)) };
-              }
-
-              // Realtime DELETE payloads intentionally have no `new` record.
-              // Parsing one first creates a transient empty message in the cache.
-              const message = messageFromRow(
-                payload.new as Record<string, unknown>,
-                data.user.id
-              );
-              const exists = current.messages.some((item) => item.id === message.id);
-              const messages = exists
-                ? current.messages.map((item) => item.id === message.id ? message : item)
-                : [...current.messages, message].sort((left, right) => left.createdAt.localeCompare(right.createdAt));
-              return { ...current, messages };
-            });
-            if (payload.eventType === 'INSERT') {
-              const message = messageFromRow(
-                payload.new as Record<string, unknown>,
-                data.user.id
-              );
-              if (message.sender === 'them') void markMessagesRead(id);
-            }
-          });
-        }
-      )
-      .subscribe();
-    return () => {
-      void client.removeChannel(channel);
-    };
-  }, [id, queryClient]);
 
   const send = useMutation({
     mutationFn: async (text: string) => {
@@ -169,7 +209,7 @@ export default function ChatScreen() {
       trackProductEvent('message_sent');
       shouldScrollToEndRef.current = true;
       queryClient.setQueryData<MessagePage>(queryKeys.messages(id), (current) => ({
-        messages: [...(current?.messages ?? []), message],
+        messages: mergeMessages(current?.messages ?? [], [message]),
         hasMore: current?.hasMore ?? false,
         ...(current?.nextCursor ? { nextCursor: current.nextCursor } : {}),
       }));
@@ -186,7 +226,7 @@ export default function ChatScreen() {
     onMutate: () => { shouldScrollToEndRef.current = false; },
     onSuccess: (page) => {
       queryClient.setQueryData<MessagePage>(queryKeys.messages(id), (current) => ({
-        messages: [...page.messages, ...(current?.messages ?? [])],
+        messages: mergeMessages(page.messages, current?.messages ?? []),
         hasMore: page.hasMore,
         ...(page.nextCursor ? { nextCursor: page.nextCursor } : {}),
       }));
@@ -206,9 +246,7 @@ export default function ChatScreen() {
     onMutate: () => setRetryFailed(false),
     onSuccess: ({ delivered, failedCount }) => {
       queryClient.setQueryData<MessagePage>(queryKeys.messages(id), (current) => ({
-        messages: [...(current?.messages ?? []), ...delivered]
-          .filter((message, index, all) => all.findIndex((item) => item.id === message.id) === index)
-          .sort((left, right) => left.createdAt.localeCompare(right.createdAt)),
+        messages: mergeMessages(current?.messages ?? [], delivered),
         hasMore: current?.hasMore ?? false,
         ...(current?.nextCursor ? { nextCursor: current.nextCursor } : {}),
       }));
@@ -220,7 +258,11 @@ export default function ChatScreen() {
 
   const close = useMutation({
     mutationFn: () => closeConnection(id),
-    onSuccess: () => {
+    onSuccess: async () => {
+      queryClient.removeQueries({ queryKey: queryKeys.messages(id) });
+      queryClient.removeQueries({ queryKey: queryKeys.connection(id) });
+      queryClient.removeQueries({ queryKey: ['private-media'] });
+      await clearPrivateMediaCache();
       void queryClient.invalidateQueries({ queryKey: queryKeys.connections });
       router.replace('/(tabs)/connections');
     },
@@ -304,7 +346,8 @@ export default function ChatScreen() {
           </Pressable>
 
           <Image
-            source={connection.profile.photos[0]}
+            source={getProfilePhotoSource(connection.profile.id, connection.profile.photos, 0)}
+            storagePath={connection.profile.photoMedia?.[0]?.storagePath}
             style={styles.avatar}
             contentFit="cover"
             accessibilityIgnoresInvertColors
@@ -355,6 +398,19 @@ export default function ChatScreen() {
         >
           <Text style={styles.cardsGlyph}>✦</Text>
           <Text style={styles.cardsLabel} numberOfLines={1}>{t('halalCards.chatRow')}</Text>
+          {CARDS_ROW_IMAGE ? (
+            <View style={styles.cardsThumbShell} pointerEvents="none">
+              <Image
+                source={CARDS_ROW_IMAGE}
+                style={styles.cardsThumbImage}
+                contentFit="cover"
+                contentPosition={{ top: '23%', left: '50%' }}
+                accessibilityIgnoresInvertColors
+                accessible={false}
+              />
+              <Animated.View style={[styles.cardsThumbShine, cardsRowShineStyle]} />
+            </View>
+          ) : null}
           {cardsWaiting ? (
             <View style={styles.cardsBadge} accessibilityLabel={t('halalCards.badgeA11y', { count: cardsWaiting })}>
               <Text style={styles.cardsBadgeText}>{cardsWaiting}</Text>
@@ -479,7 +535,7 @@ export default function ChatScreen() {
         visible={callState !== null}
         state={callState}
         name={connection.profile.firstName}
-        photo={connection.profile.photos[0]}
+        photo={getProfilePhotoSource(connection.profile.id, connection.profile.photos, 0)}
         onConnected={() => setCallState('connected')}
         onEnd={() => setCallState(null)}
       />
@@ -583,7 +639,7 @@ function CallOverlay({
   visible: boolean;
   state: 'calling' | 'connected' | 'unavailable' | null;
   name: string;
-  photo: string | undefined;
+  photo: ProfilePhotoSource;
   onConnected: () => void;
   onEnd: () => void;
 }) {
@@ -763,12 +819,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     paddingHorizontal: space.xl,
-    paddingVertical: 9,
+    paddingVertical: 6,
     backgroundColor: color.ink,
   },
   cardsRowPressed: { opacity: 0.88 },
-  cardsGlyph: { fontSize: 12, color: color.goldOnDark },
-  cardsLabel: { flex: 1, fontFamily: font.bodySemi, fontSize: 12, letterSpacing: 0.4, color: color.white },
+  cardsGlyph: { fontSize: 17, color: color.goldOnDark },
+  cardsLabel: { flex: 1, fontFamily: font.bodySemi, fontSize: 15.5, letterSpacing: 0.25, color: color.white },
+  cardsThumbShell: {
+    width: 94,
+    height: 56,
+    borderRadius: 9,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: alpha.onDarkLine,
+    backgroundColor: color.clay,
+  },
+  cardsThumbImage: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    transform: [{ scale: 1.55 }],
+  },
+  cardsThumbShine: {
+    position: 'absolute',
+    top: -12,
+    bottom: -12,
+    left: 0,
+    width: 24,
+    backgroundColor: 'rgba(255,255,255,0.6)',
+  },
   cardsBadge: {
     minWidth: 20,
     height: 20,
@@ -833,7 +914,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: 'rgba(138,106,52,0.45)',
+    borderColor: 'rgba(184,145,79,0.45)',
     backgroundColor: 'rgba(197,160,84,0.08)',
   },
   botName: { fontFamily: font.bodyBold, fontSize: 10, letterSpacing: 1.4, textTransform: 'uppercase', color: color.gold },

@@ -1,7 +1,8 @@
-import { Image } from 'expo-image';
+import { ProfileImage as Image } from '@/components/ui/ProfileImage';
+import { getProfilePhotoSource } from '@/data/demoProfilePhotos';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from 'expo-router';
-import { DeviceMotion, Gyroscope } from 'expo-sensors';
+import { Gyroscope } from 'expo-sensors';
 import {
   useCallback,
   useEffect,
@@ -22,6 +23,9 @@ import Animated, {
   cancelAnimation,
   Easing,
   runOnJS,
+  SensorType,
+  useAnimatedReaction,
+  useAnimatedSensor,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -33,6 +37,7 @@ import type { SharedValue } from 'react-native-reanimated';
 import { Text } from '@/components/ui/Text';
 import { SelectionGlow } from '@/components/introductions/SelectionGlow';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useScreenActive } from '@/hooks/useScreenActive';
 import { useI18n } from '@/i18n';
 import { deckDirectionForAccessibilityAction } from '@/lib/roundInvariants';
 import { RTL_LAYOUT } from '@/lib/rtl';
@@ -62,8 +67,8 @@ const MAX_TILT_ANGLE = 12;
 /**
  * How strongly the phone's held orientation affects the cards.
  */
-const ORIENTATION_SENSITIVITY = 0.72;
-const ORIENTATION_SMOOTHING = 0.32;
+const ORIENTATION_SENSITIVITY = 1.2;
+const ORIENTATION_SMOOTHING = 0.42;
 
 /**
  * The full ring cannot turn farther than 100 degrees in either direction.
@@ -214,6 +219,16 @@ export function HeroCard({
 
   const tiltX = useSharedValue(0);
   const tiltY = useSharedValue(0);
+  const screenActive = useScreenActive();
+  const webMotionRequested = useRef(false);
+
+  const requestWebMotionPermission = useCallback(() => {
+    if (Platform.OS !== 'web' || webMotionRequested.current) return;
+    webMotionRequested.current = true;
+    void Gyroscope.requestPermissionsAsync().catch(() => {
+      webMotionRequested.current = false;
+    });
+  }, []);
 
   /**
    * Shared left/right facing angle of the complete card ring.
@@ -245,126 +260,39 @@ export function HeroCard({
    */
   useFocusEffect(
     useCallback(() => {
-      let cancelled = false;
+      if (!screenActive || reducedMotion) return;
+      let subscription: ReturnType<typeof Gyroscope.addListener> | null = null;
 
-      let subscription:
-        | ReturnType<typeof DeviceMotion.addListener>
-        | ReturnType<typeof Gyroscope.addListener>
-        | null = null;
-      let baseBeta: number | null = null;
-      let baseGamma: number | null = null;
-      let baseGravity: { x: number; y: number } | null = null;
-
-      /**
-       * Clear invalid values that may have survived Fast Refresh.
-       */
+      // Clear invalid values that may have survived Fast Refresh and take a
+      // fresh neutral orientation when the deck receives focus.
       tiltX.value = 0;
       tiltY.value = 0;
       ringYaw.value = 0;
       ringMomentumIndex.value = 0;
       lastRingDirection.value = 0;
 
-      const startDeviceMotion = async () => {
+      // Native phones use useAnimatedSensor above. Web keeps the Expo
+      // gyroscope fallback, but the permission request is made from the card
+      // gesture so iOS Safari has user activation.
+      if (Platform.OS === 'web') {
         try {
-          // Browser sensor implementations expose rotation rate but often do
-          // not expose fused beta/gamma orientation angles.
-          if (Platform.OS === 'web') {
-            const available = await Gyroscope.isAvailableAsync();
-            if (!available || cancelled) return;
-            Gyroscope.setUpdateInterval(16);
-            let previousTime = performance.now();
-            subscription = Gyroscope.addListener(({ x, y }) => {
-              const now = performance.now();
-              const deltaTime = clamp((now - previousTime) / 1000, 0, 0.05);
-              previousTime = now;
-              if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-              tiltX.value = clamp(
-                tiltX.value + x * RAD2DEG * deltaTime * 0.45,
-                -MAX_TILT_ANGLE,
-                MAX_TILT_ANGLE,
-              );
-              tiltY.value = clamp(
-                tiltY.value - y * RAD2DEG * deltaTime * 0.45,
-                -MAX_TILT_ANGLE,
-                MAX_TILT_ANGLE,
-              );
-            });
-            return;
-          }
-
-          const available = await DeviceMotion.isAvailableAsync();
-
-          if (!available || cancelled) {
-            return;
-          }
-
-          DeviceMotion.setUpdateInterval(1000 / 30);
-          subscription = DeviceMotion.addListener((measurement) => {
-            const beta = measurement?.rotation?.beta;
-            const gamma = measurement?.rotation?.gamma;
-            let targetX: number;
-            let targetY: number;
-
-            if (typeof beta === 'number' && Number.isFinite(beta)
-              && typeof gamma === 'number' && Number.isFinite(gamma)) {
-              // The first reading is the phone's natural holding position. Keep
-              // movement relative to it, so a user's normal grip is not tilted.
-              if (baseBeta === null || baseGamma === null) {
-                baseBeta = beta;
-                baseGamma = gamma;
-                return;
-              }
-
-              const angleFromBase = (angle: number, base: number) =>
-                Math.atan2(Math.sin(angle - base), Math.cos(angle - base));
-              targetX = clamp(
-                -angleFromBase(beta, baseBeta) * RAD2DEG * ORIENTATION_SENSITIVITY,
-                -MAX_TILT_ANGLE,
-                MAX_TILT_ANGLE,
-              );
-              targetY = clamp(
-                angleFromBase(gamma, baseGamma) * RAD2DEG * ORIENTATION_SENSITIVITY,
-                -MAX_TILT_ANGLE,
-                MAX_TILT_ANGLE,
-              );
-            } else {
-              // A few devices omit fused angles; gravity still provides a
-              // stable relative tilt for those sensors.
-              const gravity = measurement?.accelerationIncludingGravity;
-              if (!gravity || !Number.isFinite(gravity.x) || !Number.isFinite(gravity.y)) return;
-              if (baseGravity === null) {
-                baseGravity = { x: gravity.x, y: gravity.y };
-                return;
-              }
-              const gravityTilt = (delta: number) =>
-                Math.asin(clamp(delta / DeviceMotion.Gravity, -1, 1)) * RAD2DEG;
-              targetX = clamp(
-                gravityTilt(gravity.y - baseGravity.y) * ORIENTATION_SENSITIVITY,
-                -MAX_TILT_ANGLE,
-                MAX_TILT_ANGLE,
-              );
-              targetY = clamp(
-                gravityTilt(gravity.x - baseGravity.x) * ORIENTATION_SENSITIVITY,
-                -MAX_TILT_ANGLE,
-                MAX_TILT_ANGLE,
-              );
-            }
-
-            const currentX = Number.isFinite(tiltX.value) ? tiltX.value : 0;
-            const currentY = Number.isFinite(tiltY.value) ? tiltY.value : 0;
-            tiltX.value = currentX + (targetX - currentX) * ORIENTATION_SMOOTHING;
-            tiltY.value = currentY + (targetY - currentY) * ORIENTATION_SMOOTHING;
+          Gyroscope.setUpdateInterval(16);
+          let previousTime = performance.now();
+          subscription = Gyroscope.addListener(({ x, y }) => {
+            const now = performance.now();
+            const deltaTime = clamp((now - previousTime) / 1000, 0, 0.05);
+            previousTime = now;
+            if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+            tiltX.value = clamp(tiltX.value + x * RAD2DEG * deltaTime * 0.45, -MAX_TILT_ANGLE, MAX_TILT_ANGLE);
+            tiltY.value = clamp(tiltY.value - y * RAD2DEG * deltaTime * 0.45, -MAX_TILT_ANGLE, MAX_TILT_ANGLE);
           });
         } catch {
           tiltX.value = 0;
           tiltY.value = 0;
         }
-      };
-
-      void startDeviceMotion();
+      }
 
       return () => {
-        cancelled = true;
         subscription?.remove();
 
         tiltX.value = withTiming(0, {
@@ -399,6 +327,8 @@ export function HeroCard({
         );
       };
     }, [
+      reducedMotion,
+      screenActive,
       lastRingDirection,
       ringMomentumIndex,
       ringYaw,
@@ -533,6 +463,7 @@ export function HeroCard({
     .activeOffsetX([-12, 12])
     .failOffsetY([-20, 20])
     .onBegin(() => {
+      runOnJS(requestWebMotionPermission)();
       cancelAnimation(centerIndex);
       dragVisualStart.value = centerIndex.value;
       dragCommittedStart.value = Math.round(committedIndex.value);
@@ -735,6 +666,9 @@ export function HeroCard({
   const tap = Gesture.Tap()
     .maxDistance(10)
     .maxDuration(450)
+    .onBegin(() => {
+      runOnJS(requestWebMotionPermission)();
+    })
     .onEnd((event, success) => {
       if (!success || profiles.length === 0) return;
       // onLayout does not always arrive on the web; the row spans the window there.
@@ -767,6 +701,7 @@ export function HeroCard({
         style={styles.gestureArea}
         onLayout={(event) => { areaWidth.value = event.nativeEvent.layout.width; }}
       >
+      {Platform.OS !== 'web' && screenActive && !reducedMotion ? <NativeTiltSensor tiltX={tiltX} tiltY={tiltY} /> : null}
       <View
         collapsable={false}
         style={[styles.deck, narrowDeck && { width: cardWidth, alignSelf: 'center', marginHorizontal: 0 }]}
@@ -878,6 +813,76 @@ export function HeroCard({
       </View>
     </GestureDetector>
   );
+}
+
+/**
+ * Native-only sensor bridge. It is mounted only while the route is focused,
+ * so a cached tab does not keep the phone sensor running in the background.
+ * Both sampling and filtering happen on Reanimated's UI runtime.
+ */
+function NativeTiltSensor({
+  tiltX,
+  tiltY,
+}: {
+  tiltX: SharedValue<number>;
+  tiltY: SharedValue<number>;
+}) {
+  const nativeRotation = useAnimatedSensor(SensorType.ROTATION, {
+    interval: 16,
+    adjustToInterfaceOrientation: true,
+  });
+  const sensorBasePitch = useSharedValue<number | null>(null);
+  const sensorBaseRoll = useSharedValue<number | null>(null);
+
+  useEffect(() => {
+    tiltX.value = 0;
+    tiltY.value = 0;
+    return () => {
+      tiltX.value = withTiming(0, { duration: 220, easing: Easing.out(Easing.cubic) });
+      tiltY.value = withTiming(0, { duration: 220, easing: Easing.out(Easing.cubic) });
+    };
+  }, [tiltX, tiltY]);
+
+  useAnimatedReaction(
+    () => {
+      const rotation = nativeRotation.sensor.value;
+      return { pitch: rotation.pitch, roll: rotation.roll };
+    },
+    (rotation) => {
+      'worklet';
+      if (!Number.isFinite(rotation.pitch) || !Number.isFinite(rotation.roll)) return;
+
+      if (sensorBasePitch.value === null || sensorBaseRoll.value === null) {
+        sensorBasePitch.value = rotation.pitch;
+        sensorBaseRoll.value = rotation.roll;
+        return;
+      }
+
+      const pitchDelta = Math.atan2(
+        Math.sin(rotation.pitch - sensorBasePitch.value),
+        Math.cos(rotation.pitch - sensorBasePitch.value),
+      );
+      const rollDelta = Math.atan2(
+        Math.sin(rotation.roll - sensorBaseRoll.value),
+        Math.cos(rotation.roll - sensorBaseRoll.value),
+      );
+      const targetX = clamp(
+        -pitchDelta * RAD2DEG * ORIENTATION_SENSITIVITY,
+        -MAX_TILT_ANGLE,
+        MAX_TILT_ANGLE,
+      );
+      const targetY = clamp(
+        rollDelta * RAD2DEG * ORIENTATION_SENSITIVITY,
+        -MAX_TILT_ANGLE,
+        MAX_TILT_ANGLE,
+      );
+
+      tiltX.value += (targetX - tiltX.value) * ORIENTATION_SMOOTHING;
+      tiltY.value += (targetY - tiltY.value) * ORIENTATION_SMOOTHING;
+    },
+  );
+
+  return null;
 }
 
 interface DeckCardProps {
@@ -1201,7 +1206,8 @@ function DeckCard({
         </View>
       ) : null}
       <Image
-        source={profile.photos[0]}
+        source={getProfilePhotoSource(profile.id, profile.photos, 0)}
+        storagePath={profile.photoMedia?.[0]?.storagePath}
         style={StyleSheet.absoluteFill}
         contentFit="cover"
         recyclingKey={profile.id}

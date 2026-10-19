@@ -24,7 +24,7 @@ export function moveItem<T>(items: readonly T[], from: number, to: number): T[] 
  * Which slot a dragged tile is currently over.
  *
  * Measured from the tile's centre rather than the finger, because a finger sits
- * wherever it happened to land on the tile — grab a photo by its corner and the
+ * wherever it happened to land on the tile, grab a photo by its corner and the
  * finger is a whole column away from where the photo looks like it is.
  *
  * Columns are counted right to left when the interface is, so a member dragging

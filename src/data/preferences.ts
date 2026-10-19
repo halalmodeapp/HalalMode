@@ -8,7 +8,7 @@ import type {
 /**
  * Build vocabulary for the private preference editor.
  *
- * Deliberately long and deliberately neutral — no term here ranks above
+ * Deliberately long and deliberately neutral, no term here ranks above
  * another. The point is to describe, so introductions land better, not to grade.
  */
 /**

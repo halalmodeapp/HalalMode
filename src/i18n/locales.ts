@@ -57,6 +57,8 @@ export const localeRegistry = {
 
 export type AppLocale = keyof typeof localeRegistry;
 
+export { brandNameFor, premiumWordFor } from '@/i18n/brandName';
+
 /** The ordered member-facing language list used by language pickers. */
 export const supportedLocales = Object.keys(localeRegistry) as AppLocale[];
 

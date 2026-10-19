@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { fetchConnections } from '@/api/connections';
 import { fetchMyPreferences, fetchMyProfile, fetchMyProfileReadiness } from '@/api/profile';
@@ -10,6 +10,7 @@ import { BrandHeader } from '@/components/navigation/BrandHeader';
 import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
 import { Screen } from '@/components/ui/Screen';
 import { Segmented } from '@/components/ui/Segmented';
+import { StretchScrollView } from '@/components/ui/StretchScrollView';
 import { Text } from '@/components/ui/Text';
 import { PreferencesIcon, ProfileIcon } from '@/components/ui/TabIcons';
 import { PrivateTab } from '@/components/you/PrivateTab';
@@ -46,8 +47,8 @@ export default function YouScreen() {
     queryFn: fetchConnections,
   });
 
-  // The moment everything is complete — the last save of the profile or of the
-  // preferences — is worth marking, and it is where introductions begin.
+  // The moment everything is complete, the last save of the profile or of the
+  // preferences, is worth marking, and it is where introductions begin.
   // Only a change seen here counts, so a member who was already complete is
   // never shown it again on opening the screen.
   const router = useRouter();
@@ -128,7 +129,7 @@ export default function YouScreen() {
         />
       </View>
 
-      <ScrollView
+      <StretchScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -161,7 +162,7 @@ export default function YouScreen() {
             profilePaused={profile.isPaused ?? false}
           />
         ) : null}
-      </ScrollView>
+      </StretchScrollView>
       <ReadyMoment
         visible={celebrating}
         name={profile.firstName || profile.name}

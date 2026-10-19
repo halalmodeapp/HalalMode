@@ -33,8 +33,8 @@ export default function LegalConsentScreen() {
   });
   // No navigation here. Recording the answer is enough: AuthGate owns where a
   // member belongs, and it moves them on the moment consent is no longer
-  // required. This screen used to navigate as well — twice, from the success
-  // handler and from an effect — so accepting fired three replaces at once, each
+  // required. This screen used to navigate as well, twice, from the success
+  // handler and from an effect, so accepting fired three replaces at once, each
   // one re-triggering the others mid-transition until React stopped the loop
   // and a brand-new member's first sight of the app was an error screen.
   const acceptance = useMutation({

@@ -17,7 +17,7 @@ export async function requestAccountDeletion(): Promise<void> {
 }
 
 /**
- * Whether this member sends read receipts — and so whether they see anybody
+ * Whether this member sends read receipts, and so whether they see anybody
  * else's. The server enforces both halves; this only reads and writes the
  * setting.
  */

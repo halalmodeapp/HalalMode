@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -11,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { authReturnAddress } from '@/api/auth';
@@ -22,19 +24,23 @@ import { useAuth } from '@/state/auth';
 import { useBreakpoint } from '@/theme/breakpoints';
 import { font as appFont } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
+import { LinkPill } from '@/components/brand/LinkPill';
+import { howItWorksUrl } from '@/lib/publicLinks';
+import { useSession } from '@/state/session';
 
 const C = {
   surface: '#FCFCFB',
   ink: '#0A0A0A',
   muted: '#6C6A65',
   label: '#8B8880',
-  gold: '#8A6A34',
-  line: 'rgba(138,106,52,0.2)',
+  gold: '#B8914F',
+  line: 'rgba(184,145,79,0.2)',
   error: '#9b2c2c',
 };
 
 export default function AuthEmailScreen() {
-  const { t, isRTL } = useI18n();
+  const { t, isRTL, brandName } = useI18n();
+  const { language } = useSession();
   const { authError, clearAuthError } = useAuth();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -86,7 +92,14 @@ export default function AuthEmailScreen() {
   };
 
   return (
-    <View style={[styles.page, isRTL && styles.rtl]}>
+    <>
+      {Platform.OS === 'web' ? (
+        <Head>
+          <title>{`${brandName} | ${t('auth.cardTitle')}`}</title>
+          <meta name="description" content={t('auth.cardSub')} />
+        </Head>
+      ) : null}
+      <View style={[styles.page, isRTL && styles.rtl]}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
           contentContainerStyle={[
@@ -97,14 +110,17 @@ export default function AuthEmailScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={[styles.card, wide && styles.cardWide]}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('common.back')}
-              onPress={goBack}
-              style={({ pressed }) => [styles.back, pressed && styles.pressed]}
-            >
-              <Text style={[styles.backLabel, { fontFamily: font }]}>{`‹  ${t('common.back')}`}</Text>
-            </Pressable>
+            <View style={styles.topRow}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('common.back')}
+                onPress={goBack}
+                style={({ pressed }) => [styles.back, pressed && styles.pressed]}
+              >
+                <Text style={[styles.backLabel, { fontFamily: font }]}>{`‹  ${t('common.back')}`}</Text>
+              </Pressable>
+              <LinkPill primary label={t('marketing.howItWorks')} onPress={() => void Linking.openURL(howItWorksUrl(language))} />
+            </View>
 
             <Text style={[styles.title, { fontFamily: isRTL ? appFont.arabic : appFont.display }, textAlign]}>
               {t('auth.cardTitle')}
@@ -166,7 +182,8 @@ export default function AuthEmailScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </View>
+      </View>
+    </>
   );
 }
 
@@ -192,7 +209,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   cardWide: { padding: 32 },
-  back: { alignSelf: 'flex-start', paddingVertical: 4, paddingHorizontal: 2 },
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  back: { alignSelf: 'flex-start', paddingVertical: 6, paddingHorizontal: 2 },
   backLabel: { color: C.gold, fontSize: 15, fontWeight: '600' },
   title: { color: C.ink, fontSize: 32, lineHeight: 38, fontWeight: '600' },
   subtitle: { color: C.muted, fontSize: 15, lineHeight: 22, marginTop: -12 },
@@ -210,11 +228,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'left',
   },
-  error: { color: C.error, fontSize: 13, lineHeight: 18 },
-  success: { color: C.ink, fontSize: 13, lineHeight: 18, fontWeight: '600' },
+  error: { color: C.error, fontSize: 14, lineHeight: 20 },
+  success: { color: C.ink, fontSize: 14, lineHeight: 20, fontWeight: '600' },
   submit: { minHeight: 52, paddingHorizontal: 18, borderRadius: 999, backgroundColor: C.ink, alignItems: 'center', justifyContent: 'center' },
   submitLabel: { color: C.surface, fontSize: 16, fontWeight: '600', textAlign: 'center' },
   disabled: { opacity: 0.55 },
   pressed: { opacity: 0.84 },
-  fine: { color: C.label, fontSize: 12, lineHeight: 18 },
+  fine: { color: C.muted, fontSize: 14, lineHeight: 20 },
 });

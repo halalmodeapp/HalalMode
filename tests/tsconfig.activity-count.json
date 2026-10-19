@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "noEmit": false,
+    "outDir": "../.count-build",
+    "rootDir": "..",
+    "types": ["node"]
+  },
+  "include": ["../src/halalCards/content/index.ts"]
+}

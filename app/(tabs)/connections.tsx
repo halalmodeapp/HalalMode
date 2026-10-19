@@ -1,13 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
-import { Image } from 'expo-image';
+import { ProfileImage as Image } from '@/components/ui/ProfileImage';
+import { getProfilePhotoSource } from '@/data/demoProfilePhotos';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { fetchConnections } from '@/api/connections';
 import { BrandHeader } from '@/components/navigation/BrandHeader';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/AsyncState';
 import { Screen } from '@/components/ui/Screen';
+import { StretchScrollView } from '@/components/ui/StretchScrollView';
 import { Text } from '@/components/ui/Text';
 import { queryKeys } from '@/lib/queryClient';
 import { useI18n } from '@/i18n';
@@ -50,7 +52,7 @@ export default function ConnectionsScreen() {
         </Text>
       </View>
 
-      <ScrollView
+      <StretchScrollView
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
       >
@@ -72,7 +74,7 @@ export default function ConnectionsScreen() {
             message={t('connections.emptyBody')}
           />
         ) : null}
-      </ScrollView>
+      </StretchScrollView>
     </Screen>
   );
 }
@@ -99,7 +101,8 @@ function ConnectionRow({ connection }: { connection: Connection }) {
       style={({ pressed }) => [styles.row, isRTL && styles.rowRTL, pressed && styles.rowPressed]}
     >
       <Image
-        source={connection.profile.photos[0]}
+        source={getProfilePhotoSource(connection.profile.id, connection.profile.photos, 0)}
+        storagePath={connection.profile.photoMedia?.[0]?.storagePath}
         style={styles.avatar}
         contentFit="cover"
         accessibilityIgnoresInvertColors

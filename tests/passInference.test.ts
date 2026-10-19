@@ -22,7 +22,7 @@ test('reading a profile is timed on every surface that shows one', () => {
 
 test('dwell timings stay on the device', () => {
   const api = read('src/api/introductions.ts');
-  // The pass RPC carries an introduction id and nothing else — no durations, no
+  // The pass RPC carries an introduction id and nothing else, no durations, no
   // counts, nothing that would let the server reconstruct how anyone read.
   assert.match(api, /pass_introduction[\s\S]{0,120}p_introduction_id: introductionId/u);
   assert.doesNotMatch(api, /totalMs|dwell|opens/iu);

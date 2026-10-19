@@ -11,7 +11,7 @@ import Animated, {
 const PARTICLE_COUNT = 22;
 
 /**
- * Pre-computed particle field. Deterministic — the same burst every time keeps
+ * Pre-computed particle field. Deterministic, the same burst every time keeps
  * the moment feeling like part of the product rather than a random effect.
  */
 const PARTICLES = Array.from({ length: PARTICLE_COUNT }, (_, i) => ({
@@ -37,7 +37,7 @@ export interface PopBurstProps {
  *
  * Rendered inside the arc strip rather than the screen, so it inherits the same
  * coordinate space the carousel already computes. That avoids a measurement
- * pass and — more importantly — guarantees it fires from the face that popped.
+ * pass and, more importantly, guarantees it fires from the face that popped.
  */
 export function PopBurst({
   origin,

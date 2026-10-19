@@ -61,7 +61,7 @@ import { onDark, SurfaceToneProvider, useSurfaceTone } from '@/theme/tone';
  * The private preference editor.
  *
  * Two halves: what you are looking for, and your own figures. Neither is ever
- * rendered on a profile or sent to another member — the copy says so twice
+ * rendered on a profile or sent to another member, the copy says so twice
  * because this is the part of the product that most needs to be trusted.
  */
 export function PrivateTab({ preferences }: { preferences: PrivatePreferences }) {

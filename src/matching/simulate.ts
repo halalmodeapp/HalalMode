@@ -46,7 +46,7 @@ export interface SimMember extends MemberSignals {
   tier: 'free' | 'premium';
   /**
    * The member's true, hidden propensity to be picked. The estimator never sees
-   * this — it only ever observes outcomes. A heavily skewed distribution is the
+   * this, it only ever observes outcomes. A heavily skewed distribution is the
    * case the old random-within-band ranking handled worst.
    */
   trueAppeal: number;
@@ -108,7 +108,7 @@ export interface SimMetrics {
  * Standard Gini coefficient over a non-negative distribution.
  *
  * Chosen over a bespoke concentration number because it is well understood and
- * comparable across runs — the brief asks for "a simple Gini or top-share".
+ * comparable across runs, the brief asks for "a simple Gini or top-share".
  */
 export function gini(values: number[]): number {
   if (values.length === 0) return 0;
@@ -133,7 +133,7 @@ function buildPopulation(options: SimOptions): SimMember[] {
     const count =
       gender === 'female' ? options.femaleCount ?? options.perGender : options.perGender;
     for (let i = 0; i < count; i += 1) {
-      // Squaring pushes most members low and a few high — the concentrated
+      // Squaring pushes most members low and a few high, the concentrated
       // distribution that makes exposure fairness hard.
       const trueAppeal = 0.1 + 0.85 * Math.pow(random(), 2);
       const trait = random();
@@ -229,7 +229,7 @@ export function simulate(options: SimOptions): SimMetrics {
         // observed keep rates produces a death spiral: a member with a poor
         // rate drops under the score floor, is excluded from every round, and
         // so never gathers the data that might lift them back out. The
-        // confidence blend is what prevents that — a thin record pulls the
+        // confidence blend is what prevents that, a thin record pulls the
         // estimate back toward stated compatibility instead of toward zero.
         const compat = 1 - Math.abs(m.trait - w.trait);
         const history: PairHistory =
@@ -252,7 +252,7 @@ export function simulate(options: SimOptions): SimMetrics {
         const utility =
           strategy === 'v1'
             ? adjustedUtility(reciprocal, m, w, config, window) * decay
-            : // Baseline: no scoring, no fairness — random order within the
+            : // Baseline: no scoring, no fairness, random order within the
               // eligible pool, which is what `(band_gap, random())` amounted to.
               random();
 
@@ -328,7 +328,7 @@ export function simulate(options: SimOptions): SimMetrics {
 
     // --- Simulate picks --------------------------------------------------
     // Each member keeps their allowance, favouring the partners with the
-    // highest hidden appeal — the behaviour the estimator is trying to predict.
+    // highest hidden appeal, the behaviour the estimator is trying to predict.
     const picks = new Set<string>();
     const bySide = new Map<string, ScoredEdge[]>();
     for (const edge of result.assigned) {

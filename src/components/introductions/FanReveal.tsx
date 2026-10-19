@@ -1,4 +1,5 @@
-import { Image } from 'expo-image';
+import { ProfileImage as Image } from '@/components/ui/ProfileImage';
+import { getProfilePhotoSource } from '@/data/demoProfilePhotos';
 import { useEffect } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
@@ -143,7 +144,8 @@ function FanCard({
       ]}
     >
       <Image
-        source={profile.photos[0]}
+        source={getProfilePhotoSource(profile.id, profile.photos, 0)}
+        storagePath={profile.photoMedia?.[0]?.storagePath}
         style={StyleSheet.absoluteFill}
         contentFit="cover"
         accessibilityIgnoresInvertColors

@@ -66,7 +66,7 @@ export async function submitQuestionPicks(
 
 /**
  * Submits one answer and returns the pair with the other side's answer filled
- * in — the double-blind reveal.
+ * in, the double-blind reveal.
  *
  * The unlock happens server-side on purpose. If the client held their answer
  * and merely blurred it, anyone with a debugger could read it early, and the
@@ -258,7 +258,7 @@ export async function openConnection(connectionId: string): Promise<void> {
 }
 
 /**
- * Closes a connection politely. Both sides simply see it move to closed — no
+ * Closes a connection politely. Both sides simply see it move to closed, no
  * reason is surfaced, ever.
  */
 export async function closeConnection(connectionId: string): Promise<void> {

@@ -1,22 +1,7 @@
-import {
-  Beiruti_400Regular,
-  Beiruti_500Medium,
-  Beiruti_600SemiBold,
-  Beiruti_700Bold,
-} from '@expo-google-fonts/beiruti';
-import {
-  NotoSans_400Regular,
-  NotoSans_500Medium,
-  NotoSans_600SemiBold,
-  NotoSans_700Bold,
-} from '@expo-google-fonts/noto-sans';
-import {
-  PlayfairDisplay_400Regular,
-  PlayfairDisplay_400Regular_Italic,
-} from '@expo-google-fonts/playfair-display';
 import { focusManager, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import Head from 'expo-router/head';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -27,7 +12,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { installErrorReporting } from '@/lib/errorReporting';
 import { installPostHog } from '@/lib/posthog';
 import { queryClient } from '@/lib/queryClient';
-import { I18nProvider } from '@/i18n';
+import { I18nProvider, useI18n } from '@/i18n';
 import { AuthGate, AuthProvider } from '@/state/auth';
 import { RoundProvider } from '@/state/round';
 import { ToastProvider } from '@/state/toast';
@@ -36,6 +21,21 @@ import { FeatureFlagsProvider } from '@/state/featureFlags';
 import { color } from '@/theme/tokens';
 import { FRAME_WIDTH, useBreakpoint } from '@/theme/breakpoints';
 import { AppRecoveryBoundary } from '@/components/ui/AppRecoveryBoundary';
+import { NotificationObserver } from '@/components/notifications/NotificationObserver';
+
+// Keep browser font assets inside the exported app tree. Cloudflare Pages
+// intentionally omits files under node_modules, which is where the Expo font
+// packages otherwise place them.
+const Beiruti_400Regular = require('../assets/fonts/Beiruti_400Regular.ttf') as number;
+const Beiruti_500Medium = require('../assets/fonts/Beiruti_500Medium.ttf') as number;
+const Beiruti_600SemiBold = require('../assets/fonts/Beiruti_600SemiBold.ttf') as number;
+const Beiruti_700Bold = require('../assets/fonts/Beiruti_700Bold.ttf') as number;
+const NotoSans_400Regular = require('../assets/fonts/NotoSans_400Regular.ttf') as number;
+const NotoSans_500Medium = require('../assets/fonts/NotoSans_500Medium.ttf') as number;
+const NotoSans_600SemiBold = require('../assets/fonts/NotoSans_600SemiBold.ttf') as number;
+const NotoSans_700Bold = require('../assets/fonts/NotoSans_700Bold.ttf') as number;
+const PlayfairDisplay_400Regular = require('../assets/fonts/PlayfairDisplay_400Regular.ttf') as number;
+const PlayfairDisplay_400Regular_Italic = require('../assets/fonts/PlayfairDisplay_400Regular_Italic.ttf') as number;
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -96,12 +96,14 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    // Hide on error too — a missing webfont should degrade, not deadlock launch.
+    // Hide on error too, a missing webfont should degrade, not deadlock launch.
     if (fontsLoaded || fontError) void SplashScreen.hideAsync();
   }, [fontsLoaded, fontError]);
 
   useEffect(() => {
     if (Platform.OS === 'web') return;
+    // Initialize before the first change event, including background launches.
+    focusManager.setFocused(AppState.currentState === 'active');
     const subscription = AppState.addEventListener('change', (status) => {
       focusManager.setFocused(status === 'active');
     });
@@ -118,11 +120,13 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <AuthGate>
               <SessionProvider>
                 <FeatureFlagsProvider>
                   <I18nProvider>
+                    <LocalizedRootHead />
                     <AppRecoveryBoundary>
+                    <AuthGate>
+                      <NotificationObserver />
                       {/* Above the router: the notices worth showing this way
                           accompany something that also navigates. */}
                       <ToastProvider>
@@ -175,15 +179,29 @@ export default function RootLayout() {
                         </Stack>
                       </RoundProvider>
                       </ToastProvider>
+                    </AuthGate>
                     </AppRecoveryBoundary>
                   </I18nProvider>
                 </FeatureFlagsProvider>
               </SessionProvider>
-            </AuthGate>
           </AuthProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </ThemeProvider>
     </GestureHandlerRootView>
+  );
+}
+
+function LocalizedRootHead() {
+  const { brandName } = useI18n();
+  if (Platform.OS !== 'web') return null;
+  return (
+    <Head>
+      <title>{`${brandName} | Muslim Marriage, More Intentionally`}</title>
+      <meta
+        name="description"
+        content="Thoughtful Muslim introductions and guided tools to help couples build a stronger marriage."
+      />
+    </Head>
   );
 }

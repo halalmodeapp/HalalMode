@@ -1,7 +1,7 @@
 /**
  * Fajr, calculated rather than fetched.
  *
- * Rounds used to open at one instant worldwide — Fajr in Madinah — which is
+ * Rounds used to open at one instant worldwide, Fajr in Madinah, which is
  * 2:30am in London and the previous evening in Los Angeles. Giving everybody
  * their own dawn means knowing when dawn is where they are, for every member,
  * every day.
@@ -13,12 +13,18 @@
  * No network, no key, no rate limit, and it works the same in a hundred years.
  *
  * The method is Umm al-Qura, which places Fajr when the sun is 18.5° below the
- * horizon — the same method the Madinah schedule already used, so nothing about
+ * horizon, the same method the Madinah schedule already used, so nothing about
  * the app's idea of Fajr changes, only where it is measured.
  */
 
 /** Umm al-Qura: the sun 18.5 degrees below the horizon. */
 export const FAJR_ANGLE = 18.5;
+
+/** High-latitude estimates are used only when the sun does not reach FAJR_ANGLE. */
+export type HighLatitudeFajrMethod = 'one_seventh' | 'reference_latitude_45';
+export const DEFAULT_HIGH_LATITUDE_FAJR_METHOD: HighLatitudeFajrMethod = 'one_seventh';
+const HIGH_LATITUDE_REFERENCE = 45;
+const SUNRISE_SUNSET_DEPRESSION = 0.833;
 
 const rad = (degrees: number) => (degrees * Math.PI) / 180;
 const deg = (radians: number) => (radians * 180) / Math.PI;
@@ -80,7 +86,7 @@ function sunPosition(d: number): SunPosition {
 
 /**
  * Hours before solar noon at which the sun sits `angle` degrees below the
- * horizon, or null where it never does — inside the polar circles in summer
+ * horizon, or null where it never does, inside the polar circles in summer
  * there is no true dawn.
  */
 function hoursBeforeNoon(latitude: number, declination: number, angle: number): number | null {
@@ -88,8 +94,106 @@ function hoursBeforeNoon(latitude: number, declination: number, angle: number): 
     -Math.sin(rad(angle)) - Math.sin(rad(latitude)) * Math.sin(rad(declination));
   const denominator = Math.cos(rad(latitude)) * Math.cos(rad(declination));
   const cosHourAngle = numerator / denominator;
-  if (cosHourAngle > 1 || cosHourAngle < -1) return null;
+  if (!Number.isFinite(cosHourAngle) || cosHourAngle > 1 || cosHourAngle < -1) return null;
   return deg(Math.acos(cosHourAngle)) / 15;
+}
+
+function solarNoonUtcHours(longitude: number, equationOfTime: number): number {
+  return 12 - longitude / 15 - equationOfTime;
+}
+
+function solarEvent(
+  latitude: number,
+  longitude: number,
+  date: { year: number; month: number; day: number },
+  rising: boolean,
+): Date | null {
+  const d = daysSinceJ2000(date.year, date.month, date.day);
+  const { declination, equationOfTime } = sunPosition(d);
+  const halfDay = hoursBeforeNoon(latitude, declination, SUNRISE_SUNSET_DEPRESSION);
+  if (halfDay === null) return null;
+  const solarNoon = solarNoonUtcHours(longitude, equationOfTime);
+  const eventUtcHours = solarNoon + (rising ? -halfDay : halfDay);
+  return new Date(Date.UTC(date.year, date.month - 1, date.day) + eventUtcHours * 3_600_000);
+}
+
+function shiftDate(date: { year: number; month: number; day: number }, days: number) {
+  const shifted = new Date(Date.UTC(date.year, date.month - 1, date.day + days));
+  return {
+    year: shifted.getUTCFullYear(),
+    month: shifted.getUTCMonth() + 1,
+    day: shifted.getUTCDate(),
+  };
+}
+
+function referenceLatitude(latitude: number): number {
+  return latitude < 0 ? -HIGH_LATITUDE_REFERENCE : HIGH_LATITUDE_REFERENCE;
+}
+
+function oneSeventhEstimate(
+  latitude: number,
+  longitude: number,
+  date: { year: number; month: number; day: number },
+): Date | null {
+  const sunrise = solarEvent(latitude, longitude, date, true);
+  const previousSunset = solarEvent(latitude, longitude, shiftDate(date, -1), false);
+  if (sunrise && previousSunset) {
+    const night = sunrise.getTime() - previousSunset.getTime();
+    if (night > 0 && night < 24 * 3_600_000) {
+      return new Date(sunrise.getTime() - night / 7);
+    }
+  }
+
+  // If the local night is undefined, estimate its length at 45 degrees in the
+  // same hemisphere. If sunrise is also absent, use that same reference dawn.
+  const reference = referenceLatitude(latitude);
+  const referenceSunrise = solarEvent(reference, longitude, date, true);
+  const referenceSunset = solarEvent(reference, longitude, shiftDate(date, -1), false);
+  if (!referenceSunrise || !referenceSunset) return null;
+  const referenceNight = referenceSunrise.getTime() - referenceSunset.getTime();
+  if (referenceNight <= 0 || referenceNight >= 24 * 3_600_000) return null;
+  if (sunrise) return new Date(sunrise.getTime() - referenceNight / 7);
+  return new Date(referenceSunrise.getTime() - referenceNight / 7);
+}
+
+function referenceLatitudeEstimate(
+  latitude: number,
+  longitude: number,
+  date: { year: number; month: number; day: number },
+): Date | null {
+  const reference = referenceLatitude(latitude);
+  const referenceFajr = fajrInstant(reference, longitude, date);
+  const referenceSunrise = solarEvent(reference, longitude, date, true);
+  if (!referenceFajr || !referenceSunrise) return null;
+
+  const localSunrise = solarEvent(latitude, longitude, date, true);
+  if (localSunrise) {
+    return new Date(localSunrise.getTime() - (referenceSunrise.getTime() - referenceFajr.getTime()));
+  }
+
+  // With no local sunrise, use the 45-degree reference dawn at the same
+  // longitude. Solar noon does not vary with latitude in this calculation.
+  return referenceFajr;
+}
+
+/**
+ * Fajr using the existing 18.5-degree calculation where that dawn exists,
+ * with one of two explicit estimates only on dates when it does not.
+ */
+export function fajrInstantWithHighLatitudeMethod(
+  latitude: number,
+  longitude: number,
+  date: { year: number; month: number; day: number },
+  method: HighLatitudeFajrMethod = DEFAULT_HIGH_LATITUDE_FAJR_METHOD,
+): Date | null {
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)
+    || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) return null;
+  const astronomicalDawn = fajrInstant(latitude, longitude, date);
+  if (astronomicalDawn) return astronomicalDawn;
+
+  return method === 'reference_latitude_45'
+    ? referenceLatitudeEstimate(latitude, longitude, date)
+    : oneSeventhEstimate(latitude, longitude, date);
 }
 
 /**
@@ -121,22 +225,42 @@ export function fajrInstant(
  *
  * Rounds are built ahead and revealed at each member's dawn, so the question is
  * always "when is their next one", not "when was today's". Looks a few days
- * forward so a null from a polar summer does not become an infinite loop.
+ * forward so a missing estimate from an unusual polar date does not become an infinite loop.
  */
 export function nextFajrAfter(
   latitude: number,
   longitude: number,
   after: Date,
-  maxDaysAhead = 4
+  highLatitudeMethod: HighLatitudeFajrMethod = DEFAULT_HIGH_LATITUDE_FAJR_METHOD,
+  maxDaysAhead = 4,
 ): Date | null {
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)
+    || Math.abs(latitude) > 90 || Math.abs(longitude) > 180
+    || !Number.isFinite(after.getTime())) return null;
   for (let offset = -1; offset <= maxDaysAhead; offset += 1) {
     const probe = new Date(after.getTime() + offset * 86_400_000);
-    const instant = fajrInstant(latitude, longitude, {
+    const instant = fajrInstantWithHighLatitudeMethod(latitude, longitude, {
       year: probe.getUTCFullYear(),
       month: probe.getUTCMonth() + 1,
       day: probe.getUTCDate(),
-    });
+    }, highLatitudeMethod);
     if (instant && instant.getTime() > after.getTime()) return instant;
   }
   return null;
+}
+
+/**
+ * The single scheduled round window: this member's next Fajr through the Fajr
+ * after it. The round and its countdown use these same stored instants.
+ */
+export function nextFajrWindow(
+  latitude: number,
+  longitude: number,
+  after: Date,
+  highLatitudeMethod: HighLatitudeFajrMethod = DEFAULT_HIGH_LATITUDE_FAJR_METHOD,
+): { opensAt: Date; expiresAt: Date } | null {
+  const opensAt = nextFajrAfter(latitude, longitude, after, highLatitudeMethod);
+  if (!opensAt) return null;
+  const expiresAt = nextFajrAfter(latitude, longitude, opensAt, highLatitudeMethod);
+  return expiresAt ? { opensAt, expiresAt } : null;
 }

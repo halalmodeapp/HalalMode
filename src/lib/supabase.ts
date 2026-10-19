@@ -25,7 +25,7 @@ if (!USE_MOCKS && (!url || !anonKey)) {
  * because React Native has no address bar to read back from.
  *
  * PKCE rather than the library default. The default returns a session as tokens
- * in the URL fragment, which only a browser can read — a native app is handed
+ * in the URL fragment, which only a browser can read, a native app is handed
  * `halalmode://auth#access_token=...` and has nothing that would pick it up.
  * PKCE returns a short code instead, in the query string, which both platforms
  * read the same way and which `state/auth` already trades for a session. It is

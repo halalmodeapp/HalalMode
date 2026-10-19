@@ -1,7 +1,7 @@
 /**
  * The Terms and Privacy Notice, in the words the app can actually stand behind.
  *
- * These describe what the code really does — what is stored, who can see it,
+ * These describe what the code really does, what is stored, who can see it,
  * and what is never shown to anyone. They are written from the system rather
  * than from a template, which is the part a lawyer cannot do for us. Have a
  * lawyer review the wording before public launch; the facts here are correct,
@@ -70,7 +70,7 @@ export const TERMS: LegalDocument = {
     {
       heading: 'Safety',
       body: [
-        'You can block or report anyone you have been introduced to, at any time — even before accepting updated terms. Blocking is immediate and the other person is not told.',
+        'You can block or report anyone you have been introduced to, at any time, even before accepting updated terms. Blocking is immediate and the other person is not told.',
         'If you choose not to see someone again, you are hidden from them too.',
         'We may suspend or remove an account that breaks these terms or puts other members at risk. Where we can, we will tell you why.',
         'New photographs and changes to your bio are checked automatically for breaches of these terms, with the help of an AI service. A photograph that clearly breaks them is taken off your profile; anything uncertain is decided by a person. Reports are always read by a person.',
@@ -82,7 +82,7 @@ export const TERMS: LegalDocument = {
       heading: 'Your account',
       body: [
         'You can pause your profile or close your account at any time, from Settings.',
-        'Closing your account hides your profile at once. After a 30-day recovery period your profile, photos, preferences, and messages are removed. Some records are kept where the law requires it, or where they are needed to keep other members safe — for example a report made by or about you.',
+        'Closing your account hides your profile at once. After a 30-day recovery period your profile, photos, preferences, and messages are removed. Some records are kept where the law requires it, or where they are needed to keep other members safe, for example a report made by or about you.',
       ],
     },
     {
@@ -167,7 +167,7 @@ export const PRIVACY: LegalDocument = {
     {
       heading: 'What nobody sees',
       body: [
-        'We keep a private score used to decide who to introduce to whom. It is never shown to anyone — including you. It is not a rating of you as a person, and it is not shared.',
+        'We keep a private score used to decide who to introduce to whom. It is never shown to anyone, including you. It is not a rating of you as a person, and it is not shared.',
         'Your answers are shown to the other person only once they have answered all of their own questions, and theirs to you only once you have answered all of yours.',
         'Blocks, reports and hides are private. The person is not told. If you hide someone, you are hidden from them too.',
         'Your exact location is never kept. It is rounded to about a kilometre before it is stored, and used only to measure distance.',
@@ -177,7 +177,7 @@ export const PRIVACY: LegalDocument = {
       heading: 'Your messages',
       body: [
         'Messages are stored so they are there when you come back, and so they can be shown to you on another device.',
-        'We do not read your messages. The exception is a safety investigation after a report, where a small number of trained staff may read what is necessary to make a decision — and nothing more.',
+        'We do not read your messages. The exception is a safety investigation after a report, where a small number of trained staff may read what is necessary to make a decision, and nothing more.',
         'Messages are removed when the account is closed.',
       ],
     },

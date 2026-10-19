@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { fetchConnection, fetchConnectionSummary, openConnection } from '@/api/connections';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
@@ -36,6 +37,15 @@ export default function RecapScreen() {
 
   const recap = connection?.recap ?? [];
   const connectionId = connection?.id;
+  const [summaryAttempt, setSummaryAttempt] = useState(0);
+  const [expiredSummary, setExpiredSummary] = useState<string | null>(null);
+  const summaryScope = `${id}:${language}:${summaryAttempt}`;
+  const summaryTimedOut = expiredSummary === summaryScope;
+  useEffect(() => {
+    if (!connectionId) return;
+    const timer = setTimeout(() => setExpiredSummary(summaryScope), 120_000);
+    return () => clearTimeout(timer);
+  }, [connectionId, summaryScope]);
   const compatibilityBreakdown = sanitizeCompatibilityBreakdown(connection?.compatibilityBreakdown);
   const alignedCount = recap.filter((item) => item.verdict === 'aligned').length;
   useEffect(() => {
@@ -48,14 +58,15 @@ export default function RecapScreen() {
   const summaryQuery = useQuery({
     queryKey: ['connection-summary', id, language],
     queryFn: () => fetchConnectionSummary(id, language),
-    enabled: !!connectionId,
+    enabled: !!connectionId && !summaryTimedOut,
     staleTime: Infinity,
     // Still being written: ask again every few seconds, for up to two minutes.
     refetchInterval: (query) =>
-      query.state.data?.pending && query.state.dataUpdateCount < 40 ? 3000 : false,
+      !summaryTimedOut && query.state.data?.pending ? 3000 : false,
   });
   const botSummary = summaryQuery.data?.summary ?? null;
-  const preparing = summaryQuery.isPending || (summaryQuery.data?.pending === true && !botSummary);
+  const preparing = !summaryTimedOut && !summaryQuery.isError && !botSummary
+    && (summaryQuery.isPending || summaryQuery.data?.pending === true);
 
   const openMutation = useMutation({
     mutationFn: () => openConnection(id),
@@ -106,12 +117,19 @@ export default function RecapScreen() {
             <View style={styles.preparing} accessible accessibilityLiveRegion="polite" accessibilityLabel={t('recap.summaryPreparing')}>
               <LoadingDots />
               <Text style={styles.preparingText}>{t('recap.summaryPreparing')}</Text>
+              <SummaryLoadingBar label={t('recap.summaryPreparing')} />
             </View>
           ) : (
             <Text style={styles.summaryText}>
               {botSummary ?? builtInSummary(compatibilityBreakdown, t)}
             </Text>
           )}
+          {!botSummary && !preparing ? (
+            <Button label={t('common.tryAgain')} variant="quiet" onPress={() => {
+              setSummaryAttempt(value => value + 1);
+              void summaryQuery.refetch();
+            }} />
+          ) : null}
         </Card>
 
 
@@ -136,13 +154,6 @@ export default function RecapScreen() {
           </View>
         ) : null}
 
-        <Card tone="dark" style={styles.startHere}>
-          <Text style={styles.startHereLabel}>{t('recap.start')}</Text>
-          <Text style={styles.startHereQuote}>
-            {t('recap.prompt')}
-          </Text>
-        </Card>
-
         <View style={styles.actions}>
           {connection?.stage === 'open' ? (
             // Come back to reread it: the conversation is already open.
@@ -165,6 +176,38 @@ export default function RecapScreen() {
         </View>
       </ScrollView>
     </Screen>
+  );
+}
+
+/**
+ * A visual estimate only: the request is never delayed by this animation.
+ * It eases toward 92% over roughly the time the written summary usually
+ * takes, then waits there until the response (or fallback) arrives.
+ */
+function SummaryLoadingBar({ label }: { label: string }) {
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    progress.value = 0;
+    progress.value = withTiming(0.92, {
+      duration: 15_000,
+      easing: Easing.linear,
+    });
+    return () => cancelAnimation(progress);
+  }, [progress]);
+
+  const fillStyle = useAnimatedStyle(() => ({
+    width: `${Math.max(0, Math.min(0.92, progress.value)) * 100}%`,
+  }));
+
+  return (
+    <View
+      accessibilityRole="progressbar"
+      accessibilityLabel={label}
+      style={styles.loadingBarTrack}
+    >
+      <Animated.View style={[styles.loadingBarFill, fillStyle]} />
+    </View>
   );
 }
 
@@ -200,10 +243,7 @@ function CompatibilityCard({ item }: { item: CompatibilityBreakdownItem }) {
   );
 }
 
-/**
- * Used when no written summary is available: a sentence or two from the
- * profile comparison (practice, timing, location, family plans).
- */
+/** Used when no written summary is available: a neutral recap of shared and differing themes. */
 function builtInSummary(items: CompatibilityBreakdownItem[], t: ReturnType<typeof useI18n>['t']): string {
   const name = (item: CompatibilityBreakdownItem) => t(topicKey[item.topic]).toLowerCase();
   // "a, b and c", not "a and b and c".
@@ -281,7 +321,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   tagAligned: { backgroundColor: 'rgba(47,93,74,0.09)' },
-  tagDiscuss: { backgroundColor: 'rgba(138,106,52,0.1)' },
+  tagDiscuss: { backgroundColor: 'rgba(184,145,79,0.1)' },
   tagLabel: {
     fontFamily: 'Beiruti_700Bold',
     fontSize: 11,
@@ -311,24 +351,17 @@ const styles = StyleSheet.create({
   },
   compatibilityCardTitle: { flex: 1, fontSize: 13 },
 
-  startHere: {
-    marginHorizontal: space.gutterWide,
-    marginTop: 18,
-    borderRadius: radius.panel,
+  loadingBarTrack: {
+    width: '100%',
+    height: 5,
+    borderRadius: 3,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(184,145,79,0.14)',
   },
-  startHereLabel: {
-    fontFamily: 'Beiruti_600SemiBold',
-    fontSize: 11,
-    letterSpacing: 2.4,
-    textTransform: 'uppercase',
-    color: '#B79A62',
-  },
-  startHereQuote: {
-    marginTop: 9,
-    fontFamily: 'PlayfairDisplay_400Regular',
-    fontSize: 17,
-    lineHeight: 25,
-    color: color.white,
+  loadingBarFill: {
+    height: '100%',
+    borderRadius: 3,
+    backgroundColor: color.gold,
   },
 
   actions: {

@@ -7,7 +7,7 @@ import { attachListTranslations } from './translations';
  * What a member does, chosen rather than typed.
  *
  * Aimed at covering the great majority of working people rather than every job
- * that exists — a list nobody can find their way down is worse than a text box.
+ * that exists, a list nobody can find their way down is worse than a text box.
  * Where a precise title would only fragment the list, the broader one is used:
  * a paediatrician and a cardiologist are both a Doctor here, because somebody
  * hoping to meet a doctor is not hoping to meet a cardiologist.
@@ -638,7 +638,7 @@ attachListTranslations(OCCUPATION_GROUPS, 'occupations');
 /**
  * A profession as a reader should see it: the label, in their language.
  *
- * The profile stores an id — `software_engineer` — so anything showing another
+ * The profile stores an id, `software_engineer`, so anything showing another
  * member's profession must come through here, or the card reads like a
  * database column.
  */

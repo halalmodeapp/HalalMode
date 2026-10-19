@@ -30,7 +30,7 @@ test('all five read and one read least is a pass', () => {
   assert.equal(inferPassCandidate(records, FIVE, ['b', 'c', 'd', 'e']), 'e');
 });
 
-test('least is least — the margin does not have to be large', () => {
+test('least is least, the margin does not have to be large', () => {
   // The rule is structural, not a judgement about how much less. A member who
   // read everyone closely and one person slightly less is still asked; they can
   // simply answer no, which is what the confirmation is for.
@@ -186,7 +186,7 @@ test('closing a profile that is not open changes nothing', () => {
   assert.deepEqual(ledger.records(), [{ introductionId: 'a', totalMs: 2_000, opens: 1 }]);
 });
 
-test('records are idempotent — reading them twice does not double-count', () => {
+test('records are idempotent, reading them twice does not double-count', () => {
   let clock = 0;
   const ledger = new DwellLedger(() => clock);
   ledger.opened('a');
@@ -272,7 +272,7 @@ test('the most-read profile among those let go is soft selected', () => {
   assert.equal(inferSoftSelect(records, ['b', 'c']), 'b');
 });
 
-test('someone kept is not soft selected — they were actually chosen', () => {
+test('someone kept is not soft selected, they were actually chosen', () => {
   const records = [record('a', 40_000), record('b', 30_000)];
   assert.equal(inferSoftSelect(records, ['b']), 'b', 'the kept one is skipped');
 });

@@ -1,4 +1,5 @@
-import { Image } from 'expo-image';
+import { ProfileImage as Image } from '@/components/ui/ProfileImage';
+import { getProfilePhotoSource } from '@/data/demoProfilePhotos';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 
@@ -28,7 +29,7 @@ export interface FirstChoiceDialogProps {
  *
  * Free members never see this: keeping one of five makes their pick their first
  * choice by definition. Premium keeps up to three, and without an order their
- * actual first choice is unknowable — which leaves mutual first choice, the
+ * actual first choice is unknowable, which leaves mutual first choice, the
  * measure this whole system is judged against, blind for exactly the members
  * who have the most say.
  *
@@ -84,7 +85,8 @@ export function FirstChoiceDialog({
                   ]}
                 >
                   <Image
-                    source={introduction.profile.photos[0]}
+                    source={getProfilePhotoSource(introduction.profile.id, introduction.profile.photos, 0)}
+                    storagePath={introduction.profile.photoMedia?.[0]?.storagePath}
                     style={styles.avatar}
                     contentFit="cover"
                     accessibilityIgnoresInvertColors

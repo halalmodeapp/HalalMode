@@ -29,7 +29,7 @@ export interface RangeSliderProps {
  *
  * The reference used two overlapping native `input[type=range]` elements, which
  * lets the thumbs cross over each other. Here they clamp against one another so
- * the range can never invert — a real bug in the prototype.
+ * the range can never invert, a real bug in the prototype.
  */
 export function RangeSlider({
   min,
@@ -48,7 +48,7 @@ export function RangeSlider({
   const highValue = useSharedValue(value[1]);
   const dragging = useSharedValue<'low' | 'high' | null>(null);
 
-  // Sync props into the shared values between drags. This has to be an effect —
+  // Sync props into the shared values between drags. This has to be an effect,
   // reading or writing a shared value during render is an error in Reanimated 4.
   useEffect(() => {
     if (dragging.value !== null) return;

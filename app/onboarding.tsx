@@ -23,7 +23,7 @@ import { fetchMyLegalConsentStatus, recordSensitiveConsent } from '@/api/legalCo
 import { documentFromStatus, type LegalConsentStatus } from '@/lib/legalConsent';
 import { queryKeys } from '@/lib/queryClient';
 import { PermissionExplainer } from '@/components/ui/PermissionExplainer';
-import { placeFromDevice } from '@/lib/deviceLocation';
+import { browserDeviceCoordinates, nativeDevicePlace, placeFromDevice } from '@/lib/deviceLocation';
 import { namesFromIdentity } from '@/lib/identityNames';
 import {
   clearOnboardingDraft,
@@ -77,6 +77,7 @@ export default function OnboardingScreen() {
   const { user, refreshProfileStatus } = useAuth();
   const queryClient = useQueryClient();
   const draftMemberId = user?.id ?? 'current';
+  const profileSavedForMember = useRef<string | null>(null);
   // Through a ref, not an effect dependency: the user object changes on every
   // token refresh, and re-running the restore then would wipe a draft in
   // progress.
@@ -116,7 +117,7 @@ export default function OnboardingScreen() {
           // Somebody who signed in with Google or Apple has already told us
           // their name once. Asking again, into two empty boxes, is the first
           // thing a new member would reasonably complain about. It is only a
-          // starting point — both fields stay editable.
+          // starting point, both fields stay editable.
           setDraft((current) => ({ ...current, ...namesFromIdentity(identity.current) }));
           return;
         }
@@ -165,8 +166,8 @@ export default function OnboardingScreen() {
    * Location is asked for by its own button, not by Continue.
    *
    * Continue used to fire the system prompt with nothing but a caption as the
-   * reason, and if the answer was no — or, on the web, where the browser cannot
-   * name a place at all — there was no way past this step. Now the reason
+   * reason, and if the answer was no, or, on the web, where the browser cannot
+   * name a place at all, there was no way past this step. Now the reason
    * comes first. Location is required (2026-10-03): a typed or picked city
    * would let anyone claim to live anywhere, and appearing elsewhere is the
    * Premium travel mode instead. A member who said no is shown how to turn it
@@ -176,23 +177,50 @@ export default function OnboardingScreen() {
     setLocating(true);
     setErrors({});
     try {
+      // Safari on iPhone does not always expose navigator.permissions, so
+      // expo-location's web permission wrapper can fail before it reaches the
+      // browser prompt. Call the browser API directly while this is still the
+      // user's tap, then use the nearest listed city because web has no native
+      // reverse geocoder.
+      if (Platform.OS === 'web') {
+        const coordinates = await browserDeviceCoordinates();
+        const resolved = placeFromDevice(undefined, coordinates);
+        if (!resolved) {
+          setErrors({ city: t('onboarding.locationFailed') });
+          return;
+        }
+        setLocationBlocked(false);
+        setDraft((current) => ({ ...current, ...resolved }));
+        return;
+      }
+
       const permission = await Location.requestForegroundPermissionsAsync();
       if (permission.status !== 'granted') {
         setLocationBlocked(true);
-        setErrors({ city: t(Platform.OS === 'web' ? 'onboarding.locationDeniedWeb' : 'onboarding.locationDenied') });
+        setErrors({ city: t('onboarding.locationDenied') });
         return;
       }
       setLocationBlocked(false);
-      const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      const places = await Location.reverseGeocodeAsync(position.coords).catch(() => []);
-      const resolved = placeFromDevice(places[0], position.coords);
+      const resolved = await nativeDevicePlace(
+        () => Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+        coordinates => Location.reverseGeocodeAsync(coordinates),
+      );
       if (!resolved) {
         setErrors({ city: t('onboarding.locationFailed') });
         return;
       }
       setDraft((current) => ({ ...current, ...resolved }));
-    } catch {
-      setErrors({ city: t('onboarding.locationFailed') });
+    } catch (error) {
+      const denied = typeof error === 'object'
+        && error !== null
+        && 'code' in error
+        && (error as { code?: unknown }).code === 1;
+      if (Platform.OS === 'web' && denied) {
+        setLocationBlocked(true);
+        setErrors({ city: t('onboarding.locationDeniedWeb') });
+      } else {
+        setErrors({ city: t('onboarding.locationFailed') });
+      }
     } finally {
       setLocating(false);
     }
@@ -201,6 +229,14 @@ export default function OnboardingScreen() {
   // The reason is shown only while the system has not been asked yet. Once
   // permission is granted it has been accepted, and repeating it is a lecture.
   const askForLocation = async () => {
+    // On Safari, make the browser request on the original tap. An extra
+    // in-page confirmation can lose transient user activation and leave the
+    // browser permission prompt unopened. The step copy already explains why
+    // location is needed; denied permission is handled below with a retry path.
+    if (Platform.OS === 'web') {
+      void locateMe();
+      return;
+    }
     const existing = await Location.getForegroundPermissionsAsync().catch(() => null);
     if (existing?.granted) {
       void locateMe();
@@ -251,20 +287,32 @@ export default function OnboardingScreen() {
     setSaving(true);
     setSubmitError(null);
     try {
-      const { error } = await requireSupabase().rpc('complete_onboarding', {
-        p_name: draft.fullName.trim(),
-        p_first_name: draft.firstName.trim(),
-        p_birth_date: birthDate,
-        p_gender: draft.gender,
-        p_city: draft.city.trim(),
-        p_country: draft.country.trim(),
-        p_latitude: draft.latitude,
-        p_longitude: draft.longitude,
-        p_terms_version: terms.version,
-        p_privacy_version: privacy.version,
-      });
-      if (error) throw error;
-      await recordSensitiveConsent().catch(() => undefined);
+      if (profileSavedForMember.current !== draftMemberId) {
+        const { error } = await requireSupabase().rpc('complete_onboarding', {
+          p_name: draft.fullName.trim(),
+          p_first_name: draft.firstName.trim(),
+          p_birth_date: birthDate,
+          p_gender: draft.gender,
+          p_city: draft.city.trim(),
+          p_country: draft.country.trim(),
+          p_latitude: draft.latitude,
+          p_longitude: draft.longitude,
+          p_terms_version: terms.version,
+          p_privacy_version: privacy.version,
+        });
+        if (error) {
+          // A timed-out response can follow a committed RPC. Confirm that
+          // before retrying it, because complete_onboarding rejects duplicates.
+          const { data: savedProfile, error: lookupError } = await requireSupabase()
+            .from('profiles')
+            .select('onboarding_complete')
+            .eq('id', draftMemberId)
+            .maybeSingle();
+          if (lookupError || savedProfile?.onboarding_complete !== true) throw error;
+        }
+        profileSavedForMember.current = draftMemberId;
+      }
+      await recordSensitiveConsent();
       await clearOnboardingDraft(draftMemberId);
       // Everything fetched before this moment was fetched about somebody who did
       // not exist yet, and is cached for five minutes. Two of those answers did
@@ -387,7 +435,14 @@ export default function OnboardingScreen() {
             cancelLabel={t('permission.notNow')}
             onContinue={() => {
               setLocationExplainer(false);
-              void locateMe();
+              // iOS will not present a second system alert while the custom
+              // permission modal is still mounted. The web request must stay
+              // synchronous with the tap so Safari preserves user activation.
+              if (Platform.OS === 'web') {
+                void locateMe();
+              } else {
+                setTimeout(() => void locateMe(), 120);
+              }
             }}
             onCancel={() => setLocationExplainer(false)}
           />
@@ -501,7 +556,7 @@ function IdentityStep({
 
 function BasicDetailsStep({ draft, errors, patch }: StepProps) {
   const { t, isRTL } = useI18n();
-  // A full day moves on to the month, a full month to the year — the way a
+  // A full day moves on to the month, a full month to the year, the way a
   // date is typed on paper. Without it every member tapped three boxes.
   const monthInput = useRef<TextInput>(null);
   const yearInput = useRef<TextInput>(null);
@@ -929,7 +984,7 @@ const styles = StyleSheet.create({
   countryPickerArrow: { fontFamily: font.body, fontSize: 22, color: color.inkSoft },
   locationPanel: { minHeight: 88, padding: 16, borderRadius: radius.lg, backgroundColor: color.sandLight, justifyContent: 'center', gap: 8 },
   inputRTL: { textAlign: 'right', writingDirection: 'rtl' },
-  errorText: { fontFamily: font.bodyMedium, fontSize: 12, lineHeight: 18, color: '#A33A3A' },
+  errorText: { fontFamily: font.bodyMedium, fontSize: 14, lineHeight: 20, color: '#A33A3A' },
   dateRow: { flexDirection: 'row', gap: 9 },
   datePanel: {
     gap: 9,
@@ -952,7 +1007,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   genderOptionSelected: { backgroundColor: color.ink, borderColor: color.ink },
-  genderLabel: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink },
+  genderLabel: { fontFamily: font.bodyBold, fontSize: 14, lineHeight: 20, color: color.ink },
   genderLabelSelected: { color: color.white },
   infoCard: {
     marginTop: 28,
@@ -994,7 +1049,7 @@ const styles = StyleSheet.create({
   legalCheckMark: { fontFamily: font.bodyBold, fontSize: 12, color: color.white },
   legalConsentText: { flex: 1, color: color.ink },
   legalLinks: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
-  legalLink: { fontFamily: font.bodySemi, fontSize: 12, color: color.ink, textDecorationLine: 'underline' },
+  legalLink: { fontFamily: font.bodySemi, fontSize: 14, lineHeight: 20, color: color.ink, textDecorationLine: 'underline' },
   legalLoadError: { marginTop: 8 },
   submitError: {
     marginTop: 18,
@@ -1005,7 +1060,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(163,58,58,0.32)',
     backgroundColor: 'rgba(163,58,58,0.06)',
   },
-  submitErrorTitle: { fontFamily: font.bodyBold, fontSize: 13, color: '#843030' },
+  submitErrorTitle: { fontFamily: font.bodyBold, fontSize: 14, lineHeight: 20, color: '#843030' },
   footer: {
     flexDirection: 'row',
     gap: 10,

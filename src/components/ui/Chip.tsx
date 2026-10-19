@@ -15,7 +15,7 @@ export interface ChipProps {
 
 /**
  * The pill that carries profile traits, build preferences and country filters.
- * Static when no `onPress` is given — the profile-detail chips are read-only.
+ * Static when no `onPress` is given, the profile-detail chips are read-only.
  */
 export function Chip({ label, selected = false, onPress, showMark }: ChipProps) {
   const dark = useSurfaceTone() === 'dark';

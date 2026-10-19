@@ -4,7 +4,7 @@
  * Google sends `full_name` or `name`, and usually `given_name`; Apple sends a
  * name only on the very first sign-in and sometimes nothing but an email. So
  * every field is optional, and anything that looks like an email address is
- * refused — "maryam.k@gmail.com" in the first-name box would be worse than an
+ * refused, "maryam.k@gmail.com" in the first-name box would be worse than an
  * empty one.
  */
 export function namesFromIdentity(

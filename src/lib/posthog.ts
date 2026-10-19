@@ -6,7 +6,7 @@ import { setAnalyticsSink, type ProductEvent } from '@/lib/analytics';
 /**
  * Sends product events to PostHog's capture endpoint with a plain request, so
  * there is no SDK to load. Only what `analytics.ts` lets through is sent: an
- * event name and simple metadata, against an anonymous id for the device —
+ * event name and simple metadata, against an anonymous id for the device,
  * never a member id, email, profile text or location.
  *
  * Off unless EXPO_PUBLIC_POSTHOG_KEY is set (a public, write-only key).

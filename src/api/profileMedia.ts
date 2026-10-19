@@ -4,10 +4,12 @@ import { Platform } from 'react-native';
 
 import { PHOTO_JPEG_QUALITY, photoResizeTarget } from '@/lib/photoPolicy';
 import { requireSupabase, USE_MOCKS } from '@/lib/supabase';
-import type { Profile, ProfileMediaSource } from '@/types';
+import type { Profile } from '@/types';
+import { PROFILE_PHOTO_BUCKET, VOICE_INTRODUCTION_BUCKET, resolveProfileMedia } from '@/lib/resolveProfileMedia';
+import { createProfileMediaSignedUrl } from '@/api/privateMedia';
+export { createProfileMediaSignedUrl } from '@/api/privateMedia';
 
-export const PROFILE_PHOTO_BUCKET = 'profile-photos';
-export const VOICE_INTRODUCTION_BUCKET = 'voice-introductions';
+export { PROFILE_PHOTO_BUCKET, VOICE_INTRODUCTION_BUCKET } from '@/lib/resolveProfileMedia';
 
 export type ProfilePhotoMimeType =
   | 'image/jpeg'
@@ -36,20 +38,13 @@ export interface VoiceIntroductionUpload {
 
 const PHOTO_LIMIT_BYTES = 10 * 1024 * 1024;
 const VOICE_LIMIT_BYTES = 15 * 1024 * 1024;
-// Long enough for an uninterrupted foreground session. Returning to the app
-// also refetches stale queries, which rotates these URLs before reuse.
-// Short-lived: a link copied out of the app stops working soon after. Screens
-// refetch well inside this window, so members never see one expire.
-const SIGNED_URL_SECONDS = 20 * 60;
-const PHOTO_STORAGE_PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|heic|heif)$/;
-const VOICE_STORAGE_PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(m4a|aac|mp3|webm)$/;
 
 /**
  * Uploads a private object, then atomically attaches its verified path to the
  * profile.
  *
  * The photo is shrunk and re-encoded here rather than at the call site, because
- * a call site is a thing somebody adds later and forgets — and the cost of
+ * a call site is a thing somebody adds later and forgets, and the cost of
  * forgetting is a bill that grows with every member. It also means what leaves
  * the phone is always a JPEG, whatever the camera produced: an iPhone hands you
  * HEIC, which no browser will render.
@@ -65,8 +60,16 @@ export async function uploadProfilePhoto(
   const path = await createServerMediaPath('photo', 'image/jpeg');
   const { error: uploadError } = await client.storage
     .from(PROFILE_PHOTO_BUCKET)
-    .upload(path, body, { contentType: 'image/jpeg', upsert: false, cacheControl: '3600' });
+    .upload(path, body, { contentType: 'image/jpeg', upsert: false, cacheControl: '60' });
   if (uploadError) throw uploadError;
+
+  const validation = await client.functions.invoke('validate-profile-media', {
+    body: { bucket: PROFILE_PHOTO_BUCKET, path, mediaType: 'photo' },
+  });
+  if (validation.error) {
+    await client.storage.from(PROFILE_PHOTO_BUCKET).remove([path]);
+    throw validation.error;
+  }
 
   const { data, error: attachError } = await client.rpc('attach_profile_photo', {
     p_path: path,
@@ -117,8 +120,16 @@ export async function uploadVoiceIntroduction(
   const path = await createServerMediaPath('voice', media.mimeType);
   const { error: uploadError } = await client.storage
     .from(VOICE_INTRODUCTION_BUCKET)
-    .upload(path, body, { contentType: media.mimeType, upsert: false, cacheControl: '3600' });
+    .upload(path, body, { contentType: media.mimeType, upsert: false, cacheControl: '60' });
   if (uploadError) throw uploadError;
+
+  const validation = await client.functions.invoke('validate-profile-media', {
+    body: { bucket: VOICE_INTRODUCTION_BUCKET, path, mediaType: 'voice' },
+  });
+  if (validation.error) {
+    await client.storage.from(VOICE_INTRODUCTION_BUCKET).remove([path]);
+    throw validation.error;
+  }
 
   const { data, error: attachError } = await client.rpc('attach_voice_introduction', {
     p_path: path,
@@ -150,20 +161,6 @@ export async function deleteVoiceIntroduction(path: string): Promise<void> {
   await client.storage.from(VOICE_INTRODUCTION_BUCKET).remove([String(data)]);
 }
 
-/** Resolves a private path only while Storage RLS says the viewer may see it. */
-export async function createProfileMediaSignedUrl(
-  bucket: typeof PROFILE_PHOTO_BUCKET | typeof VOICE_INTRODUCTION_BUCKET,
-  path: string,
-  expiresInSeconds = SIGNED_URL_SECONDS
-): Promise<string> {
-  if (USE_MOCKS) return path;
-  const { data, error } = await requireSupabase().storage
-    .from(bucket)
-    .createSignedUrl(path, expiresInSeconds);
-  if (error) throw error;
-  return data.signedUrl;
-}
-
 /**
  * Converts database storage paths into renderable signed URLs. Existing
  * HTTPS, mock, data, and bundled references pass through unchanged, which
@@ -172,29 +169,7 @@ export async function createProfileMediaSignedUrl(
 export async function hydrateProfileMedia(profile: Profile): Promise<Profile> {
   if (USE_MOCKS) return profile;
 
-  const photoMedia = await Promise.all(
-    profile.photos.map(async (value): Promise<ProfileMediaSource> => {
-      if (!PHOTO_STORAGE_PATH.test(value)) return { displayUrl: value };
-      return {
-        storagePath: value,
-        displayUrl: await createProfileMediaSignedUrl(PROFILE_PHOTO_BUCKET, value),
-      };
-    })
-  );
-
-  const voicePath = profile.audioGreetingUrl;
-  const signedVoice = voicePath && VOICE_STORAGE_PATH.test(voicePath)
-    ? await createProfileMediaSignedUrl(VOICE_INTRODUCTION_BUCKET, voicePath)
-    : voicePath;
-
-  return {
-    ...profile,
-    photos: photoMedia.map((media) => media.displayUrl),
-    photoMedia,
-    audioGreetingUrl: signedVoice,
-    audioGreetingStoragePath:
-      voicePath && VOICE_STORAGE_PATH.test(voicePath) ? voicePath : undefined,
-  };
+  return resolveProfileMedia(profile, createProfileMediaSignedUrl);
 }
 
 async function createServerMediaPath(
@@ -213,8 +188,8 @@ async function createServerMediaPath(
 /**
  * Shrinks a chosen photo to something worth storing and serving.
  *
- * Rendered once to learn its real size — the picker reports dimensions, but not
- * on every platform and not after a rotation — then resized only if it is
+ * Rendered once to learn its real size, the picker reports dimensions, but not
+ * on every platform and not after a rotation, then resized only if it is
  * bigger than we keep, and always saved as JPEG.
  *
  * A failure here is not fatal. If the image cannot be decoded, the original is
@@ -262,7 +237,11 @@ async function readLocalMedia(uri: string, maxBytes: number): Promise<ArrayBuffe
   const file = new File(uri);
   if (!file.exists) throw new Error('The selected media file is no longer available.');
   if (file.size <= 0 || file.size > maxBytes) throw tooLarge();
-  return file.arrayBuffer();
+  const buffer = await file.arrayBuffer();
+  // The file metadata and the bytes returned by the native provider are two
+  // different trust boundaries. Check the bytes too before sending them.
+  if (buffer.byteLength <= 0 || buffer.byteLength > maxBytes) throw tooLarge();
+  return buffer;
 }
 
 /** The round profile picture's place on the main photo (migration 0187). */

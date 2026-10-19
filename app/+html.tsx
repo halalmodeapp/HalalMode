@@ -6,7 +6,7 @@ import type { PropsWithChildren } from 'react';
  *
  * Without this file Expo uses its default, which paints the page black whenever
  * the visitor's computer is in dark mode. This app is light only, so every load
- * began with a second of solid black before the first screen drew — the first
+ * began with a second of solid black before the first screen drew, the first
  * thing anybody opening the link saw. The background now matches the app's own
  * surface from the first frame.
  */

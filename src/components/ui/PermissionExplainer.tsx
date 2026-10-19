@@ -28,7 +28,7 @@ export interface PermissionExplainerProps {
  * Asks before the operating system does.
  *
  * A permission prompt on its own is a demand with no reason attached, and the
- * honest answer to an unexplained demand is no. On iOS that no is permanent —
+ * honest answer to an unexplained demand is no. On iOS that no is permanent,
  * the system prompt is offered once per install, and after a refusal the only
  * route back is a trip to Settings that nobody makes.
  *

@@ -14,7 +14,7 @@ import { useI18n } from '@/i18n';
 import { alpha, color, font, microLabel, radius } from '@/theme/tokens';
 
 export type ButtonVariant =
-  /** Near-black pill. One per screen — the single forward action. */
+  /** Near-black pill. One per screen, the single forward action. */
   | 'primary'
   /** Outlined pill. "Let go", "Not yet", "Pause my profile". */
   | 'secondary'
@@ -23,7 +23,7 @@ export type ButtonVariant =
   /** Inverted primary, for use inside the near-black panels. */
   | 'onDark'
   /**
-   * The chosen-one call to action. Gold is reserved for this single moment —
+   * The chosen-one call to action. Gold is reserved for this single moment,
    * it should never appear anywhere a decision is still open.
    */
   | 'gold';

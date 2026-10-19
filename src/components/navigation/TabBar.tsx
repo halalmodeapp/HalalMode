@@ -635,7 +635,7 @@ export function TabBar({
   const barArea = useRef<View | null>(null);
 
   // On the web, onLayout can arrive late or not at all, and the pill then sits
-  // at a stale position — slid off to the left of the tab it marks. Measuring
+  // at a stale position, slid off to the left of the tab it marks. Measuring
   // the element directly, and watching it, keeps the pill under its tab.
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof ResizeObserver === 'undefined') return;

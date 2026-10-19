@@ -1,62 +1,59 @@
-import * as Location from 'expo-location';
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { Platform } from 'react-native';
+import { AppState } from 'react-native';
 
-import { coordsForCityName } from '@/data/cities';
-import { nextFajrAfter } from '@/lib/prayerTimes';
-
-type Coords = { latitude: number; longitude: number };
-
-/** A position the member has already allowed; never shows a permission prompt. */
-async function allowedPosition(): Promise<Coords | null> {
-  if (Platform.OS === 'web') {
-    // expo-location's permission check on the web often answers "not asked"
-    // even after the browser has granted it, so ask the browser itself.
-    if (typeof navigator === 'undefined' || !navigator.geolocation) return null;
-    try {
-      const state = await navigator.permissions?.query({ name: 'geolocation' as PermissionName });
-      if (state && state.state !== 'granted') return null;
-    } catch {
-      return null;
-    }
-    return new Promise((resolve) => {
-      navigator.geolocation.getCurrentPosition(
-        (position) => resolve({ latitude: position.coords.latitude, longitude: position.coords.longitude }),
-        () => resolve(null),
-        { maximumAge: 6 * 60 * 60 * 1000, timeout: 8000 },
-      );
-    });
-  }
-  const permission = await Location.getForegroundPermissionsAsync();
-  if (!permission.granted) return null;
-  const position = (await Location.getLastKnownPositionAsync())
-    ?? (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low }));
-  return position ? { latitude: position.coords.latitude, longitude: position.coords.longitude } : null;
-}
+import { fetchMyHighLatitudeFajrSettings } from '@/api/profile';
+import { DEFAULT_HIGH_LATITUDE_FAJR_METHOD, nextFajrAfter } from '@/lib/prayerTimes';
+import { queryKeys } from '@/lib/queryClient';
 
 /**
- * The member's next Fajr.
+ * The member's next Fajr, using the same saved coordinates and shared
+ * calculation as the server-side round scheduler. Device GPS can differ from
+ * the location used to open the round, so it is deliberately not consulted.
  *
- * From where the device is now when location is already allowed; otherwise
- * from their city on the profile, which is close enough to the minute that
- * matters. Coordinates stay on the device. Null only if neither is known.
+ * The owner-only settings RPC supplies these coordinates and never exposes
+ * them through another member's profile.
  */
-export function useNextFajr(city?: string | null): Date | null {
+export function useNextFajr(): Date | null {
   const [next, setNext] = useState<Date | null>(null);
+  const settings = useQuery({
+    queryKey: queryKeys.highLatitudeFajrSettings,
+    queryFn: fetchMyHighLatitudeFajrSettings,
+  });
+  const method = settings.data?.method ?? DEFAULT_HIGH_LATITUDE_FAJR_METHOD;
+  const latitude = settings.data?.latitude ?? null;
+  const longitude = settings.data?.longitude ?? null;
 
   useEffect(() => {
     let cancelled = false;
-    const fromCity = coordsForCityName(city);
-    if (fromCity) setNext(nextFajrAfter(fromCity.latitude, fromCity.longitude, new Date()));
-    void allowedPosition()
-      .then((coords) => {
-        if (!cancelled && coords) setNext(nextFajrAfter(coords.latitude, coords.longitude, new Date()));
-      })
-      .catch(() => undefined);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const calculate = () => {
+      if (cancelled) return;
+      if (timer) clearTimeout(timer);
+      const now = new Date();
+      const hasCoordinates = Number.isFinite(latitude) && Number.isFinite(longitude);
+      const dawn = hasCoordinates
+        ? nextFajrAfter(latitude!, longitude!, now, method)
+        : null;
+      setNext(dawn);
+      // Recompute just past dawn, including after the OS resumes a delayed timer.
+      // Polar locations without a calculable dawn are reconsidered periodically.
+      const delay = dawn ? Math.max(1000, dawn.getTime() - now.getTime() + 1000) : 6 * 60 * 60 * 1000;
+      timer = setTimeout(calculate, Math.min(delay, 24 * 60 * 60 * 1000));
+    };
+    calculate();
+    const subscription = AppState.addEventListener('change', state => {
+      if (state === 'active') calculate();
+      else {
+        if (timer) clearTimeout(timer);
+      }
+    });
     return () => {
       cancelled = true;
+      if (timer) clearTimeout(timer);
+      subscription.remove();
     };
-  }, [city]);
+  }, [latitude, longitude, method]);
 
   return next;
 }

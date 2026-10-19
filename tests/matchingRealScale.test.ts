@@ -9,8 +9,8 @@ import { planRound } from '../supabase/functions/generate-round/matching.ts';
 /**
  * The round planner, on the data that killed it.
  *
- * A shadow run against 53 real members recorded its candidate snapshot — 660
- * possible pairings, 431 after filtering — and then stopped. No pairs, no
+ * A shadow run against 53 real members recorded its candidate snapshot, 660
+ * possible pairings, 431 after filtering, and then stopped. No pairs, no
  * error, twice. Errors are recorded when they are thrown, so a blank error
  * means the process never got to throw one.
  *

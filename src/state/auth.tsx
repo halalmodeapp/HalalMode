@@ -12,8 +12,13 @@ import {
   type ReactNode,
 } from 'react';
 import type { User } from '@supabase/supabase-js';
+import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
+import { Screen } from '@/components/ui/Screen';
+import { useI18n } from '@/i18n';
+import { withDeadline } from '@/lib/withDeadline';
 
 import { fetchMyLegalConsentStatus } from '@/api/legalConsent';
+import { exchangeAuthCodeOnce } from '@/lib/authCodeExchange';
 import {
   canApplyProfileStatus,
   hasAuthPrincipalChanged,
@@ -34,6 +39,7 @@ interface AuthValue {
   authError: 'invalid_link' | null;
   clearAuthError: () => void;
   refreshProfileStatus: () => Promise<void>;
+  retryStartup: () => void;
   signOut: () => Promise<void>;
 }
 
@@ -45,6 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [onboardingComplete, setOnboardingComplete] = useState(USE_MOCKS);
   const [profileStatusReady, setProfileStatusReady] = useState(USE_MOCKS);
   const [authError, setAuthError] = useState<'invalid_link' | null>(null);
+  const [startupAttempt, setStartupAttempt] = useState(0);
+  const retryStartup = useCallback(() => setStartupAttempt(value => value + 1), []);
 
   const activeUserId = useRef<string | null>(null);
   const profileStatusRequest = useRef(0);
@@ -77,23 +85,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (USE_MOCKS) return;
 
     const client = requireSupabase();
-    const { data: current } = await client.auth.getUser();
     const requestId = ++profileStatusRequest.current;
+    const expectedUserId = activeUserId.current;
+    const { data: current, error: authFailure } = await withDeadline(client.auth.getUser());
+    if (authFailure) throw authFailure;
+    if (requestId !== profileStatusRequest.current || expectedUserId !== activeUserId.current) return;
 
     if (!current.user) {
-      if (requestId === profileStatusRequest.current) {
-        setOnboardingComplete(false);
-        setProfileStatusReady(true);
-      }
-
-      return;
+      throw new Error('The current account could not be verified.');
     }
 
-    const { data, error } = await client
+    const { data, error } = await withDeadline(client
       .from('profiles')
       .select('onboarding_complete')
       .eq('id', current.user.id)
-      .maybeSingle();
+      .maybeSingle());
 
     if (error) throw error;
 
@@ -131,7 +137,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!code) return;
 
-      const { error } = await client.auth.exchangeCodeForSession(code);
+      const { error } = await withDeadline(
+        exchangeAuthCodeOnce(
+          code,
+          (singleUseCode) => client.auth.exchangeCodeForSession(singleUseCode)
+        )
+      );
 
       if (!active) return;
 
@@ -139,13 +150,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const load = async () => {
-      const initialUrl = await Linking.getInitialURL();
+      const initialUrl = await withDeadline(Linking.getInitialURL());
 
       if (initialUrl) {
         await exchangeCode(initialUrl);
       }
 
-      const { data } = await client.auth.getUser();
+      const { data } = await withDeadline(client.auth.getUser());
 
       if (active) {
         adoptUser(data.user);
@@ -172,7 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     const linking = Linking.addEventListener('url', ({ url }) => {
-      void exchangeCode(url);
+      void exchangeCode(url).catch(() => { if (active) setAuthError('invalid_link'); });
     });
 
     return () => {
@@ -180,7 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription.data.subscription.unsubscribe();
       linking.remove();
     };
-  }, [adoptUser]);
+  }, [adoptUser, startupAttempt]);
 
   useEffect(() => {
     if (!ready || USE_MOCKS) return;
@@ -214,7 +225,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     if (!USE_MOCKS) {
       // Before the session ends, while the server still knows who this is.
-      await forgetThisDevice();
+      await withDeadline(forgetThisDevice(), 5000).catch(() => {});
       const { error } = await requireSupabase().auth.signOut({
         scope: MEMBER_SIGN_OUT_SCOPE,
       });
@@ -250,6 +261,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       authError,
       clearAuthError,
       refreshProfileStatus,
+      retryStartup,
       signOut,
     }),
     [
@@ -260,6 +272,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       authError,
       clearAuthError,
       refreshProfileStatus,
+      retryStartup,
       signOut,
     ],
   );
@@ -272,7 +285,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
  * renders. In mock mode, authentication and onboarding are skipped.
  */
 export function AuthGate({ children }: { children: ReactNode }) {
-  const { ready, user, onboardingComplete, profileStatusReady } = useAuth();
+  const { ready, user, onboardingComplete, profileStatusReady, refreshProfileStatus, retryStartup } = useAuth();
+  const { t } = useI18n();
+  const [waitExpired, setWaitExpired] = useState(false);
+  const [retryEpoch, setRetryEpoch] = useState(0);
   const router = useRouter();
   const segments = useSegments();
 
@@ -286,16 +302,25 @@ export function AuthGate({ children }: { children: ReactNode }) {
       profileStatusReady &&
       onboardingComplete,
   });
+  const waiting = !ready || (!USE_MOCKS && !!user && (
+    !profileStatusReady || (onboardingComplete && legalConsentQuery.isPending)
+  ));
+  useEffect(() => {
+    setWaitExpired(false);
+    if (!waiting) return;
+    const timer = setTimeout(() => setWaitExpired(true), 15_000);
+    return () => clearTimeout(timer);
+  }, [waiting, retryEpoch, user?.id]);
 
   useEffect(() => {
     if (!ready) return;
 
     const rootSegment = segments[0] as string | undefined;
-    const inAuth = rootSegment === 'auth';
+    const inAuth = rootSegment === 'auth' || rootSegment === 'auth-email';
     const inOnboarding = rootSegment === 'onboarding';
     const inLegalConsent = rootSegment === 'legal-consent';
     // The public waitlist landing. Reachable by anyone, signed in or not, and
-    // never redirected away from — it is the page halalmo.de points at.
+    // never redirected away from, it is the page halalmo.de points at.
     const inJoin = rootSegment === 'join';
     // Terms and the Privacy Notice, at the addresses the database already sends
     // members to. Readable before signing up, because deciding whether to agree
@@ -371,20 +396,18 @@ export function AuthGate({ children }: { children: ReactNode }) {
     user,
   ]);
 
-  if (!ready) return null;
-
-  if (!USE_MOCKS && user && !profileStatusReady) {
-    return null;
-  }
-
-  if (
-    !USE_MOCKS &&
-    user &&
-    onboardingComplete &&
-    legalConsentQuery.isPending
-  ) {
-    return null;
-  }
+  if (waiting) return (
+    <Screen>
+      {waitExpired ? (
+        <ErrorState message={t('auth.providerFailedBody')} onRetry={() => {
+          setRetryEpoch(value => value + 1);
+          if (!ready) retryStartup();
+          else if (user && !profileStatusReady) void refreshProfileStatus().catch(() => setWaitExpired(true));
+          else if (user) void legalConsentQuery.refetch();
+        }} />
+      ) : <LoadingState />}
+    </Screen>
+  );
 
   return <>{children}</>;
 }

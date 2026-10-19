@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { fajrInstant, nextFajrAfter, FAJR_ANGLE } from '../src/lib/prayerTimes.ts';
+import {
+  fajrInstant,
+  fajrInstantWithHighLatitudeMethod,
+  nextFajrAfter,
+  nextFajrWindow,
+  FAJR_ANGLE,
+} from '../src/lib/prayerTimes.ts';
 
 /**
  * Dawn, calculated rather than fetched.
@@ -9,7 +15,7 @@ import { fajrInstant, nextFajrAfter, FAJR_ANGLE } from '../src/lib/prayerTimes.t
  * Every member now gets their round at their own Fajr, which means computing it
  * for any coordinates on Earth, every day, without a network call. These
  * expectations were taken from the Umm al-Qura prayer-time API the app used for
- * Madinah — the same method, same source — so the calculation is pinned to the
+ * Madinah, the same method, same source, so the calculation is pinned to the
  * thing it replaced rather than to itself.
  *
  * Two minutes of tolerance. The published tables round to the minute and differ
@@ -21,7 +27,7 @@ const TOLERANCE_MINUTES = 2;
 const CASES = [
   // Expected instants taken from the Umm al-Qura API the app used for Madinah.
   // Written in full rather than as a clock time, because east of Greenwich the
-  // dawn of a local date falls on the previous UTC day — Tokyo's 03:21 on the
+  // dawn of a local date falls on the previous UTC day, Tokyo's 03:21 on the
   // 13th is 18:21Z on the 12th. A clock-only expectation hides that, and hiding
   // it is how you ship a round that opens twenty-four hours late.
   { name: 'Madinah', lat: 24.4672, lon: 39.6111, on: [2026, 8, 13], expected: '2026-08-13T01:32Z' },
@@ -60,6 +66,56 @@ test('the far north has no dawn in midsummer, and says so', () => {
   assert.equal(instant, null);
 });
 
+test('high-latitude estimates are only used when the standard dawn is absent', () => {
+  const date = { year: 2026, month: 11, day: 21 };
+  const standard = fajrInstant(51.5072, -0.1276, date);
+  const oneSeventh = fajrInstantWithHighLatitudeMethod(51.5072, -0.1276, date, 'one_seventh');
+  const reference = fajrInstantWithHighLatitudeMethod(51.5072, -0.1276, date, 'reference_latitude_45');
+
+  assert.ok(standard && oneSeventh && reference);
+  assert.equal(oneSeventh.getTime(), standard.getTime());
+  assert.equal(reference.getTime(), standard.getTime());
+});
+
+test('both high-latitude methods provide distinct summer estimates for Edinburgh', () => {
+  const date = { year: 2026, month: 6, day: 21 };
+  assert.equal(fajrInstant(55.9533, -3.1883, date), null);
+
+  const oneSeventh = fajrInstantWithHighLatitudeMethod(
+    55.9533,
+    -3.1883,
+    date,
+    'one_seventh',
+  );
+  const reference = fajrInstantWithHighLatitudeMethod(
+    55.9533,
+    -3.1883,
+    date,
+    'reference_latitude_45',
+  );
+
+  assert.ok(oneSeventh && Number.isFinite(oneSeventh.getTime()));
+  assert.ok(reference && Number.isFinite(reference.getTime()));
+  assert.notEqual(oneSeventh.getTime(), reference.getTime());
+});
+
+test('the default estimate remains defined in Tromsø during polar summer', () => {
+  const date = { year: 2026, month: 6, day: 21 };
+  assert.equal(fajrInstant(69.6492, 18.9553, date), null);
+
+  const estimated = fajrInstantWithHighLatitudeMethod(
+    69.6492,
+    18.9553,
+    date,
+    'one_seventh',
+  );
+  assert.ok(estimated && Number.isFinite(estimated.getTime()));
+
+  const after = new Date('2026-06-21T00:00:00Z');
+  const next = nextFajrAfter(69.6492, 18.9553, after);
+  assert.ok(next && next.getTime() > after.getTime());
+});
+
 test('the next dawn is always in the future', () => {
   const after = new Date('2026-08-13T05:00:00Z');
   const next = nextFajrAfter(51.5072, -0.1276, after);
@@ -69,6 +125,25 @@ test('the next dawn is always in the future', () => {
   assert.ok(
     next.getTime() - after.getTime() < 26 * 3_600_000,
     'and within a day, not a week'
+  );
+});
+
+test('a round window expires at the same shared calculation’s following Fajr', () => {
+  const latitude = 55.9533;
+  const longitude = -3.1883;
+  const after = new Date('2026-06-21T00:00:00Z');
+  const window = nextFajrWindow(latitude, longitude, after, 'one_seventh');
+
+  assert.ok(window, 'the configured high-latitude fallback supplies both boundaries');
+  assert.ok(window.opensAt.getTime() > after.getTime());
+  assert.ok(window.expiresAt.getTime() > window.opensAt.getTime());
+  assert.equal(
+    window.opensAt.getTime(),
+    nextFajrAfter(latitude, longitude, after, 'one_seventh')?.getTime(),
+  );
+  assert.equal(
+    window.expiresAt.getTime(),
+    nextFajrAfter(latitude, longitude, window.opensAt, 'one_seventh')?.getTime(),
   );
 });
 

@@ -12,7 +12,7 @@ test('every option id is unique, because the id is what gets stored', () => {
   const ids = flattenGroups(OCCUPATION_GROUPS).map((option) => option.id);
   const inEducation = flattenGroups(EDUCATION_GROUPS).map((option) => option.id);
   assert.equal(new Set(ids).size, ids.length);
-  // Education ids only have to be unique among themselves — the two lists are
+  // Education ids only have to be unique among themselves, the two lists are
   // never mixed, and both legitimately offer "prefer not to say".
   assert.equal(new Set(inEducation).size, inEducation.length);
 });

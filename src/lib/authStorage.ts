@@ -20,7 +20,7 @@ const secureStore: AuthStorage = {
  * Nothing is stored while a page is being rendered on the server.
  *
  * Expo Router server-renders web routes in Node, and the Supabase client is
- * built at module scope, so its storage adapter runs during that render — where
+ * built at module scope, so its storage adapter runs during that render, where
  * AsyncStorage reaches straight for `window.localStorage` and throws, taking
  * the whole render with it. Returning "nothing stored" is the truthful answer
  * rather than a workaround: a server render has no member session, and the

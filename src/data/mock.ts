@@ -7,25 +7,15 @@ import type {
   Profile,
   RecapItem,
 } from '@/types';
+import { demoPhotoReference } from '@/data/demoProfilePhotos';
 
 /**
  * Bundled sample content so the app runs end-to-end with no Supabase project.
- * Enabled by `EXPO_PUBLIC_USE_MOCKS=1`. Photography is placeholder, exactly as
- * the reference notes.
+ * Enabled by `EXPO_PUBLIC_USE_MOCKS=1`. Portraits are generated locally for
+ * these fictional sample profiles.
  */
-
-const unsplash = (id: string, w = 900) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&q=80&w=${w}`;
-
-/** Neutral context shots appended to every gallery — no other faces. */
-const CONTEXT_SHOTS = [
-  unsplash('photo-1499750310107-5fef28a66643'),
-  unsplash('photo-1517248135467-4c7edcad34c4'),
-  unsplash('photo-1493857671505-72967e2e2760'),
-];
-
-function gallery(portraitId: string): string[] {
-  return [unsplash(portraitId), ...CONTEXT_SHOTS];
+function gallery(slug: string): string[] {
+  return [0, 1, 2].map((index) => demoPhotoReference(slug, index));
 }
 
 export const MOCK_PROFILES: Profile[] = [
@@ -40,7 +30,7 @@ export const MOCK_PROFILES: Profile[] = [
     city: 'London',
     country: 'United Kingdom',
     bio: 'Fascinated by how the brain learns. I balance research with sourdough, classical calligraphy and community work. Looking for a practicing, kind partner who values open communication.',
-    photos: gallery('photo-1573496359142-b8d87734a5a2'),
+    photos: gallery('mock-amina-rahmani'),
     chips: ['Practicing', 'Marriage within a year', 'Calligraphy', 'Volunteering'],
     religiousPractice: 'practicing',
     timeline: 'within_1_year',
@@ -62,7 +52,7 @@ export const MOCK_PROFILES: Profile[] = [
     city: 'Manchester',
     country: 'United Kingdom',
     bio: 'Art director by day, tea drinker by night. I value tranquility, prayers on time and quiet conversation over noise.',
-    photos: gallery('photo-1544005313-94ddf0286df2'),
+    photos: gallery('mock-yasmine-benali'),
     chips: ['Very practicing', 'Within 6 months', 'Digital art', 'Quran recitation'],
     religiousPractice: 'very_practicing',
     timeline: 'within_6_months',
@@ -84,7 +74,7 @@ export const MOCK_PROFILES: Profile[] = [
     city: 'London',
     country: 'United Kingdom',
     bio: 'Ambitious at work, but home is where my heart rests. Tennis, North African cooking, and Seerah study.',
-    photos: gallery('photo-1524504388940-b1c1722653e1'),
+    photos: gallery('mock-maryam-el-farouk'),
     chips: ['Practicing', 'Within a year', 'Tennis', 'Culinary arts'],
     religiousPractice: 'practicing',
     timeline: 'within_1_year',
@@ -106,7 +96,7 @@ export const MOCK_PROFILES: Profile[] = [
     city: 'Birmingham',
     country: 'United Kingdom',
     bio: 'Helping children walk and heal fills my days. Nature walks, herbal gardening, quiet evenings with a book.',
-    photos: gallery('photo-1567532939604-b6b5b0db2604'),
+    photos: gallery('mock-layla-al-hassan'),
     chips: ['Very practicing', 'Within 6 months', 'Gardening', 'Poetry'],
     religiousPractice: 'very_practicing',
     timeline: 'within_6_months',
@@ -128,7 +118,7 @@ export const MOCK_PROFILES: Profile[] = [
     city: 'Cambridge',
     country: 'United Kingdom',
     bio: 'Advocating for climate justice and ethical living. Ocean swimming, pottery, long discussions on ethics.',
-    photos: gallery('photo-1531746020798-e6953c6e8e04'),
+    photos: gallery('mock-salma-qureshi'),
     chips: ['Practicing', 'Within a year', 'Pottery', 'Ocean swimming'],
     religiousPractice: 'practicing',
     timeline: 'within_1_year',
@@ -150,7 +140,7 @@ export const MOCK_PROFILES: Profile[] = [
     city: 'Edinburgh',
     country: 'United Kingdom',
     bio: 'Preserving sacred geometry and old stone mosques. Landscape photography, herbal tea, museum walks.',
-    photos: gallery('photo-1534528741775-53994a69daeb'),
+    photos: gallery('mock-zainab-mansour'),
     chips: ['Very practicing', 'Within a year', 'Islamic arts', 'Photography'],
     religiousPractice: 'very_practicing',
     timeline: 'within_1_year',
@@ -172,7 +162,7 @@ export const MOCK_PROFILES: Profile[] = [
     city: 'Oxford',
     country: 'United Kingdom',
     bio: 'Designing prosthetic tech for children. Moroccan pastries, cycling by the river, memorising Surahs.',
-    photos: gallery('photo-1580489944761-15a19d654956'),
+    photos: gallery('mock-soraya-kaddouri'),
     chips: ['Practicing', 'Within 6 months', 'Cycling', 'Quran study'],
     religiousPractice: 'practicing',
     timeline: 'within_6_months',
@@ -187,7 +177,7 @@ export const MOCK_PROFILES: Profile[] = [
 
 /**
  * Overlaps the server is willing to disclose. Note these are *statements of
- * agreement*, never the underlying ranges — the private filters stay private on
+ * agreement*, never the underlying ranges, the private filters stay private on
  * both sides.
  */
 const AGREEMENTS: Record<string, { label: string; value: string }[]> = {
@@ -239,11 +229,7 @@ export const MOCK_SELF: Profile = {
   city: 'London',
   country: 'United Kingdom',
   bio: 'Passionate about sustainable Islamic design, morning coffee routines and weekend hiking. Seeking an intentional partner to build a serene home and journey towards Jannah together.',
-  photos: [
-    unsplash('photo-1507003211169-0a1dd7228f2d'),
-    unsplash('photo-1492562080023-ab3db95bfbce'),
-    unsplash('photo-1500648767791-00dcc994a43e'),
-  ],
+  photos: gallery('mock-zayd-al-mansoor'),
   chips: ['Practicing', 'Within a year', 'Hiking', 'Design'],
   religiousPractice: 'practicing',
   timeline: 'within_1_year',
@@ -351,13 +337,13 @@ const MOCK_COMPATIBILITY_BREAKDOWN = [
   { topic: 'conversation', verdict: 'aligned' },
 ] as const;
 
-/** Their answers — revealed only once the member submits their own. */
+/** Their answers, revealed only once the member submits their own. */
 export const MOCK_THEIR_ANSWERS: Record<string, string> = {
   q1: 'Fajr together when we can, and supporting each other without guilt when we miss one.',
   q2: 'Small and unglamorous. Two salaries, one flat, Thursday dinners with both families, and a lot of learning how the other person likes silence.',
   q3: 'You provide the household as a duty; my income is mine and I will still put it in when it matters. One honest look at the numbers each month.',
   q4: 'We stop. Fifteen minutes apart, then we sit down. No raised voices, no leaving the house, no involving family in the first hour.',
-  q5: 'I would like to stay in London near my parents while my father is unwell. After that, I am genuinely open — including abroad.',
+  q5: 'I would like to stay in London near my parents while my father is unwell. After that, I am genuinely open, including abroad.',
 };
 
 export const MOCK_CONNECTIONS: Connection[] = [
@@ -412,7 +398,7 @@ export const MOCK_MESSAGES: ChatMessage[] = [
     id: 'm1',
     connectionId: 'conn-1',
     sender: 'them',
-    text: 'Assalamu alaikum. Your answer about the cool-off pause stayed with me — my family shouts first and apologises later.',
+    text: 'Assalamu alaikum. Your answer about the cool-off pause stayed with me, my family shouts first and apologises later.',
     createdAt: new Date(Date.now() - 3 * 86400_000).toISOString(),
   },
   {

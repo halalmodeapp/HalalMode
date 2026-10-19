@@ -6,7 +6,7 @@ import type { TranslationKey } from '@/i18n/catalog';
  *
  * The server says why it refused ("This set is not open yet", "Your height
  * must be between 140 and 210 cm"), but every screen used to show the same
- * "check your connection" — which is how a missing height looked like a
+ * "check your connection", which is how a missing height looked like a
  * network fault for weeks. Known reasons map to a translated sentence; anything
  * else falls back to the screen's own message.
  */

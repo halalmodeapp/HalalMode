@@ -1,5 +1,5 @@
 /**
- * Fairness — stage three of three, applied inside allocation rather than
+ * Fairness, stage three of three, applied inside allocation rather than
  * reported afterwards.
  *
  * Two constraints shape everything here.
@@ -12,7 +12,7 @@
  * **Need is measured against pace, not against an absolute total.** An absolute
  * target is inert for most of a window: early on nobody has reached it, so
  * every member reports maximum need and the term stops discriminating between
- * them — which lets quality ranking concentrate exposure on popular members
+ * them, which lets quality ranking concentrate exposure on popular members
  * unopposed. Comparing against the exposure a member *should* have by this
  * point in the window keeps the signal live from the first round.
  *
@@ -68,7 +68,7 @@ export function noMatchNeed(member: MemberSignals, config: MatchingConfig): numb
 }
 
 /**
- * Combined, capped boost for an edge. Symmetric in the two members — an edge
+ * Combined, capped boost for an edge. Symmetric in the two members, an edge
  * serves both of them, so both needs count equally.
  */
 export function fairnessBoost(
@@ -109,7 +109,7 @@ export function adjustedUtility(
  *
  * Members running ahead of their own pace are tightened so attention does not
  * concentrate; members at or behind pace keep their full allowance. Never
- * returns less than one — nobody is frozen out of a round entirely.
+ * returns less than one, nobody is frozen out of a round entirely.
  */
 export function appearanceLimit(
   member: MemberSignals,

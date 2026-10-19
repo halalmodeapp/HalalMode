@@ -5,7 +5,7 @@ import { attachListTranslations } from './translations';
  * How far a member took their education, and in what.
  *
  * Short on purpose. This is a field people scan past on somebody else's
- * profile, so the useful answer is a level, not an institution — "Bachelor's
+ * profile, so the useful answer is a level, not an institution, "Bachelor's
  * degree" tells a reader what they wanted to know, where "BSc Hons Mechanical
  * Engineering, 2:1" only tells them the writer was proud of it.
  *

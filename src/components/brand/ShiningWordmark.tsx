@@ -5,6 +5,7 @@ import { Platform, Pressable, View } from 'react-native';
 import { COUPLE_HEART_PATH } from '@/components/auth/coupleHeart';
 import { Wordmark, type WordmarkProps } from '@/components/brand/Wordmark';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useI18n } from '@/i18n';
 
 // The heart of the wordmark, in the logo's own coordinates, as a mask.
 const HEART_MASK = `url("data:image/svg+xml,${encodeURIComponent(
@@ -21,6 +22,7 @@ const HEART_MASK = `url("data:image/svg+xml,${encodeURIComponent(
  * who prefers reduced motion, it is the plain wordmark.
  */
 export function ShiningWordmark(props: WordmarkProps) {
+  const { brandName } = useI18n();
   const reducedMotion = useReducedMotion();
   const host = useRef<View>(null);
   const shine = useRef<{ on: () => void; off: (after: number) => void } | null>(null);
@@ -133,7 +135,7 @@ export function ShiningWordmark(props: WordmarkProps) {
         shine.current?.off(1000);
       }}
       accessibilityRole="image"
-      accessibilityLabel="Halal Mode"
+      accessibilityLabel={brandName}
     >
       <View ref={host} style={{ position: 'relative' }}>
         <Wordmark {...props} />

@@ -3,9 +3,9 @@ import { Platform } from 'react-native';
 /**
  * Design tokens transcribed from `Halal Mode 2030.dc.html`.
  *
- * The reference commits hard to a two-colour world — alabaster and near-black —
- * with a single warm gold accent. Everything else is an opacity of the ink.
- * Resist adding hues here; the restraint is the brand.
+ * The reference commits to alabaster and near-black, with Halal Gold as the
+ * primary accent and Halal Pink, the pink of the cover's bougainvillea, as a
+ * sparing secondary brand color for warmth and motion.
  */
 
 export const color = {
@@ -38,8 +38,18 @@ export const color = {
   /** Counters and the quietest hints. */
   whisper: '#B4B0A8',
 
-  /** The one accent. Used for micro-labels that matter and links. */
-  gold: '#8A6A34',
+  /** Halal Gold: primary brand accent. Used for micro-labels that matter and links. */
+  gold: '#B8914F',
+  /** Halal Pink: secondary brand accent, sampled from the cover's bougainvillea. */
+  halalPink: '#FC3C6C',
+  /** Halal Pink deepened for small text on light surfaces (contrast 5.6:1). */
+  halalPinkDeep: '#C2124A',
+  /** Translucent Halal Pink wash. */
+  halalPinkWash: 'rgba(252,60,108,0.10)',
+  /** Flat editorial sand shapes behind the layered cover illustration. */
+  coverDune: '#E8DBC5',
+  /** Ground strip in the responsive cover backdrop. */
+  coverGround: '#D6BF96',
   /** Gold on dark surfaces. */
   goldOnDark: '#D6B469',
   /** The chosen-one glow. */
@@ -51,7 +61,7 @@ export const color = {
   white: '#FCFCFB',
 } as const;
 
-/** Ink at opacity — borders, scrims, hairlines. */
+/** Ink at opacity, borders, scrims, hairlines. */
 export const alpha = {
   line: 'rgba(10,10,10,0.09)',
   lineStrong: 'rgba(10,10,10,0.14)',
@@ -115,11 +125,11 @@ const webStack = (face: string) =>
     : face;
 
 export const font = {
-  /** Playfair Display — the human sentences. Never for mechanics. */
+  /** Playfair Display, the human sentences. Never for mechanics. */
   display: 'PlayfairDisplay_400Regular',
   displayItalic: 'PlayfairDisplay_400Regular_Italic',
   /**
-   * Noto Sans — mechanics, labels, body. Chosen because it was drawn to cover
+   * Noto Sans, mechanics, labels, body. Chosen because it was drawn to cover
    * nearly every script in one consistent design, so the app reads as itself
    * in Hindi or Russian rather than in whatever the device happened to have.
    */

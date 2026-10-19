@@ -410,11 +410,11 @@ export const tr: ListTranslations = {
     q4: 'Ciddi bir anlaşmazlık yaşadığımızda ilk on dakikada ne olur?',
     q5: 'Beş yıl sonra nerede yaşıyoruz ve kimin ailesi yakınımızda?',
     q6: 'Yalnızca bize ait saatleri nasıl koruyoruz?',
-    q7: 'Hayatımızın ne kadarını herkese açık paylaşıyoruz — fotoğraflar, isimler, herhangi bir şey?',
+    q7: 'Hayatımızın ne kadarını herkese açık paylaşıyoruz, fotoğraflar, isimler, herhangi bir şey?',
     q8: 'Bir hükümde anlaşamadığımızda hangi âlimleri ve görüşleri takip ediyoruz?',
     q9: 'Annen baban neyi doğru yaptı ve biz neyi tekrarlamayacağız?',
     q10: 'Sağlık, terapi ve üzerinde çalıştığımız şeyler konusunda ne kadar dürüstüz?',
-    q11: 'Sana göre “yeterli” neye benziyor — ve ne için asla borç almayız?',
+    q11: 'Sana göre “yeterli” neye benziyor, ve ne için asla borç almayız?',
     q12: 'Birimiz bir çağrı ile bir taşınma arasında seçim yapmak zorunda kalsa nasıl karar veririz?',
   },
   openers: [

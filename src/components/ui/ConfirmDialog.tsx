@@ -21,7 +21,7 @@ export interface ConfirmDialogProps {
 }
 
 /**
- * The "Send interest to Amina?" confirmation. Deliberately modal — this is the
+ * The "Send interest to Amina?" confirmation. Deliberately modal, this is the
  * one irreversible tap in the round, and the reference stops the user cold here.
  */
 export function ConfirmDialog({
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     paddingVertical: space.xxl,
     paddingHorizontal: space.gutterWide,
-    // Already narrower than the app column, and deliberately so — a two-button
+    // Already narrower than the app column, and deliberately so, a two-button
     // question reads better tight. It only needs the centring.
     maxWidth: 290,
     width: '100%',

@@ -5,7 +5,7 @@ import { alpha, color, radius, space } from '@/theme/tokens';
 
 export interface CardProps {
   children: ReactNode;
-  /** `dark` is the inverted panel used for Premium and the "Start here" prompt. */
+  /** `dark` is the inverted panel used for Premium surfaces. */
   tone?: 'outlined' | 'filled' | 'dark' | 'accent';
   style?: ViewStyle;
   /** Stable selector for native automation when a card is an interaction landmark. */
@@ -25,11 +25,11 @@ const styles = StyleSheet.create({
   },
   filled: { backgroundColor: color.sand },
   dark: { backgroundColor: color.ink },
-  /** The "Confidential by design" note — gold at low opacity. */
+  /** The "Confidential by design" note, gold at low opacity. */
   accent: {
-    backgroundColor: 'rgba(138,106,52,0.08)',
+    backgroundColor: 'rgba(184,145,79,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(138,106,52,0.2)',
+    borderColor: 'rgba(184,145,79,0.2)',
     borderRadius: radius.lg,
   },
 });

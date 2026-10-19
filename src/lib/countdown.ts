@@ -2,7 +2,7 @@
  * How long until the next set, in words.
  *
  * Shown under "resets at Fajr in London", so it answers the question that line
- * raises: yes, but when? Coarse on purpose — hours and minutes, seconds only in
+ * raises: yes, but when? Coarse on purpose, hours and minutes, seconds only in
  * the last minute. A ticking second hand on a marriage app would make a quiet
  * daily ritual feel like a countdown to a deadline, which is the opposite of
  * what the round is for.

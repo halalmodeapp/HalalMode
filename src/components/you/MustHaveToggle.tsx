@@ -16,7 +16,7 @@ export interface MustHaveToggleProps {
  * Turns one preference into an absolute.
  *
  * Sits directly beneath the control it governs. Every criterion grades by
- * default — a near match still appears, ranked lower — and this is the only
+ * default, a near match still appears, ranked lower, and this is the only
  * thing that turns one into a hard filter.
  *
  * Whether a criterion is absolute is not the same for everyone: sect is

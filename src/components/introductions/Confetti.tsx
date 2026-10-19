@@ -14,7 +14,7 @@ const PIECE_COUNT = 30;
 const COLORS = ['#C5A054', '#D6B469', '#0A0A0A', '#9C9891', '#EDEBE6'];
 
 /**
- * The match-reveal confetti. Falls once and stops — no loop, because a looping
+ * The match-reveal confetti. Falls once and stops, no loop, because a looping
  * celebration turns a moment into a slot machine.
  */
 export function Confetti() {

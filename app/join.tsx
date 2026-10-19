@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -17,6 +18,8 @@ import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
 import { LanguageSheet } from '@/components/ui/LanguageSheet';
 import { localeName } from '@/i18n/locales';
+import { LinkPill } from '@/components/brand/LinkPill';
+import { howItWorksUrl } from '@/lib/publicLinks';
 import { testIds } from '@/lib/testIds';
 import { useSession } from '@/state/session';
 import { alpha, color, radius, space } from '@/theme/tokens';
@@ -87,16 +90,17 @@ export default function JoinScreen() {
         style={styles.flex}
       >
         <ScrollView contentContainerStyle={[styles.content, isRTL && styles.rtl]}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('auth.languageLabel')}
-            onPress={() => setLanguageOpen(true)}
-            style={[styles.language, isRTL && styles.languageRTL]}
-          >
-            <Text style={styles.languageLabel}>
-              {localeName(language)}
-            </Text>
-          </Pressable>
+          <View style={[styles.topBar, isRTL && styles.topBarRTL]}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('auth.languageLabel')}
+              onPress={() => setLanguageOpen(true)}
+              style={styles.language}
+            >
+              <Text style={styles.languageLabel}>{localeName(language)}</Text>
+            </Pressable>
+            <LinkPill primary label={t('marketing.howItWorks')} onPress={() => void Linking.openURL(howItWorksUrl(language))} />
+          </View>
 
           <Text variant="microAccent">{t('join.eyebrow')}</Text>
           <Text variant="display" style={styles.title}>{t('join.title')}</Text>
@@ -197,9 +201,11 @@ const styles = StyleSheet.create({
   rtl: RTL_LAYOUT,
   rowReverse: { flexDirection: 'row-reverse' },
   content: { padding: space.gutterWide, paddingBottom: space.xxl, gap: space.sm },
+  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm, marginBottom: space.sm },
+  topBarRTL: { flexDirection: 'row-reverse' },
   language: { alignSelf: 'flex-start', paddingVertical: space.xs, paddingHorizontal: space.sm },
-  languageRTL: { alignSelf: 'flex-end' },
   languageLabel: { color: color.inkSoft },
+  pressed: { backgroundColor: color.sandLight },
   title: { marginTop: space.xs },
   copy: { marginTop: space.sm, color: color.inkSoft },
   points: { marginTop: space.lg, gap: space.sm },

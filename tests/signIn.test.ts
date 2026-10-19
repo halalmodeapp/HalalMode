@@ -30,15 +30,18 @@ test('both providers come back to the address the deep-link listener watches', (
   );
 });
 
-test('the session is adopted in one place only', () => {
+test('auth-session and deep-link redirects share the same PKCE exchange guard', () => {
   const api = read('src/api/auth.ts');
-  // `exchangeCodeForSession` is allowed here for the native flow, which gets
-  // the URL handed back rather than routed through the deep link. Anything
-  // that sets a session outright is not.
-  assert.doesNotMatch(api, /setSession|signInWithIdToken/u);
-
   const state = read('src/state/auth.tsx');
-  assert.match(state, /exchangeCodeForSession/u);
+  const helper = read('src/lib/authCodeExchange.ts');
+
+  // iOS may return the redirect URL through the auth-session result, while
+  // Android can also deliver it to Linking. Both routes must share one guard.
+  assert.match(api, /exchangeAuthCodeOnce/u);
+  assert.match(state, /exchangeAuthCodeOnce/u);
+  assert.match(helper, /inFlightExchanges/u);
+  assert.match(helper, /completedExchanges/u);
+  assert.doesNotMatch(api, /setSession|signInWithIdToken/u);
 });
 
 test('both providers are offered, and named in both languages', () => {

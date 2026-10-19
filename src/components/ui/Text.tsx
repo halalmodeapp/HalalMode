@@ -10,7 +10,7 @@ import { onDark, useSurfaceTone } from '@/theme/tone';
  * which is the whole typographic idea.
  */
 export type TextVariant =
-  /** Playfair. Screen headlines — "Five introductions, one at a time." */
+  /** Playfair. Screen headlines, "Five introductions, one at a time." */
   | 'display'
   /** Playfair, smaller. Card and sheet headings. */
   | 'displaySmall'

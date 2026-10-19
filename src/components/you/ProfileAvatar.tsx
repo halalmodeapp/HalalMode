@@ -1,5 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Image } from 'expo-image';
+import { ProfileImage as Image } from '@/components/ui/ProfileImage';
+import { getProfilePhotoSource } from '@/data/demoProfilePhotos';
+import { usePrivateMedia } from '@/hooks/usePrivateMedia';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -25,7 +27,11 @@ export function ProfileAvatar({ profile }: { profile: Profile }) {
   const [aspect, setAspect] = useState(4 / 3);
   const crop = useQuery({ queryKey: KEY, queryFn: fetchMyAvatarCrop });
 
-  const url = profile.photos[0];
+  const original = getProfilePhotoSource(profile.id, profile.photos, 0);
+  const media = usePrivateMedia(original, 'profile-photos', profile.photoMedia?.[0]?.storagePath);
+  const source = (media.privateMedia ? media.url ?? '' : original) as typeof original;
+  const url = typeof source === 'string' ? source : profile.photos[0];
+  const canEdit = typeof source === 'string';
   const path = profile.photoMedia?.[0]?.storagePath ?? url ?? '';
   if (!url) return <View style={styles.circle} />;
 
@@ -49,11 +55,12 @@ export function ProfileAvatar({ profile }: { profile: Profile }) {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('profile.avatarEditA11y')}
+        disabled={!canEdit}
         onPress={() => setEditing(true)}
         style={({ pressed }) => [styles.circle, pressed && styles.pressed]}
       >
         <Image
-          source={url}
+          source={source}
           onLoad={(event) => setAspect(event.source.height / Math.max(event.source.width, 1))}
           style={{
             position: 'absolute',
@@ -68,7 +75,7 @@ export function ProfileAvatar({ profile }: { profile: Profile }) {
       </Pressable>
       <PhotoCropSheet
         shape="circle"
-        uri={editing ? url : null}
+        uri={editing && canEdit ? url : null}
         initial={saved}
         onCircle={save}
         onCancel={() => setEditing(false)}

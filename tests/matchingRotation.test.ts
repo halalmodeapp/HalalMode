@@ -61,7 +61,7 @@ test('severe imbalance defers the surplus side and serves the rest fully', () =>
   }
 });
 
-test('the constrained side is whichever has surplus — not a fixed gender', () => {
+test('the constrained side is whichever has surplus, not a fixed gender', () => {
   const menHeavy = planRotation(side('m', 500), side('w', 100), config, 1);
   const womenHeavy = planRotation(side('m', 100), side('w', 500), config, 1);
 
@@ -87,7 +87,7 @@ test('served sets are capped at the minimum worthwhile size, not the full allowa
   }
 
   // Capping at three rather than five means more members get a turn each round,
-  // which is what actually drives match count — keeps are per round.
+  // which is what actually drives match count, keeps are per round.
   assert.ok(
     servedMen.length > 100 / 5,
     'capping the set size should serve more members than full sets would'

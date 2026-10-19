@@ -7,7 +7,7 @@ export const dailyRoundStatuses = [
   'awaiting_turn',
   // A set that exists and has not opened yet. Rounds open at each member's own
   // Fajr, so between being built and being seen there is a real, ordinary wait
-  // that is not any kind of problem — unlike every other status here.
+  // that is not any kind of problem, unlike every other status here.
   'next_set_scheduled',
   // Today's set has been chosen. Kept on the server so a reload cannot turn
   // "you chose" into "we found nobody".

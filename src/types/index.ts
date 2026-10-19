@@ -33,7 +33,7 @@ export type RelocationPreference =
 
 /**
  * Self-declared. `prefer_not_to_say` is treated as compatible with everything
- * in matching — declining to state something is not the same as stating a
+ * in matching, declining to state something is not the same as stating a
  * difference.
  */
 export type Sect = 'sunni' | 'shia' | 'other' | 'prefer_not_to_say';
@@ -65,7 +65,7 @@ export type FamilyGoals =
 export type MembershipTier = 'free' | 'premium';
 
 export interface ProfileMediaSource {
-  /** Renderable HTTPS/mock URL. Private Storage paths are signed before use. */
+  /** Renderable HTTPS/mock URL, or empty when unavailable. Never a private path. */
   displayUrl: string;
   /** Bucket-relative path retained for owner mutation; absent for legacy URLs. */
   storagePath?: string;
@@ -88,7 +88,7 @@ export const TIER_LIMITS: Record<
 export interface Profile {
   id: string;
   name: string;
-  /** First name only — used everywhere the tone should be personal. */
+  /** First name only, used everywhere the tone should be personal. */
   firstName: string;
   age: number;
   gender: Gender;
@@ -157,11 +157,11 @@ export interface PrivatePreferences {
   premiumMustHave?: Partial<Record<PremiumCriterion, boolean>>;
   /**
    * Criteria this member treats as absolute. Absent or false means the
-   * criterion is weighted rather than filtered — the only hard filters in
+   * criterion is weighted rather than filtered, the only hard filters in
    * matching, chosen by the member who pays their cost.
    */
   mustHave: Partial<Record<MustHaveCriterion, boolean>>;
-  /** The member's own figures — stored privately, never rendered on a profile. */
+  /** The member's own figures, stored privately, never rendered on a profile. */
   ownHeightCm: number;
   ownWeightKg?: number;
   ownBuild?: string;
@@ -171,7 +171,7 @@ export interface PrivatePreferences {
 
 /**
  * A single card in the current round. `agreements` are the pre-computed
- * overlaps the server is willing to disclose — never the underlying ranges.
+ * overlaps the server is willing to disclose, never the underlying ranges.
  */
 export interface Introduction {
   id: string;

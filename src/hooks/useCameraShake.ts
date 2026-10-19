@@ -9,7 +9,7 @@ import {
 
 /**
  * Keyframes transcribed from the reference's `shakecam`, including its uneven
- * timing. The irregularity is the point — evenly spaced steps read as a
+ * timing. The irregularity is the point, evenly spaced steps read as a
  * vibration, while these read as a knock the camera is recovering from.
  */
 const STEPS: { x: number; y: number; duration: number }[] = [
@@ -25,10 +25,10 @@ const STEPS: { x: number; y: number; duration: number }[] = [
  * A short, subtle camera knock.
  *
  * Peaks at three pixels. Anything larger stops reading as a camera and starts
- * reading as the layout breaking — and this fires on every pop, so it has to
+ * reading as the layout breaking, and this fires on every pop, so it has to
  * survive being seen four times in a row without becoming annoying.
  */
-// The style's type is inferred from `useAnimatedStyle` rather than annotated —
+// The style's type is inferred from `useAnimatedStyle` rather than annotated,
 // Reanimated's exported `AnimatedStyle` is wider than what `View` accepts.
 export function useCameraShake() {
   const x = useSharedValue(0);

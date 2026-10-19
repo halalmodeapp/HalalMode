@@ -7,7 +7,8 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { Image } from 'expo-image';
+import { ProfileImage as Image } from '@/components/ui/ProfileImage';
+import { getProfilePhotoSource } from '@/data/demoProfilePhotos';
 
 import { ActionIcon } from '@/components/ui/ActionIcon';
 import { Text } from '@/components/ui/Text';
@@ -28,13 +29,15 @@ const SETTLE = { damping: 18, stiffness: 260, mass: 0.7 } as const;
 const LIFT = { damping: 9, stiffness: 210, mass: 0.6 } as const;
 
 export interface PhotoTile {
-  /** Stable across a reorder — the storage path where there is one. */
+  /** Stable across a reorder, the storage path where there is one. */
   key: string;
   displayUrl: string;
+  storagePath?: string;
 }
 
 export interface PhotoReorderGridProps {
   photos: readonly PhotoTile[];
+  profileId: string;
   onReorder: (next: PhotoTile[]) => void;
   onRemove: (index: number) => void;
   /** Tapping an empty slot. */
@@ -52,7 +55,7 @@ export interface PhotoReorderGridProps {
 /**
  * The photo gallery: six slots, rearrangeable by dragging.
  *
- * All six are always drawn. An empty one is not absence, it is an invitation —
+ * All six are always drawn. An empty one is not absence, it is an invitation,
  * a member who sees two photos and four gaps knows what to do next, where a
  * member who sees two photos and nothing else thinks they are finished.
  *
@@ -69,6 +72,7 @@ export interface PhotoReorderGridProps {
  */
 export function PhotoReorderGrid({
   photos,
+  profileId,
   onReorder,
   onRemove,
   onAdd,
@@ -91,7 +95,7 @@ export function PhotoReorderGrid({
    * Each swap is applied to the latest order through a ref, never to the list
    * this render happened to close over. A gesture keeps the callbacks it started
    * with, so reading the prop there meant every swap after the first was
-   * applied to the original list and quietly undid the one before it — drag the
+   * applied to the original list and quietly undid the one before it, drag the
    * third photo to the front and the first two swapped instead.
    *
    * Nothing is saved until the photo is let go. Saving on every swap sent a
@@ -169,7 +173,7 @@ export function PhotoReorderGrid({
    * `onLayout` is how a React Native view is told its own size, and on a device
    * it arrives. In the browser neither it nor `measure()` ever fired for this
    * view, and without a width there is no cell size. A ref to a view on web is
-   * the DOM node, which can simply be asked — and watched, so the grid stays
+   * the DOM node, which can simply be asked, and watched, so the grid stays
    * right when a window is resized.
    */
   useEffect(() => {
@@ -242,7 +246,7 @@ export function PhotoReorderGrid({
 
           {/* Drawn in a fixed order, placed by position. Rendering in the live
               order made React move the dragged photo's element in the page on
-              every swap, and a browser cancels a drag whose element moves —
+              every swap, and a browser cancels a drag whose element moves,
               which is exactly the photo dropping itself mid-drag. */}
           {stableOrder(filled).map((photo) => {
             const index = filled.findIndex((tile) => tile.key === photo.key);
@@ -250,6 +254,7 @@ export function PhotoReorderGrid({
             <PhotoCell
               key={photo.key}
               photo={photo}
+              profileId={profileId}
               index={index}
               count={filled.length}
               cellWidth={cellWidth}
@@ -282,6 +287,7 @@ function stableOrder(tiles: readonly PhotoTile[]): PhotoTile[] {
 
 interface PhotoCellProps {
   photo: PhotoTile;
+  profileId: string;
   index: number;
   count: number;
   cellWidth: number;
@@ -302,6 +308,7 @@ interface PhotoCellProps {
 
 function PhotoCell({
   photo,
+  profileId,
   index,
   count,
   cellWidth,
@@ -372,7 +379,7 @@ function PhotoCell({
 
   // A finger holds first, so a swipe past the gallery still scrolls the form.
   // A mouse is different: everybody clicks and drags at once, and a long-press
-  // gesture fails the instant it moves before its timer — so on the web a few
+  // gesture fails the instant it moves before its timer, so on the web a few
   // pixels of movement is the whole signal. A scroll wheel never competes.
   //
   // The gesture is built once per drag-relevant setting, never per render. Each
@@ -396,7 +403,7 @@ function PhotoCell({
     })
     .onUpdate((event) => {
       // Measured from where the finger landed, not from wherever this tile has
-      // since been re-slotted to — otherwise it leaps out from under the finger
+      // since been re-slotted to, otherwise it leaps out from under the finger
       // the first time it swaps with a neighbour.
       offsetX.value = grabbedAtX.value - homeX.value + event.translationX;
       offsetY.value = grabbedAtY.value - homeY.value + event.translationY;
@@ -476,11 +483,15 @@ function PhotoCell({
       >
         <Animated.View style={[styles.surface, animated]}>
           {/* Kept out of the pointer's way. On the web a photo is an <img>, and
-              a browser starts its own drag of any image you press on — which
+              a browser starts its own drag of any image you press on, which
               takes the pointer and the gesture never sees it again. */}
           <View pointerEvents="none" style={StyleSheet.absoluteFill}>
             <Image
-              source={photo.displayUrl}
+              // This cell already owns the selected photo. Passing it as a
+              // one-item gallery with the tile's position made every tile
+              // after the main photo resolve to an empty string.
+              source={getProfilePhotoSource(profileId, [photo.displayUrl], 0)}
+              storagePath={photo.storagePath}
               style={StyleSheet.absoluteFill}
               contentFit="cover"
               accessibilityIgnoresInvertColors

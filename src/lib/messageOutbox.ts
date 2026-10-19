@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
+import { createKeyedSerialQueue } from './keyedSerialQueue';
 
 import {
   joinOutboxBody,
@@ -13,7 +14,18 @@ import {
   outboxStorageKeyForMember,
 } from '@/lib/outboxScope';
 
-const LEGACY_STORAGE_KEY = 'halal-mode.message-outbox.v1';
+const serialize = createKeyedSerialQueue();
+
+function withOutbox<T>(memberId: string, work: () => Promise<T>): Promise<T> {
+  const key = outboxStorageKeyForMember(memberId);
+  return serialize(key, () => {
+    // Web Locks coordinate separate tabs; native operations share this queue.
+    if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.locks) {
+      return navigator.locks.request(key, work);
+    }
+    return work();
+  });
+}
 
 export type PendingMessage = {
   id: string;
@@ -30,6 +42,7 @@ type StoredPendingMessage = Omit<PendingMessage, 'body'> & { bodyChunks: number 
  * private chat text through the app's normal async-storage files.
  */
 export async function enqueueMessage(memberId: string, connectionId: string, body: string): Promise<PendingMessage> {
+  return withOutbox(memberId, async () => {
   const entry: PendingMessage = {
     id: createRequestId(),
     connectionId,
@@ -48,9 +61,11 @@ export async function enqueueMessage(memberId: string, connectionId: string, bod
     throw error;
   }
   return entry;
+  });
 }
 
 export async function getPendingMessages(memberId: string, connectionId?: string): Promise<PendingMessage[]> {
+  return withOutbox(memberId, async () => {
   const entries = await getStoredPendingMessages(memberId);
   const hydrated: (PendingMessage | null)[] = await Promise.all(entries.map(async (entry) => {
     const body = await readBody(memberId, entry.id, entry.bodyChunks);
@@ -74,31 +89,56 @@ export async function getPendingMessages(memberId: string, connectionId?: string
     );
   }
   return connectionId ? valid.filter((entry) => entry.connectionId === connectionId) : valid;
+  });
 }
 
 export async function removePendingMessage(memberId: string, id: string): Promise<void> {
+  return withOutbox(memberId, async () => {
   const entries = await getStoredPendingMessages(memberId);
   const entry = entries.find((item) => item.id === id);
   if (!entry) return;
   await removeBody(memberId, id, entry.bodyChunks);
   await writeStoredPendingMessages(memberId, entries.filter((item) => item.id !== id));
+  });
 }
 
 async function getStoredPendingMessages(memberId: string): Promise<StoredPendingMessage[]> {
-  // v1/v2 stored full message text in AsyncStorage. Discard it rather than
-  // retaining private text in plaintext after the secure outbox upgrade.
-  await Promise.all([
-    AsyncStorage.removeItem(LEGACY_STORAGE_KEY),
-    AsyncStorage.removeItem(legacyOutboxStorageKeyForMember(memberId)),
-  ]);
   const raw = await AsyncStorage.getItem(outboxStorageKeyForMember(memberId));
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? parsed.filter(isStoredPendingMessage) : [];
-  } catch {
-    return [];
+  const parsed: unknown = raw ? JSON.parse(raw) : [];
+  // Never overwrite a damaged manifest with an empty queue.
+  if (!Array.isArray(parsed) || !parsed.every(isStoredPendingMessage)) {
+    throw new Error('The pending message queue could not be read.');
   }
+  const entries: StoredPendingMessage[] = [...parsed];
+  const legacyKey = legacyOutboxStorageKeyForMember(memberId);
+  const legacyRaw = await AsyncStorage.getItem(legacyKey);
+  if (!legacyRaw) return entries;
+  const legacy: unknown = JSON.parse(legacyRaw);
+  if (!Array.isArray(legacy) || !legacy.every(isLegacyPendingMessage)) {
+    throw new Error('The previous pending message queue could not be recovered.');
+  }
+  // Commit protected bodies and the manifest before removing the old copy.
+  // A restart can repeat this migration safely using the original request IDs.
+  for (const entry of legacy) {
+    if (entries.some(current => current.id === entry.id)) continue;
+    const bodyChunks = await writeBody(memberId, entry.id, entry.body);
+    entries.push({ id: entry.id, connectionId: entry.connectionId, createdAt: entry.createdAt, bodyChunks });
+  }
+  await writeStoredPendingMessages(memberId, entries);
+  await AsyncStorage.removeItem(legacyKey);
+  // The ownerless v1 queue is deliberately not adopted or deleted here.
+  // Recovering it requires proof of account ownership, not the current login.
+  return entries;
+}
+
+function isLegacyPendingMessage(value: unknown): value is PendingMessage {
+  if (!value || typeof value !== 'object') return false;
+  const entry = value as Record<string, unknown>;
+  return typeof entry.id === 'string' && /^[a-zA-Z0-9_-]{12,80}$/.test(entry.id)
+    && typeof entry.connectionId === 'string' && !!entry.connectionId
+    && typeof entry.createdAt === 'string' && Number.isFinite(Date.parse(entry.createdAt))
+    && typeof entry.body === 'string' && entry.body.length > 0
+    && splitOutboxBody(entry.body).length <= 4;
 }
 
 function writeStoredPendingMessages(memberId: string, entries: StoredPendingMessage[]): Promise<void> {
@@ -107,8 +147,13 @@ function writeStoredPendingMessages(memberId: string, entries: StoredPendingMess
 
 async function writeBody(memberId: string, id: string, body: string): Promise<number> {
   const chunks = splitOutboxBody(body);
-  if (!chunks.length) throw new Error('A pending message must include text.');
-  await Promise.all(chunks.map((chunk, index) => setBodyChunk(memberId, id, index, chunk)));
+  if (!chunks.length || chunks.length > 4) throw new Error('A pending message must contain between 1 and 2048 characters.');
+  const writes = await Promise.allSettled(chunks.map((chunk, index) => setBodyChunk(memberId, id, index, chunk)));
+  const failed = writes.find(result => result.status === 'rejected');
+  if (failed?.status === 'rejected') {
+    await removeBody(memberId, id, chunks.length).catch(() => {});
+    throw failed.reason;
+  }
   return chunks.length;
 }
 

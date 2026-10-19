@@ -34,6 +34,8 @@ interface RoundValue {
   narrowingCriterion: NarrowingCriterion | null;
   /** Set only while a built set waits to open, to name whose dawn it is. */
   nextSetCity: string | null;
+  /** Authoritative scheduled or submitted-round Fajr instant from the server. */
+  nextFajrAt: string | null;
   /** Whose questions the member must answer before seeing a set. */
   owed: OwedAnswers | null;
   /** Everyone the member still owes answers to, oldest first. */
@@ -54,7 +56,7 @@ interface RoundValue {
   selected: string[];
   /**
    * Shows or withdraws interest. Returns false, changing nothing, when the
-   * member is already at their limit — the screen then asks who to swap out.
+   * member is already at their limit, the screen then asks who to swap out.
    */
   toggleSelect: (id: string) => boolean;
   /** Swaps one selection for another, keeping the rest in order. */
@@ -74,7 +76,7 @@ interface RoundValue {
   submitting: boolean;
   /** Sends interest to the selection. Resolves with the mutual matches. */
   submit: (keptIntroductionIds?: string[]) => Promise<string[]>;
-  /** True once interest is sent — drives the "Nothing more today" state. */
+  /** True once interest is sent, drives the "Nothing more today" state. */
   submitted: boolean;
   /** A mutual is held only until both members have an open conversation slot. */
   waitingForConnection: boolean;
@@ -110,6 +112,9 @@ export function RoundProvider({ children }: { children: ReactNode }) {
   } = useQuery({
     queryKey: [...queryKeys.round, tier],
     queryFn: () => fetchCurrentRoundState(tier),
+    // The provider is mounted above the route stack, including public auth.
+    // Do not call the member-only RPC until a verified account is present.
+    enabled: USE_MOCKS || !!memberId,
   });
 
   const round = roundState?.round;
@@ -119,6 +124,7 @@ export function RoundProvider({ children }: { children: ReactNode }) {
 
   const narrowingCriterion = roundState?.narrowingCriterion ?? null;
   const nextSetCity = roundState?.city ?? null;
+  const nextFajrAt = roundState?.nextFajrAt ?? null;
   const owed = roundState?.owed ?? null;
   const owedAll = useMemo(() => roundState?.owedAll ?? (owed ? [owed] : []), [roundState?.owedAll, owed]);
 
@@ -260,6 +266,7 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       emptyReason,
       narrowingCriterion,
       nextSetCity,
+      nextFajrAt,
       owed,
       owedAll,
       isLoading,
@@ -290,6 +297,7 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       emptyReason,
       narrowingCriterion,
       nextSetCity,
+      nextFajrAt,
       owed,
       owedAll,
       isLoading,

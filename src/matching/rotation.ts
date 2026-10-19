@@ -14,12 +14,12 @@
  * Left alone, a greedy allocator resolves that by concentrating: a lucky few
  * get full sets and most get nothing, with the winners picked by score, so
  * broadly the same members win every round. This module makes the choice
- * deliberate and fair instead — each round serves a cohort of the constrained
+ * deliberate and fair instead, each round serves a cohort of the constrained
  * side with full sets, ordered by who has waited longest, and defers the rest.
  *
  * Nothing here knows which gender is which. The constrained side is whichever
  * has surplus capacity in that round, so a pool that starts with more men and
- * later has more women needs no code change — and a balanced pool degenerates
+ * later has more women needs no code change, and a balanced pool degenerates
  * to "serve everyone" on its own.
  */
 
@@ -41,7 +41,7 @@ export interface RotationPlan {
    *
    * When the pool is constrained this is capped at `rotation_min_set_size`
    * rather than the member's full allowance. Selection opportunities scale with
-   * the number of *rounds* a member is served, not with set size — a free
+   * the number of *rounds* a member is served, not with set size, a free
    * member keeps one person per round however many they are shown. Serving
    * twice as many members with sets of three therefore produces far more
    * matches than serving half as many with sets of five.
@@ -91,7 +91,7 @@ function byWaiting(seed: number) {
  * Decides who receives a set this round.
  *
  * Returns every member when the pool is balanced, or when spreading thinly
- * would still leave the larger side with a workable set — deferring people is
+ * would still leave the larger side with a workable set, deferring people is
  * only worth it when the alternative is sets too small to choose from.
  */
 export function planRotation(

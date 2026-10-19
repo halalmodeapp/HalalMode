@@ -2,16 +2,16 @@ import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 
+import { exchangeAuthCodeOnce } from '@/lib/authCodeExchange';
 import { requireSupabase } from '@/lib/supabase';
+import { withDeadline } from '@/lib/withDeadline';
 
 /**
  * Signing in with Google or Apple.
  *
- * There is no session handling here on purpose. Supabase sends the person back
- * to `halalmode://auth?code=...`, and the deep-link listener in `state/auth`
- * already trades that code for a session — the same path the email link has
- * always used. A second place that adopted a session would be a second place
- * that could get it wrong.
+ * The auth-session result and native deep-link listener can both receive the
+ * same callback. Both route its PKCE code through the shared one-time exchange
+ * guard, while `onAuthStateChange` remains the single place that adopts users.
  */
 export type AuthProvider = 'google' | 'apple';
 
@@ -56,7 +56,12 @@ export async function signInWithProvider(provider: AuthProvider): Promise<void> 
   if (result.type === 'success' && result.url) {
     const code = new URL(result.url).searchParams.get('code');
     if (code) {
-      const exchange = await client.auth.exchangeCodeForSession(code);
+      const exchange = await withDeadline(
+        exchangeAuthCodeOnce(
+          code,
+          (singleUseCode) => client.auth.exchangeCodeForSession(singleUseCode)
+        )
+      );
       if (exchange.error) throw exchange.error;
     }
   }

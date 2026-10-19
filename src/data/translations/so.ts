@@ -402,11 +402,11 @@ export const so: ListTranslations = {
     q4: 'Marka aan si qoto dheer isu khilaafno, maxaa dhaca tobanka daqiiqo ee ugu horreeya?',
     q5: 'Shan sano kadib xaggee ayaan ku noolaan doonnaa, qoyska yaa noo dhow?',
     q6: 'Sidee u ilaalinaynaa saacadaha annaga keliya ah?',
-    q7: 'Intee nolosheenna ka mid ah ayaa si fagaare ah loo wadaagayaa — sawirro, magacyo, wax kasta?',
+    q7: 'Intee nolosheenna ka mid ah ayaa si fagaare ah loo wadaagayaa, sawirro, magacyo, wax kasta?',
     q8: 'Marka aan isku khilaafno arrin shareeco, culimada iyo aragtiyaha kee ayaan raacaynaa?',
     q9: 'Maxay waalidiintaa si sax ah u sameeyeen, maxaanse ku celin doonin?',
     q10: 'Intee ayaan ka daacad nahay caafimaadka, daawaynta, iyo waxyaabaha aan ka shaqaynayno?',
-    q11: 'Sidee "ku filan" kuu eg yahay — oo maxaan weligeen deyn u qaadan doonin?',
+    q11: 'Sidee "ku filan" kuu eg yahay, oo maxaan weligeen deyn u qaadan doonin?',
     q12: 'Haddii midkeen uu dooran lahaa hammigiisa iyo guurista, sidee go’aan u gaari lahayn?',
   },
   openers: [

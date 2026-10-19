@@ -1,17 +1,21 @@
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
 import { alpha, color, font, radius } from '@/theme/tokens';
+import { usePrivateMedia } from '@/hooks/usePrivateMedia';
+import { useScreenActive } from '@/hooks/useScreenActive';
+import { showNotice } from '@/lib/notice';
 
 const BAR_COUNT = 26;
 
 export interface AudioGreetingProps {
   durationSeconds: number;
-  /** Absent in the sample data — the waveform still scrubs so the UI is real. */
+  /** Absent in the sample data, the waveform still scrubs so the UI is real. */
   url?: string;
+  storagePath?: string;
   /** Chat bubbles use the compact form with no surrounding card. */
   compact?: boolean;
   /** Inverts for the sent-message bubble. */
@@ -21,18 +25,25 @@ export interface AudioGreetingProps {
 /**
  * Voice greeting player.
  *
- * The waveform is derived from the duration rather than decoded from the file —
+ * The waveform is derived from the duration rather than decoded from the file,
  * a real FFT would cost a native module and a decode pass for a 16-second clip
  * that is decoration. Playback position is honest; the bar heights are not.
  */
 export function AudioGreeting({
   durationSeconds,
   url,
+  storagePath,
   compact,
   onDark,
 }: AudioGreetingProps) {
   const { localeTag, isRTL, t } = useI18n();
-  const player = useAudioPlayer(url, {
+  const media = usePrivateMedia(url, 'voice-introductions', storagePath);
+  const active = useScreenActive();
+  const loadedUrl = useRef<string | undefined>(undefined);
+  const request = useRef(0);
+  const startingRef = useRef(false);
+  const [starting, setStarting] = useState(false);
+  const player = useAudioPlayer(null, {
     updateInterval: 250,
     // Downloading first helps a phone start playback cleanly. On the web the
     // library's pre-download has no error handling, so an unreachable file
@@ -41,6 +52,36 @@ export function AudioGreeting({
     downloadFirst: Platform.OS !== 'web',
   });
   const status = useAudioPlayerStatus(player);
+  useEffect(() => {
+    if (!active) player.pause();
+    startingRef.current = false;
+    setStarting(false);
+    // useAudioPlayer releases its native object on unmount; do not call it
+    // from cleanup after that release. Blur/background pause above is enough.
+    return () => { request.current += 1; };
+  }, [active, player]);
+
+  const play = async () => {
+    if (!active || startingRef.current) return;
+    if (status.playing) { player.pause(); return; }
+    startingRef.current = true;
+    setStarting(true);
+    const generation = request.current;
+    try {
+      const fresh = await media.ensure();
+      if (generation !== request.current) return;
+      if (typeof fresh !== 'string' || !fresh) throw new Error('Audio unavailable');
+      if (loadedUrl.current !== fresh) {
+        player.replace(fresh);
+        loadedUrl.current = fresh;
+      } else if (status.didJustFinish) await player.seekTo(0);
+      if (generation === request.current) player.play();
+    } catch {
+      if (generation === request.current) showNotice(t('audio.unavailable'), t('profile.connectionError'));
+    } finally {
+      if (generation === request.current) { startingRef.current = false; setStarting(false); }
+    }
+  };
 
   const bars = useMemo(
     () =>
@@ -67,21 +108,14 @@ export function AudioGreeting({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={
-          !url ? t('audio.unavailable') : status.playing ? t('audio.pause') : t('audio.play')
+          !url && !storagePath ? t('audio.unavailable') : status.playing ? t('audio.pause') : t('audio.play')
         }
-        accessibilityState={{ disabled: !url, busy: status.isBuffering }}
-        disabled={!url}
-        onPress={() => {
-          if (status.playing) {
-            player.pause();
-            return;
-          }
-          if (status.didJustFinish) void player.seekTo(0);
-          player.play();
-        }}
+        accessibilityState={{ disabled: !url && !storagePath, busy: starting || status.isBuffering }}
+        disabled={(!url && !storagePath) || starting}
+        onPress={() => void play()}
         style={[
           styles.play,
-          !url && styles.playDisabled,
+          !url && !storagePath && styles.playDisabled,
           { backgroundColor: onDark ? color.white : color.ink },
         ]}
       >
