@@ -6,7 +6,8 @@ import {
   resolveStoredConfig,
   type MatchingConfig,
 } from '../../../src/matching/config.ts';
-import { nextFajrAfter } from '../../../src/lib/prayerTimes.ts';
+import { fajrForMadinahDate } from '../../../src/lib/madinahPrayerTimes.ts';
+import { nextFajrWindow } from '../../../src/lib/prayerTimes.ts';
 import {
   liveFinalizationArgs,
   planRound,
@@ -35,6 +36,7 @@ interface MemberLocationRow {
   user_id: string;
   latitude: number;
   longitude: number;
+  high_latitude_fajr_method: 'one_seventh' | 'reference_latitude_45';
 }
 
 class MatchingRunError extends Error {
@@ -80,58 +82,37 @@ async function finalizeWithExactRetry<T>(
 function madinahParts(date = new Date()) {
   const values = new Intl.DateTimeFormat('en-CA', {
     timeZone: MADINAH_TIME_ZONE,
-    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
-    hourCycle: 'h23',
+    year: 'numeric', month: '2-digit', day: '2-digit',
   }).formatToParts(date);
   const read = (type: Intl.DateTimeFormatPartTypes) => values.find((part) => part.type === type)?.value ?? '';
-  return { date: `${read('year')}-${read('month')}-${read('day')}`, hour: Number(read('hour')), minute: Number(read('minute')) };
+  return `${read('year')}-${read('month')}-${read('day')}`;
 }
 
-async function fajrForMadinahDate(cycleDate: string) {
-  const response = await fetch(
-    `https://api.aladhan.com/v1/timingsByCity/${cycleDate}?city=Medina&country=Saudi%20Arabia&method=4`
-  );
-  if (!response.ok) throw new Error('Could not retrieve Madinah prayer times');
-  const payload = await response.json() as { data?: { timings?: { Fajr?: string } } };
-  const pieces = (payload.data?.timings?.Fajr ?? '').match(/\d{1,2}/g)?.map(Number) ?? [];
-  const hour = pieces[0];
-  const minute = pieces[1];
-  if (hour === undefined || minute === undefined) throw new Error('Madinah Fajr time was unavailable');
-  return { hour, minute };
-}
-
-async function madinahFajrWindow(now = new Date()) {
-  const current = madinahParts(now);
-  const { hour, minute } = await fajrForMadinahDate(current.date);
-  const currentMinutes = current.hour * 60 + current.minute;
-  const fajrMinutes = hour * 60 + minute;
+function madinahFajrWindow(now = new Date()) {
+  const cycleDate = madinahParts(now);
+  const fajr = fajrForMadinahDate(cycleDate);
   return {
-    cycleDate: current.date,
-    startsAt: madinahInstant(current.date, hour, minute).toISOString(),
-    due: currentMinutes >= fajrMinutes && currentMinutes < fajrMinutes + 15,
+    cycleDate,
+    startsAt: fajr.at.toISOString(),
+    due: now.getTime() >= fajr.at.getTime() && now.getTime() < fajr.at.getTime() + 15 * 60_000,
   };
 }
 
 function nextMadinahDate(cycleDate: string) {
   const tomorrow = new Date(`${cycleDate}T00:00:00+03:00`);
   tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
-  return madinahParts(tomorrow).date;
+  return madinahParts(tomorrow);
 }
 
-function madinahInstant(cycleDate: string, hour: number, minute: number) {
-  return new Date(`${cycleDate}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00+03:00`);
-}
-
-async function planTomorrowFajr(now = new Date()) {
-  const today = madinahParts(now).date;
+function planTomorrowFajr(now = new Date()) {
+  const today = madinahParts(now);
   const cycleDate = nextMadinahDate(today);
-  const { hour, minute } = await fajrForMadinahDate(cycleDate);
-  // fajrForMadinahDate validates the upstream response and parsed time.
-  // Madinah is permanently UTC+3. pg_cron schedules in UTC on Supabase.
+  const fajr = fajrForMadinahDate(cycleDate);
+  // pg_cron schedules in UTC on Supabase, so use the calculated instant directly.
   return {
     cycleDate,
-    schedule: `${minute} ${(hour + 21) % 24} * * *`,
-    startsAt: madinahInstant(cycleDate, hour, minute).toISOString(),
+    schedule: `${fajr.at.getUTCMinutes()} ${fajr.at.getUTCHours()} * * *`,
+    startsAt: fajr.at.toISOString(),
   };
 }
 
@@ -353,9 +334,8 @@ async function finalizeShadowInBatches(
  * Dawn is worked out from their own coordinates rather than fetched, so this
  * costs one database read and no network calls however many members there are.
  *
- * A member without a dawn is left out rather than given a guess. Above the
- * Arctic circle in summer the sun never reaches the Fajr angle, so there is no
- * time to open their round at; they simply wait for a day that has one.
+ * Use the astronomical dawn when it exists. At higher latitudes, use the
+ * member's saved estimate only on dates where that angle does not occur.
  */
 async function dawnScheduleFor(client: SupabaseClient) {
   const members = await client.rpc('members_awaiting_round_service');
@@ -365,13 +345,15 @@ async function dawnScheduleFor(client: SupabaseClient) {
   const schedule: { user_id: string; opens_at: string; expires_at: string }[] = [];
 
   for (const row of (members.data ?? []) as MemberLocationRow[]) {
-    const opens = nextFajrAfter(row.latitude, row.longitude, now);
-    if (!opens) continue;
+    const method = row.high_latitude_fajr_method === 'reference_latitude_45'
+      ? row.high_latitude_fajr_method
+      : 'one_seventh';
+    const window = nextFajrWindow(row.latitude, row.longitude, now, method);
+    if (!window) continue;
     schedule.push({
       user_id: row.user_id,
-      opens_at: opens.toISOString(),
-      // Their own day, measured from their own dawn — not a global clock.
-      expires_at: new Date(opens.getTime() + 24 * 3_600_000).toISOString(),
+      opens_at: window.opensAt.toISOString(),
+      expires_at: window.expiresAt.toISOString(),
     });
   }
 
@@ -461,9 +443,9 @@ Deno.serve(async (request: Request) => {
   if (requestedMode === 'shadow') {
     try {
       const requestedCycle = new URL(request.url).searchParams.get('cycleDate');
-      const cycleDate = requestedCycle ?? madinahParts().date;
-      const fajr = await fajrForMadinahDate(cycleDate);
-      const evaluatedAt = madinahInstant(cycleDate, fajr.hour, fajr.minute).toISOString();
+      const cycleDate = requestedCycle ?? madinahParts();
+      const fajr = fajrForMadinahDate(cycleDate);
+      const evaluatedAt = fajr.at.toISOString();
       const result = await runMatchingV1(client, 'shadow', cycleDate, evaluatedAt, null);
       return Response.json(result);
     } catch (error) {
@@ -472,15 +454,18 @@ Deno.serve(async (request: Request) => {
   }
 
   if (requestedMode === 'plan') {
-    const plan = await planTomorrowFajr();
+    const plan = planTomorrowFajr();
     const result = await client.rpc('set_madinah_fajr_cron', { p_schedule: plan.schedule });
     if (result.error) return Response.json({ error: result.error.message }, { status: 500 });
     return Response.json({ plannedFor: plan.cycleDate, scheduleUtc: plan.schedule });
   }
-  const timing = await madinahFajrWindow();
+  const timing = madinahFajrWindow();
   if (!timing.due) {
     return Response.json({ skipped: 'Outside the Madinah Fajr window', cycleDate: timing.cycleDate });
   }
+
+  // Calculate all deterministic timing inputs before reserving the cycle.
+  const nextFajr = planTomorrowFajr();
 
   // A second cron attempt or retry cannot generate another daily cycle.
   const cycle = await client.from('round_generation_runs').insert({ cycle_date: timing.cycleDate });
@@ -490,7 +475,6 @@ Deno.serve(async (request: Request) => {
   if (cycle.error) return Response.json({ error: cycle.error.message }, { status: 500 });
 
   // Keep the round live until the next daily Madinah Fajr reset.
-  const nextFajr = await planTomorrowFajr();
   const expiresAt = nextFajr.startsAt;
   const expired = await client.rpc('expire_stale_rounds');
   if (expired.error) {
@@ -499,7 +483,7 @@ Deno.serve(async (request: Request) => {
   }
 
   // Before the config is read, so a version the tuner inserts cannot appear
-  // between that read and the run start — which the run start would reject for
+  // between that read and the run start, which the run start would reject for
   // not using the active version. Deliberately not fatal: adjusting weights is
   // an improvement to tomorrow, and failing it must not cost anyone their round.
   const tuned = await client.rpc('tune_matching_weights_service');
@@ -508,7 +492,7 @@ Deno.serve(async (request: Request) => {
   }
 
   // Read before the round is built, so a reading exists even on a cycle that
-  // fails to generate — a failed cycle is exactly when the numbers are wanted.
+  // fails to generate, a failed cycle is exactly when the numbers are wanted.
   // Idempotent within a day, so a retry overwrites rather than duplicating.
   const measured = await client.rpc('capture_matching_outcomes_service', {
     p_window_days: 30,
@@ -519,7 +503,7 @@ Deno.serve(async (request: Request) => {
 
   // A pass holds for a few months and then stops holding. Without this the
   // cooldown would be a number in a config table that nothing ever read, and
-  // every pass would be permanent — which is the behaviour it replaced.
+  // every pass would be permanent, which is the behaviour it replaced.
   // Idempotent, and must run before candidates are built so a pass that expired
   // overnight is available to today's round.
   const passes = await client.rpc('expire_explicit_passes_service');

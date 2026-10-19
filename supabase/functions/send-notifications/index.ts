@@ -5,7 +5,7 @@
  * anything. This is the missing half.
  *
  * It claims a bounded batch, posts it, and reports back what landed and what
- * did not — so a failure is retried rather than lost, and a token Apple or
+ * did not, so a failure is retried rather than lost, and a token Apple or
  * Google has rejected is cleared instead of retried forever.
  *
  * Verifies itself against the vault the same way round generation and the
@@ -184,9 +184,14 @@ Deno.serve(async (request) => {
       title,
       body,
       sound: 'default',
+      channelId: row.platform === 'android' ? 'default' : undefined,
+      // Stable for every retry of this outbox row. Expo can collapse pending
+      // copies for the same device, and the app can identify the event if the
+      // provider returns an ambiguous response.
+      collapseId: `halal-mode-${row.id}`,
       // Lets the app open the right screen without putting anything private
       // in the payload.
-      data: { kind: row.kind },
+      data: { kind: row.kind, notificationId: String(row.id) },
     };
   });
 
@@ -207,7 +212,17 @@ Deno.serve(async (request) => {
       });
       if (!response.ok) {
         const text = await response.text();
-        for (const row of batchRows) lastError.set(row.id, `push ${response.status}: ${text.slice(0, 120)}`);
+        if (response.status >= 500 || response.status === 408) {
+          // A transport/provider 5xx can mean Expo accepted the batch and the
+          // response was lost. Retrying here is the duplicate path; settle the
+          // row once rather than sending the same notification again.
+          for (const row of batchRows) {
+            delivered.add(row.id);
+            lastError.set(row.id, `ambiguous push response ${response.status}`);
+          }
+        } else {
+          for (const row of batchRows) lastError.set(row.id, `push ${response.status}: ${text.slice(0, 120)}`);
+        }
         continue;
       }
       const payload = await response.json() as { data?: { status: string; message?: string; details?: { error?: string } }[] };
@@ -218,13 +233,21 @@ Deno.serve(async (request) => {
           delivered.add(row.id);
           return;
         }
-        const error = ticket ? (ticket.details?.error ?? ticket.message ?? 'unknown') : 'no ticket returned';
+        if (!ticket) {
+          // A successful HTTP response with a missing ticket is also
+          // ambiguous: do not retry an event that may already be accepted.
+          delivered.add(row.id);
+          lastError.set(row.id, 'ambiguous push response without ticket');
+          return;
+        }
+        const error = ticket.details?.error ?? ticket.message ?? 'unknown';
         lastError.set(row.id, error);
         // Only this phone is retired; the member's others keep receiving.
         if (error === 'DeviceNotRegistered') deadTokens.push(row.push_token);
       });
     } catch (error) {
       for (const row of batchRows) {
+        delivered.add(row.id);
         lastError.set(row.id, error instanceof Error ? error.message : 'transport failed');
       }
     }

@@ -38,6 +38,14 @@ const cors = {
 const reply = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
 
+type SummaryData = {
+  allowed: boolean;
+  cached: { body: string; created_at: string } | null;
+  picked: { question_id: string }[];
+  answers: { user_id: string; question_id: string; body: string }[];
+  people: { id: string; first_name: string }[];
+};
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: cors });
 
@@ -63,13 +71,17 @@ Deno.serve(async (request) => {
   if (connection.stage !== 'recap' && connection.stage !== 'open') {
     return reply({ summary: null });
   }
-
-  const { data: cached } = await admin
-    .from('connection_summaries')
-    .select('body, created_at')
-    .eq('connection_id', connectionId)
-    .eq('language', language)
-    .maybeSingle();
+  // This is a single service-only database snapshot: consent, the cache row,
+  // and (when needed) the answer inputs are read under the same boundary.
+  const loadSummaryData = () => admin.rpc('get_connection_summary_data_service', {
+    p_connection_id: connectionId,
+    p_viewer_id: me,
+    p_language: language,
+  });
+  const initial = await loadSummaryData();
+  const initialData = initial.data as SummaryData | null;
+  if (initial.error || !initialData?.allowed) return reply({ summary: null });
+  const cached = initialData.cached;
   if (cached?.body && cached.body !== PENDING) return reply({ summary: cached.body });
 
   if (!Deno.env.get('OPENAI_API_KEY')) return reply({ summary: null });
@@ -86,14 +98,20 @@ Deno.serve(async (request) => {
   const claim = await admin.from('connection_summaries')
     .insert({ connection_id: connectionId, language, body: PENDING });
   if (claim.error) return reply({ summary: null, pending: true });
-  const release = () => admin.from('connection_summaries').delete()
-    .eq('connection_id', connectionId).eq('language', language).eq('body', PENDING);
+  const release = async () => {
+    await admin.from('connection_summaries').delete()
+      .eq('connection_id', connectionId).eq('language', language).eq('body', PENDING);
+  };
 
-  const [{ data: picked }, { data: answers }, { data: people }] = await Promise.all([
-    admin.from('connection_questions').select('question_id').eq('connection_id', connectionId),
-    admin.from('question_answers').select('user_id, question_id, body').eq('connection_id', connectionId),
-    admin.from('profiles').select('id, first_name').in('id', [connection.user_a, connection.user_b]),
-  ]);
+  // Consent or relationship state may have changed while the claim was being
+  // inserted. Re-load through the same guarded RPC before using any answer.
+  const snapshot = await loadSummaryData();
+  const data = snapshot.data as SummaryData | null;
+  if (snapshot.error || !data?.allowed) {
+    await release();
+    return reply({ summary: null });
+  }
+  const { picked, answers, people } = data;
   // The provider sees "Person A" and "Person B", never names; the names go
   // back in here, after the text comes back.
   const realName = (id: string) => people?.find((p) => p.id === id)?.first_name ?? '';
@@ -112,7 +130,7 @@ Deno.serve(async (request) => {
   const instructions = [
     `You are writing for ${nameOf(a)} and ${nameOf(b)}, two Muslims considering marriage on Halal Mode.`,
     'They each answered the same questions privately. Write one or two short paragraphs (at most 130 words in total), addressed to both of them.',
-    'First say, warmly and specifically, where their answers already sound alike. Then name the one or two things most worth talking through together, as gentle prompts rather than problems.',
+    'Briefly and warmly summarize where their answers align and where they differ. Do not write conversation questions, chat openers, discussion prompts, or suggested next steps; the app provides chat suggestions separately.',
     'Never give a score, a percentage or a verdict on whether they suit each other. Never give religious rulings. Do not invent anything that is not in their answers. Do not quote them at length.',
     `Write in ${LANGUAGES[language]}.`,
     'Refer to them only as Person A and Person B, exactly as written.',

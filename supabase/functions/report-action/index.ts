@@ -50,14 +50,22 @@ Deno.serve(async (request) => {
     return Response.json({ error: 'forbidden' }, { status: 403, headers: CORS });
   }
 
-  const applied = await client.rpc('apply_report_action_service', { p_report_id: r, p_action: a });
-  if (applied.error) return Response.json({ error: applied.error.message }, { status: 400, headers: CORS });
-
   const duration = BAN_FOR[a];
+  const claimed = await client.rpc('claim_report_action_service', { p_report_id: r, p_action: a });
+  if (claimed.error) return Response.json({ error: claimed.error.message }, { status: 400, headers: CORS });
+
   if (duration) {
-    const subject = (applied.data as { subject_id: string }).subject_id;
+    const subject = claimed.data as string;
     const banned = await client.auth.admin.updateUserById(subject, { ban_duration: duration });
-    if (banned.error) return Response.json({ error: banned.error.message }, { status: 500, headers: CORS });
+    if (banned.error) {
+      await client.rpc('release_report_action_service', { p_report_id: r, p_action: a });
+      return Response.json({ error: banned.error.message }, { status: 500, headers: CORS });
+    }
   }
+  // The database action is applied only after the external Auth side effect
+  // succeeds. If the worker dies here, the claim makes the same signed action
+  // retryable without allowing a different action or a second notice.
+  const applied = await client.rpc('apply_report_action_service', { p_report_id: r, p_action: a });
+  if (applied.error) return Response.json({ error: applied.error.message }, { status: 500, headers: CORS });
   return Response.json({ done: a }, { headers: CORS });
 });

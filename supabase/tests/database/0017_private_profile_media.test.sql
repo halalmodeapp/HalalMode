@@ -1,7 +1,7 @@
 begin;
 
 set local search_path = public, extensions;
-select plan(24);
+select plan(25);
 
 select is(
   (select count(*)::int from storage.buckets where id in ('profile-photos', 'voice-introductions')),
@@ -75,6 +75,9 @@ do $$ begin
   perform set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e5","role":"authenticated"}', true);
 end $$;
 
+select public.accept_current_legal_documents();
+select public.record_sensitive_consent();
+
 select ok(
   halal_mode_private.can_read_profile_media('00000000-0000-0000-0000-0000000000f6'),
   'a live introduction authorizes private profile media reads'
@@ -104,6 +107,21 @@ select throws_ok(
 insert into storage.objects (bucket_id, name, metadata)
 select 'profile-photos', path, '{"mimetype":"image/jpeg","size":1024}'::jsonb
 from generated_media_paths where kind = 'photo';
+
+select throws_ok(
+  $$ select attach_profile_photo((select path from generated_media_paths where kind = 'photo')) $$,
+  '22023', 'Uploaded profile photo bytes were not validated',
+  'a Storage MIME label alone cannot attach a profile photo'
+);
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+select public.record_profile_media_validation_service(
+  'profile-photos',
+  (select path from generated_media_paths where kind = 'photo'),
+  'photo',
+  'image/jpeg',
+  1024
+);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e5","role":"authenticated"}', true);
 
 select is(
   attach_profile_photo((select path from generated_media_paths where kind = 'photo')),
@@ -146,6 +164,16 @@ select ok(
 insert into storage.objects (bucket_id, name, metadata)
 select 'voice-introductions', path, '{"mimetype":"audio/mp4","size":2048}'::jsonb
 from generated_media_paths where kind = 'voice';
+
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+select public.record_profile_media_validation_service(
+  'voice-introductions',
+  (select path from generated_media_paths where kind = 'voice'),
+  'voice',
+  'audio/mp4',
+  2048
+);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000e5","role":"authenticated"}', true);
 
 select is(
   attach_voice_introduction(

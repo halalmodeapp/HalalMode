@@ -2,9 +2,9 @@
  * Checks queued photos and bios with OpenAI's free moderation endpoint
  * (omni-moderation-latest): no cost per photo or bio.
  *
- * allow  — nothing happens.
- * remove — a photo comes off the profile (bios are never removed automatically).
- * review — the operator is emailed to decide.
+ * allow, nothing happens.
+ * remove, a photo comes off the profile (bios are never removed automatically).
+ * review, the operator is emailed to decide.
  *
  * The endpoint scores harm categories (sexual, violence, hate, harassment,
  * self-harm, illicit). It cannot tell whether a photo shows the member's own

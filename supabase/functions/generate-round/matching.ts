@@ -7,7 +7,7 @@
  *
  * Shadow mode is a difference of one branch at the very end. Everything before
  * it is a pure computation over data already fetched, so a shadow run cannot
- * create a match, consume a limit, move a marker or start a cooldown — it has
+ * create a match, consume a limit, move a marker or start a cooldown, it has
  * no code path that writes anywhere except `shadow_round_edges`.
  *
  * The estimation, allocation, fairness and rotation modules are shared verbatim
@@ -125,7 +125,7 @@ function optionalInstant(value: string | null, field: string): Date | null {
 /**
  * Computes a full round. Pure: takes fetched rows, returns a decision.
  *
- * Being pure is what makes shadow mode trustworthy — the caller chooses whether
+ * Being pure is what makes shadow mode trustworthy, the caller chooses whether
  * to persist, and there is nothing here that could write regardless.
  */
 export function planRound(

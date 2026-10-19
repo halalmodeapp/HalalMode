@@ -7,7 +7,7 @@
  *
  * The caller proves itself against the vault rather than an environment
  * variable, the same way round generation does. That keeps the secret in one
- * place — rotating it is a single update with nothing to redeploy — and means
+ * place, rotating it is a single update with nothing to redeploy, and means
  * deploying this function needs no secrets configured by hand.
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';

@@ -81,3 +81,6 @@ verify_jwt = false
 
 [functions.moderate]
 verify_jwt = false
+
+[functions.verify-waitlist]
+verify_jwt = false

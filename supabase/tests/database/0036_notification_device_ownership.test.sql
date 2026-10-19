@@ -1,7 +1,7 @@
 begin;
 
 set local search_path = public, extensions;
-select plan(5);
+select plan(6);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-000000000361', 'device-first@example.test'),
@@ -38,6 +38,15 @@ select is(
   'the device belongs to the member who most recently enabled it'
 );
 select is((select get_my_notification_consent()), true, 'the current owner has notification consent');
+select register_my_notification_device(repeat('a', 32), 'android', 'en');
+select register_my_notification_device(repeat('b', 32), 'android', 'en');
+select register_my_notification_device(repeat('c', 32), 'android', 'en');
+select register_my_notification_device(repeat('d', 32), 'android', 'en');
+select throws_ok(
+  $$ select register_my_notification_device(repeat('e', 32), 'android', 'en') $$,
+  'P0001', 'Maximum number of notification devices reached',
+  'a member cannot register an unbounded number of notification devices'
+);
 
 select * from finish();
 rollback;
