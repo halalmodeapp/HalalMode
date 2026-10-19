@@ -145,7 +145,7 @@ export default function AuthScreen() {
               style={[styles.header, compact && styles.headerCompact, { paddingTop: insets.top + (compact ? 8 : 18) }]}
             >
               <View style={[styles.brand, LTR_LAYOUT]} {...LTR_WEB_PROPS}>
-                <ShiningWordmark width={compact ? 132 : 176} fill={C.surface} />
+                <ShiningWordmark width={compact ? 177 : 212} fill={C.surface} />
                 <Text
                   accessibilityElementsHidden
                   importantForAccessibility="no-hide-descendants"
@@ -154,53 +154,7 @@ export default function AuthScreen() {
                   ™
                 </Text>
               </View>
-              <View style={styles.headerActions}>
-                <Pressable
-                  accessibilityRole="link"
-                  accessibilityLabel={t('marketing.howItWorks')}
-                  onPress={() => void Linking.openURL(howItWorksUrl(language))}
-                  style={({ pressed }) => [styles.howButton, pressed && styles.howButtonPressed]}
-                >
-                  <Text numberOfLines={1} style={styles.howButtonLabel}>{t('marketing.howItWorks')}</Text>
-                </Pressable>
-                <Pressable
-                  testID={testIds.auth.language}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('auth.languageLabel')}
-                  accessibilityState={{ expanded: languageOpen }}
-                  onPress={() => setLanguageOpen((open) => !open)}
-                  style={[styles.globe, languageOpen && styles.globeOpen]}
-                >
-                  <Svg width={19} height={19} viewBox="0 0 24 24" fill="none" stroke={languageOpen ? C.gold : C.soft} strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
-                    <Circle cx={12} cy={12} r={9} />
-                    <Path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z" />
-                  </Svg>
-                </Pressable>
-              </View>
             </View>
-            {languageOpen ? (
-              <View style={[styles.languageMenu, { top: insets.top + 66 }, isRTL ? styles.menuStart : styles.menuEnd]}>
-                {supportedLocales.map((code) => (
-                  <Pressable
-                    key={code}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: code === language }}
-                    onPress={() => {
-                      setLanguage(code);
-                      setLanguageOpen(false);
-                    }}
-                    style={[
-                      styles.languageOption,
-                      ['en', 'ar', 'ur', 'fa'].includes(code) ? styles.languageWide : styles.languageHalf,
-                      code === language && styles.languageOptionOn,
-                    ]}
-                  >
-                    <Text style={styles.languageName} numberOfLines={1}>{localeName(code)}</Text>
-                    {code === language ? <Text style={styles.tick}>✓</Text> : null}
-                  </Pressable>
-                ))}
-              </View>
-            ) : null}
           </View>
 
           <View
@@ -220,7 +174,7 @@ export default function AuthScreen() {
             <Text style={[styles.h1, compact && styles.h1Compact, dense && styles.h1Dense, { fontFamily: body }, isRTL && styles.noTracking, align]}>
               {t('auth.heroTitle')}
             </Text>
-            <Text style={[styles.lede, compact && styles.ledeCompact, dense && styles.ledeDense, { fontFamily: isRTL ? appFont.arabic : SANS }, align]}>
+            <Text style={[styles.lede, compact && styles.ledeCompact, dense && styles.ledeDense, { fontFamily: body }, align]}>
               {t('auth.heroIntro')}
             </Text>
 
@@ -270,6 +224,64 @@ export default function AuthScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      {/* As on halalmo.de: How it works and the language globe sit at the
+          page's top right in every language, with the menu opening below. */}
+      <View
+        pointerEvents="box-none"
+        style={[styles.actionsBar, LTR_LAYOUT, { top: insets.top + (compact ? 8 : 18), right: compact ? 14 : 24 }]}
+        {...LTR_WEB_PROPS}
+      >
+        <View style={styles.headerActions}>
+          {/* Phones keep only the globe up here, as on halalmo.de, so the logo has room. */}
+          {width >= 600 ? (
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={t('marketing.howItWorks')}
+            onPress={() => void Linking.openURL(howItWorksUrl(language))}
+            style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [styles.howButton, (pressed || hovered) && styles.howButtonPressed]}
+          >
+            <Text numberOfLines={1} style={styles.howButtonLabel}>
+              {t('marketing.howItWorks')} <Text style={styles.howArrow}>{isRTL ? '←' : '→'}</Text>
+            </Text>
+          </Pressable>
+          ) : null}
+          <Pressable
+            testID={testIds.auth.language}
+            accessibilityRole="button"
+            accessibilityLabel={t('auth.languageLabel')}
+            accessibilityState={{ expanded: languageOpen }}
+            onPress={() => setLanguageOpen((open) => !open)}
+            style={[styles.globe, languageOpen && styles.globeOpen]}
+          >
+            <Svg width={19} height={19} viewBox="0 0 24 24" fill="none" stroke={languageOpen ? C.gold : C.soft} strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+              <Circle cx={12} cy={12} r={9} />
+              <Path d="M3 12h18M12 3c-2.5 2.4-4 5.5-4 9s1.5 6.6 4 9M12 3c2.5 2.4 4 5.5 4 9s-1.5 6.6-4 9" />
+            </Svg>
+          </Pressable>
+        </View>
+        {languageOpen ? (
+          <View style={styles.languageMenu}>
+            {supportedLocales.map((code) => (
+              <Pressable
+                key={code}
+                accessibilityRole="button"
+                accessibilityState={{ selected: code === language }}
+                onPress={() => {
+                  setLanguage(code);
+                  setLanguageOpen(false);
+                }}
+                style={[
+                  styles.languageOption,
+                  code === language && styles.languageOptionOn,
+                ]}
+              >
+                <Text style={styles.languageName} numberOfLines={1}>{localeName(code)}</Text>
+                {code === language ? <Text style={styles.tick}>✓</Text> : null}
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
+      </View>
       </View>
     </>
   );
@@ -375,33 +387,34 @@ const styles = StyleSheet.create({
   },
   header: {
     position: 'relative',
+    minHeight: 38,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 24,
   },
+  actionsBar: { position: 'absolute', zIndex: 5, alignItems: 'flex-end' },
   headerCompact: { paddingHorizontal: 14 },
   // The wordmark is English in every language, so its trademark mark always sits to its right.
   brand: { flexDirection: 'row', alignItems: 'flex-start' },
   trademark: { marginLeft: 3, marginTop: -2, color: C.surface, fontFamily: appFont.bodySemi, fontSize: 10, lineHeight: 12 },
   trademarkCompact: { fontSize: 8, lineHeight: 10 },
-  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 7, flexShrink: 1 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  // The waitlist page's How it works: Halal Pink, white, small caps, with an arrow.
   howButton: {
-    minHeight: 36,
-    maxWidth: 138,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: C.line,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
     borderRadius: 999,
-    backgroundColor: 'rgba(252,252,251,0.88)',
+    backgroundColor: '#FC3C6C', // Halal Pink
     alignItems: 'center',
     justifyContent: 'center',
   },
-  howButtonPressed: { backgroundColor: '#F5F1E9', borderColor: 'rgba(184,145,79,0.42)' },
-  howButtonLabel: { color: C.soft, fontFamily: appFont.bodySemi, fontSize: 12, lineHeight: 16 },
+  howButtonPressed: { backgroundColor: '#C2124A' }, // Halal Pink, deep
+  howButtonLabel: { color: '#FFFFFF', fontFamily: appFont.bodySemi, fontSize: 12, lineHeight: 16, letterSpacing: 1.7, textTransform: 'uppercase' },
+  howArrow: { letterSpacing: 0 },
   globe: {
-    width: 44,
-    height: 44,
+    width: 38,
+    height: 38,
     borderRadius: 19,
     borderWidth: 1,
     borderColor: 'rgba(184,145,79,0.24)',
@@ -411,10 +424,10 @@ const styles = StyleSheet.create({
   },
   globeOpen: { borderColor: 'rgba(184,145,79,0.55)' },
   languageMenu: {
-    position: 'absolute',
-    width: 300,
-    maxWidth: '86%',
-    padding: 8,
+    marginTop: 10,
+    width: 360,
+    maxWidth: '100%',
+    padding: 10,
     flexDirection: 'row',
     flexWrap: 'wrap',
     rowGap: 3,
@@ -428,10 +441,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 18 },
     elevation: 8,
   },
-  // Opens under the globe, which sits on the left in Arabic.
-  menuEnd: { right: 24 },
-  menuStart: { left: 24 },
   languageOption: {
+    width: '50%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -440,9 +451,8 @@ const styles = StyleSheet.create({
     borderRadius: 11,
   },
   languageOptionOn: { backgroundColor: '#F5F1E9' },
-  languageWide: { width: '100%' },
-  languageHalf: { width: '50%' },
-  languageName: { flexShrink: 1, fontFamily: SANS, fontSize: 14, fontWeight: '500', color: C.soft },
+  // Two to a row, every name aligned left, as on halalmo.de.
+  languageName: { flexShrink: 1, textAlign: 'left', fontFamily: SANS, fontSize: 14, fontWeight: '500', color: C.soft },
   tick: { color: C.gold, fontSize: 14 },
 
   sheet: {

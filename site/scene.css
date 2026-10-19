@@ -1,0 +1,53 @@
+/* The couple scene, shared by halalmo.de (site/index.html) and the app's
+   sign-up screen (src/components/auth/CoupleCoverScene.web.tsx). The page
+   positions and sizes #cover-couple; everything inside it is styled here. */
+#cover-couple .scene-world{position:absolute;--cover:calc(max(100cqw / 1536, 100cqh / 1024) * 1.035);--fit:min(100cqw / 714, 100cqh / 736);--least:max(100cqw / 1584, 100cqh / 1072);--u:max(var(--least), min(var(--cover), var(--fit)));--ax:calc(14 * var(--u));--ay:calc(8 * var(--u));--as:calc(20 * var(--u));--zoom:.9;width:calc(1536 * var(--u));height:calc(1024 * var(--u));left:clamp(calc(100cqw - 1560 * var(--u)), calc(50cqw - 812 * var(--u)), calc(24 * var(--u)));top:clamp(calc(100cqh - 1048 * var(--u)), calc(50cqh - 574 * var(--u)), calc(24 * var(--u)))}
+#cover-couple .scene-layer,#cover-couple .scene-light{position:absolute;left:calc(var(--x) * var(--u));top:calc(var(--y) * var(--u));width:calc(var(--w) * var(--u));height:calc(var(--h) * var(--u));transform:translate3d(calc(var(--px) * var(--d) * var(--ax)),calc(var(--py) * var(--d) * var(--ay) - var(--sy) * var(--d) * var(--as)),0) scale(calc(1 + var(--sy) * var(--zoom) * (1 + var(--d) * .55)));transform-origin:calc((800 - var(--x)) * var(--u)) calc((480 - var(--y)) * var(--u));will-change:transform}
+#cover-couple .scene-layer>img{position:absolute;inset:0;display:block;width:100%;height:100%;user-select:none;pointer-events:none}
+#cover-couple .scene-heart{position:absolute;left:calc(var(--x) * var(--u));top:calc(var(--y) * var(--u));width:calc(var(--w) * var(--u));height:calc(var(--h) * var(--u));cursor:grab;pointer-events:auto;touch-action:none}
+#cover-couple .scene-heart::before{content:'';position:absolute;inset:-14px}
+#cover-couple .scene-heart[data-dragging="true"]{cursor:grabbing}
+#cover-couple .scene-heart-offset{position:absolute;inset:0;transition:transform 520ms cubic-bezier(.22,1,.36,1)}
+#cover-couple .scene-heart-float{position:absolute;inset:0;animation:scene-heart-float 5.2s ease-in-out infinite alternate;will-change:transform}
+@keyframes scene-heart-float{0%{transform:translate3d(calc(-2 * var(--u)),calc(4 * var(--u)),0) rotate(-5deg) scale(.97)}50%{transform:translate3d(calc(2.5 * var(--u)),calc(-2 * var(--u)),0) rotate(2deg) scale(1.03)}100%{transform:translate3d(calc(-.5 * var(--u)),calc(-7 * var(--u)),0) rotate(4.5deg) scale(1)}}
+html[data-page-hidden="true"] #cover-couple .scene-heart-float{animation-play-state:paused}
+#cover-couple .scene-heart-offset img{position:absolute;inset:0;display:block;width:100%;height:100%;user-select:none;pointer-events:none;-webkit-user-drag:none}
+/* Speech bubbles: anchored just above each head, following the scroll zoom of
+   the couple's plane; each pops in, floats gently, then fades. */
+#cover-couple .scene-bubble{position:absolute;left:calc(var(--bx) * var(--u));top:calc(var(--by) * var(--u));width:0;height:0;pointer-events:none;
+  transform:translate3d(calc((var(--bx) - 800) * var(--u) * var(--sy) * var(--zoom)),calc((var(--by) - 480) * var(--u) * var(--sy) * var(--zoom)),0)}
+#cover-couple .scene-bubble span{position:absolute;left:0;bottom:calc(10 * var(--u));display:flex;align-items:center;gap:.35em;white-space:nowrap;padding:.42em .7em .44em;border-radius:.62em;
+  background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:#16140F;font:500 clamp(11px,calc(15 * var(--u)),16px)/1.3 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:-.003em;
+  box-shadow:0 4px 14px rgba(10,10,10,.12),0 0 0 .5px rgba(10,10,10,.06);opacity:0;transform:translateX(var(--tx,-50%)) scale(.55);transform-origin:50% 100%;
+  transition:opacity .35s ease,transform .5s cubic-bezier(.34,1.56,.64,1)}
+#cover-couple .scene-bubble span::after{content:'';position:absolute;left:50%;margin-left:-.3em;bottom:-.26em;width:.6em;height:.6em;background:rgba(255,255,255,.94);border-radius:0 0 .12em 0;transform:rotate(45deg);box-shadow:2px 2px 3px rgba(10,10,10,.04)}
+#cover-couple .scene-bubble b{font-weight:500}
+#cover-couple .scene-bubble-emoji{font-style:normal;font-size:1.05em;line-height:1}
+#cover-couple .scene-bubble[data-show] span{opacity:1;transform:translateX(var(--tx,-50%)) scale(1);animation:scene-bubble-float 3.2s ease-in-out .5s infinite alternate}
+#cover-couple .scene-bubble[data-hide] span{opacity:0;transform:translateX(var(--tx,-50%)) scale(.92);transition:opacity .6s ease,transform .6s ease;animation:none}
+@keyframes scene-bubble-float{from{transform:translateX(var(--tx,-50%)) translateY(0)}to{transform:translateX(var(--tx,-50%)) translateY(calc(-3 * var(--u)))}}
+@media(prefers-reduced-motion:reduce){#cover-couple .scene-bubble span{transform:translateX(var(--tx,-50%))!important;animation:none!important;transition:opacity .4s ease}}
+/* Warm light: a soft glow on the sun and a few broad shafts falling toward
+   the stairs, screened over the sky, city and walls only. */
+#cover-couple .scene-light{--x:-48;--y:-48;--w:1632;--h:1120;pointer-events:none;overflow:hidden}
+#cover-couple .scene-glow,#cover-couple .scene-rays{position:absolute;mix-blend-mode:screen;pointer-events:none}
+/* God rays: soft shafts fanning down-left from the sun. Each set is a
+   quarter-size layer anchored at the sun (so it stays small on the GPU),
+   turning a degree or two and breathing slowly; only transform and
+   opacity animate, which the compositor handles without repainting. */
+#cover-couple .scene-rays{left:calc((var(--sunx) + 48 - 1400) * var(--u));top:calc((var(--suny) + 48) * var(--u));width:calc(1400 * var(--u));height:calc(1150 * var(--u));transform-origin:100% 0;will-change:transform,opacity;-webkit-mask:radial-gradient(circle at 100% 0,transparent 4.2%,rgba(0,0,0,.35) 6.5%,#000 11%,rgba(0,0,0,.6) 34%,rgba(0,0,0,.22) 62%,transparent 92%);mask:radial-gradient(circle at 100% 0,transparent 4.2%,rgba(0,0,0,.35) 6.5%,#000 11%,rgba(0,0,0,.6) 34%,rgba(0,0,0,.22) 62%,transparent 92%)}
+#cover-couple .scene-rays-a{background:conic-gradient(from 180deg at 100% 0,rgba(255,246,222,0) 0deg,rgba(255,246,222,0) 5.4deg,rgba(255,246,222,0.40) 7.2deg,rgba(255,246,222,0.80) 9.0deg,rgba(255,246,222,0.40) 10.8deg,rgba(255,246,222,0) 12.6deg,rgba(255,246,222,0) 18.6deg,rgba(255,246,222,0.28) 19.8deg,rgba(255,246,222,0.55) 21.0deg,rgba(255,246,222,0.28) 22.2deg,rgba(255,246,222,0) 23.4deg,rgba(255,246,222,0) 28.6deg,rgba(255,246,222,0.38) 30.8deg,rgba(255,246,222,0.75) 33.0deg,rgba(255,246,222,0.38) 35.2deg,rgba(255,246,222,0) 37.4deg,rgba(255,246,222,0) 44.2deg,rgba(255,246,222,0.30) 45.6deg,rgba(255,246,222,0.60) 47.0deg,rgba(255,246,222,0.30) 48.4deg,rgba(255,246,222,0) 49.8deg,rgba(255,246,222,0) 54.2deg,rgba(255,246,222,0.40) 56.1deg,rgba(255,246,222,0.80) 58.0deg,rgba(255,246,222,0.40) 59.9deg,rgba(255,246,222,0) 61.8deg,rgba(255,246,222,0) 68.6deg,rgba(255,246,222,0.25) 69.8deg,rgba(255,246,222,0.50) 71.0deg,rgba(255,246,222,0.25) 72.2deg,rgba(255,246,222,0) 73.4deg,rgba(255,246,222,0) 78.8deg,rgba(255,246,222,0.28) 80.4deg,rgba(255,246,222,0.55) 82.0deg,rgba(255,246,222,0.28) 83.6deg,rgba(255,246,222,0) 85.2deg,rgba(255,246,222,0) 360deg);animation:scene-rays-a 37s ease-in-out infinite alternate,scene-rays-shimmer-a 7.3s ease-in-out infinite}
+#cover-couple .scene-rays-b{background:conic-gradient(from 180deg at 100% 0,rgba(255,236,198,0) 0deg,rgba(255,236,198,0) 11.8deg,rgba(255,236,198,0.30) 12.9deg,rgba(255,236,198,0.60) 14.0deg,rgba(255,236,198,0.30) 15.1deg,rgba(255,236,198,0) 16.2deg,rgba(255,236,198,0) 24.0deg,rgba(255,236,198,0.33) 25.5deg,rgba(255,236,198,0.65) 27.0deg,rgba(255,236,198,0.33) 28.5deg,rgba(255,236,198,0) 30.0deg,rgba(255,236,198,0) 38.0deg,rgba(255,236,198,0.25) 39.0deg,rgba(255,236,198,0.50) 40.0deg,rgba(255,236,198,0.25) 41.0deg,rgba(255,236,198,0) 42.0deg,rgba(255,236,198,0) 49.2deg,rgba(255,236,198,0.33) 50.6deg,rgba(255,236,198,0.65) 52.0deg,rgba(255,236,198,0.33) 53.4deg,rgba(255,236,198,0) 54.8deg,rgba(255,236,198,0) 63.1deg,rgba(255,236,198,0.23) 64.0deg,rgba(255,236,198,0.45) 65.0deg,rgba(255,236,198,0.23) 66.0deg,rgba(255,236,198,0) 66.9deg,rgba(255,236,198,0) 74.4deg,rgba(255,236,198,0.25) 75.7deg,rgba(255,236,198,0.50) 77.0deg,rgba(255,236,198,0.25) 78.3deg,rgba(255,236,198,0) 79.6deg,rgba(255,236,198,0) 360deg);animation:scene-rays-b 29s ease-in-out infinite alternate,scene-rays-shimmer-b 5.9s ease-in-out -2.4s infinite}
+#cover-couple .scene-glow{border-radius:50%;left:calc((var(--sunx) + 48 - 260) * var(--u));top:calc((var(--suny) + 48 - 260) * var(--u));width:calc(520 * var(--u));height:calc(520 * var(--u));background:radial-gradient(closest-side,rgba(255,247,222,.6),rgba(255,238,196,.28) 38%,rgba(255,226,160,.09) 66%,rgba(255,226,160,0))}
+#cover-couple .scene-motes{position:absolute;inset:0}
+/* Dust motes (positions, sizes and drift from the build): they show only
+   while crossing the light, then fade, like dust in a sunbeam. */
+#cover-couple .scene-motes i{position:absolute;left:calc(var(--mx) * var(--u));top:calc(var(--my) * var(--u));width:calc(var(--ms) * var(--u));height:calc(var(--ms) * var(--u));border-radius:50%;background:radial-gradient(closest-side,rgba(255,252,240,1),rgba(255,242,210,.45) 55%,rgba(255,240,200,0));opacity:0;will-change:transform,opacity;animation-name:scene-mote;animation-timing-function:ease-in-out;animation-iteration-count:infinite}
+@keyframes scene-rays-a{from{transform:rotate(-1.6deg)}to{transform:rotate(1.4deg)}}
+@keyframes scene-rays-b{from{transform:rotate(1.3deg)}to{transform:rotate(-1.5deg)}}
+@keyframes scene-rays-shimmer-a{0%{opacity:.4}18%{opacity:.52}31%{opacity:.42}52%{opacity:.6}67%{opacity:.45}84%{opacity:.55}100%{opacity:.4}}
+@keyframes scene-rays-shimmer-b{0%{opacity:.28}23%{opacity:.4}39%{opacity:.3}58%{opacity:.45}76%{opacity:.32}91%{opacity:.4}100%{opacity:.28}}
+@keyframes scene-mote{0%{opacity:0;transform:translate3d(0,0,0)}22%{opacity:var(--mo)}50%{opacity:calc(var(--mo) * .55)}68%{opacity:var(--mo)}100%{opacity:0;transform:translate3d(calc(var(--mdx) * var(--u)),calc(var(--mdy) * var(--u)),0)}}
+html[data-scene-lite] #cover-couple .scene-motes{display:none}
+html[data-scene-lite] #cover-couple .scene-rays,html[data-page-hidden="true"] #cover-couple .scene-rays{animation-play-state:paused}
+html[data-page-hidden="true"] #cover-couple .scene-motes i{animation-play-state:paused}

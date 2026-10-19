@@ -22,7 +22,10 @@ export type TextDirection = 'ltr' | 'rtl';
  * complete catalog and metadata here; member-facing screens then inherit its
  * direction, BCP-47 tag, and fallback without scattered language checks.
  *
- * The same sixteen languages, in the same order, as halalmo.de. Lists such as
+ * The same sixteen languages, in the same order, as halalmo.de. Pickers lay
+ * them out two to a row: English and Arabic, Persian and Urdu, Hindi and
+ * Bengali, Indonesian and Malay, then the rest, every name aligned to the left
+ * whatever its direction. Lists such as
  * professions and cities are translated in src/data/translations.
  *
  * Tags pin the Gregorian calendar where a language's default is another one,
@@ -31,12 +34,12 @@ export type TextDirection = 'ltr' | 'rtl';
 export const localeRegistry = {
   en: { tag: 'en', name: 'English', direction: 'ltr', catalog: en },
   ar: { tag: 'ar-SA-u-ca-gregory', name: 'العربية', direction: 'rtl', catalog: ar },
-  ur: { tag: 'ur', name: 'اردو', direction: 'rtl', catalog: ur },
   fa: { tag: 'fa-u-ca-gregory', name: 'فارسی', direction: 'rtl', catalog: fa },
+  ur: { tag: 'ur', name: 'اردو', direction: 'rtl', catalog: ur },
   hi: { tag: 'hi', name: 'हिन्दी', direction: 'ltr', catalog: hi },
+  bn: { tag: 'bn', name: 'বাংলা', direction: 'ltr', catalog: bn },
   id: { tag: 'id', name: 'Bahasa Indonesia', direction: 'ltr', catalog: id },
   ms: { tag: 'ms', name: 'Bahasa Melayu', direction: 'ltr', catalog: ms },
-  bn: { tag: 'bn', name: 'বাংলা', direction: 'ltr', catalog: bn },
   fr: { tag: 'fr', name: 'Français', direction: 'ltr', catalog: fr },
   tr: { tag: 'tr', name: 'Türkçe', direction: 'ltr', catalog: tr },
   ha: { tag: 'ha', name: 'Hausa', direction: 'ltr', catalog: ha },

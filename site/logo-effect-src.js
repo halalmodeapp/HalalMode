@@ -58,31 +58,31 @@ function mountLogo(link, image) {
     return;
   }
 
+  // Only the heart turns chrome (the mask is logo-heart.svg). With a mouse it
+  // stays chrome while the pointer is over the logo and fades back as soon as
+  // it leaves. A tap is one shot: chrome at once, back to normal about a
+  // second later with nothing more to do. Keyboard focus counts only when it
+  // came from the keyboard, so a tap's focus can no longer hold it on.
   let hovering = false;
-  let pressing = false;
   let focusing = false;
   let releaseTimer = 0;
   let stopTimer = 0;
   let touchClick = false;
   link.classList.add('is-ready');
 
-  let holdUntil = 0;
   function activate() {
     clearTimeout(releaseTimer);
     clearTimeout(stopTimer);
-    holdUntil = 0;
     link.classList.add('is-active');
     shader.setSpeed(1);
   }
-  // Hover leaves fade after 0.5s; a tap fades after about 1s without further action.
-  function release(delay = 500) {
-    if (hovering || pressing || focusing) return;
-    holdUntil = Math.max(holdUntil, performance.now() + delay);
+  function release(delay = 0) {
     clearTimeout(releaseTimer);
     releaseTimer = setTimeout(() => {
+      if (hovering || focusing) return;
       link.classList.remove('is-active');
       stopTimer = setTimeout(() => shader.setSpeed(0), 700);
-    }, Math.max(0, holdUntil - performance.now()));
+    }, delay);
   }
 
   link.addEventListener('pointerenter', event => {
@@ -90,30 +90,24 @@ function mountLogo(link, image) {
     hovering = true;
     activate();
   });
-  link.addEventListener('pointerleave', () => {
+  link.addEventListener('pointerleave', event => {
+    if (event.pointerType === 'touch') return;
     hovering = false;
     release();
   });
   link.addEventListener('pointerdown', event => {
-    pressing = true;
     touchClick = event.pointerType === 'touch';
+    if (!touchClick) return;
     activate();
-  });
-  const endPress = () => {
-    if (!pressing) return;
-    pressing = false;
     release(1000);
-  };
-  window.addEventListener('pointerup', endPress);
-  window.addEventListener('pointercancel', () => {
-    touchClick = false;
-    endPress();
   });
   link.addEventListener('focus', () => {
+    if (!link.matches(':focus-visible')) return;
     focusing = true;
     activate();
   });
   link.addEventListener('blur', () => {
+    if (!focusing) return;
     focusing = false;
     release();
   });

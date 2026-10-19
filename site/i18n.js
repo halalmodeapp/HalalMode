@@ -2,9 +2,9 @@
   'use strict';
 
   const names = {
-    en: 'English', ar: 'العربية', ur: 'اردو', fa: 'فارسی',
-    hi: 'हिन्दी', id: 'Bahasa Indonesia', ms: 'Bahasa Melayu',
-    bn: 'বাংলা', fr: 'Français', tr: 'Türkçe', ha: 'Hausa',
+    en: 'English', ar: 'العربية', fa: 'فارسی', ur: 'اردو',
+    hi: 'हिन्दी', bn: 'বাংলা', id: 'Bahasa Indonesia', ms: 'Bahasa Melayu',
+    fr: 'Français', tr: 'Türkçe', ha: 'Hausa',
     am: 'አማርኛ', so: 'Soomaali', es: 'Español', ru: 'Русский',
     'zh-Hans': '简体中文'
   };
@@ -657,9 +657,13 @@
       button.type = 'button';
       button.className = 'language-option';
       button.dataset.language = code;
-      button.lang = code;
-      button.dir = 'auto';
-      button.textContent = name;
+      // Two to a row and all aligned left; each name keeps its own direction.
+      button.dir = 'ltr';
+      const label = document.createElement('span');
+      label.lang = code;
+      label.dir = 'auto';
+      label.textContent = name;
+      button.append(label);
       button.addEventListener('click', () => { select(code); close(); trigger.focus(); });
       menu.append(button);
     }

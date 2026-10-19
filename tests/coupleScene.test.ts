@@ -3,6 +3,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import test from 'node:test';
 
 import { COUPLE_HEART_BOX, COUPLE_SCENE_LAYERS, COUPLE_WORLD } from '../src/components/auth/coupleSceneLayers';
+import { COUPLE_SCENE_MARKUP } from '../src/components/auth/coupleSceneMarkup';
 import {
   COUPLE_FOCUS,
   COUPLE_OVERSCAN,
@@ -91,13 +92,17 @@ test('layers are small WebP files that exist and match the landing page', () => 
   }
   // The figures and the heart ship at 2x so the deep scroll zoom stays crisp.
   assert.ok(total < 560 * 1024, `scene layers grew to ${Math.round(total / 1024)} KB`);
-  // The CSS camera must match the app's.
-  assert.ok(html.includes(`--cover:calc(max(100cqw / ${COUPLE_WORLD.width}, 100cqh / ${COUPLE_WORLD.height}) * ${COUPLE_OVERSCAN})`));
-  assert.ok(html.includes(`--fit:min(100cqw / ${COUPLE_SUBJECTS.right - COUPLE_SUBJECTS.left + 24}, 100cqh / ${COUPLE_SUBJECTS.bottom - COUPLE_SUBJECTS.top + 24})`));
-  assert.ok(html.includes(`calc(50cqw - ${COUPLE_FOCUS.x} * var(--u))`));
-  assert.ok(html.includes(`calc(50cqh - ${COUPLE_FOCUS.y} * var(--u))`));
-  assert.ok(html.includes(`--ax:calc(${COUPLE_PARALLAX.x} * var(--u))`));
-  assert.ok(html.includes(`--ay:calc(${COUPLE_PARALLAX.y} * var(--u))`));
+  // One scene: the sign-up screen draws the waitlist page's own markup...
+  for (const line of COUPLE_SCENE_MARKUP.split('\n')) assert.ok(html.includes(line), `sign-up scene differs: ${line.slice(0, 60)}`);
+  // ...styled by the shared scene.css, whose CSS camera must match the native app's.
+  const css = readFileSync('site/scene.css', 'utf8');
+  assert.ok(html.includes('/scene.css'));
+  assert.ok(css.includes(`--cover:calc(max(100cqw / ${COUPLE_WORLD.width}, 100cqh / ${COUPLE_WORLD.height}) * ${COUPLE_OVERSCAN})`));
+  assert.ok(css.includes(`--fit:min(100cqw / ${COUPLE_SUBJECTS.right - COUPLE_SUBJECTS.left + 24}, 100cqh / ${COUPLE_SUBJECTS.bottom - COUPLE_SUBJECTS.top + 24})`));
+  assert.ok(css.includes(`calc(50cqw - ${COUPLE_FOCUS.x} * var(--u))`));
+  assert.ok(css.includes(`calc(50cqh - ${COUPLE_FOCUS.y} * var(--u))`));
+  assert.ok(css.includes(`--ax:calc(${COUPLE_PARALLAX.x} * var(--u))`));
+  assert.ok(css.includes(`--ay:calc(${COUPLE_PARALLAX.y} * var(--u))`));
 });
 
 test('every painted layer outside the couple group moves at its own depth', () => {

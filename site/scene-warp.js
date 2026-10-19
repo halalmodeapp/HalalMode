@@ -14,10 +14,10 @@
  * (a bone's `rest` angle eases in with the breeze, so it never jumps).
  * Nothing runs with reduced motion, in the lite (save-data / low-memory) mode,
  * without WebGL, or while the page is hidden; the static images stay.
+ *
+ * halalmo.de starts it on its own cover below; the app's sign-up screen calls
+ * startSceneWarp() on the same scene markup.
  */
-const scene = document.getElementById('cover-couple');
-const root = document.documentElement;
-const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
 // World-pixel pins (the reference illustration's 1536x1024 frame).
 const RIGS = {
@@ -203,52 +203,75 @@ function prepare(layer, rig) {
   };
 }
 
-let prepared = [], rigs = [], frame = 0, began = 0;
 const EASE_IN = 1.6; // seconds for the breeze to grow from stillness
-const eligible = () => scene && !reduceMotion.matches && !('sceneLite' in root.dataset) && root.dataset.coverStyle === 'couple';
-function loop(now) {
-  frame = requestAnimationFrame(loop);
-  const t = now / 1000;
-  if (!began) began = t;
-  const k = Math.min(1, (t - began) / EASE_IN);
-  const strength = k * k * (3 - 2 * k);
-  for (const rig of rigs) rig.draw(t, strength);
+
+/** Starts the breeze on a scene element; returns a function that stops it. */
+export function startSceneWarp(scene, { eligible = () => true } = {}) {
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  let prepared = [], rigs = [], frame = 0, began = 0, disposed = false;
+  const allowed = () => !disposed && scene && !reduceMotion.matches && eligible();
+  function loop(now) {
+    frame = requestAnimationFrame(loop);
+    const t = now / 1000;
+    if (!began) began = t;
+    const k = Math.min(1, (t - began) / EASE_IN);
+    const strength = k * k * (3 - 2 * k);
+    for (const rig of rigs) rig.draw(t, strength);
+  }
+  function prepareAll() {
+    if (prepared.length || !allowed()) return;
+    for (const [key, rig] of Object.entries(RIGS)) {
+      const layer = scene.querySelector(`[data-layer="${key}"]`);
+      if (!layer || !layer.querySelector('img')) continue;
+      try { const ready = prepare(layer, rig); if (ready) prepared.push(ready); } catch { /* the static image stays */ }
+    }
+  }
+  function start() {
+    if (rigs.length || !allowed()) return;
+    performance.mark('scene-warp-start');
+    prepareAll();
+    rigs = prepared.filter((rig) => rig.attach());
+    performance.mark('scene-warp-ready');
+    performance.measure('scene-warp-init', 'scene-warp-start', 'scene-warp-ready');
+    began = 0;
+    if (rigs.length && !document.hidden) frame = requestAnimationFrame(loop);
+  }
+  function stop() {
+    cancelAnimationFrame(frame); frame = 0;
+    for (const rig of prepared) rig.destroy();
+    prepared = []; rigs = [];
+  }
+  const onVisibility = () => {
+    if (document.hidden) { cancelAnimationFrame(frame); frame = 0; }
+    else if (rigs.length && !frame) frame = requestAnimationFrame(loop);
+  };
+  const onMotion = () => (reduceMotion.matches ? stop() : start());
+  document.addEventListener('visibilitychange', onVisibility);
+  reduceMotion.addEventListener('change', onMotion);
+
+  // Start once every scene image has arrived and the browser has settled, so the
+  // GPU is not still busy uploading the freshly loaded scene.
+  // Measured: started straight after load, WebGL set-up waits ~600 ms behind that
+  // burst; 1.2 s later it takes well under 200 ms. The breeze eases in from rest,
+  // so the wait is invisible.
+  const images = [...scene.querySelectorAll('img')];
+  const whenIdle = (fn) => setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 400 }) : fn()), 1200);
+  Promise.all(images.map((img) => (img.complete ? null : new Promise((done) => { img.addEventListener('load', done, { once: true }); img.addEventListener('error', done, { once: true }); }))))
+    .then(() => (document.readyState === 'complete' ? whenIdle(start) : addEventListener('load', () => whenIdle(start), { once: true })));
+
+  return () => {
+    disposed = true;
+    stop();
+    document.removeEventListener('visibilitychange', onVisibility);
+    reduceMotion.removeEventListener('change', onMotion);
+  };
 }
-function prepareAll() {
-  if (prepared.length || !eligible()) return;
-  for (const [key, rig] of Object.entries(RIGS)) {
-    const layer = scene.querySelector(`[data-layer="${key}"]`);
-    if (!layer || !layer.querySelector('img')) continue;
-    try { const ready = prepare(layer, rig); if (ready) prepared.push(ready); } catch { /* the static image stays */ }
+
+// halalmo.de: the cover on the landing page.
+if (typeof document !== 'undefined') {
+  const cover = document.getElementById('cover-couple');
+  if (cover && !('app' in cover.dataset)) {
+    const root = document.documentElement;
+    startSceneWarp(cover, { eligible: () => !('sceneLite' in root.dataset) && root.dataset.coverStyle === 'couple' });
   }
 }
-function start() {
-  if (rigs.length || !eligible()) return;
-  performance.mark('scene-warp-start');
-  prepareAll();
-  rigs = prepared.filter((rig) => rig.attach());
-  performance.mark('scene-warp-ready');
-  performance.measure('scene-warp-init', 'scene-warp-start', 'scene-warp-ready');
-  began = 0;
-  if (rigs.length && !document.hidden) frame = requestAnimationFrame(loop);
-}
-function stop() {
-  cancelAnimationFrame(frame); frame = 0;
-  for (const rig of prepared) rig.destroy();
-  prepared = []; rigs = [];
-}
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { cancelAnimationFrame(frame); frame = 0; }
-  else if (rigs.length && !frame) frame = requestAnimationFrame(loop);
-});
-reduceMotion.addEventListener('change', () => (reduceMotion.matches ? stop() : start()));
-
-// Start once every scene image has arrived and the browser has settled, so the
-// GPU is not still busy uploading the freshly loaded scene.
-const images = scene ? [...scene.querySelectorAll('img')] : [];
-// Measured: started straight after load, WebGL set-up waits ~600 ms behind that
-// burst; 1.2 s later it takes well under 200 ms. The breeze eases in from rest,
-// so the wait is invisible.
-const whenIdle = (fn) => setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 400 }) : fn()), 1200);
-Promise.all(images.map((img) => (img.complete ? null : new Promise((done) => { img.addEventListener('load', done, { once: true }); img.addEventListener('error', done, { once: true }); }))))
-  .then(() => (window.addEventListener ? (document.readyState === 'complete' ? whenIdle(start) : addEventListener('load', () => whenIdle(start), { once: true })) : start()));

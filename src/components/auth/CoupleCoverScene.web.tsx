@@ -1,10 +1,10 @@
 import { Asset } from 'expo-asset';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { CSSProperties } from 'react';
 
+import '../../../site/scene.css';
 import { COUPLE_SCENE_ASSETS } from './coupleLayerAssets';
-import { COUPLE_SCENE_LAYERS, COUPLE_SUN, COUPLE_WORLD, type CoupleSceneLayer } from './coupleSceneLayers';
-import { COUPLE_PARALLAX, coupleCameraCss } from './coupleSceneLayout';
+import { COUPLE_SCENE_LAYERS } from './coupleSceneLayers';
+import { COUPLE_SCENE_MARKUP } from './coupleSceneMarkup';
 import { rubberBandOffset } from './coverMotion';
 
 type CoupleCoverSceneProps = {
@@ -13,42 +13,24 @@ type CoupleCoverSceneProps = {
   active: boolean;
 };
 
-const MOTES = [[880, 330, 0, 19], [1010, 290, -4, 23], [1190, 360, -9, 19], [940, 210, -13, 26], [1260, 250, -6, 21], [1080, 400, -16, 24], [800, 250, -11, 28]] as const;
-
-// Same light and motes as the landing page (site/index.html), scoped to this scene.
-const SCENE_CSS = `
-.hm-couple-rays{position:absolute;border-radius:50%;mix-blend-mode:screen;pointer-events:none;opacity:.5;
-background:conic-gradient(from 180deg,rgba(255,244,214,0) 0deg,rgba(255,244,214,.34) 9deg,rgba(255,244,214,0) 17deg,rgba(255,244,214,0) 26deg,rgba(255,244,214,.26) 31deg,rgba(255,244,214,0) 37deg,rgba(255,244,214,0) 49deg,rgba(255,244,214,.38) 58deg,rgba(255,244,214,0) 69deg,rgba(255,244,214,0) 80deg,rgba(255,244,214,.22) 85deg,rgba(255,244,214,0) 92deg,rgba(255,244,214,0) 360deg);
--webkit-mask:radial-gradient(closest-side,#000 6%,rgba(0,0,0,.5) 42%,transparent 92%);mask:radial-gradient(closest-side,#000 6%,rgba(0,0,0,.5) 42%,transparent 92%);
-animation:hm-couple-rays 48s ease-in-out infinite alternate}
-.hm-couple-glow{position:absolute;border-radius:50%;mix-blend-mode:screen;pointer-events:none;
-background:radial-gradient(closest-side,rgba(255,247,222,.62),rgba(255,238,196,.3) 38%,rgba(255,226,160,.1) 66%,rgba(255,226,160,0))}
-.hm-couple-mote{position:absolute;border-radius:50%;opacity:0;background:radial-gradient(closest-side,rgba(255,250,232,.95),rgba(255,240,200,0));animation:hm-couple-mote 19s linear infinite}
-.hm-couple-scene[data-still] .hm-couple-rays{animation:none}
-.hm-couple-scene[data-still] .hm-couple-mote{display:none}
-@keyframes hm-couple-rays{from{transform:rotate(-1.4deg)}to{transform:rotate(1.4deg)}}
-@keyframes hm-couple-mote{0%{opacity:0;transform:translate3d(0,0,0)}18%{opacity:.75}70%{opacity:.5}100%{opacity:0;transform:translate3d(var(--mx),var(--my),0)}}
-@media(prefers-reduced-motion:reduce){.hm-couple-rays{animation:none}.hm-couple-mote{display:none}}
-`;
-
-const CAMERA = coupleCameraCss();
-
 /**
- * Web companion to the native cover. The shared world camera is expressed in
- * CSS container units, so the server-rendered page is framed correctly before
- * hydration and resizes need no React work; hover or device tilt only writes
- * --px/--py on the scene, and each layer turns that into its own offset.
+ * The waitlist page's cover, adapted to the sign-up screen. There is one
+ * scene: its markup (generated into coupleSceneMarkup.ts by
+ * scripts/build-couple-scene.py), its styles (site/scene.css: camera, light,
+ * dust motes, heart float) and its breeze (site/scene-warp.js) all come from
+ * halalmo.de. This component only supplies the bundled image URLs, sizes the
+ * scene to its frame, and wires the same hover / tilt parallax and heart drag.
+ * The speech bubbles stay on the waitlist page.
  * `width`/`height` are accepted for parity with the native scene.
  */
 export function CoupleCoverScene({ active }: CoupleCoverSceneProps) {
   const sceneRef = useRef<HTMLDivElement>(null);
-  const heartHandleRef = useRef<HTMLDivElement>(null);
-  const heartOffsetRef = useRef<HTMLDivElement>(null);
   const [pageVisible, setPageVisible] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
-  const uris = useMemo(() => Object.fromEntries(
-    COUPLE_SCENE_LAYERS.map((layer) => [layer.key, Asset.fromModule(COUPLE_SCENE_ASSETS[layer.key]).uri]),
-  ) as Record<CoupleSceneLayer['key'], string>, []);
+  const markup = useMemo(() => COUPLE_SCENE_LAYERS.reduce(
+    (html, layer) => html.split(`/img/scene/${layer.file}`).join(Asset.fromModule(COUPLE_SCENE_ASSETS[layer.key]).uri),
+    COUPLE_SCENE_MARKUP,
+  ), []);
   const motionActive = active && pageVisible && !reducedMotion;
   const lite = useMemo(() => {
     if (typeof navigator === 'undefined') return false;
@@ -56,33 +38,47 @@ export function CoupleCoverScene({ active }: CoupleCoverSceneProps) {
     return Boolean(nav.connection?.saveData) || (nav.hardwareConcurrency || 8) <= 2 || (nav.deviceMemory || 8) <= 2;
   }, []);
 
+  // The shared styles read these flags from the document, as on the site.
   useEffect(() => {
-    if (document.getElementById('hm-couple-scene-css')) return;
-    const style = document.createElement('style');
-    style.id = 'hm-couple-scene-css';
-    style.textContent = SCENE_CSS;
-    document.head.appendChild(style);
-  }, []);
-
-  useEffect(() => {
+    const root = document.documentElement;
     const motionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
     const sync = () => {
       setPageVisible(!document.hidden);
       setReducedMotion(motionQuery?.matches ?? false);
+      root.dataset.pageHidden = String(document.hidden);
     };
     sync();
+    if (lite) root.dataset.sceneLite = '';
     document.addEventListener('visibilitychange', sync);
     motionQuery?.addEventListener('change', sync);
     return () => {
       document.removeEventListener('visibilitychange', sync);
       motionQuery?.removeEventListener('change', sync);
+      delete root.dataset.pageHidden;
+      delete root.dataset.sceneLite;
     };
-  }, []);
+  }, [lite]);
 
+  // The breeze: the waitlist page's puppet warp, started on this scene.
   useEffect(() => {
     const host = sceneRef.current;
-    const handle = heartHandleRef.current;
-    const offset = heartOffsetRef.current;
+    if (!host || !motionActive || lite) return;
+    let stop: (() => void) | null = null;
+    let cancelled = false;
+    void import('../../../site/scene-warp.js').then(({ startSceneWarp }) => {
+      if (!cancelled) stop = startSceneWarp(host);
+    }).catch(() => undefined);
+    return () => {
+      cancelled = true;
+      stop?.();
+    };
+  }, [motionActive, lite]);
+
+  // Drag the heart; it springs back when let go.
+  useEffect(() => {
+    const host = sceneRef.current;
+    const handle = host?.querySelector<HTMLElement>('[data-heart-drag]');
+    const offset = handle?.querySelector<HTMLElement>('.scene-heart-offset');
     if (!host || !handle || !offset || !active) return;
 
     let pointerId: number | null = null;
@@ -115,11 +111,11 @@ export function CoupleCoverScene({ active }: CoupleCoverSceneProps) {
       if (event.pointerId !== pointerId) return;
       pointerId = null;
       delete handle.dataset.dragging;
-      offset.style.transition = 'transform 520ms cubic-bezier(.22,1,.36,1)';
+      offset.style.transition = '';
       offset.style.transform = moved ? 'translate3d(0,0,0)' : 'scale(.97)';
       if (!moved) {
         window.setTimeout(() => {
-          if (handle.dataset.dragging !== 'true') offset.style.transform = 'scale(1)';
+          if (handle.dataset.dragging !== 'true') offset.style.transform = '';
         }, 110);
       }
     };
@@ -136,6 +132,7 @@ export function CoupleCoverScene({ active }: CoupleCoverSceneProps) {
     };
   }, [active]);
 
+  // Hover or device tilt only writes --px/--py; each layer moves by its depth.
   useEffect(() => {
     const host = sceneRef.current;
     if (!host) return;
@@ -209,70 +206,21 @@ export function CoupleCoverScene({ active }: CoupleCoverSceneProps) {
     };
   }, [motionActive]);
 
-  const box = (x: number, y: number, w: number, h: number): CSSProperties => ({
-    position: 'absolute', left: u(x), top: u(y), width: u(w), height: u(h),
-  });
-  const depthStyle = (depth: number): CSSProperties => ({
-    transform: `translate3d(calc(var(--px) * ${depth * COUPLE_PARALLAX.x} * var(--u)),calc(var(--py) * ${depth * COUPLE_PARALLAX.y} * var(--u)),0)`,
-    willChange: 'transform',
-  });
-  const backdrop = COUPLE_SCENE_LAYERS[0]!;
-  const sunX = COUPLE_SUN.x - backdrop.x;
-  const sunY = COUPLE_SUN.y - backdrop.y;
-
   return (
     <div
       ref={sceneRef}
-      className="hm-couple-scene"
+      id="cover-couple"
+      data-app=""
       aria-hidden="true"
-      data-still={!motionActive || lite ? '' : undefined}
-      style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: '#2F6BD8', pointerEvents: 'none', touchAction: 'pan-y', contain: 'strict', containerType: 'size', ['--px' as string]: 0, ['--py' as string]: 0 }}
+      style={{
+        position: 'absolute', inset: 0, overflow: 'hidden', isolation: 'isolate', background: '#2F6BD8',
+        pointerEvents: 'none', touchAction: 'pan-y', contain: 'strict', containerType: 'size',
+        ['--px' as string]: 0, ['--py' as string]: 0, ['--sy' as string]: 0,
+      }}
     >
-      <div style={{ position: 'absolute', ['--u' as string]: CAMERA.unit, left: CAMERA.left, top: CAMERA.top, width: u(COUPLE_WORLD.width), height: u(COUPLE_WORLD.height) }}>
-        {COUPLE_SCENE_LAYERS.map((layer) => (
-          <div key={layer.key} style={{ ...box(layer.x, layer.y, layer.width, layer.height), ...depthStyle(layer.depth) }}>
-            {layer.key === 'heart' ? (
-              <div ref={heartHandleRef} style={{ position: 'absolute', inset: 0, pointerEvents: 'auto', cursor: 'grab', touchAction: 'none' }}>
-                <div ref={heartOffsetRef} style={{ position: 'absolute', inset: 0, transition: 'transform 520ms cubic-bezier(.22,1,.36,1)' }}>
-                  <img src={uris.heart} alt="" draggable={false} decoding="async" style={imageStyle} />
-                </div>
-              </div>
-            ) : (
-              <img src={uris[layer.key]} alt="" draggable={false} decoding="async" style={imageStyle} />
-            )}
-            {layer.key === 'sky' ? (
-              <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-                <div className="hm-couple-rays" style={box(sunX - 760, sunY - 760, 1520, 1520)} />
-                <div className="hm-couple-glow" style={box(sunX - 230, sunY - 230, 460, 460)} />
-                {MOTES.map(([mx, my, delay, duration]) => (
-                  <i
-                    key={mx}
-                    className="hm-couple-mote"
-                    style={{
-                      ...box(mx - backdrop.x, my - backdrop.y, 7, 7),
-                      animationDelay: `${delay}s`,
-                      animationDuration: `${duration}s`,
-                      ['--mx' as string]: u(-26),
-                      ['--my' as string]: u(-70),
-                    }}
-                  />
-                ))}
-              </div>
-            ) : null}
-          </div>
-        ))}
-      </div>
+      <div className="scene-world" dangerouslySetInnerHTML={{ __html: markup }} />
     </div>
   );
-}
-
-const imageStyle: CSSProperties = {
-  position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block', userSelect: 'none', pointerEvents: 'none',
-};
-
-/** A length of `value` world pixels. */
-function u(value: number) {
-  return `calc(${value} * var(--u))`;
 }
 
 function clamp(value: number, min: number, max: number) {

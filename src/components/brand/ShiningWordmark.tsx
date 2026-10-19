@@ -1,21 +1,30 @@
+import { Asset } from 'expo-asset';
 import { useEffect, useRef } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 
+import { COUPLE_HEART_PATH } from '@/components/auth/coupleHeart';
 import { Wordmark, type WordmarkProps } from '@/components/brand/Wordmark';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
+// The heart of the wordmark, in the logo's own coordinates, as a mask.
+const HEART_MASK = `url("data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 988.77 139.6"><path d="${COUPLE_HEART_PATH}"/></svg>`,
+)}")`;
+
 /**
- * The wordmark with the waitlist page's liquid-chrome shine as a small
- * surprise: tap it and the chrome fades in, holds for a second, and fades out.
+ * The wordmark with the waitlist page's liquid-chrome heart, behaving as it
+ * does on halalmo.de: with a mouse the heart is chrome while the pointer is
+ * over the logo; a tap turns it chrome, holds for a second, and fades back.
  *
  * Web only, using the same Paper Design shader, edge map and settings as
- * halalmo.de, masked to the logo's shape. On the phone apps, and for anyone
+ * halalmo.de, masked to the heart in the logo. On the phone apps, and for anyone
  * who prefers reduced motion, it is the plain wordmark.
  */
 export function ShiningWordmark(props: WordmarkProps) {
   const reducedMotion = useReducedMotion();
   const host = useRef<View>(null);
-  const shine = useRef<(() => void) | null>(null);
+  const shine = useRef<{ on: () => void; off: (after: number) => void } | null>(null);
+  const hovering = useRef(false);
   const web = Platform.OS === 'web' && !reducedMotion;
 
   useEffect(() => {
@@ -28,18 +37,19 @@ export function ShiningWordmark(props: WordmarkProps) {
     void (async () => {
       const { ShaderMount, liquidMetalFragmentShader, getShaderColorFromString, LiquidMetalShapes, ShaderFitOptions } =
         await import('@paper-design/shaders');
+      // Bundled with the app, so it loads on the dev server as well as live.
       const image = new Image();
-      image.src = '/logo-liquid-metal-map.png';
+      image.src = Asset.fromModule(require('../../../site/logo-liquid-metal-map.png')).uri;
       await image.decode().catch(() => undefined);
       if (disposed || !image.complete || !image.naturalWidth) return;
 
-      // A layer the size of the logo, cut to its letters by a mask.
+      // A layer the size of the logo, cut to its heart by a mask.
       const layer = document.createElement('div');
       Object.assign(layer.style, {
         position: 'absolute', inset: '0', pointerEvents: 'none', opacity: '0', overflow: 'hidden',
         transition: 'opacity .7s ease',
-        maskImage: "url('/logo.svg')", maskSize: '100% 100%', maskRepeat: 'no-repeat', maskPosition: 'center',
-        webkitMaskImage: "url('/logo.svg')", webkitMaskSize: '100% 100%', webkitMaskRepeat: 'no-repeat', webkitMaskPosition: 'center',
+        maskImage: HEART_MASK, maskSize: '100% 100%', maskRepeat: 'no-repeat', maskPosition: 'center',
+        webkitMaskImage: HEART_MASK, webkitMaskSize: '100% 100%', webkitMaskRepeat: 'no-repeat', webkitMaskPosition: 'center',
       } as Partial<CSSStyleDeclaration>);
       const mount = document.createElement('div');
       Object.assign(mount.style, { position: 'absolute', inset: '-15.8%' });
@@ -78,18 +88,21 @@ export function ShiningWordmark(props: WordmarkProps) {
       }
 
       const timers: ReturnType<typeof setTimeout>[] = [];
-      shine.current = () => {
+      const on = () => {
         timers.splice(0).forEach(clearTimeout);
         shader.setSpeed(1);
         layer.style.transitionDuration = '.15s';
         layer.style.opacity = '1';
-        // Hold for a second, then fade out, then stop drawing.
+      };
+      const off = (after: number) => {
+        timers.splice(0).forEach(clearTimeout);
         timers.push(setTimeout(() => {
           layer.style.transitionDuration = '.7s';
           layer.style.opacity = '0';
           timers.push(setTimeout(() => shader.setSpeed(0), 750));
-        }, 1000));
+        }, after));
       };
+      shine.current = { on, off };
       cleanup = () => {
         timers.forEach(clearTimeout);
         shader.dispose();
@@ -106,7 +119,17 @@ export function ShiningWordmark(props: WordmarkProps) {
 
   if (!web) return <Wordmark {...props} />;
   return (
-    <Pressable onPress={() => shine.current?.()} accessibilityRole="image" accessibilityLabel="Halal Mode">
+    <Pressable
+      onHoverIn={() => { hovering.current = true; shine.current?.on(); }}
+      onHoverOut={() => { hovering.current = false; shine.current?.off(0); }}
+      onPress={() => {
+        if (hovering.current) return;
+        shine.current?.on();
+        shine.current?.off(1000);
+      }}
+      accessibilityRole="image"
+      accessibilityLabel="Halal Mode"
+    >
       <View ref={host} style={{ position: 'relative' }}>
         <Wordmark {...props} />
       </View>
