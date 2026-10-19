@@ -123,7 +123,9 @@ function prepare(layer, rig) {
   canvas.className = 'scene-warp';
   canvas.setAttribute('aria-hidden', 'true');
   canvas.style.cssText = `position:absolute;pointer-events:none;left:${(-MARGIN / w) * 100}%;top:${(-MARGIN / h) * 100}%;width:${((w + 2 * MARGIN) / w) * 100}%;height:${((h + 2 * MARGIN) / h) * 100}%`;
-  const gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, powerPreference: 'low-power' });
+  const gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, powerPreference: 'low-power',
+    // Kept so the halftone texture (halftone-src.js) can read the bent layer.
+    preserveDrawingBuffer: true });
   if (!gl) return null;
 
   const shader = (type, source) => { const s = gl.createShader(type); gl.shaderSource(s, source); gl.compileShader(s); return s; };

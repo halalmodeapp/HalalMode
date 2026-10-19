@@ -20,7 +20,8 @@ type CoupleCoverSceneProps = {
  * dust motes, heart float) and its breeze (site/scene-warp.js) all come from
  * halalmo.de. This component only supplies the bundled image URLs, sizes the
  * scene to its frame, and wires the same hover / tilt parallax and heart drag.
- * The speech bubbles stay on the waitlist page.
+ * The halftone texture (site/halftone-src.js) is shared too. The speech
+ * bubbles stay on the waitlist page.
  * `width`/`height` are accepted for parity with the native scene.
  */
 export function CoupleCoverScene({ active }: CoupleCoverSceneProps) {
@@ -73,6 +74,21 @@ export function CoupleCoverScene({ active }: CoupleCoverSceneProps) {
       stop?.();
     };
   }, [motionActive, lite]);
+
+  // The waitlist page's halftone texture (site/halftone-src.js), same settings.
+  useEffect(() => {
+    const host = sceneRef.current;
+    if (!host || !active) return;
+    let halftone: { stop(): void } | null = null;
+    let cancelled = false;
+    void import('../../../site/halftone-src.js').then(({ startHalftone }) => {
+      if (!cancelled) halftone = startHalftone(host, { still: lite || reducedMotion });
+    }).catch(() => undefined);
+    return () => {
+      cancelled = true;
+      halftone?.stop();
+    };
+  }, [active, lite, reducedMotion]);
 
   // Drag the heart; it springs back when let go.
   useEffect(() => {

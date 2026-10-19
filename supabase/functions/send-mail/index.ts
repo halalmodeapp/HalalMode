@@ -34,15 +34,22 @@ interface Moderation {
   first_name: string | null;
 }
 
+interface Progress {
+  eligible: boolean;
+  referral_count: number;
+  reward_months: number;
+}
+
 interface Claimed {
   id: number;
-  kind: 'report' | 'waitlist_welcome' | 'moderation' | 'waitlist_verification';
+  kind: 'report' | 'waitlist_welcome' | 'moderation' | 'waitlist_verification' | 'waitlist_not_joined' | 'referral_joined';
   to: string | null;
   locale: string;
   report: Report | null;
   moderation: Moderation | null;
-  verification: { token: string } | null;
+  verification: { token: string; confirmed?: boolean } | null;
   welcome: { eligible: boolean } | null;
+  progress: Progress | null;
 }
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
@@ -141,28 +148,114 @@ function welcomeEmail(locale: string, eligible: boolean, token: string | null) {
   };
 }
 
-const VERIFICATION: Record<string, { subject: string; intro: string; button: string; expiry: string }> = {
+const VERIFICATION: Record<string, {
+  subject: string; intro: string; button: string; expiry: string;
+  introConfirmed: string; buttonConfirmed: string; expiryConfirmed: string;
+}> = {
   en: {
     subject: 'Your Halal Mode referral link',
     intro: 'Confirm your email to get your referral link. Invite a few good people and unlock more Premium.',
     button: 'Get my referral link',
     expiry: 'This link expires in 7 days.',
+    introConfirmed: 'Here is your referral link page, with how many friends have joined and the Premium you have earned.',
+    buttonConfirmed: 'See my referral link',
+    expiryConfirmed: 'This link works for 30 days.',
   },
   ar: {
     subject: 'رابط الدعوة الخاص بك في حلال مود',
     intro: 'أكّد بريدك الإلكتروني لتحصل على رابط الدعوة. ادعُ أشخاصًا طيبين واحصل على مزيد من بريميوم.',
     button: 'احصل على رابطي',
     expiry: 'ينتهي هذا الرابط خلال 7 أيام.',
+    introConfirmed: 'هذه صفحة رابط الدعوة الخاص بك، وفيها عدد الأصدقاء الذين انضموا وما كسبته من بريميوم.',
+    buttonConfirmed: 'اعرض رابطي',
+    expiryConfirmed: 'يعمل هذا الرابط لمدة 30 يومًا.',
   },
 };
 
-function verificationEmail(locale: string, token: string) {
+const BUTTON = 'display:inline-block;padding:11px 17px;border-radius:999px;background:#0a0a0a;color:#fff;text-decoration:none;font-weight:600';
+const NOTE = 'color:#6c6a65;font-size:13px';
+const page = (rtl: boolean, body: string) =>
+  `<div dir="${rtl ? 'rtl' : 'ltr'}" style="font-family:system-ui,sans-serif;font-size:16px;line-height:1.6;color:#0a0a0a">${body}<p>Halal Mode</p></div>`;
+
+function verificationEmail(locale: string, token: string, confirmed: boolean) {
   const words = VERIFICATION[locale] ?? VERIFICATION.en;
-  const rtl = locale === 'ar';
   const link = `https://halalmo.de/refer?verify=${encodeURIComponent(token)}`;
   return {
     subject: words.subject,
-    html: `<div dir="${rtl ? 'rtl' : 'ltr'}" style="font-family:system-ui,sans-serif;font-size:16px;line-height:1.6;color:#0a0a0a"><p>${escape(words.intro)}</p><p><a href="${link}" style="display:inline-block;padding:11px 17px;border-radius:999px;background:#0a0a0a;color:#fff;text-decoration:none;font-weight:600">${escape(words.button)}</a></p><p style="color:#6c6a65;font-size:13px">${escape(words.expiry)}</p><p>Halal Mode</p></div>`,
+    html: page(locale === 'ar', `<p>${escape(confirmed ? words.introConfirmed : words.intro)}</p><p><a href="${link}" style="${BUTTON}">${escape(confirmed ? words.buttonConfirmed : words.button)}</a></p><p style="${NOTE}">${escape(confirmed ? words.expiryConfirmed : words.expiry)}</p>`),
+  };
+}
+
+// Someone asked for a referral link with an address that is not on the
+// waitlist. Plain on purpose: it goes to whoever owns the address.
+const NOT_JOINED: Record<string, { subject: string; body: string; button: string; ignore: string }> = {
+  en: {
+    subject: 'Join the Halal Mode waitlist first',
+    body: 'Someone asked for a Halal Mode referral link for this email address, but it is not on the waitlist yet. Join the waitlist, then you can get your referral link straight away.',
+    button: 'Join the waitlist',
+    ignore: 'If this was not you, you can ignore this email.',
+  },
+  ar: {
+    subject: 'سجّل في قائمة انتظار حلال مود أولًا',
+    body: 'طلب أحدهم رابط دعوة من حلال مود لهذا البريد الإلكتروني، لكنه ليس في قائمة الانتظار بعد. سجّل في قائمة الانتظار، ثم يمكنك الحصول على رابط الدعوة فورًا.',
+    button: 'سجّل في قائمة الانتظار',
+    ignore: 'إذا لم تكن أنت، يمكنك تجاهل هذه الرسالة.',
+  },
+};
+
+function notJoinedEmail(locale: string) {
+  const words = NOT_JOINED[locale] ?? NOT_JOINED.en;
+  return {
+    subject: words.subject,
+    html: page(locale === 'ar', `<p>${escape(words.body)}</p><p><a href="https://halalmo.de/" style="${BUTTON}">${escape(words.button)}</a></p><p style="${NOTE}">${escape(words.ignore)}</p>`),
+  };
+}
+
+// A friend's confirmation just counted. Progress toward the next reward, the
+// Premium reserved so far, and a fresh 30-day link to their page.
+const JOINED: Record<string, {
+  subject: string; counted: string; next: string; top: string; months: string; month: string; button: string; expiry: string;
+  rewards: Record<number, string>;
+}> = {
+  en: {
+    subject: 'A friend joined Halal Mode with your link',
+    counted: '{joined} of {goal} friends have joined with your link.',
+    next: '{left} more for {reward}.',
+    top: 'You have reached the top reward: 1 year of Premium, free.',
+    months: 'Premium reserved for you so far: {months} months.',
+    month: 'Premium reserved for you so far: 1 month.',
+    button: 'See my progress',
+    expiry: 'This link works for 30 days.',
+    rewards: { 3: '3 months free', 5: '6 months free', 10: '1 year free' },
+  },
+  ar: {
+    subject: 'انضم صديق إلى حلال مود عبر رابطك',
+    counted: 'انضم {joined} من {goal} أصدقاء عبر رابطك.',
+    next: 'تبقّى {left} للحصول على {reward}.',
+    top: 'وصلت إلى أعلى مكافأة: سنة من بريميوم مجانًا.',
+    months: 'بريميوم المحجوز لك حتى الآن: {months} أشهر.',
+    month: 'بريميوم المحجوز لك حتى الآن: شهر واحد.',
+    button: 'اعرض تقدّمي',
+    expiry: 'يعمل هذا الرابط لمدة 30 يومًا.',
+    rewards: { 3: '3 أشهر مجانًا', 5: '6 أشهر مجانًا', 10: 'سنة مجانًا' },
+  },
+};
+
+function referralJoinedEmail(locale: string, progress: Progress, token: string) {
+  const words = JOINED[locale] ?? JOINED.en;
+  const joined = Math.max(0, progress.referral_count);
+  const goal = joined >= 10 ? 10 : joined >= 5 ? 10 : joined >= 3 ? 5 : 3;
+  const fill = (text: string, values: Record<string, string | number>) =>
+    text.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ''));
+  const lines = [fill(words.counted, { joined, goal })];
+  lines.push(joined >= 10 ? words.top : fill(words.next, { left: goal - joined, reward: words.rewards[goal] }));
+  if (progress.reward_months > 0) {
+    lines.push(progress.reward_months === 1 ? words.month : fill(words.months, { months: progress.reward_months }));
+  }
+  const link = `https://halalmo.de/refer?verify=${encodeURIComponent(token)}`;
+  return {
+    subject: words.subject,
+    html: page(locale === 'ar', `${lines.map((line, i) => `<p>${i === 0 ? `<b>${escape(line)}</b>` : escape(line)}</p>`).join('')}<p><a href="${link}" style="${BUTTON}">${escape(words.button)}</a></p><p style="${NOTE}">${escape(words.expiry)}</p>`),
   };
 }
 
@@ -214,7 +307,13 @@ Deno.serve(async (request) => {
         const mail = welcomeEmail(item.locale, item.welcome?.eligible === true, item.verification?.token ?? null);
         error = await send(apiKey, item.to, mail.subject, mail.html, `mail-${item.id}`);
       } else if (item.kind === 'waitlist_verification' && item.to && item.verification?.token) {
-        const mail = verificationEmail(item.locale, item.verification.token);
+        const mail = verificationEmail(item.locale, item.verification.token, item.verification.confirmed === true);
+        error = await send(apiKey, item.to, mail.subject, mail.html, `mail-${item.id}`);
+      } else if (item.kind === 'waitlist_not_joined' && item.to) {
+        const mail = notJoinedEmail(item.locale);
+        error = await send(apiKey, item.to, mail.subject, mail.html, `mail-${item.id}`);
+      } else if (item.kind === 'referral_joined' && item.to && item.progress && item.verification?.token) {
+        const mail = referralJoinedEmail(item.locale, item.progress, item.verification.token);
         error = await send(apiKey, item.to, mail.subject, mail.html, `mail-${item.id}`);
       } else {
         error = 'nothing to send';

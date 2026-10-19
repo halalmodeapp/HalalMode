@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "esbuild logo-effect-src.js --bundle --minify --format=esm --target=es2020 --outfile=logo-effect.js"
+    "build": "esbuild logo-effect-src.js --bundle --minify --format=esm --target=es2020 --outfile=logo-effect.js && esbuild halftone-src.js --bundle --minify --format=esm --target=es2020 --outfile=halftone.js"
   },
   "devDependencies": {
     "esbuild": "0.28.2",

@@ -96,6 +96,14 @@ export default function AuthScreen() {
   // height for the complete sign-in form.
   const compact = !wide || (landscape && height < 700);
   const dense = height < 560;
+  // Headline and intro sized exactly as on halalmo.de (site/index.html).
+  const clampTo = (min: number, value: number, max: number) => Math.min(max, Math.max(min, value));
+  const titleSize = width > 960 ? clampTo(30, Math.min(width * 0.0285, height * 0.056), 62) : clampTo(28, width * 0.074, 44);
+  const ledeSize = width > 960 ? clampTo(14, Math.min(width * 0.0115, height * 0.02), 19) : 15;
+  const heroText = {
+    title: { fontSize: titleSize, lineHeight: Math.round(titleSize * 1.04), letterSpacing: isRTL ? 0 : -0.025 * titleSize },
+    lede: { fontSize: ledeSize, lineHeight: Math.round(ledeSize * (width > 960 ? 1.6 : 1.55)) },
+  };
   const usableHeight = Math.max(1, height - insets.top - insets.bottom);
   const splitPanelWidth = !split
     ? undefined
@@ -171,10 +179,10 @@ export default function AuthScreen() {
               },
             ]}
           >
-            <Text style={[styles.h1, compact && styles.h1Compact, dense && styles.h1Dense, { fontFamily: body }, isRTL && styles.noTracking, align]}>
+            <Text style={[styles.h1, compact && styles.h1Compact, dense && styles.h1Dense, heroText.title, { fontFamily: body }, align]}>
               {t('auth.heroTitle')}
             </Text>
-            <Text style={[styles.lede, compact && styles.ledeCompact, dense && styles.ledeDense, { fontFamily: body }, align]}>
+            <Text style={[styles.lede, compact && styles.ledeCompact, dense && styles.ledeDense, heroText.lede, { fontFamily: body }, align]}>
               {t('auth.heroIntro')}
             </Text>
 
@@ -221,6 +229,10 @@ export default function AuthScreen() {
               ) : null}
               <Text style={[styles.fine, compact && styles.fineCompact, dense && styles.fineDense, align]}>{t('auth.privacyNote')}</Text>
             </View>
+            {/* As on halalmo.de; the year follows the calendar. */}
+            <Text style={[styles.copyright, split && styles.copyrightWide, split && { bottom: insets.bottom + 18 }]}>
+              © {new Date().getFullYear()} {brandName}
+            </Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -353,7 +365,6 @@ const styles = StyleSheet.create({
   scrollContent: { flexGrow: 1 },
   rtl: RTL_LAYOUT,
   rtlText: { textAlign: 'right', writingDirection: 'rtl' },
-  noTracking: { letterSpacing: 0 },
 
   hero: { position: 'relative', overflow: 'visible' },
   split: { flexDirection: 'row', minHeight: '100%' },
@@ -370,8 +381,8 @@ const styles = StyleSheet.create({
     minWidth: 0,
     justifyContent: 'center',
     marginTop: 0,
-    paddingVertical: 48,
-    paddingHorizontal: 40,
+    paddingVertical: 64,
+    paddingHorizontal: 44,
     borderTopWidth: 0,
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
@@ -485,11 +496,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: -1,
     color: C.ink,
-    marginBottom: 20,
+    marginBottom: 18,
   },
   h1Compact: { fontSize: 25, lineHeight: 29, marginBottom: 4 },
   h1Dense: { fontSize: 21, lineHeight: 24, marginBottom: 2 },
-  lede: { fontSize: 17, lineHeight: 27, color: C.muted, marginBottom: 28 },
+  lede: { fontSize: 17, lineHeight: 27, color: C.muted, marginBottom: 36 },
   ledeCompact: { fontSize: 14, lineHeight: 20, marginBottom: 10 },
   ledeDense: { fontSize: 14, lineHeight: 20, marginBottom: 8 },
   card: {
@@ -497,8 +508,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.line,
     borderRadius: 26,
-    padding: 22,
-    gap: 12,
+    paddingHorizontal: 26,
+    paddingVertical: 28,
+    gap: 14,
     shadowColor: '#0A0A0A',
     shadowOpacity: 0.12,
     shadowRadius: 30,
@@ -510,7 +522,7 @@ const styles = StyleSheet.create({
   h2: { fontSize: 26, fontWeight: '600', color: C.ink },
   h2Compact: { fontSize: 18, lineHeight: 24 },
   h2Dense: { fontSize: 18, lineHeight: 24 },
-  sub: { fontSize: 15, lineHeight: 22, color: C.muted, marginTop: -6, marginBottom: 8 },
+  sub: { fontSize: 15, lineHeight: 22, color: C.muted, marginTop: -6, marginBottom: 12 },
   subCompact: { fontSize: 14, lineHeight: 20, marginTop: -2, marginBottom: 4 },
   subDense: { fontSize: 14, lineHeight: 20, marginTop: -2, marginBottom: 4 },
 
@@ -552,7 +564,10 @@ const styles = StyleSheet.create({
   providerAppleLabel: { color: '#FFFFFF' },
 
   error: { fontFamily: SANS, fontSize: 14, lineHeight: 20, color: C.err },
-  fine: { fontFamily: SANS, fontSize: 14, lineHeight: 20, color: C.muted },
+  fine: { fontFamily: SANS, fontSize: 14, lineHeight: 20, color: C.muted, marginTop: 4 },
+  copyright: { marginTop: 18, textAlign: 'center', fontFamily: SANS, fontSize: 12, lineHeight: 16, color: C.muted },
+  // Pinned to the foot of the side panel, like the waitlist page's footer.
+  copyrightWide: { position: 'absolute', left: 0, right: 0, marginTop: 0 },
   fineCompact: { fontSize: 14, lineHeight: 20 },
   fineDense: { fontSize: 14, lineHeight: 20 },
 });

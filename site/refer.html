@@ -17,7 +17,7 @@
 *{box-sizing:border-box}
 html,body{min-height:100%}
 body{margin:0;display:flex;flex-direction:column;min-height:100svh;background:radial-gradient(ellipse 76% 40% at 50% 0%,#f7f1e6 0%,rgba(247,241,230,0) 100%),var(--surface);color:var(--ink);font:17px/1.6 ui-serif,Georgia,"Times New Roman",serif;-webkit-font-smoothing:antialiased}
-.nav,footer,.referral-tier,.referral-note,.referral-progress,.share-actions a,.share-actions button,.cta{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.nav,footer,.referral-tier,.referral-note,.share-actions a,.share-actions button,.cta{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
 .wrap{width:100%;max-width:1100px;margin:0 auto;padding:0 clamp(22px,5.3vw,84px);display:flex;flex:1;flex-direction:column}
 header{padding:24px 0;display:flex;align-items:center;justify-content:space-between;gap:20px}
 .logo{height:30px;width:auto;display:block}
@@ -31,14 +31,33 @@ main{flex:1;display:flex;flex-direction:column;justify-content:center;padding:cl
 h1{font-weight:600;font-size:clamp(40px,5vw,72px);line-height:1.02;letter-spacing:-.035em;margin:0 0 14px;max-width:16ch}
 .referral-sub{margin:0;color:var(--muted);font-size:clamp(17px,1.5vw,20px)}
 .referral-tiers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:clamp(24px,4vh,40px) 0 0}
+.referral-tier p{margin:0}
+/* Each reward fills as friends join; reached ones get a tick, the next one is highlighted. */
+.tier-bar{display:block;height:6px;margin-top:12px;border-radius:999px;background:rgba(184,145,79,.16);overflow:hidden}
+.tier-bar i{display:block;height:100%;width:var(--fill,0%);border-radius:inherit;background:var(--gold);transition:width .8s cubic-bezier(.22,1,.36,1)}
+.tier-count{display:block;min-height:1.3em;margin-top:6px;color:var(--label);font-size:12.5px;font-weight:600}
+.referral-tier[data-state=current]{border-color:rgba(252,60,108,.45);box-shadow:0 6px 20px rgba(252,60,108,.10)}
+.referral-tier[data-state=current] .tier-bar i{background:#FC3C6C}
+.referral-tier[data-state=current] .tier-count{color:#C2124A}
+.referral-tier[data-state=reached] .tier-count{color:var(--gold)}
+.confirm-email{display:inline-flex;align-items:center;justify-content:center;min-height:46px;margin-top:16px;padding:0 24px;border:0;border-radius:999px;background:var(--ink);color:var(--surface);font:600 15px ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer}
+.confirm-email[hidden]{display:none}
+.confirm-email:disabled{opacity:.55;cursor:wait}
 .referral-tier{margin:0;padding:20px 22px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(160deg,#f6f1e7,#fff 60%);color:var(--soft);font-weight:600;font-size:15px;line-height:1.4}
 .referral-note{margin:16px 0 0;color:var(--label);font-size:13px;line-height:1.5}
 .verification-status{margin-top:28px;padding:22px;border:1px solid var(--line);border-radius:20px;background:#fff}
 .verification-status[hidden],.share-actions[hidden],.cta[hidden]{display:none}
 .verification-title{margin:0;font-size:26px;font-weight:600}
-.verification-body,.referral-progress{margin:6px 0 0;color:var(--muted);font-size:16px}
-.referral-progress{color:var(--soft);font-size:14px}
+.verification-body{margin:6px 0 0;color:var(--muted);font-size:16px}
 .share-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+/* The link itself, readable in full, with a copy button that ticks when done. */
+.share-link{display:flex;flex:1 1 420px;min-width:0;gap:6px;padding:6px;border:1px solid var(--line);border-radius:999px;background:#FBF8F2}
+.share-link input{flex:1;min-width:0;padding:0 14px;border:0;background:transparent;color:var(--ink);font:500 15px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;text-overflow:ellipsis}
+.share-link input:focus{outline:none}
+.share-link:focus-within{outline:2px solid rgba(184,145,79,.5);outline-offset:2px}
+.share-actions .share-link button{flex:none;min-height:42px}
+.share-actions .share-link button.copied{background:var(--green,#2F5D4A)}
+@media(max-width:560px){.share-link{flex-direction:column;border-radius:18px}.share-link input{padding:10px 8px;text-align:center;font-size:14px}.share-actions .share-link button,.share-whatsapp{width:100%}}
 .share-actions a,.share-actions button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 20px;border:0;border-radius:999px;background:var(--ink);color:var(--surface);font-weight:600;font-size:14px;text-decoration:none;cursor:pointer}
 .cta{display:inline-flex;align-self:flex-start;align-items:center;justify-content:center;min-height:52px;margin-top:28px;padding:0 30px;border-radius:999px;background:var(--ink);color:var(--surface);text-decoration:none;font-weight:650;font-size:15px}
 footer{padding:26px 0 40px;border-top:1px solid var(--line);color:var(--muted);font-size:14px;display:flex;flex-wrap:wrap;gap:10px 32px;justify-content:space-between}
@@ -67,12 +86,6 @@ html[dir=rtl] main,html[dir=rtl] footer{text-align:right}
 <main id="referrals" aria-labelledby="referral-title">
   <h1 id="referral-title" data-i18n="referralTitle">Refer your friends</h1>
   <p class="referral-sub" data-i18n="referralBody">Invite a few good people and unlock more Premium.</p>
-  <div class="referral-tiers" aria-label="Referral rewards">
-    <p class="referral-tier" data-i18n="reward3">3 joins → 3 months free</p>
-    <p class="referral-tier" data-i18n="reward5">5 joins → 6 months free</p>
-    <p class="referral-tier" data-i18n="reward10">10 joins → 1 year free</p>
-  </div>
-  <p class="referral-note" data-i18n="referralNote">Referrals count once your friend verifies their email.</p>
   <form id="link-form" class="link-form" novalidate>
     <label for="link-email" data-i18n="referFormTitle">Get your referral link</label>
     <div class="link-row">
@@ -84,12 +97,21 @@ html[dir=rtl] main,html[dir=rtl] footer{text-align:right}
   <div id="verification-status" class="verification-status" role="status" aria-live="polite" hidden>
     <p id="verification-title" class="verification-title"></p>
     <p id="verification-body" class="verification-body"></p>
-    <p id="referral-progress" class="referral-progress"></p>
     <div id="share-actions" class="share-actions" hidden>
-      <a id="whatsapp-share" href="#" target="_blank" rel="noopener" data-i18n="shareWhatsApp">WhatsApp</a>
-      <button id="copy-invite" type="button" data-i18n="copyInvite">Copy invite link</button>
+      <div class="share-link">
+        <input id="share-url" type="text" readonly dir="ltr" spellcheck="false" aria-label="Your referral link" data-i18n-aria="referralLinkLabel">
+        <button id="copy-invite" type="button"><span data-i18n="copyInvite">Copy invite link</span></button>
+      </div>
+      <a id="whatsapp-share" class="share-whatsapp" href="#" target="_blank" rel="noopener" data-i18n="shareWhatsApp">WhatsApp</a>
     </div>
+    <button id="confirm-email" class="confirm-email" type="button" hidden><span data-i18n="confirmButton">Confirm my email</span></button>
   </div>
+  <div class="referral-tiers" aria-label="Referral rewards">
+    <div class="referral-tier" data-goal="3"><p data-i18n="reward3">3 joins → 3 months free</p><span class="tier-bar"><i></i></span><span class="tier-count"></span></div>
+    <div class="referral-tier" data-goal="5"><p data-i18n="reward5">5 joins → 6 months free</p><span class="tier-bar"><i></i></span><span class="tier-count"></span></div>
+    <div class="referral-tier" data-goal="10"><p data-i18n="reward10">10 joins → 1 year free</p><span class="tier-bar"><i></i></span><span class="tier-count"></span></div>
+  </div>
+  <p class="referral-note" data-i18n="referralNote">Referrals count once your friend verifies their email.</p>
   <a class="cta referral-join" href="/" data-i18n="waitlistButton">Join the waitlist</a>
 </main>
 
@@ -98,7 +120,7 @@ html[dir=rtl] main,html[dir=rtl] footer{text-align:right}
   <span><a href="/how-it-works" data-i18n="navHow">How it works</a> &nbsp;·&nbsp; <span data-i18n="questions">Questions?</span> <a href="mailto:hello@halalmo.de">hello@halalmo.de</a></span>
 </footer>
 </div>
-<script src="/i18n.js?v=20261019a"></script>
+<script src="/i18n.js?v=20261019c"></script>
 <script src="/waitlist-email.js?v=20261018a"></script>
 <script>
 /* ---------- Waitlist verification and referral sharing ---------- */
@@ -130,49 +152,103 @@ html[dir=rtl] main,html[dir=rtl] footer{text-align:right}
   var status=document.getElementById('verification-status');
   var title=document.getElementById('verification-title');
   var body=document.getElementById('verification-body');
-  var progress=document.getElementById('referral-progress');
+  var confirmButton=document.getElementById('confirm-email');
+  var tiers=[].slice.call(document.querySelectorAll('.referral-tier'));
   var share=document.getElementById('share-actions');
   var join=document.querySelector('.referral-join');
   var whatsapp=document.getElementById('whatsapp-share');
   var copy=document.getElementById('copy-invite');
-  var shareUrl='';
-  function progressText(count){
+  var copyLabel=copy.querySelector('span');
+  var urlBox=document.getElementById('share-url');
+  var heading=document.getElementById('referral-title');
+  var shareUrl='',verified=null,copiedTimer=0;
+  var t=function(key){return window.HalalI18n.t(key)};
+  /* The reward cards are the progress: each bar fills toward its goal, reached
+     goals get a tick and the next one is highlighted. Without a confirmed
+     link the bars stay empty. */
+  function renderTiers(count){
+    var known=count!==null&&count!==undefined;
     count=Math.max(0,Number(count)||0);
-    if(count>=10)return '10+ verified referrals — 12 months free total.';
-    if(count>=5)return count+' of 10 joined';
-    if(count>=3)return count+' of 5 joined';
-    return count+' of 3 joined';
+    var current=null;
+    tiers.forEach(function(tier){
+      var goal=Number(tier.dataset.goal);
+      var reached=known&&count>=goal;
+      if(known&&!reached&&!current)current=tier;
+      tier.style.setProperty('--fill',known?Math.min(100,count/goal*100)+'%':'0%');
+      tier.dataset.state=reached?'reached':'';
+      tier.querySelector('.tier-count').textContent=!known?'':(reached?'✓ ':'')+t('tierCount').replace('{{joined}}',Math.min(count,goal)).replace('{{goal}}',goal);
+    });
+    if(current)current.dataset.state='current';
   }
+  /* Verified from the email link: the page becomes the member's own link. */
   function renderVerified(data){
-    var months=Number(data&&data.reward_months)||0;
+    verified=data||{};
+    var months=Number(verified.reward_months)||0;
     status.hidden=false;
-    title.textContent=window.HalalI18n.t('verifiedTitle');
-    body.textContent=data&&data.eligible===true
-      ? (months===1?'Your 1 month of Premium is automatically reserved for launch.': 'Your '+months+' months of Premium are automatically reserved for launch.')
-      : window.HalalI18n.t('verifiedNotEligible');
-    progress.textContent=progressText(data&&data.referral_count);
-    shareUrl=String(data&&data.referral_url||'');
+    heading.dataset.i18n='referralLinkTitle';
+    heading.textContent=t('referralLinkTitle');
+    title.textContent=t('verifiedTitle');
+    body.textContent=verified.eligible===true
+      ? (months===1?t('rewardMonth1'):t('rewardMonths').replace('{{months}}',months))
+      : t('verifiedNotEligible');
+    confirmButton.hidden=true;
+    renderTiers(verified.referral_count);
+    shareUrl=String(verified.referral_url||'');
     if(shareUrl){
-      var text='I’m on the Halal Mode waitlist. It’s a Muslim marriage app built around fewer, more thoughtful matches.\n\nJoin the waitlist here: '+shareUrl;
-      whatsapp.href='https://wa.me/?text='+encodeURIComponent(text);
+      urlBox.value=shareUrl;
+      whatsapp.href='https://wa.me/?text='+encodeURIComponent(t('shareMessage').replace('{{url}}',shareUrl));
       share.hidden=false;
     }
     join.hidden=true;
   }
+  /* Opened but not yet confirmed: ask, rather than confirming on load, since
+     email scanners open links on their own. */
+  var pendingToken='';
+  function renderUnconfirmed(token){
+    pendingToken=token;
+    status.hidden=false;
+    title.textContent=t('confirmTitle');
+    body.textContent=t('confirmBody');
+    confirmButton.hidden=false;
+    join.hidden=true;
+  }
+  confirmButton.addEventListener('click',function(){
+    if(!pendingToken)return;
+    confirmButton.disabled=true;
+    fetch(VERIFY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:pendingToken})})
+      .then(function(r){return r.json().catch(function(){return {}}).then(function(data){if(!r.ok)throw new Error('verification');return data})})
+      .then(renderVerified)
+      .catch(showVerifyError)
+      .then(function(){confirmButton.disabled=false});
+  });
+  function showVerifyError(){status.hidden=false;title.textContent=t('verificationError');body.textContent='';confirmButton.hidden=true;join.hidden=false}
+  document.addEventListener('halal:language',function(){
+    if(verified)renderVerified(verified);
+    else if(pendingToken)renderUnconfirmed(pendingToken);
+    else renderTiers(null);
+  });
+  urlBox.addEventListener('focus',function(){urlBox.select()});
   function verifyFromUrl(){
     var token=new URLSearchParams(window.location.search).get('verify')||'';
     if(!/^[0-9a-f]{64}$/i.test(token.trim()))return;
     fetch(VERIFY_URL+'?token='+encodeURIComponent(token.trim()),{headers:{Accept:'application/json'}})
       .then(function(r){return r.json().catch(function(){return {}}).then(function(data){if(!r.ok)throw new Error('verification');return data})})
-      .then(renderVerified)
-      .catch(function(){status.hidden=false;title.textContent=window.HalalI18n.t('verificationError');body.textContent='';progress.textContent='';join.hidden=false});
+      .then(function(data){if(data&&data.state==='unconfirmed')renderUnconfirmed(token.trim());else renderVerified(data)})
+      .catch(showVerifyError);
   }
   copy.addEventListener('click',function(){
     if(!shareUrl)return;
-    var done=function(){copy.textContent=window.HalalI18n.t('copiedInvite');window.setTimeout(function(){copy.textContent=window.HalalI18n.t('copyInvite')},1600)};
+    var done=function(){
+      window.clearTimeout(copiedTimer);
+      copy.classList.add('copied');
+      copyLabel.dataset.i18n='copiedInvite';
+      copyLabel.textContent='✓ '+t('copiedInvite');
+      copiedTimer=window.setTimeout(function(){copy.classList.remove('copied');copyLabel.dataset.i18n='copyInvite';copyLabel.textContent=t('copyInvite')},2000);
+    };
     if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(shareUrl).then(done).catch(function(){})}
     else {var area=document.createElement('textarea');area.value=shareUrl;area.setAttribute('readonly','');area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();try{document.execCommand('copy');done()}catch(_){}document.body.removeChild(area)}
   });
+  renderTiers(null);
   verifyFromUrl();
 })();
 </script>
