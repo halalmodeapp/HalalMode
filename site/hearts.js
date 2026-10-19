@@ -8,7 +8,7 @@
   let HEART_SRC='/img/chrome-heart.png',PHOTO_SRC='/img/hero.webp';
   let SPRITE={fw:314,fh:313,cols:4};
   let CELL=5,FOCUS={x:.74,y:.33},ZOOM=1.35,DOT_BASE=.12,DOT_FULL=.56;
-  let GOLD='138,106,52',MID='200,98,76',PINK='240,80,94';
+  let GOLD='184,145,79',MID='200,98,76',PINK='240,80,94';
   let SIZES=[1.02,.92],SPOTS=[[.38,.4],[.64,.62]];
 
   let stage=document.getElementById('stage');
@@ -252,7 +252,7 @@
 
   /* ---------- drawing ---------- */
   let lastT=0,shown=false,live=[],frame=0,running=false;
-  /* tiers by how much of a cell's wake is the pink heart's: gold, coral, pink */
+  /* tiers by how much of a cell's wake is the pink heart's: gold, warm, pink */
   let TIERS=[['rgba('+GOLD+',.66)'],['rgba('+MID+',.72)'],['rgba('+PINK+',.76)']];
   function addCell(k){
     if(seen[k]===frameNo)return;seen[k]=frameNo;

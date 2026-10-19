@@ -25,6 +25,14 @@ OUT = os.path.join(ROOT, 'src', 'halalCards', 'illustrations.ts')
 
 FULL_WIDTH = 1200
 THUMB_WIDTH = 520
+SECTION_COVERS = {'hub-hero', 'guide-hero', 'section-lab', 'section-quiz', 'section-adventure'}
+
+
+def is_cover(slot_id, roles):
+    # The brief intentionally lists only slots that are still missing. Once
+    # the library is filled, it has no role data left to drive thumbnail
+    # generation, so keep the filename convention as the durable fallback.
+    return roles.get(slot_id) == 'cover' or slot_id.endswith('-cover') or slot_id in SECTION_COVERS
 
 
 def resize(src, dest, width, quality):
@@ -48,7 +56,7 @@ def main():
     for slot_id in ids:
         path = os.path.join(ASSETS, f'{slot_id}.webp')
         resize(path, path, FULL_WIDTH, 74)
-        if roles.get(slot_id) == 'cover':
+        if is_cover(slot_id, roles):
             resize(path, os.path.join(THUMBS, f'{slot_id}.webp'), THUMB_WIDTH, 70)
             thumbs.append(slot_id)
 

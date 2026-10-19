@@ -10,7 +10,7 @@
     "scheme": "halalmode",
     "userInterfaceStyle": "light",
     "backgroundColor": "#FCFCFB",
-    "icon": "./assets/icons/icon.png",
+    "icon": "./assets/icons/chrome-heart-icon.png",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.halalmode.app",
@@ -26,7 +26,7 @@
     "android": {
       "package": "com.halalmode.app",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icons/adaptive-icon.png",
+        "foregroundImage": "./assets/icons/chrome-heart-icon.png",
         "backgroundColor": "#A82149"
       },
       "permissions": [
@@ -51,8 +51,8 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#A82149",
-          "image": "./assets/branding/halalmode-splash.png",
-          "imageWidth": 220,
+          "image": "./assets/icons/chrome-heart-icon.png",
+          "imageWidth": 320,
           "resizeMode": "contain"
         }
       ],
@@ -80,7 +80,8 @@
       "expo-image",
       "expo-localization",
       "expo-status-bar",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-build-properties"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -93,6 +94,9 @@
       },
       "router": {}
     },
-    "owner": "halalmode"
+    "owner": "halalmode",
+    "updates": {
+      "url": "https://u.expo.dev/73e752a3-067d-40d4-b218-06ca25723fbe"
+    }
   }
 }

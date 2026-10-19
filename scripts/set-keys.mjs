@@ -5,9 +5,9 @@
  *   3. turns on Google sign-in with the Halal Mode Web client.
  *
  * Run:  npm run set-keys
- * Press Enter on any question to skip it. Keys are never written to disk:
- * the auth settings are pushed from a temporary copy of supabase/config.toml
- * that is deleted straight after.
+ * Press Enter on any question to skip it. Secrets are not echoed or passed as
+ * command-line arguments. Temporary secret/config files are deleted straight
+ * after the relevant Supabase CLI call.
  */
 import { spawnSync } from 'node:child_process';
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -20,13 +20,65 @@ const GOOGLE_CLIENT_ID = '133411707691-be2uc3gudlki9cg8l2fv6lq6odqqqj3v.apps.goo
 
 const NEWLINE = String.fromCharCode(10);
 
-// Plain line input: works in every Windows terminal, including screen readers.
-const lines = createInterface({ input: process.stdin, output: process.stdout });
-const answers = lines[Symbol.asyncIterator]();
-const ask = async (question) => {
+const lines = process.stdin.isTTY
+  ? undefined
+  : createInterface({ input: process.stdin, output: process.stdout });
+
+async function askHidden(question) {
+  if (!process.stdin.isTTY || typeof process.stdin.setRawMode !== 'function') {
+    return (await lines?.question(question) ?? '').trim();
+  }
+
   process.stdout.write(question);
-  const next = await answers.next();
-  return (next.done ? '' : next.value).trim();
+  const stdin = process.stdin;
+  return new Promise((resolve, reject) => {
+    let value = '';
+    const cleanup = () => {
+      stdin.off('data', onData);
+      stdin.off('error', onError);
+      stdin.setRawMode(false);
+      stdin.pause();
+    };
+    const finish = () => {
+      cleanup();
+      process.stdout.write(NEWLINE);
+      resolve(value.trim());
+    };
+    const onError = (error) => {
+      cleanup();
+      reject(error);
+    };
+    const onData = (chunk) => {
+      for (const character of String(chunk)) {
+        if (character === '\u0003') {
+          cleanup();
+          process.stdout.write(NEWLINE);
+          reject(new Error('Input cancelled.'));
+          return;
+        }
+        if (character === '\r' || character === '\n') {
+          finish();
+          return;
+        }
+        if (character === '\b' || character === '\u007f') {
+          value = value.slice(0, -1);
+        } else {
+          value += character;
+        }
+      }
+    };
+    stdin.setEncoding('utf8');
+    stdin.setRawMode(true);
+    stdin.resume();
+    stdin.on('data', onData);
+    stdin.once('error', onError);
+  });
+}
+
+const ask = (question) => askHidden(question);
+
+function removeTemporaryDirectory(dir) {
+  rmSync(dir, { recursive: true, force: true });
 };
 
 function run(args, env = {}) {
@@ -49,9 +101,16 @@ const secrets = [];
 if (resend) secrets.push(`RESEND_API_KEY=${resend}`);
 if (openai) secrets.push(`OPENAI_API_KEY=${openai}`);
 if (secrets.length) {
-  console.log(run(['secrets', 'set', '--project-ref', PROJECT, ...secrets])
-    ? 'Done: function keys stored.'
-    : 'Problem: the function keys were not stored. Is the Supabase CLI signed in?');
+  const dir = mkdtempSync(join(tmpdir(), 'halalmode-secrets-'));
+  try {
+    const secretFile = join(dir, '.env');
+    writeFileSync(secretFile, `${secrets.join(NEWLINE)}${NEWLINE}`, { encoding: 'utf8', mode: 0o600 });
+    console.log(run(['secrets', 'set', '--project-ref', PROJECT, '--env-file', secretFile])
+      ? 'Done: function keys stored.'
+      : 'Problem: the function keys were not stored. Is the Supabase CLI signed in?');
+  } finally {
+    removeTemporaryDirectory(dir);
+  }
 }
 
 if (resend || google) {
@@ -92,11 +151,11 @@ if (resend || google) {
     const what = [resend && 'sign-in emails through Resend', google && 'Google sign-in'].filter(Boolean).join(' and ');
     console.log(ok ? `Done: ${what} switched on.` : 'Problem: the sign-in settings were not saved.');
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    removeTemporaryDirectory(dir);
   }
 }
 
 console.log('');
-lines.close();
+lines?.close();
 console.log('All finished. You can tell Claude it is done.');
 process.exit(0);
