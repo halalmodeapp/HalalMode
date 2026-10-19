@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
-  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -29,7 +28,8 @@ import { useBreakpoint } from '@/theme/breakpoints';
 import { font as appFont } from '@/theme/tokens';
 import { LTR_LAYOUT, LTR_WEB_PROPS, RTL_LAYOUT } from '@/lib/rtl';
 import { ShiningWordmark } from '@/components/brand/ShiningWordmark';
-import { howItWorksUrl } from '@/lib/publicLinks';
+import { PublicLinks } from '@/components/brand/LinkPill';
+import { SiteFooter } from '@/components/brand/SiteFooter';
 
 const GOOGLE_SIGN_IN_ICON = require('../assets/auth/google-g-logo.png');
 const APPLE_SIGN_IN_ICON = require('../assets/auth/apple-signin-logo.png');
@@ -64,11 +64,12 @@ export default function AuthScreen() {
   const insets = useSafeAreaInsets();
   const { height, width } = useWindowDimensions();
   const router = useRouter();
-  // From tablet width up the picture and the form sit side by side, the way
-  // the landing page does, instead of a phone layout stretched sideways.
+  // Side by side above 960px, where halalmo.de does the same; below that the
+  // picture sits on top, as on the site's phone layout. A short landscape
+  // phone keeps them side by side so the form still fits.
   const wide = useBreakpoint() !== 'phone';
   const landscape = width > height;
-  const split = wide || landscape;
+  const split = width > 960 || (landscape && height < 600);
   const [busyProvider, setBusyProvider] = useState<AuthProvider | null>(null);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [providerError, setProviderError] = useState<string | null>(null);
@@ -104,15 +105,54 @@ export default function AuthScreen() {
     title: { fontSize: titleSize, lineHeight: Math.round(titleSize * 1.04), letterSpacing: isRTL ? 0 : -0.025 * titleSize },
     lede: { fontSize: ledeSize, lineHeight: Math.round(ledeSize * (width > 960 ? 1.6 : 1.55)) },
   };
-  const usableHeight = Math.max(1, height - insets.top - insets.bottom);
+  // On phones the gaps grow a little with the screen's height, and the footer
+  // follows the card, as on halalmo.de.
+  const gap = clampTo(14, height * 0.024, 28);
+  const phoneSpacing = split ? null : {
+    title: { marginBottom: Math.round(gap * 0.55) },
+    lede: { marginBottom: Math.round(gap * 0.9) },
+    links: { marginBottom: Math.round(gap * 1.25) },
+    footer: { marginTop: Math.round(gap * 1.1) },
+  };
   const splitPanelWidth = !split
     ? undefined
     : compact
       ? Math.min(440, width * 0.48)
       : Math.min(520, Math.max(380, width * 0.4));
-  // Keep the sign-in controls together in a compact bottom sheet in portrait;
-  // landscape uses a side-by-side composition so the form has enough height.
-  const phoneSheetHeight = Math.max(234, Math.min(292, Math.round(usableHeight * 0.32)));
+
+  // The picture: beside the copy when wide; on phones a fixed 16:9 picture
+  // above the copy, rounded at the bottom, as on halalmo.de.
+  const phoneHeroHeight = Math.round(Math.min(width * 0.5625, height * 0.55)) + insets.top;
+  const hero = (
+    <View style={[
+      styles.hero,
+      split ? styles.heroWide : [styles.heroPhone, { height: phoneHeroHeight }],
+      split && compact && styles.heroWideCompact,
+    ]}>
+      <HalftoneHero variant="couple" />
+      <LogoLight
+        width={compact ? '94%' : '62%'}
+        maxWidth={compact ? 420 : 640}
+        height={insets.top + (compact ? 132 : 200)}
+        mirrored={isRTL && Platform.OS !== 'web'}
+      />
+      <View
+        pointerEvents="box-none"
+        style={[styles.header, compact && styles.headerCompact, { paddingTop: insets.top + (compact ? 8 : 18) }]}
+      >
+        <View style={[styles.brand, LTR_LAYOUT]} {...LTR_WEB_PROPS}>
+          <ShiningWordmark width={compact ? 177 : 212} fill={C.surface} />
+          <Text
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            style={[styles.trademark, compact && styles.trademarkCompact]}
+          >
+            ™
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
 
   return (
     <>
@@ -127,43 +167,17 @@ export default function AuthScreen() {
       ) : null}
       <View style={[styles.page, isRTL && styles.rtl]}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        {split ? null : hero}
         <ScrollView
           contentContainerStyle={[
             styles.scrollContent,
-            { minHeight: height, paddingBottom: 0 },
+            split ? { minHeight: height, paddingBottom: 0 } : styles.phoneScroll,
             split && styles.split,
           ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={[
-            styles.hero,
-            split ? styles.heroWide : styles.heroPortrait,
-            split && compact && styles.heroWideCompact,
-          ]}>
-            <HalftoneHero variant="couple" />
-            <LogoLight
-              width={compact ? '94%' : '62%'}
-              maxWidth={compact ? 420 : 640}
-              height={insets.top + (compact ? 132 : 200)}
-              mirrored={isRTL && Platform.OS !== 'web'}
-            />
-            <View
-              pointerEvents="box-none"
-              style={[styles.header, compact && styles.headerCompact, { paddingTop: insets.top + (compact ? 8 : 18) }]}
-            >
-              <View style={[styles.brand, LTR_LAYOUT]} {...LTR_WEB_PROPS}>
-                <ShiningWordmark width={compact ? 177 : 212} fill={C.surface} />
-                <Text
-                  accessibilityElementsHidden
-                  importantForAccessibility="no-hide-descendants"
-                  style={[styles.trademark, compact && styles.trademarkCompact]}
-                >
-                  ™
-                </Text>
-              </View>
-            </View>
-          </View>
+          {split ? hero : null}
 
           <View
             style={[
@@ -175,16 +189,16 @@ export default function AuthScreen() {
               {
                 paddingBottom: insets.bottom + (compact ? 8 : 24),
                 ...(splitPanelWidth ? { width: splitPanelWidth } : {}),
-                ...(!split ? { minHeight: phoneSheetHeight } : {}),
               },
             ]}
           >
-            <Text style={[styles.h1, compact && styles.h1Compact, dense && styles.h1Dense, heroText.title, { fontFamily: body }, align]}>
+            <Text style={[styles.h1, compact && styles.h1Compact, dense && styles.h1Dense, heroText.title, phoneSpacing?.title, { fontFamily: body }, align]}>
               {t('auth.heroTitle')}
             </Text>
-            <Text style={[styles.lede, compact && styles.ledeCompact, dense && styles.ledeDense, heroText.lede, { fontFamily: body }, align]}>
+            <Text style={[styles.lede, compact && styles.ledeCompact, dense && styles.ledeDense, heroText.lede, phoneSpacing?.lede, { fontFamily: body }, align]}>
               {t('auth.heroIntro')}
             </Text>
+            {width > 960 ? null : <PublicLinks style={[styles.inlineLinks, phoneSpacing?.links]} />}
 
             <View style={[styles.card, compact && styles.cardCompact, dense && styles.cardDense]}>
               <Text style={[styles.h2, compact && styles.h2Compact, dense && styles.h2Dense, { fontFamily: body }, align]}>{t('auth.cardTitle')}</Text>
@@ -229,10 +243,8 @@ export default function AuthScreen() {
               ) : null}
               <Text style={[styles.fine, compact && styles.fineCompact, dense && styles.fineDense, align]}>{t('auth.privacyNote')}</Text>
             </View>
-            {/* As on halalmo.de; the year follows the calendar. */}
-            <Text style={[styles.copyright, split && styles.copyrightWide, split && { bottom: insets.bottom + 18 }]}>
-              © {new Date().getFullYear()} {brandName}
-            </Text>
+            {/* The halalmo.de footer, pinned to the foot of the side panel when wide. */}
+            <SiteFooter style={[styles.footer, phoneSpacing?.footer, split && styles.footerWide, split && { bottom: insets.bottom + 18 }]} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -244,19 +256,8 @@ export default function AuthScreen() {
         {...LTR_WEB_PROPS}
       >
         <View style={styles.headerActions}>
-          {/* Phones keep only the globe up here, as on halalmo.de, so the logo has room. */}
-          {width >= 600 ? (
-          <Pressable
-            accessibilityRole="link"
-            accessibilityLabel={t('marketing.howItWorks')}
-            onPress={() => void Linking.openURL(howItWorksUrl(language))}
-            style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [styles.howButton, (pressed || hovered) && styles.howButtonPressed]}
-          >
-            <Text numberOfLines={1} style={styles.howButtonLabel}>
-              {t('marketing.howItWorks')} <Text style={styles.howArrow}>{isRTL ? '←' : '→'}</Text>
-            </Text>
-          </Pressable>
-          ) : null}
+          {/* From desktop width the links sit up here; below it, under the intro. */}
+          {width > 960 ? <PublicLinks /> : null}
           <Pressable
             testID={testIds.auth.language}
             accessibilityRole="button"
@@ -368,7 +369,19 @@ const styles = StyleSheet.create({
 
   hero: { position: 'relative', overflow: 'visible' },
   split: { flexDirection: 'row', minHeight: '100%' },
-  heroPortrait: { flex: 1, minHeight: 170 },
+  heroPhone: {
+    zIndex: 2,
+    overflow: 'hidden',
+    borderBottomLeftRadius: 22,
+    borderBottomRightRadius: 22,
+    shadowColor: '#0A0A0A',
+    shadowOpacity: 0.14,
+    shadowRadius: 15,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 6,
+  },
+  phoneScroll: { flexGrow: 1, paddingBottom: 0 },
+  inlineLinks: { marginBottom: 24 },
   heroWide: { flex: 1, overflow: 'hidden' },
   heroWideCompact: { flex: 1 },
   sheetWide: {
@@ -410,19 +423,7 @@ const styles = StyleSheet.create({
   brand: { flexDirection: 'row', alignItems: 'flex-start' },
   trademark: { marginLeft: 3, marginTop: -2, color: C.surface, fontFamily: appFont.bodySemi, fontSize: 10, lineHeight: 12 },
   trademarkCompact: { fontSize: 8, lineHeight: 10 },
-  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  // The waitlist page's How it works: Halal Pink, white, small caps, with an arrow.
-  howButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 999,
-    backgroundColor: '#FC3C6C', // Halal Pink
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  howButtonPressed: { backgroundColor: '#C2124A' }, // Halal Pink, deep
-  howButtonLabel: { color: '#FFFFFF', fontFamily: appFont.bodySemi, fontSize: 12, lineHeight: 16, letterSpacing: 1.7, textTransform: 'uppercase' },
-  howArrow: { letterSpacing: 0 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 12 }, // Halal Pink, deep
   globe: {
     width: 38,
     height: 38,
@@ -483,11 +484,13 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   sheetPortrait: {
-    flexGrow: 0,
-    flexShrink: 0,
-    marginTop: -16,
-    paddingTop: 12,
-    paddingHorizontal: 16,
+    flexGrow: 1,
+    marginTop: 0,
+    paddingTop: 26,
+    paddingHorizontal: 20,
+    borderTopWidth: 0,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
   },
   sheetDense: { marginTop: -12, paddingTop: 8 },
   h1: {
@@ -517,7 +520,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 20 },
     elevation: 6,
   },
-  cardCompact: { padding: 10, gap: 5, borderRadius: 17 },
+  cardCompact: { paddingHorizontal: 16, paddingVertical: 16, gap: 10, borderRadius: 18 },
   cardDense: { padding: 8, gap: 4, borderRadius: 15 },
   h2: { fontSize: 26, fontWeight: '600', color: C.ink },
   h2Compact: { fontSize: 18, lineHeight: 24 },
@@ -565,9 +568,9 @@ const styles = StyleSheet.create({
 
   error: { fontFamily: SANS, fontSize: 14, lineHeight: 20, color: C.err },
   fine: { fontFamily: SANS, fontSize: 14, lineHeight: 20, color: C.muted, marginTop: 4 },
-  copyright: { marginTop: 18, textAlign: 'center', fontFamily: SANS, fontSize: 12, lineHeight: 16, color: C.muted },
-  // Pinned to the foot of the side panel, like the waitlist page's footer.
-  copyrightWide: { position: 'absolute', left: 0, right: 0, marginTop: 0 },
+  footer: { marginTop: 18 },
+  // Pinned to the foot of the side panel.
+  footerWide: { position: 'absolute', left: 24, right: 24, marginTop: 0 },
   fineCompact: { fontSize: 14, lineHeight: 20 },
   fineDense: { fontSize: 14, lineHeight: 20 },
 });

@@ -65,6 +65,7 @@ function websiteCopy(language: string, pathname = '/how-it-works') {
     logoLabel: logoLink.label,
     logoAlt: logoImage.label,
     brandCopy: ['heroIntro', 'privacy', 'thanks', 'howTitle'].map((key) => window.HalalI18n!.t(key)),
+    t: (key: string) => window.HalalI18n!.t(key),
   };
 }
 
@@ -167,7 +168,13 @@ test('waitlist and auth home surfaces use a compact How it works action, not the
   const waitlist = readFileSync(`${root}/site/index.html`, 'utf8');
   const howItWorks = readFileSync(`${root}/site/how-it-works.html`, 'utf8');
   assert.doesNotMatch(waitlist, /cardsTitle|cardsBody|Halal Cards\. Learn and play together/);
-  assert.match(waitlist, /href="\/how-it-works" data-i18n="navHow"/);
+  assert.match(waitlist, /href="\/how-it-works"><span data-i18n="navHow">/);
+  // One footer for every public page, written by site/site-footer.js.
+  for (const page of ['index', 'how-it-works', 'refer']) {
+    const html = readFileSync(`${root}/site/${page}.html`, 'utf8');
+    assert.match(html, /<footer[^>]*data-site-footer><\/footer>/, `${page} uses the shared footer`);
+    assert.match(html, /src="\/site-footer\.js[^"]*"><\/script>\s*<script src="\/i18n\.js/, `${page} fills the footer before translating`);
+  }
   for (const image of ['introductions', 'privacy', 'conversation', 'halal-cards']) {
     assert.match(howItWorks, new RegExp(`src="/img/how-it-works/${image}\\.webp"`));
   }
@@ -177,9 +184,13 @@ test('waitlist and auth home surfaces use a compact How it works action, not the
   for (const file of ['app/auth.tsx', 'app/auth-email.tsx', 'app/join.tsx']) {
     const source = readFileSync(`${root}/${file}`, 'utf8');
     assert.doesNotMatch(source, /marketing\.cards(?:Title|Body)/);
-    assert.match(source, /t\('marketing\.howItWorks'\)/);
-    assert.match(source, /howItWorksUrl\(language\)/);
+    // Every public screen uses the one shared link button.
+    assert.match(source, /<(?:PublicLinks|LinkPill)/, `${file} uses the shared link button`);
   }
+  const pills = readFileSync(`${root}/src/components/brand/LinkPill.tsx`, 'utf8');
+  assert.match(pills, /t\('marketing\.howItWorks'\)/);
+  assert.match(pills, /howItWorksUrl\(language\)/);
+  assert.match(pills, /referUrl\(language\)/);
 });
 
 test('public-site crawler metadata points to only the canonical marketing routes', () => {
@@ -215,9 +226,13 @@ test('auth and native waitlist surfaces use a compact How it works action', () =
   for (const file of ['app/auth.tsx', 'app/auth-email.tsx', 'app/join.tsx']) {
     const source = readFileSync(`${root}/${file}`, 'utf8');
     assert.doesNotMatch(source, /marketing\.cards(?:Title|Body)/);
-    assert.match(source, /t\('marketing\.howItWorks'\)/);
-    assert.match(source, /howItWorksUrl\(language\)/);
+    // Every public screen uses the one shared link button.
+    assert.match(source, /<(?:PublicLinks|LinkPill)/, `${file} uses the shared link button`);
   }
+  const pills = readFileSync(`${root}/src/components/brand/LinkPill.tsx`, 'utf8');
+  assert.match(pills, /t\('marketing\.howItWorks'\)/);
+  assert.match(pills, /howItWorksUrl\(language\)/);
+  assert.match(pills, /referUrl\(language\)/);
   const emailAuth = readFileSync(`${root}/app/auth-email.tsx`, 'utf8');
   assert.match(emailAuth, /const \{ language \} = useSession\(\)/);
   assert.match(emailAuth, /style=\{styles\.topRow\}/);
@@ -225,5 +240,24 @@ test('auth and native waitlist surfaces use a compact How it works action', () =
     const source = readFileSync(`${root}/${file}`, 'utf8');
     assert.match(source, /import Head from 'expo-router\/head'/);
     assert.match(source, /<title>/);
+  }
+});
+
+test('the sign-up screen speaks with the waitlist page words in every language', () => {
+  const catalogs: [string, Record<string, string>][] = [
+    ['en', en], ['ar', ar], ['ur', ur], ['fa', fa], ['hi', hi], ['id', id],
+    ['ms', ms], ['bn', bn], ['fr', fr], ['tr', tr], ['ha', ha], ['am', am],
+    ['so', so], ['es', es], ['ru', ru], ['zh-Hans', zhHans],
+  ];
+  const same: [string, string][] = [
+    ['auth.heroTitle', 'heroTitle'],
+    ['marketing.howItWorks', 'navHow'],
+    ['marketing.refer', 'navRefer'],
+    ['marketing.questions', 'questions'],
+  ];
+  for (const [language, catalog] of catalogs) {
+    const site = websiteCopy(language, '/');
+    for (const [app, web] of same) assert.equal(catalog[app], site.t(web), `${language}: ${app}`);
+    assert.equal(catalog['auth.heroIntro'], `${site.t('heroIntro')} ${site.t('heroBold')}`.trim(), `${language}: auth.heroIntro`);
   }
 });

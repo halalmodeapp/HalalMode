@@ -665,7 +665,7 @@
 
   function buildSelector() {
     const header = document.querySelector('header');
-    const nav = header && header.querySelector('.nav');
+    const nav = header && header.querySelector('.pill-link');
     if (!nav) return;
     const actions = header.querySelector('.header-actions') || document.createElement('div');
     if (!actions.className) actions.className = 'header-actions';

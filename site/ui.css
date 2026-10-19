@@ -1,0 +1,13 @@
+/* Shared pieces of every halalmo.de page. The app draws the same pieces from
+   src/components/brand/LinkPill.tsx and SiteFooter.tsx. */
+
+/* Link button: mixed case with an arrow. Halal Pink for the page's main
+   action, an outlined pill for the rest. */
+.pill-link{display:inline-flex;align-items:center;justify-content:center;gap:.35em;padding:8px 15px;border:1px solid rgba(184,145,79,.2);border-radius:999px;background:rgba(252,252,251,.9);color:#0A0A0A;text-decoration:none;font:600 13px/18px ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:0;text-transform:none;white-space:nowrap;transition:color .15s ease,border-color .15s ease,background-color .15s ease}
+.pill-link:hover{color:#B8914F;border-color:rgba(184,145,79,.45)}
+.pill-link-primary{background:#FC3C6C;border-color:#FC3C6C;color:#fff}
+.pill-link-primary:hover{background:#C2124A;border-color:#C2124A;color:#fff}
+.pill-link:focus-visible{outline:2px solid #B8914F;outline-offset:2px}
+.pill-arrow{display:inline-block}
+[dir=rtl] .pill-arrow{transform:scaleX(-1)}
+.pill-links{display:flex;flex-wrap:wrap;align-items:center;gap:8px}

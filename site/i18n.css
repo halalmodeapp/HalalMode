@@ -1,6 +1,6 @@
 header{direction:ltr}
 .header-actions{display:flex;align-items:center;gap:12px;min-width:0;direction:ltr}
-.header-actions .nav{direction:auto;text-align:center;white-space:normal;min-width:0}
+.header-actions .pill-link{direction:auto;text-align:center;min-width:0}
 header .logo-link{flex:none}
 .language-picker{position:relative;flex:none;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
 .language-trigger{display:grid;place-items:center;width:38px;height:38px;padding:0;border:1px solid rgba(184,145,79,.24);border-radius:50%;background:rgba(252,252,251,.88);color:#3B3934;cursor:pointer;box-shadow:0 4px 18px rgba(10,10,10,.05);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
@@ -17,7 +17,7 @@ html[lang=ar] body,html[lang=ur] body,html[lang=fa] body,html[lang=hi] body,html
 html[lang=am] body{font-family:"Ebrima",ui-sans-serif,system-ui,sans-serif;line-height:1.7}
 html[lang=am] h1{font-weight:500;font-size:clamp(38px,4.8vw,72px)}
 html[lang=am] .lede{font-size:clamp(18px,1.4vw,21px)}
-html[lang=am] .nav{letter-spacing:0;font-size:13px}
+
 html[dir=rtl] h1,html[dir=rtl] h2{letter-spacing:0}
 html[dir=rtl] .hero{direction:ltr}
 html[dir=rtl] .hero>div{direction:rtl}
@@ -29,7 +29,7 @@ html[dir=rtl] .card input:not([type=email]),html[dir=rtl] .card select{text-alig
 html[dir=rtl] .hero>div,html[dir=rtl] .feature,html[dir=rtl] footer{text-align:right}
 main h1,main h2,.cta{overflow-wrap:break-word}
 .cta{max-width:100%}
-@media(max-width:480px){.header-actions{gap:7px}.header-actions .nav{font-size:11px;letter-spacing:.06em}.header-actions .nav-refer{display:none}.language-trigger{width:36px;height:36px}.language-menu{width:min(340px,calc(100vw - 36px));padding:7px}.language-option{font-size:13px;padding:10px 8px}}
+@media(max-width:480px){.header-actions{gap:7px}.header-actions .pill-link{padding:7px 12px;font-size:12px}.header-actions .pill-link:not(.pill-link-primary){display:none}.language-trigger{width:36px;height:36px}.language-menu{width:min(340px,calc(100vw - 36px));padding:7px}.language-option{font-size:13px;padding:10px 8px}}
 /* One serif across halalmo.de and the app: Playfair Display, the app's face for
    headlines. Scripts it does not cover keep their own fonts. */
 @font-face{font-family:'Playfair Display';src:url('/fonts/PlayfairDisplay-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}

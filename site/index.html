@@ -22,7 +22,8 @@ if(/[?&]verify=/.test(window.location.search))window.location.replace('/refer'+w
 <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2"><link rel="icon" type="image/png" href="/favicon.png?v=2">
 <link rel="stylesheet" href="/scene.css?v=20261019a">
 <link rel="stylesheet" href="/logo-effect.css?v=20261019a">
-<link rel="stylesheet" href="/i18n.css?v=20261019c">
+<link rel="stylesheet" href="/ui.css?v=20261019a">
+<link rel="stylesheet" href="/i18n.css?v=20261019d">
 <style>
 :root{/* Brand: Halal Gold (--gold) and Halal Pink (--halal-pink, the bougainvillea's pink). */
 --surface:#FCFCFB;--sand:#F2F0EC;--ink:#0A0A0A;--soft:#3B3934;--muted:#6C6A65;--label:#8B8880;--gold:#B8914F;--halal-pink:#FC3C6C;--halal-pink-deep:#C2124A;--halal-pink-wash:rgba(252,60,108,.10);--cover-dune:#E8DBC5;--cover-ground:#D6BF96;--cover-plant:#526E64;--sidebar-width:clamp(360px,30vw,500px);--line:rgba(184,145,79,.2);--green:#2F5D4A;--err:#9b2c2c}
@@ -72,12 +73,6 @@ header{position:absolute;z-index:5;top:0;left:clamp(22px,3vw,54px);right:clamp(2
    radial falloff, so it reads as shade on the illustration rather than a shape. */
 header::before{content:'';position:absolute;z-index:-1;pointer-events:none;top:0;left:calc(-1 * clamp(22px,3vw,54px));width:clamp(420px,38vw,700px);height:clamp(200px,27vh,320px);background:radial-gradient(farthest-side at 0 0,rgba(10,10,10,.58) 0%,rgba(10,10,10,.55) 18%,rgba(10,10,10,.49) 30%,rgba(10,10,10,.41) 41%,rgba(10,10,10,.32) 51%,rgba(10,10,10,.23) 61%,rgba(10,10,10,.14) 71%,rgba(10,10,10,.07) 81%,rgba(10,10,10,.02) 91%,rgba(10,10,10,0) 100%)}
 .hero{position:relative}
-.nav{font:600 12px ui-sans-serif,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);text-decoration:none;background:rgba(252,252,251,.82);padding:8px 14px;border-radius:999px}
-.nav:hover{color:var(--gold)}
-.nav-primary{background:var(--halal-pink);color:#fff}
-.nav-primary:hover{background:var(--halal-pink-deep);color:#fff}
-.nav-arrow{display:inline-block}
-[dir="rtl"] .nav-arrow{transform:scaleX(-1)}
 .logo{height:30px;width:auto;display:block}
 /* A small trademark mark beside the wordmark. */
 .logo-tm{position:absolute;left:100%;top:-1px;margin-left:3px;font:600 9px/1 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:0;pointer-events:none;color:#fff;text-shadow:0 1px 4px rgba(10,10,10,.35)}
@@ -157,16 +152,14 @@ button:disabled{opacity:.55;cursor:wait}
   .logo{height:25px}
   header{position:fixed;z-index:6;left:20px;right:20px;padding:14px 0}
   header::before{left:-20px;width:min(560px,94vw);height:min(150px,20svh)}
-  header .header-actions .nav{display:none}
+  header .header-actions .pill-link{display:none}
   #cover-couple{position:fixed;z-index:3;top:0;right:0;left:0;margin:0;width:auto;height:var(--scene-full);border-radius:0 0 22px 22px;box-shadow:0 10px 30px rgba(10,10,10,.14)}
   .hero{position:relative;z-index:2;display:block;height:auto;margin-top:calc(var(--scene-full) - 24px);padding:40px clamp(18px,5vw,28px) calc(18px + env(safe-area-inset-bottom));background:var(--surface);border-radius:24px 24px 0 0;pointer-events:auto}
   .hero-spacer{display:none}
   .hero-sidebar{display:block;height:auto;max-width:640px;margin:0 auto;padding:0;overflow:visible;background:transparent;border:0;box-shadow:none}
   h1{font-size:clamp(28px,7.4vw,44px);margin:0 0 10px}
   .lede{font-size:15px;line-height:1.55;margin-bottom:14px}
-  .mobile-links{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
-  .how-link{display:inline-flex;align-items:center;gap:.35em;padding:9px 16px;border:1px solid var(--line);border-radius:999px;color:var(--ink);text-decoration:none;font:600 13px ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
-  .how-link-primary{background:var(--halal-pink);border-color:var(--halal-pink);color:#fff}
+  .mobile-links{display:flex;margin:0 0 18px}
   .stores{gap:8px;margin-bottom:14px}
   .slot{gap:3px}
   .soon{font-size:9.5px}
@@ -218,8 +211,8 @@ button:disabled{opacity:.55;cursor:wait}
 <header>
   <a class="logo-link" href="/" aria-label="Halal Mode" data-brand-name-aria><img class="logo" src="/logo.svg" alt="Halal Mode"><sup class="logo-tm" aria-hidden="true">™</sup><span class="logo-effect" aria-hidden="true"><span class="logo-shader"></span></span></a>
   <div class="header-actions">
-    <a class="nav nav-primary" href="/how-it-works"><span data-i18n="navHow">How it works</span> <span class="nav-arrow" aria-hidden="true">→</span></a>
-    <a class="nav nav-refer" href="/refer"><span data-i18n="navRefer">Refer your friends</span> <span class="nav-arrow" aria-hidden="true">→</span></a>
+    <a class="pill-link pill-link-primary" href="/how-it-works"><span data-i18n="navHow">How it works</span> <span class="pill-arrow" aria-hidden="true">→</span></a>
+    <a class="pill-link" href="/refer"><span data-i18n="navRefer">Refer your friends</span> <span class="pill-arrow" aria-hidden="true">→</span></a>
   </div>
 </header>
 
@@ -230,9 +223,9 @@ button:disabled{opacity:.55;cursor:wait}
     <h1 data-i18n="heroTitle">Marriage, taken seriously.</h1>
     <p class="lede"><span data-i18n="heroIntro">Halal Mode is a better Muslim marriage app, built around a small, curated set of introductions each day. It’s intentionally designed for</span> <span data-i18n="heroBold">less noise and better connections.</span></p>
 
-    <nav class="mobile-links" aria-label="More">
-      <a class="how-link how-link-primary" href="/how-it-works"><span data-i18n="navHow">How it works</span> <span class="nav-arrow" aria-hidden="true">→</span></a>
-      <a class="how-link" href="/refer"><span data-i18n="navRefer">Refer your friends</span> <span class="nav-arrow" aria-hidden="true">→</span></a>
+    <nav class="mobile-links pill-links" aria-label="More">
+      <a class="pill-link pill-link-primary" href="/how-it-works"><span data-i18n="navHow">How it works</span> <span class="pill-arrow" aria-hidden="true">→</span></a>
+      <a class="pill-link" href="/refer"><span data-i18n="navRefer">Refer your friends</span> <span class="pill-arrow" aria-hidden="true">→</span></a>
     </nav>
     <div class="stores" aria-label="App availability" data-i18n-aria="availability">
       <div class="slot"><span class="soon" data-i18n="comingSoon">Coming soon</span><div class="store ios" role="img" aria-label="App Store, coming soon">
@@ -269,12 +262,7 @@ button:disabled{opacity:.55;cursor:wait}
       <a class="joined-refer" href="/refer" data-i18n="navRefer">Refer your friends</a>
     </div>
   </form>
-  <footer class="site-footer">
-    <span>© <span id="yr">2026</span> <span data-brand-name>Halal Mode</span></span>
-    <a href="/how-it-works" data-i18n="navHow">How it works</a>
-    <a href="/refer" data-i18n="navRefer">Refer your friends</a>
-    <span><span data-i18n="questions">Questions?</span> <a href="mailto:hello@halalmo.de">hello@halalmo.de</a></span>
-  </footer>
+  <footer class="site-footer" data-site-footer></footer>
   </div>
 
 </div>
@@ -283,7 +271,8 @@ button:disabled{opacity:.55;cursor:wait}
 
 
 <div id="dots" role="tablist" aria-label="Photos" data-i18n-aria="photos"></div>
-<script src="/i18n.js?v=20261019c"></script>
+<script src="/site-footer.js?v=20261019a"></script>
+<script src="/i18n.js?v=20261019d"></script>
 <script src="/waitlist-email.js?v=20261018a"></script>
 <script>
 /* ---------- Waitlist ---------- */
@@ -293,7 +282,6 @@ button:disabled{opacity:.55;cursor:wait}
   var REFERRAL_EXISTS_URL=BASE+'/rest/v1/rpc/referral_code_exists';
   var KEY='sb_publishable_yioJpXVD_u-krXHgA7souQ_2pOiITsN';
   var REFERRAL_STORAGE='halal-mode-referral-code';
-  document.getElementById('yr').textContent=new Date().getFullYear();
   var f=document.getElementById('f'),msg=document.getElementById('msg'),go=document.getElementById('go');
   function say(key,ok){msg.dataset.messageKey=key||'';msg.textContent=key?window.HalalI18n.t(key):'';msg.className='msg '+(ok?'ok':'bad')}
   function sayText(text,ok){msg.dataset.messageKey='';msg.textContent=text;msg.className='msg '+(ok?'ok':'bad')}
