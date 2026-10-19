@@ -1,6 +1,9 @@
 .logo-link{position:relative;display:inline-block;line-height:0;isolation:isolate}
 .logo-effect{position:absolute;inset:0;pointer-events:none;opacity:0;overflow:hidden;transition:opacity .7s ease;-webkit-mask:url('/logo-heart.svg') center/100% 100% no-repeat;mask:url('/logo-heart.svg') center/100% 100% no-repeat}
 .logo-link.is-ready.is-active .logo-effect{opacity:1;transition-duration:.1s}
+/* Its darkest bands become a deep Halal Pink instead of black. */
+.logo-effect{isolation:isolate}
+.logo-effect::after{content:'';position:absolute;inset:0;background:#A3164A;mix-blend-mode:lighten;pointer-events:none}
 /* Lifted so the pink chrome reads light rather than dark. */
 .logo-shader{position:absolute;inset:-15.8% -15.8%;filter:brightness(1.45) saturate(1.05)}
 .logo-shader canvas{z-index:0!important}

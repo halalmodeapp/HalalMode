@@ -46,7 +46,7 @@ export function ShiningWordmark(props: WordmarkProps) {
       // A layer the size of the logo, cut to its heart by a mask.
       const layer = document.createElement('div');
       Object.assign(layer.style, {
-        position: 'absolute', inset: '0', pointerEvents: 'none', opacity: '0', overflow: 'hidden',
+        position: 'absolute', inset: '0', pointerEvents: 'none', opacity: '0', overflow: 'hidden', isolation: 'isolate',
         transition: 'opacity .7s ease',
         maskImage: HEART_MASK, maskSize: '100% 100%', maskRepeat: 'no-repeat', maskPosition: 'center',
         webkitMaskImage: HEART_MASK, webkitMaskSize: '100% 100%', webkitMaskRepeat: 'no-repeat', webkitMaskPosition: 'center',
@@ -55,6 +55,10 @@ export function ShiningWordmark(props: WordmarkProps) {
       // Lifted so the pink chrome reads light, as on halalmo.de (logo-effect.css).
       Object.assign(mount.style, { position: 'absolute', inset: '-15.8%', filter: 'brightness(1.45) saturate(1.05)' });
       layer.appendChild(mount);
+      // Its darkest bands become a deep Halal Pink instead of black.
+      const deepen = document.createElement('div');
+      Object.assign(deepen.style, { position: 'absolute', inset: '0', background: '#A3164A', mixBlendMode: 'lighten', pointerEvents: 'none' });
+      layer.appendChild(deepen);
       element.appendChild(layer);
 
       let shader: { setSpeed: (speed: number) => void; dispose: () => void };
