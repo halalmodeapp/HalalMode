@@ -5,12 +5,10 @@ import { Linking, Platform, Pressable, ScrollView, Share, StyleSheet, View } fro
 import { fetchMyReferralProgress, type ReferralProgress } from '@/api/referrals';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
-import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
 import type { TranslationKey } from '@/i18n/catalog';
-import { referUrl } from '@/lib/publicLinks';
 import { queryKeys } from '@/lib/queryClient';
 import { referralTiers, type ReferralTier } from '@/lib/referralTiers';
 import { showNotice } from '@/lib/notice';
@@ -21,13 +19,12 @@ function rewardLabel(goal: number): TranslationKey {
 }
 
 /**
- * The member's waitlist referral link and progress, the same as
- * halalmo.de/refer shows, for whoever is signed in with the address they
- * joined the waitlist with. Without a confirmed link it points them to that
- * page, where confirming their email gives them one.
+ * The member's one referral link, its code, and their progress: the same
+ * numbers halalmo.de/refer shows. Every signed-in member has a link here, with
+ * no email step; if they joined the waitlist first, it is that same link.
  */
 export default function ReferralsScreen() {
-  const { t, language } = useI18n();
+  const { t } = useI18n();
   const query = useQuery({ queryKey: queryKeys.referralProgress, queryFn: fetchMyReferralProgress });
 
   return (
@@ -45,15 +42,7 @@ export default function ReferralsScreen() {
             {query.data.state === 'verified' ? (
               <ShareCard progress={query.data} />
             ) : (
-              <View style={styles.card}>
-                {query.data.state === 'unconfirmed' ? (
-                  <Text variant="body">{t('referrals.confirmBody')}</Text>
-                ) : null}
-                <Button
-                  label={t('referrals.getLink')}
-                  onPress={() => void Linking.openURL(referUrl(language)).catch(() => undefined)}
-                />
-              </View>
+              <ErrorState message={t('profile.connectionError')} onRetry={() => void query.refetch()} />
             )}
             <View style={styles.tiers} accessibilityLabel={t('referrals.title')}>
               {referralTiers(query.data.state === 'verified' ? query.data.referralCount : null).map((tier) => (
@@ -109,6 +98,10 @@ function ShareCard({ progress }: { progress: Extract<ReferralProgress, { state: 
           {url}
         </Text>
       </View>
+      {/* For a friend who installs the app from the store, where the link's code is lost. */}
+      <Text variant="bodySmall" style={styles.codeLine}>
+        {t('referrals.codeLabel')} <Text selectable style={styles.codeText}>{progress.referralCode}</Text>
+      </Text>
       <View style={styles.actions}>
         <Pressable
           accessibilityRole="button"
@@ -180,6 +173,8 @@ function TierCard({ tier, known }: { tier: ReferralTier; known: boolean }) {
 }
 
 const styles = StyleSheet.create({
+  codeLine: { marginTop: space.xs, color: color.inkSoft },
+  codeText: { fontFamily: font.bodySemi, color: color.ink, letterSpacing: 1 },
   scroll: { paddingHorizontal: space.gutter, paddingBottom: space.xxl * 2 },
   column: { width: '100%', maxWidth: layout.maxContentWidth, alignSelf: 'center', gap: space.lg },
   intro: { color: color.inkSoft },

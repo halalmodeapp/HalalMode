@@ -19,6 +19,8 @@ import { Text } from '@/components/ui/Text';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n, type Translate } from '@/i18n';
 import { requireSupabase } from '@/lib/supabase';
+import { claimReferralCode } from '@/api/referrals';
+import { forgetReferralCode, normalizeReferralCode, pendingReferralCode } from '@/lib/referralCode';
 import { fetchMyLegalConsentStatus, recordSensitiveConsent } from '@/api/legalConsent';
 import { documentFromStatus, type LegalConsentStatus } from '@/lib/legalConsent';
 import { queryKeys } from '@/lib/queryClient';
@@ -98,6 +100,20 @@ export default function OnboardingScreen() {
   const [ageConfirmationOpen, setAgeConfirmationOpen] = useState(false);
   const [legalAccepted, setLegalAccepted] = useState(false);
   const [sensitiveAccepted, setSensitiveAccepted] = useState(false);
+  // Who invited them: filled in from the link they arrived by, or typed in.
+  const [referralCode, setReferralCode] = useState('');
+  const referralError = referralCode.trim() && !normalizeReferralCode(referralCode)
+    ? t('onboarding.referralInvalid')
+    : undefined;
+  useEffect(() => {
+    let active = true;
+    void pendingReferralCode().then((code) => {
+      if (active && code) setReferralCode((current) => current || code);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
   const legalStatusQuery = useQuery({
     queryKey: queryKeys.legalConsent,
     queryFn: fetchMyLegalConsentStatus,
@@ -246,6 +262,7 @@ export default function OnboardingScreen() {
   };
 
   const goNext = async () => {
+    if (step === 0 && referralError) return;
     if (step === 3 && (draft.latitude === undefined || draft.longitude === undefined)) {
       setErrors({ city: t('onboarding.locationRequired') });
       return;
@@ -313,6 +330,10 @@ export default function OnboardingScreen() {
         profileSavedForMember.current = draftMemberId;
       }
       await recordSensitiveConsent();
+      // Credit whoever invited them. It never holds up sign-up.
+      const invitedBy = normalizeReferralCode(referralCode);
+      if (invitedBy) await claimReferralCode(invitedBy).catch(() => undefined);
+      await forgetReferralCode();
       await clearOnboardingDraft(draftMemberId);
       // Everything fetched before this moment was fetched about somebody who did
       // not exist yet, and is cached for five minutes. Two of those answers did
@@ -389,7 +410,9 @@ export default function OnboardingScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {step === 0 ? <WelcomeStep /> : null}
+          {step === 0 ? (
+            <WelcomeStep referralCode={referralCode} onReferralCodeChange={setReferralCode} referralError={referralError} />
+          ) : null}
           {step === 1 ? (
             <IdentityStep draft={draft} errors={errors} patch={patch} />
           ) : null}
@@ -496,7 +519,15 @@ export default function OnboardingScreen() {
   );
 }
 
-function WelcomeStep() {
+function WelcomeStep({
+  referralCode,
+  onReferralCodeChange,
+  referralError,
+}: {
+  referralCode: string;
+  onReferralCodeChange: (value: string) => void;
+  referralError?: string;
+}) {
   const { t } = useI18n();
   return (
     <View>
@@ -514,6 +545,18 @@ function WelcomeStep() {
         <InfoRow
           title={t('onboarding.savedTitle')}
           body={t('onboarding.savedBody')}
+        />
+      </View>
+      <View style={styles.form}>
+        <Field
+          label={t('onboarding.referralLabel')}
+          placeholder={t('onboarding.referralPlaceholder')}
+          value={referralCode}
+          onChangeText={(value) => onReferralCodeChange(value.toUpperCase())}
+          autoCapitalize="characters"
+          autoCorrect={false}
+          maxLength={10}
+          error={referralError}
         />
       </View>
     </View>

@@ -55,6 +55,8 @@ h1{font-weight:600;font-size:clamp(40px,5vw,72px);line-height:1.02;letter-spacin
 .share-link input:focus{outline:none}
 .share-link:focus-within{border-color:rgba(184,145,79,.55)}
 .share-actions .share-link button{flex:none;min-height:42px}
+.share-code{flex-basis:100%;order:3;margin:2px 0 0;color:var(--soft);font:500 14px ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.share-code b{color:var(--ink);font-weight:650;letter-spacing:.06em}
 .share-actions .share-link button.copied{background:var(--green,#2F5D4A)}
 @media(max-width:560px){.share-link{flex-direction:column;border-radius:18px}.share-link input{padding:10px 8px;text-align:center;font-size:14px}.share-actions .share-link button,.share-whatsapp{width:100%}}
 .share-actions a,.share-actions button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 20px;border:0;border-radius:999px;background:var(--ink);color:var(--surface);font-weight:600;font-size:14px;text-decoration:none;cursor:pointer}
@@ -101,6 +103,7 @@ html[dir=rtl] main,html[dir=rtl] footer{text-align:right}
         <input id="share-url" type="text" readonly dir="ltr" spellcheck="false" aria-label="Your referral link" data-i18n-aria="referralLinkLabel">
         <button id="copy-invite" type="button"><span data-i18n="copyInvite">Copy invite link</span></button>
       </div>
+      <p class="share-code"><span data-i18n="referralCodeLabel">Your code:</span> <b id="share-code-value"></b></p>
       <a id="whatsapp-share" class="share-whatsapp" href="#" target="_blank" rel="noopener" data-i18n="shareWhatsApp">WhatsApp</a>
     </div>
     <button id="confirm-email" class="confirm-email" type="button" hidden><span data-i18n="confirmButton">Confirm my email</span></button>
@@ -110,14 +113,14 @@ html[dir=rtl] main,html[dir=rtl] footer{text-align:right}
     <div class="referral-tier" data-goal="5"><p data-i18n="reward5">5 joins → 6 months free</p><span class="tier-bar"><i></i></span><span class="tier-count"></span></div>
     <div class="referral-tier" data-goal="10"><p data-i18n="reward10">10 joins → 1 year free</p><span class="tier-bar"><i></i></span><span class="tier-count"></span></div>
   </div>
-  <p class="referral-note" data-i18n="referralNote">Referrals count once your friend verifies their email.</p>
+  <p class="referral-note" data-i18n="referralNote">A friend counts as joined once they’ve confirmed their email on the waitlist or completed their profile in the app.</p>
   <a class="cta referral-join" href="/" data-i18n="waitlistButton">Join the waitlist</a>
 </main>
 
 <footer data-site-footer></footer>
 </div>
 <script src="/site-footer.js?v=20261019a"></script>
-<script src="/i18n.js?v=20261019d"></script>
+<script src="/i18n.js?v=20261019f"></script>
 <script src="/waitlist-email.js?v=20261018a"></script>
 <script>
 /* ---------- Waitlist verification and referral sharing ---------- */
@@ -192,6 +195,7 @@ html[dir=rtl] main,html[dir=rtl] footer{text-align:right}
     shareUrl=String(verified.referral_url||'');
     if(shareUrl){
       urlBox.value=shareUrl;
+      document.getElementById('share-code-value').textContent=String(verified.referral_code||'');
       whatsapp.href='https://wa.me/?text='+encodeURIComponent(t('shareMessage').replace('{{url}}',shareUrl));
       share.hidden=false;
     }

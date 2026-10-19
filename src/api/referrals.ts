@@ -14,9 +14,10 @@ export type ReferralProgress =
   | { state: 'not_on_waitlist' };
 
 /**
- * The member's waitlist referral link and how many friends have counted, found
- * by the confirmed email on their account. The same numbers halalmo.de/refer
- * shows; the server never sends back the address itself.
+ * The member's one referral link and how many friends have counted: the same
+ * code and numbers halalmo.de/refer shows. Every signed-in member has one;
+ * if they joined the waitlist with this account's email, it is that link.
+ * The server never sends back an email address.
  */
 export async function fetchMyReferralProgress(): Promise<ReferralProgress> {
   if (USE_MOCKS) {
@@ -50,4 +51,19 @@ export function parseReferralProgress(data: unknown): ReferralProgress {
     };
   }
   return { state: row.state === 'not_on_waitlist' ? 'not_on_waitlist' : 'unconfirmed' };
+}
+
+export type ReferralClaim = 'claimed' | 'already' | 'own' | 'too_late' | 'invalid';
+
+/**
+ * Records who invited the signed-in member, once, in their first 30 days. The
+ * friend counts toward that person's rewards once this member's profile is
+ * complete.
+ */
+export async function claimReferralCode(code: string): Promise<ReferralClaim> {
+  if (USE_MOCKS) return 'claimed';
+  const { data, error } = await requireSupabase().rpc('claim_referral_code', { p_code: code });
+  if (error) throw error;
+  const state = (data as { state?: unknown } | null)?.state;
+  return state === 'claimed' || state === 'already' || state === 'own' || state === 'too_late' ? state : 'invalid';
 }

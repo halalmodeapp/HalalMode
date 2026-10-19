@@ -11,6 +11,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { installErrorReporting } from '@/lib/errorReporting';
 import { installPostHog } from '@/lib/posthog';
+import { useReferralLinkCapture } from '@/lib/referralCode';
 import { queryClient } from '@/lib/queryClient';
 import { I18nProvider, useI18n } from '@/i18n';
 import { AuthGate, AuthProvider } from '@/state/auth';
@@ -74,6 +75,8 @@ if (Platform.OS === 'web' && typeof window !== 'undefined') {
 
 export default function RootLayout() {
   const breakpoint = useBreakpoint();
+  // Whoever shared the link that opened the app gets the credit at sign-up.
+  useReferralLinkCapture();
   const [fontsLoaded, fontError] = useFonts({
     PlayfairDisplay_400Regular,
     PlayfairDisplay_400Regular_Italic,

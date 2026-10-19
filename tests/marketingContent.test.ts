@@ -261,3 +261,30 @@ test('the sign-up screen speaks with the waitlist page words in every language',
     assert.equal(catalog['auth.heroIntro'], `${site.t('heroIntro')} ${site.t('heroBold')}`.trim(), `${language}: auth.heroIntro`);
   }
 });
+
+test('after-launch copy pairs with its usual copy, with the same placeholders, in every language', () => {
+  const catalogs: [string, Record<string, string>][] = [
+    ['en', en], ['ar', ar], ['ur', ur], ['fa', fa], ['hi', hi], ['id', id],
+    ['ms', ms], ['bn', bn], ['fr', fr], ['tr', tr], ['ha', ha], ['am', am],
+    ['so', so], ['es', es], ['ru', ru], ['zh-Hans', zhHans],
+  ];
+  const placeholders = (text: string) => (text.match(/\{\{\w+\}\}/g) ?? []).sort().join(',');
+  const appKeys = Object.keys(en).filter((key) => key.endsWith('Launched'));
+  assert.ok(appKeys.length >= 5, 'the app has after-launch copy');
+  for (const [language, catalog] of catalogs) {
+    for (const key of appKeys) {
+      const base = key.slice(0, -'Launched'.length);
+      assert.ok(catalog[key]?.trim(), `${language}: ${key}`);
+      assert.ok(catalog[base]?.trim(), `${language}: ${key} has its usual copy ${base}`);
+      assert.equal(placeholders(catalog[key]!), placeholders(catalog[base]!), `${language}: ${key} placeholders`);
+    }
+  }
+  // The website: every language carries the same after-launch keys.
+  const source = readFileSync(`${root}/site/i18n.js`, 'utf8');
+  const blocks = source.split(/\n    '?[\w-]+'?: \{\n/).slice(1, 17);
+  assert.equal(blocks.length, 16);
+  const siteKeys = (block: string) => [...block.matchAll(/(\w+Launched):/g)].map((m) => m[1]).sort().join(',');
+  const expected = siteKeys(blocks[0]!);
+  assert.ok(expected.split(',').length >= 5, 'the website has after-launch copy');
+  for (const block of blocks) assert.equal(siteKeys(block), expected);
+});
