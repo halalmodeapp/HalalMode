@@ -10,8 +10,11 @@ type AppConfig = {
   };
 };
 
-test('native updates are tied to an explicitly versioned runtime', () => {
+// An over-the-air update only reaches installed apps whose native code it was
+// built against, so .eas/workflows can publish on every push without crashing
+// an older APK.
+test('native updates are tied to the native code fingerprint', () => {
   const config = JSON.parse(readFileSync(resolve(process.cwd(), 'app.json'), 'utf8')) as AppConfig;
-  assert.equal(config.expo?.runtimeVersion?.policy, 'appVersion');
+  assert.equal(config.expo?.runtimeVersion?.policy, 'fingerprint');
   assert.equal(config.expo?.scheme, 'halalmode');
 });

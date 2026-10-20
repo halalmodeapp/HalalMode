@@ -12,7 +12,12 @@ tmp/
 docs/
 tests/
 maestro/
-site/
+# The website, except the images the app bundles (cover scene, wordmark map).
+site/*
+!site/logo-liquid-metal-map.png
+!site/img
+site/img/*
+!site/img/scene
 .github/
 Halal Mode LLC EIN Packet/
 android/
