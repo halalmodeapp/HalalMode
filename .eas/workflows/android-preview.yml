@@ -1,39 +1,19 @@
 # Keeps the Android preview app on the latest pushed code.
 #
-# On every push to the main branch: if the native code is unchanged since an
-# existing preview build (same fingerprint), publish an over-the-air update
-# that installed apps pick up on their next launch; otherwise make a new APK.
-# Needs runtimeVersion { policy: "fingerprint" } in app.json, and the GitHub
-# repository linked to the project on expo.dev.
-name: Android preview
+# On every push to the main branch an over-the-air update is published to the
+# preview channel; installed apps pick it up on their next launch. Updates are
+# labelled with the native code fingerprint (runtimeVersion policy in app.json),
+# so an app only receives updates it can run. After a native change (a new
+# native package, icons, an Expo upgrade) make a new APK once:
+#   npx eas-cli workflow:run .eas/workflows/android-preview-build.yml
+name: Android preview update
 
 on:
   push:
     branches: ['codex/premium-foundation']
 
 jobs:
-  fingerprint:
-    type: fingerprint
-
-  get_build:
-    needs: [fingerprint]
-    type: get-build
-    params:
-      fingerprint_hash: ${{ needs.fingerprint.outputs.android_fingerprint_hash }}
-      platform: android
-      profile: preview-arm64
-
-  build:
-    needs: [get_build]
-    if: ${{ !needs.get_build.outputs.build_id }}
-    type: build
-    params:
-      platform: android
-      profile: preview-arm64
-
   update:
-    needs: [get_build]
-    if: ${{ needs.get_build.outputs.build_id }}
     type: update
     params:
       platform: android

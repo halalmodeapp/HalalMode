@@ -1,0 +1,13 @@
+# A new Android preview APK, for after a native change. Run by hand:
+#   npx eas-cli workflow:run .eas/workflows/android-preview-build.yml
+name: Android preview build
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    type: build
+    params:
+      platform: android
+      profile: preview-arm64
