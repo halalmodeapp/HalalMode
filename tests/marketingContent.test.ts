@@ -202,7 +202,10 @@ test('public-site crawler metadata points to only the canonical marketing routes
   assert.match(waitlist, /<link rel="canonical" href="https:\/\/halalmo\.de\/">/);
   assert.match(howItWorks, /<link rel="canonical" href="https:\/\/halalmo\.de\/how-it-works">/);
   assert.match(refer, /<link rel="canonical" href="https:\/\/halalmo\.de\/refer">/);
-  assert.match(robots, /^User-agent: \*\nAllow: \/\n\nSitemap: https:\/\/halalmo\.de\/sitemap\.xml\n$/);
+  assert.match(
+    robots,
+    /^User-agent: \*\nAllow: \/\n# The app is not open yet; only the waitlist pages should be found\.\nDisallow: \/app\/\n\nSitemap: https:\/\/halalmo\.de\/sitemap\.xml\n$/
+  );
   assert.deepEqual([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]), [
     'https://halalmo.de/',
     'https://halalmo.de/how-it-works',

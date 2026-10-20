@@ -22,3 +22,22 @@ test('Cloudflare rules are derived for every dynamic Expo Router page', () => {
   assert.equal(output.trimEnd().split('\n').length, routes.length);
   assert.equal(new Set(routes.map((route) => route.source)).size, routes.length);
 });
+
+test('a waitlist-only deploy sends every app address away and keeps the legal pages', async () => {
+  const { legalPage, waitlistOnlyRedirects } = await import('../scripts/legal-pages.mjs');
+  const rules = waitlistOnlyRedirects().trimEnd().split('\n');
+  // Specific rules first: Cloudflare uses the first rule that matches.
+  assert.deepEqual(rules, [
+    '/app/terms /legal/terms 301',
+    '/app/privacy /legal/privacy 301',
+    '/app / 302',
+    '/app/* / 302',
+  ]);
+
+  const doc = { slug: 'terms', title: 'Terms <of> Service', updated: '2026-10-06', intro: 'Hello & welcome.', sections: [{ heading: 'One', body: ['A line.'] }] };
+  const html = legalPage(doc, { slug: 'privacy' });
+  assert.match(html, /<title>Terms &lt;of&gt; Service · Halal Mode<\/title>/);
+  assert.match(html, /Hello &amp; welcome\./);
+  assert.match(html, /href="\/legal\/privacy">Read the Privacy Notice/);
+  assert.doesNotMatch(html, /<script/);
+});

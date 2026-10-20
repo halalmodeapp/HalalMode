@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+# The app is not open yet; only the waitlist pages should be found.
+Disallow: /app/
 
 Sitemap: https://halalmo.de/sitemap.xml

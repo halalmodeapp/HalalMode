@@ -62,9 +62,10 @@ test('the summary reports counts and never an address', () => {
   );
 });
 
-test('the landing page reaches the server through the verified waitlist function', () => {
+test('the app join page reaches the server through the same function as the website', () => {
   const api = read('src/api/waitlist.ts');
-  assert.match(api, /rpc\('request_waitlist_verification'/u);
+  assert.match(api, /rpc\('join_waitlist_now'/u);
+  assert.doesNotMatch(api, /request_waitlist_verification/u);
   // Lowercased and trimmed before it leaves, so the same person signing up from
   // two devices is one row rather than two.
   assert.match(api, /\.trim\(\)\.toLowerCase\(\)/u);

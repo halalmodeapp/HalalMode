@@ -12,7 +12,7 @@ export interface WaitlistEntry {
 }
 
 export interface WaitlistJoinResult {
-  state: 'verification_required';
+  state: 'joined';
 }
 
 /**
@@ -26,16 +26,19 @@ export interface WaitlistJoinResult {
 export async function joinWaitlist(entry: WaitlistEntry): Promise<WaitlistJoinResult> {
   if (USE_MOCKS) {
     await new Promise((resolve) => setTimeout(resolve, 400));
-    return { state: 'verification_required' };
+    return { state: 'joined' };
   }
 
   const client = requireSupabase();
-  const { data, error } = await client.rpc('request_waitlist_verification', {
+  // The same endpoint as the website: the place is saved at once and a
+  // thank-you email follows.
+  const { error } = await client.rpc('join_waitlist_now', {
     p_email: entry.email.trim().toLowerCase(),
     p_city: entry.city.trim(),
     p_age_range: entry.ageRange,
     p_locale: entry.locale ?? null,
+    p_referral_code: null,
   });
   if (error) throw error;
-  return { state: data?.state === 'verification_required' ? data.state : 'verification_required' };
+  return { state: 'joined' };
 }

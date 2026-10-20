@@ -14,3 +14,7 @@
 
 /img/scene/*
   Cache-Control: public, max-age=31536000, immutable
+
+# The app is not open yet: keep it out of search results.
+/app/*
+  X-Robots-Tag: noindex, nofollow

@@ -3,7 +3,7 @@ import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 
 import { exchangeAuthCodeOnce } from '@/lib/authCodeExchange';
-import { requireSupabase } from '@/lib/supabase';
+import { requireSupabase, USE_MOCKS } from '@/lib/supabase';
 import { withDeadline } from '@/lib/withDeadline';
 
 /**
@@ -16,6 +16,27 @@ import { withDeadline } from '@/lib/withDeadline';
 export type AuthProvider = 'google' | 'apple';
 
 export const REDIRECT_TO = 'halalmode://auth';
+
+/**
+ * The sign-in providers switched on for this Supabase project, read from its
+ * public auth settings, so a provider that is off (Apple, until it is set up)
+ * is never offered. Google alone if the settings cannot be read.
+ */
+export async function fetchEnabledProviders(): Promise<AuthProvider[]> {
+  if (USE_MOCKS) return ['google', 'apple'];
+  const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
+  const key = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return ['google'];
+  try {
+    const response = await withDeadline(fetch(`${url}/auth/v1/settings`, { headers: { apikey: key } }), 8000);
+    if (!response.ok) return ['google'];
+    const settings = (await response.json()) as { external?: Partial<Record<AuthProvider, boolean>> };
+    const enabled = (['google', 'apple'] as const).filter((provider) => settings.external?.[provider] === true);
+    return enabled.length ? [...enabled] : ['google'];
+  } catch {
+    return ['google'];
+  }
+}
 
 /**
  * Where sign-in returns to: the app's own address on the web (which lives under
