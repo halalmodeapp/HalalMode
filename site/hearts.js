@@ -17,7 +17,7 @@
   stage.appendChild(cv);
   let ctx=cv.getContext('2d');
   let reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let mobileMQ=window.matchMedia('(max-width: 960px)');
+  let mobileMQ=window.matchMedia('(max-width: 960px) and (orientation: portrait), (max-width: 960px) and (min-height: 600px)');
 
   /* ---------- engine ---------- */
   let width=1,height=1,cols=0,rows=0;
@@ -25,7 +25,7 @@
   let seen=new Int32Array(0),frameNo=0;
   let bb={i0:1,i1:0,j0:1,j1:0};      /* box around every cell a wake still touches */
   let hearts=[],grabbed=null,trail=[];
-  function baseSize(){return Math.max(44,Math.min(width,height*1.1)*(width<=960?.36:.24))}
+  function baseSize(){return Math.max(44,Math.min(width,height*1.1)*(mobileMQ.matches?.36:.24))}
   function seat(h,i){
     h.size=baseSize()*(SIZES[i]||1);h.radius=h.size*.4;
     let s=SPOTS[i]||SPOTS[0];h.x=width*s[0];h.y=height*s[1];
