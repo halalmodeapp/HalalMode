@@ -14,10 +14,11 @@ select ok(
   'referral rows remain private'
 );
 select ok(
-  has_function_privilege('anon', 'public.request_waitlist_verification(text,text,text,text,text)', 'EXECUTE')
+  -- Retired for the public in 20261020100000; join_waitlist_now replaces it.
+  not has_function_privilege('anon', 'public.request_waitlist_verification(text,text,text,text,text)', 'EXECUTE')
   and has_function_privilege('anon', 'public.referral_code_exists(text)', 'EXECUTE')
   and not has_function_privilege('anon', 'public.verify_waitlist_token(text)', 'EXECUTE'),
-  'anonymous callers can request and validate, but cannot read verification state directly'
+  'anonymous callers can validate codes, but cannot read verification state directly'
 );
 select ok(
   position('pg_advisory_xact_lock' in pg_get_functiondef(

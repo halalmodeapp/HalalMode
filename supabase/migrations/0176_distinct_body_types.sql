@@ -12,6 +12,11 @@
 -- own_build_also is an optional second. A body-type filter is met by either.
 -- Existing answers and filters are mapped to the nearest new option.
 
+-- On a fresh database this runs before the 20260813* migrations (file names
+-- sort that way), so function bodies are checked when they run, not now.
+-- 20261020090000 restates the matching functions as production has them.
+set local check_function_bodies = off;
+
 create or replace function public.valid_build(p text)
 returns boolean
 language sql

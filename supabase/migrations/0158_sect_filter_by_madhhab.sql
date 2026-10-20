@@ -7,6 +7,12 @@
 -- Only matching_shortlist_batch_edges changes; it is restated from
 -- 20260813091106 with the two sect clauses and two live columns swapped in.
 
+-- On a fresh database this file runs before 20260813* (file names sort that
+-- way), when the snapshot columns the body reads do not exist yet, so the body
+-- is checked when it runs rather than now. 20261020090000 restates the
+-- function last, so a fresh database ends with this version, as production does.
+set local check_function_bodies = off;
+
 create or replace function halal_mode_private.sect_allows(
   p_wanted_sects sect[],
   p_wanted_details text[],

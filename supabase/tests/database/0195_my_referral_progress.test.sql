@@ -55,7 +55,7 @@ select ok(
 -- No waitlist place, or an unconfirmed account email: a new code all the same.
 select set_config('request.jwt.claims',
   '{"sub":"00000000-0000-0000-0000-000000019503","role":"authenticated"}', true);
-select matches(public.my_referral_progress()->>'referral_code', '^HM[A-Z0-9]{8}$',
+select ok(public.my_referral_progress()->>'referral_code' ~ '^HM[A-Z0-9]{8}$',
   'a member who never joined the waitlist gets a code of their own');
 select is(public.my_referral_progress()->>'referral_code',
   (select code from halal_mode_private.referral_codes where user_id = '00000000-0000-0000-0000-000000019503'),

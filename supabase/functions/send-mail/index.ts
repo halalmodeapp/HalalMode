@@ -1,13 +1,16 @@
 /**
- * Drains the mail outbox through Resend: every email the service sends goes
- * through here (report alerts to the operator, waitlist verification, and later
- * support), so there is one sender, one set of DNS records, one log.
+ * Drains the mail outbox: every email the service sends goes through here
+ * (report alerts to the operator, waitlist mail, and later support), so there
+ * is one sender, one set of DNS records, one log.
  *
- * Secrets (supabase secrets set …): RESEND_API_KEY, OPERATOR_EMAIL, and
+ * Sends through Amazon SES when its secrets are set, otherwise Resend.
+ * Secrets (supabase secrets set …): OPERATOR_EMAIL; for SES, SES_REGION,
+ * SES_ACCESS_KEY_ID and SES_SECRET_ACCESS_KEY; for Resend, RESEND_API_KEY;
  * optionally MAIL_FROM (default "Halal Mode <hello@halalmo.de>").
- * Called every two minutes by cron with the vault's worker secret.
+ * Called every minute by cron with the vault's worker secret.
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { AwsClient } from 'npm:aws4fetch@1.0.20';
 
 interface Report {
   id: string;
@@ -259,23 +262,70 @@ function referralJoinedEmail(locale: string, progress: Progress, token: string) 
   };
 }
 
-async function send(
-  apiKey: string,
-  to: string,
-  subject: string,
-  html: string,
-  idempotencyKey: string,
-): Promise<string | null> {
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'Idempotency-Key': idempotencyKey,
-    },
-    body: JSON.stringify({ from: FROM, to: [to], subject, html }),
-  });
-  return response.ok ? null : `${response.status} ${(await response.text()).slice(0, 300)}`;
+type Send = (to: string, subject: string, html: string, idempotencyKey: string) => Promise<string | null>;
+
+/**
+ * Errors come back as "<status> <detail>". A provider limit is reported as
+ * "429 rate …" or "429 quota …": settle_mail_service then waits (a minute or
+ * an hour) without counting the try.
+ */
+function limitError(status: number, body: string): string | null {
+  if (/quota/i.test(body)) return `429 quota ${body.slice(0, 300)}`;
+  if (status === 429 || /throttl|TooManyRequests|rate exceeded/i.test(body)) return `429 rate ${body.slice(0, 300)}`;
+  return null;
+}
+
+function resend(apiKey: string): Send {
+  return async (to, subject, html, idempotencyKey) => {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'Idempotency-Key': idempotencyKey,
+      },
+      body: JSON.stringify({ from: FROM, to: [to], subject, html }),
+    });
+    if (response.ok) return null;
+    const body = await response.text();
+    return limitError(response.status, body) ?? `${response.status} ${body.slice(0, 300)}`;
+  };
+}
+
+function ses(region: string, accessKeyId: string, secretAccessKey: string): Send {
+  const aws = new AwsClient({ accessKeyId, secretAccessKey, region, service: 'ses' });
+  return async (to, subject, html) => {
+    const response = await aws.fetch(`https://email.${region}.amazonaws.com/v2/email/outbound-emails`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        FromEmailAddress: FROM,
+        Destination: { ToAddresses: [to] },
+        Content: {
+          Simple: {
+            Subject: { Data: subject, Charset: 'UTF-8' },
+            Body: { Html: { Data: html, Charset: 'UTF-8' } },
+          },
+        },
+      }),
+    });
+    if (response.ok) return null;
+    const body = await response.text();
+    return limitError(response.status, body) ?? `${response.status} ${body.slice(0, 300)}`;
+  };
+}
+
+/** SES when configured, otherwise Resend, with a pause that fits each one's per-second limit. */
+function mailer(): { send: Send; pauseMs: number } | null {
+  const region = Deno.env.get('SES_REGION');
+  const keyId = Deno.env.get('SES_ACCESS_KEY_ID');
+  const secret = Deno.env.get('SES_SECRET_ACCESS_KEY');
+  // New SES accounts may send 1 email a second; this keeps 40 inside the minute.
+  if (region && keyId && secret) return { send: ses(region, keyId, secret), pauseMs: 1100 };
+  const apiKey = Deno.env.get('RESEND_API_KEY');
+  // Resend's default limit is 2 requests a second.
+  if (apiKey) return { send: resend(apiKey), pauseMs: 600 };
+  return null;
 }
 
 Deno.serve(async (request) => {
@@ -285,36 +335,41 @@ Deno.serve(async (request) => {
   });
   if (verified.error || verified.data !== true) return new Response('forbidden', { status: 403 });
 
-  const apiKey = Deno.env.get('RESEND_API_KEY');
+  const mail = mailer();
   const operator = Deno.env.get('OPERATOR_EMAIL');
-  if (!apiKey || !operator) return new Response('RESEND_API_KEY and OPERATOR_EMAIL are not set', { status: 503 });
+  if (!mail || !operator) return new Response('Mail provider secrets and OPERATOR_EMAIL are not set', { status: 503 });
+  const send = mail.send;
 
   const secret = await client.rpc('mail_link_secret_service');
-  const claimed = await client.rpc('claim_mail_service', { p_limit: 20 });
+  // Runs every minute: 40 paced sends finish inside it, about 2,400 an hour.
+  const claimed = await client.rpc('claim_mail_service', { p_limit: 40 });
   if (claimed.error || secret.error) return new Response('claim failed', { status: 500 });
 
   let sent = 0;
+  let first = true;
   for (const item of (claimed.data ?? []) as Claimed[]) {
+    if (!first) await new Promise((resolve) => setTimeout(resolve, mail.pauseMs));
+    first = false;
     let error: string | null = null;
     try {
       if (item.kind === 'report' && item.report) {
         const mail = await reportEmail(item.report, secret.data as string);
-        error = await send(apiKey, operator, mail.subject, mail.html, `mail-${item.id}`);
+        error = await send(operator, mail.subject, mail.html, `mail-${item.id}`);
       } else if (item.kind === 'moderation' && item.moderation) {
         const mail = await moderationEmail(item.moderation, client);
-        error = await send(apiKey, operator, mail.subject, mail.html, `mail-${item.id}`);
+        error = await send(operator, mail.subject, mail.html, `mail-${item.id}`);
       } else if (item.kind === 'waitlist_welcome' && item.to) {
         const mail = welcomeEmail(item.locale, item.welcome?.eligible === true, item.verification?.token ?? null);
-        error = await send(apiKey, item.to, mail.subject, mail.html, `mail-${item.id}`);
+        error = await send(item.to, mail.subject, mail.html, `mail-${item.id}`);
       } else if (item.kind === 'waitlist_verification' && item.to && item.verification?.token) {
         const mail = verificationEmail(item.locale, item.verification.token, item.verification.confirmed === true);
-        error = await send(apiKey, item.to, mail.subject, mail.html, `mail-${item.id}`);
+        error = await send(item.to, mail.subject, mail.html, `mail-${item.id}`);
       } else if (item.kind === 'waitlist_not_joined' && item.to) {
         const mail = notJoinedEmail(item.locale);
-        error = await send(apiKey, item.to, mail.subject, mail.html, `mail-${item.id}`);
+        error = await send(item.to, mail.subject, mail.html, `mail-${item.id}`);
       } else if (item.kind === 'referral_joined' && item.to && item.progress && item.verification?.token) {
         const mail = referralJoinedEmail(item.locale, item.progress, item.verification.token);
-        error = await send(apiKey, item.to, mail.subject, mail.html, `mail-${item.id}`);
+        error = await send(item.to, mail.subject, mail.html, `mail-${item.id}`);
       } else {
         error = 'nothing to send';
       }

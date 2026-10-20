@@ -5,6 +5,11 @@
 -- replacement asserts that its anchor text was found, so a definition that has
 -- drifted fails this migration loudly instead of being half-patched.
 
+-- On a fresh database this runs before the 20260813* migrations (file names
+-- sort that way), so function bodies are checked when they run, not now.
+-- 20261020090000 restates the matching functions as production has them.
+set local check_function_bodies = off;
+
 create or replace function halal_mode_private.patch_function(
   p_signature text,
   p_find text,

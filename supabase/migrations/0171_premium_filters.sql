@@ -13,6 +13,11 @@
 -- What a member says about themselves.
 -- ---------------------------------------------------------------------------
 
+-- On a fresh database this runs before the 20260813* migrations (file names
+-- sort that way), so function bodies are checked when they run, not now.
+-- 20261020090000 restates the matching functions as production has them.
+set local check_function_bodies = off;
+
 alter table public.profiles
   add column if not exists has_children text
     check (has_children is null or has_children in ('no', 'yes', 'prefer_not_to_say')),
