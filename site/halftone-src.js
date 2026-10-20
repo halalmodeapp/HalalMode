@@ -142,7 +142,15 @@ export function startHalftone(scene, { settings = HALFTONE_DEFAULTS, still = fal
 
   function teardown() {
     cancelAnimationFrame(frame); frame = 0;
-    if (mount) { mount.dispose(); mount = null; }
+    if (mount) {
+      // dispose() frees the shader but leaves the WebGL context alive until
+      // garbage collection. Each rebuild (every rotation) then held one more,
+      // and phones, which allow few, dropped the oldest: a layer of the scene.
+      const gl = mount.gl;
+      mount.dispose();
+      gl?.getExtension('WEBGL_lose_context')?.loseContext();
+      mount = null;
+    }
     overlay.remove();
   }
 

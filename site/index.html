@@ -399,12 +399,16 @@ button:disabled{opacity:.55;cursor:wait}
   var IN_LIMIT=.09,OUT_LIMIT=.025,RETURN=24,IDLE_MS=110;
   function stretch(p){var limit=p>=0?IN_LIMIT:OUT_LIMIT;return Math.sign(p)*limit*(1-Math.exp(-Math.abs(p)/limit))}
   var orientationBaseGamma=null,orientationBaseBeta=null,orientationPermissionRequested=false;
+  /* Phone tilt is meant to be obvious without being pointed out: full effect at
+     8 degrees, layers travel up to 2.2x the hover distance (still inside the
+     scene's bleed), and it follows the hand quicker than the mouse does. */
+  var TILT_DEGREES=8,TILT_GAIN=2.2,ease=.09;
   function enabled(){return root.dataset.coverStyle==='couple'&&root.dataset.pageHidden!=='true'&&!(reduceMotion&&reduceMotion.matches)}
   function write(){scene.style.setProperty('--px',x.toFixed(4));scene.style.setProperty('--py',y.toFixed(4));scene.style.setProperty('--sy',sy.toFixed(4))}
   function step(now){
     frame=0;
     var dt=lastT?Math.min(.05,(now-lastT)/1000):1/60;lastT=now;
-    x+=(targetX-x)*.09;y+=(targetY-y)*.09;
+    x+=(targetX-x)*ease;y+=(targetY-y)*ease;
     if(now-lastInput>IDLE_MS){pullV+=(-RETURN*pull-2*Math.sqrt(RETURN)*pullV)*dt;pull+=pullV*dt}else pullV=0;
     sy+=(stretch(pull)-sy)*.22;
     if(Math.abs(targetX-x)<.002&&Math.abs(targetY-y)<.002&&Math.abs(pull)<.0008&&Math.abs(sy)<.0008){x=targetX;y=targetY;sy=pull=pullV=0;lastT=0;write();return}
@@ -447,8 +451,9 @@ button:disabled{opacity:.55;cursor:wait}
   });
   /* On phones and tablets the page scrolls under a fixed scene. */
   var mobile=window.matchMedia('(max-width: 960px) and (orientation: portrait), (max-width: 960px) and (min-height: 600px)');
-  function aim(nx,ny){
-    targetX=enabled()?Math.max(-1,Math.min(1,nx)):0;targetY=enabled()?Math.max(-1,Math.min(1,ny)):0;
+  function aim(nx,ny,limit){
+    limit=limit||1;
+    targetX=enabled()?Math.max(-limit,Math.min(limit,nx)):0;targetY=enabled()?Math.max(-limit,Math.min(limit,ny)):0;
     if(!frame){lastT=0;frame=requestAnimationFrame(step)}
   }
   function settle(){
@@ -460,6 +465,7 @@ button:disabled{opacity:.55;cursor:wait}
   window.addEventListener('pointermove',function(event){
     if(dragPointerId!==null||event.pointerType==='touch'||!enabled())return;
     var rect=scene.getBoundingClientRect();
+    ease=.09;
     if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom){aim(0,0);return}
     aim(((event.clientX-rect.left)/Math.max(1,rect.width)-.5)*2,((event.clientY-rect.top)/Math.max(1,rect.height)-.5)*2);
   },{passive:true});
@@ -468,8 +474,16 @@ button:disabled{opacity:.55;cursor:wait}
     if(!enabled()||event.gamma===null||event.beta===null)return;
     if(orientationBaseGamma===null)orientationBaseGamma=event.gamma;
     if(orientationBaseBeta===null)orientationBaseBeta=event.beta;
-    aim((event.gamma-orientationBaseGamma)/18,(event.beta-orientationBaseBeta)/18);
+    var dg=event.gamma-orientationBaseGamma,db=event.beta-orientationBaseBeta;
+    /* Gamma and beta are the device's axes; turned sideways they swap on screen. */
+    var angle=(screen.orientation&&screen.orientation.angle)||window.orientation||0;
+    var dx=angle===90?db:angle===-90||angle===270?-db:angle===180?-dg:dg;
+    var dy=angle===90?-dg:angle===-90||angle===270?dg:angle===180?-db:db;
+    ease=.16;
+    aim(dx/TILT_DEGREES,dy/TILT_DEGREES,TILT_GAIN);
   },{passive:true});
+  /* A rotation changes which way is "level": start again from the new hold. */
+  window.addEventListener('orientationchange',function(){orientationBaseGamma=null;orientationBaseBeta=null});
   window.addEventListener('pointerdown',function(event){
     if(event.pointerType!=='touch'||orientationPermissionRequested)return;
     var rect=scene.getBoundingClientRect();
@@ -518,9 +532,9 @@ button:disabled{opacity:.55;cursor:wait}
 })();
 </script>
 <script src="/hearts.js?v=20261017b"></script>
-<script type="module" src="/scene-warp.js?v=20261020a"></script>
+<script type="module" src="/scene-warp.js?v=20261020b"></script>
 <script type="module" src="/logo-effect.js?v=20261019d"></script>
 <!-- Halftone CMYK texture over the cover; ?halftone in the address adds a tuning panel. -->
-<script type="module" src="/halftone.js?v=20261019a"></script>
+<script type="module" src="/halftone.js?v=20261020a"></script>
 </body>
 </html>

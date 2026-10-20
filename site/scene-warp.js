@@ -157,7 +157,7 @@ function buildMesh(rig, ox, oy, w, h) {
 /** Context, shaders and mesh: created as soon as the script runs, while the
  * GPU is still idle. Asking for a WebGL context later, while the browser is
  * busy rasterizing the freshly loaded scene, can stall for half a second. */
-function prepare(layer, rig) {
+function prepare(layer, rig, onRestored) {
   const img = layer.querySelector('img');
   const style = getComputedStyle(layer);
   const ox = parseFloat(style.getPropertyValue('--x')), oy = parseFloat(style.getPropertyValue('--y'));
@@ -170,6 +170,19 @@ function prepare(layer, rig) {
     // Kept so the halftone texture (halftone-src.js) can read the bent layer.
     preserveDrawingBuffer: true });
   if (!gl) return null;
+  // A phone may drop a WebGL context when the page holds too many or memory
+  // runs short (rotating can do both). Show the layer's own image at once,
+  // so it never goes blank, and rebuild once the browser allows it again.
+  let lost = false, destroyed = false;
+  canvas.addEventListener('webglcontextlost', (event) => {
+    // Our own destroy() below also ends in a (late) lost event: not a loss.
+    if (destroyed) return;
+    event.preventDefault();
+    lost = true;
+    img.style.visibility = '';
+    canvas.style.visibility = 'hidden';
+  });
+  canvas.addEventListener('webglcontextrestored', () => { if (!destroyed) onRestored(); });
 
   const shader = (type, source) => { const s = gl.createShader(type); gl.shaderSource(s, source); gl.compileShader(s); return s; };
   const program = gl.createProgram();
@@ -236,6 +249,7 @@ function prepare(layer, rig) {
     still: Boolean(rig.still),
     /** `look` is { amount, size, rough, seed } for the line boil, or null. */
     draw(t, strength, look) {
+      if (lost || gl.isContextLost()) return;
       gl.uniform4f(uView, MARGIN, w, h, t);
       gl.uniform4f(uBoil, w, h, look ? look.amount : 0, look ? Math.max(1, look.size) : 1);
       gl.uniform2f(uBoil2, look ? look.seed : 0, look ? look.rough : 0);
@@ -247,6 +261,7 @@ function prepare(layer, rig) {
       if (!shown) { shown = true; img.style.visibility = 'hidden'; }
     },
     destroy() {
+      destroyed = true;
       observer.disconnect(); canvas.remove(); img.style.visibility = '';
       const lose = gl.getExtension('WEBGL_lose_context'); if (lose) lose.loseContext();
     },
@@ -282,7 +297,7 @@ export function startSceneWarp(scene, { eligible = () => true } = {}) {
       const layer = scene.querySelector(`[data-layer="${key}"]`);
       const img = layer && layer.querySelector('img');
       if (!img || img.parentElement !== layer) continue;
-      try { const ready = prepare(layer, rig); if (ready) prepared.push(ready); } catch { /* the static image stays */ }
+      try { const ready = prepare(layer, rig, restart); if (ready) prepared.push(ready); } catch { /* the static image stays */ }
     }
   }
   function start() {
@@ -293,13 +308,16 @@ export function startSceneWarp(scene, { eligible = () => true } = {}) {
     performance.mark('scene-warp-ready');
     performance.measure('scene-warp-init', 'scene-warp-start', 'scene-warp-ready');
     began = 0;
-    if (rigs.length && !document.hidden) frame = requestAnimationFrame(loop);
+    // The browser pauses animation frames by itself while the page is hidden.
+    if (rigs.length && !frame) frame = requestAnimationFrame(loop);
   }
   function stop() {
     cancelAnimationFrame(frame); frame = 0;
     for (const rig of prepared) rig.destroy();
     prepared = []; rigs = []; drawn = new WeakMap();
   }
+  // A dropped context came back: build every layer afresh.
+  function restart() { if (!disposed) { stop(); start(); } }
   const onVisibility = () => {
     if (document.hidden) { cancelAnimationFrame(frame); frame = 0; }
     else if (rigs.length && !frame) frame = requestAnimationFrame(loop);
