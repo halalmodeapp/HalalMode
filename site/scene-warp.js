@@ -17,6 +17,12 @@
  *
  * halalmo.de starts it on its own cover below; the app's sign-up screen calls
  * startSceneWarp() on the same scene markup.
+ *
+ * Line boil: the same shader redraws each layer with a slight turbulent wobble
+ * that changes on held frames, cycling through a few "drawings" as hand-drawn
+ * animation does, so the picture reads as drawn rather than rendered. The
+ * still layers with outlines (stairs, walls, city) get a canvas too, but are
+ * only redrawn when the drawing changes.
  */
 
 // World-pixel pins (the reference illustration's 1536x1024 frame).
@@ -24,7 +30,7 @@ const RIGS = {
   woman: {
     bones: [
       // Raised arm: shoulder -> fingertips.
-      { from: [629, 606], to: [775, 488], inner: 32, outer: 59, rest: 4.5, amp: 1.3, period: 5.6, phase: 0 },
+      { from: [629, 606], to: [775, 488], inner: 32, outer: 59, rest: 4.5, amp: 2.4, period: 5.6, phase: 0 },
       // Hijab trail: neck -> scarf tip. Kept narrow so the shoulder bag beside it stays still.
       { from: [532, 612], to: [408, 751], inner: 27, outer: 44, amp: 2.6, period: 4.3, phase: 1.7 },
     ],
@@ -32,7 +38,7 @@ const RIGS = {
   man: {
     bones: [
       // Reaching arm: shoulder -> fingertips.
-      { from: [940, 409], to: [816, 502], inner: 30, outer: 54, rest: 2, amp: 1.0, period: 6.1, phase: 0.9 },
+      { from: [940, 409], to: [816, 502], inner: 30, outer: 54, rest: 2, amp: 1.9, period: 6.1, phase: 0.9 },
       // Front shoe: the heel stays down while the toe rises and settles, unhurried.
       { from: [1062, 551], to: [999, 554], inner: 22, outer: 34, amp: 2.2, period: 6.5, phase: 0, lift: true },
     ],
@@ -40,7 +46,15 @@ const RIGS = {
   bougainvillea: { sway: { anchor: 40, tip: 540, ampX: 6, ampY: 1.6, period: 6.5 } },
   plantLeft: { sway: { anchor: 902, tip: 625, ampX: 5.5, ampY: 1.2, period: 5.1 } },
   plantRight: { sway: { anchor: 864, tip: 378, ampX: 7.5, ampY: 1.6, period: 5.8 } },
+  // Still layers: drawn by the shader for the line boil only.
+  stairs: { still: true },
+  walls: { still: true },
+  city: { still: true },
 };
+
+/** Line boil, as chosen on the live page. Amount and size are in world pixels
+ * (the 1536x1024 frame); rough roughens soft edges (off). */
+const BOIL = { amount: 0.5, size: 6, fps: 8, drawings: 6, rough: 0 };
 const GRID = 40;
 const MARGIN = 14; // world px around each layer for movement to spill into
 
@@ -67,10 +81,39 @@ void main() {
   gl_Position = vec4(clip.x * 2.0 - 1.0, 1.0 - clip.y * 2.0, 0.0, 1.0);
 }`;
 const FRAGMENT = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
 precision mediump float;
+#endif
 uniform sampler2D u_tex;
+uniform vec4 u_boil;      // layer width, layer height, amount (px), size (px)
+uniform vec2 u_boil2;     // drawing seed, edge roughness
 varying vec2 v_uv;
-void main() { gl_FragColor = texture2D(u_tex, v_uv); }`;
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float noise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+void main() {
+  if (u_boil.z <= 0.0 && u_boil2.y <= 0.0) { gl_FragColor = texture2D(u_tex, v_uv); return; }
+  vec2 px = v_uv * u_boil.xy;
+  vec2 q = px / u_boil.w + u_boil2.x * vec2(37.2, 17.9);
+  // Two octaves of value noise: a broad wobble with a little grain in it.
+  vec2 wobble = vec2(noise(q), noise(q + vec2(19.7, 7.3))) - 0.5
+    + 0.45 * (vec2(noise(q * 2.7 + 5.1), noise(q * 2.7 + 11.3)) - 0.5);
+  vec4 c = texture2D(u_tex, v_uv + wobble * 2.0 * u_boil.z / u_boil.xy);
+  // Rough edges: only the soft rim of a shape (alpha between 0 and 1) is
+  // pushed in or out, so outlines look cut by hand and interiors are untouched.
+  float a = c.a;
+  if (u_boil2.y > 0.0 && a > 0.001 && a < 0.999) {
+    float n = noise(px / (u_boil.w * 0.3) + u_boil2.x * 13.1) - 0.5;
+    float a2 = clamp(a + n * u_boil2.y * 4.0 * a * (1.0 - a), 0.0, 1.0);
+    c *= a2 / a;
+  }
+  gl_FragColor = c;
+}`;
 
 const smoothstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
@@ -156,6 +199,7 @@ function prepare(layer, rig) {
 
   const u = (name) => gl.getUniformLocation(program, name);
   const uView = u('u_view'), uB1 = u('u_b1'), uB2 = u('u_b2'), uSway = u('u_sway');
+  const uBoil = u('u_boil'), uBoil2 = u('u_boil2');
   const b1 = rig.bones && rig.bones[0], b2 = rig.bones && rig.bones[1];
   const sway = rig.sway;
   if (sway) gl.uniform4f(uSway, sway.ampX, sway.ampY, (2 * Math.PI) / sway.period, 0);
@@ -189,8 +233,12 @@ function prepare(layer, rig) {
       observer.observe(canvas);
       return true;
     },
-    draw(t, strength) {
+    still: Boolean(rig.still),
+    /** `look` is { amount, size, rough, seed } for the line boil, or null. */
+    draw(t, strength, look) {
       gl.uniform4f(uView, MARGIN, w, h, t);
+      gl.uniform4f(uBoil, w, h, look ? look.amount : 0, look ? Math.max(1, look.size) : 1);
+      gl.uniform2f(uBoil2, look ? look.seed : 0, look ? look.rough : 0);
       if (sway) gl.uniform4f(uSway, sway.ampX * strength, sway.ampY * strength, (2 * Math.PI) / sway.period, 0);
       if (b1) gl.uniform3f(uB1, b1.from[0] - ox, b1.from[1] - oy, angle(b1, t) * strength);
       if (b2) gl.uniform3f(uB2, b2.from[0] - ox, b2.from[1] - oy, angle(b2, t) * strength);
@@ -211,6 +259,7 @@ const EASE_IN = 1.6; // seconds for the breeze to grow from stillness
 export function startSceneWarp(scene, { eligible = () => true } = {}) {
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
   let prepared = [], rigs = [], frame = 0, began = 0, disposed = false;
+  let drawn = new WeakMap(); // still layer -> the drawing it shows
   const allowed = () => !disposed && scene && !reduceMotion.matches && eligible();
   function loop(now) {
     frame = requestAnimationFrame(loop);
@@ -218,13 +267,21 @@ export function startSceneWarp(scene, { eligible = () => true } = {}) {
     if (!began) began = t;
     const k = Math.min(1, (t - began) / EASE_IN);
     const strength = k * k * (3 - 2 * k);
-    for (const rig of rigs) rig.draw(t, strength);
+    // Held frames: the boil only changes drawing fps times a second, cycling
+    // through a few drawings, while the breeze stays smooth.
+    const step = Math.floor(t * BOIL.fps) % BOIL.drawings;
+    rigs.forEach((rig, i) => {
+      const look = { amount: BOIL.amount, size: BOIL.size, rough: BOIL.rough, seed: step + 1 + i * 7.31 };
+      if (!rig.still) { rig.draw(t, strength, look); return; }
+      if (drawn.get(rig) !== step) { drawn.set(rig, step); rig.draw(t, strength, look); }
+    });
   }
   function prepareAll() {
     if (prepared.length || !allowed()) return;
     for (const [key, rig] of Object.entries(RIGS)) {
       const layer = scene.querySelector(`[data-layer="${key}"]`);
-      if (!layer || !layer.querySelector('img')) continue;
+      const img = layer && layer.querySelector('img');
+      if (!img || img.parentElement !== layer) continue;
       try { const ready = prepare(layer, rig); if (ready) prepared.push(ready); } catch { /* the static image stays */ }
     }
   }
@@ -241,7 +298,7 @@ export function startSceneWarp(scene, { eligible = () => true } = {}) {
   function stop() {
     cancelAnimationFrame(frame); frame = 0;
     for (const rig of prepared) rig.destroy();
-    prepared = []; rigs = [];
+    prepared = []; rigs = []; drawn = new WeakMap();
   }
   const onVisibility = () => {
     if (document.hidden) { cancelAnimationFrame(frame); frame = 0; }

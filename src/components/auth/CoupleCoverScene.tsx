@@ -15,6 +15,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import Svg, { Defs, Path, RadialGradient, Stop } from 'react-native-svg';
 
+import { BOIL, boilNoise } from './boilSettings';
 import { COUPLE_SCENE_ASSETS } from './coupleLayerAssets';
 import { COUPLE_SCENE_LAYERS, COUPLE_SUN, COUPLE_WORLD, type CoupleSceneLayer } from './coupleSceneLayers';
 import { coupleCamera, coupleParallax, type CoupleCamera } from './coupleSceneLayout';
@@ -27,6 +28,8 @@ type CoupleCoverSceneProps = {
 };
 
 type Tilt = { x: SharedValue<number>; y: SharedValue<number> };
+/** Line boil: the current held drawing, and the jitter in world pixels (0 when off). */
+type Boil = { step: SharedValue<number>; amount: SharedValue<number> };
 
 const BACKDROP = COUPLE_SCENE_LAYERS.find((layer) => layer.key === 'sky')!;
 /** Broad light shafts, as angles clockwise from straight down, and their half-widths. */
@@ -53,6 +56,9 @@ export function CoupleCoverScene({ width, height, active }: CoupleCoverSceneProp
   const pressScale = useSharedValue(1);
   const float = useSharedValue(0);
   const tilt = useMemo(() => ({ x: tiltX, y: tiltY }), [tiltX, tiltY]);
+  const boilStep = useSharedValue(0);
+  const boilAmount = useSharedValue(0);
+  const boil = useMemo(() => ({ step: boilStep, amount: boilAmount }), [boilStep, boilAmount]);
   const camera = useMemo(() => coupleCamera(width, height), [width, height]);
 
   const heartPanResponder = useMemo(() => PanResponder.create({
@@ -80,6 +86,19 @@ export function CoupleCoverScene({ width, height, active }: CoupleCoverSceneProp
     },
   }), [dragX, dragY, pressScale, width, height]);
 
+  // Held frames: a new drawing fps times a second, cycling through a few.
+  useEffect(() => {
+    if (!active) {
+      boilAmount.value = 0;
+      return;
+    }
+    boilAmount.value = BOIL.amount;
+    const timer = setInterval(() => {
+      boilStep.value = (boilStep.value + 1) % BOIL.drawings;
+    }, 1000 / BOIL.fps);
+    return () => clearInterval(timer);
+  }, [active, boilAmount, boilStep]);
+
   // The heart drifts gently in place, between the two hands.
   useEffect(() => {
     if (!active) {
@@ -105,8 +124,8 @@ export function CoupleCoverScene({ width, height, active }: CoupleCoverSceneProp
   return (
     <View pointerEvents="box-none" style={styles.scene}>
       <View pointerEvents="box-none" style={[styles.world, { left: camera.left, top: camera.top, width: COUPLE_WORLD.width * unit, height: COUPLE_WORLD.height * unit }]}>
-        {COUPLE_SCENE_LAYERS.map((layer) => (
-          <SceneLayer key={layer.key} layer={layer} camera={camera} tilt={tilt}>
+        {COUPLE_SCENE_LAYERS.map((layer, index) => (
+          <SceneLayer key={layer.key} layer={layer} index={index} camera={camera} tilt={tilt} boil={boil}>
             {layer.key === 'heart' ? (
               <Reanimated.View
                 {...heartPanResponder.panHandlers}
@@ -128,17 +147,38 @@ export function CoupleCoverScene({ width, height, active }: CoupleCoverSceneProp
   );
 }
 
-function SceneLayer({ layer, camera, tilt, children }: {
+function SceneLayer({ layer, index, camera, tilt, boil, children }: {
   layer: CoupleSceneLayer;
+  index: number;
   camera: CoupleCamera;
   tilt: Tilt;
+  boil: Boil;
   children?: ReactNode;
 }) {
   const { unit } = camera;
+  // The sky has no outlines to boil.
+  const boils = layer.key !== 'sky';
   const animatedStyle = useAnimatedStyle(() => {
     const offset = coupleParallax(layer.depth, tilt.x.value, tilt.y.value, unit);
-    return { transform: [{ translateX: offset.x }, { translateY: offset.y }] };
-  }, [layer.depth, unit]);
+    const amount = boils ? boil.amount.value : 0;
+    if (amount <= 0) return { transform: [{ translateX: offset.x }, { translateY: offset.y }] };
+    const step = boil.step.value;
+    // A nudge of about half a point, with a hair of turn and stretch sized so
+    // a layer's far edge moves no more than its middle: every drawing is
+    // slightly redrawn.
+    const size = Math.max(layer.width, layer.height) * unit;
+    const turn = (boilNoise(step, index, 2) * amount * 180) / (Math.PI * size);
+    const stretch = 1 + (boilNoise(step, index, 3) * amount) / size;
+    return {
+      transform: [
+        { translateX: offset.x + boilNoise(step, index, 0) * amount },
+        { translateY: offset.y + boilNoise(step, index, 1) * amount },
+        { rotate: `${turn}deg` },
+        { scaleX: stretch },
+        { scaleY: 2 - stretch },
+      ],
+    };
+  }, [layer.depth, layer.width, layer.height, boils, index, unit]);
   return (
     <Reanimated.View
       pointerEvents="box-none"
