@@ -18,7 +18,7 @@ import Svg, { Defs, Path, RadialGradient, Stop } from 'react-native-svg';
 import { BOIL, boilNoise } from './boilSettings';
 import { COUPLE_SCENE_ASSETS } from './coupleLayerAssets';
 import { COUPLE_SCENE_LAYERS, COUPLE_SUN, COUPLE_WORLD, type CoupleSceneLayer } from './coupleSceneLayers';
-import { coupleCamera, coupleParallax, type CoupleCamera } from './coupleSceneLayout';
+import { COUPLE_TILT, coupleCamera, coupleParallax, type CoupleCamera } from './coupleSceneLayout';
 import { rubberBandOffset } from './coverMotion';
 
 type CoupleCoverSceneProps = {
@@ -276,9 +276,11 @@ function NativeCoverTiltSensor({ tiltX, tiltY }: { tiltX: SharedValue<number>; t
       const pitchDelta = Math.atan2(Math.sin(pitch - basePitch.value), Math.cos(pitch - basePitch.value));
       const rollDelta = Math.atan2(Math.sin(roll - baseRoll.value), Math.cos(roll - baseRoll.value));
       const degrees = 180 / Math.PI;
-      // 18 degrees of tilt reaches full travel; the easing keeps hand tremor out.
-      tiltX.value += (clampNumber((rollDelta * degrees) / 18, -1, 1) - tiltX.value) * 0.09;
-      tiltY.value += (clampNumber((-pitchDelta * degrees) / 18, -1, 1) - tiltY.value) * 0.09;
+      // A small tilt reaches full travel, and travel goes further than hover
+      // would; the easing still keeps hand tremor out.
+      const { degrees: full, gain, ease } = COUPLE_TILT;
+      tiltX.value += (clampNumber((rollDelta * degrees) / full, -gain, gain) - tiltX.value) * ease;
+      tiltY.value += (clampNumber((-pitchDelta * degrees) / full, -gain, gain) - tiltY.value) * ease;
     },
   );
 

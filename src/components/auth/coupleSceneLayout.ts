@@ -19,6 +19,25 @@ export const COUPLE_FOCUS = { x: 812, y: 574 } as const;
 /** Parallax travel, in world pixels, of a layer at depth 1 at full tilt. */
 export const COUPLE_PARALLAX = { x: 14, y: 8 } as const;
 /**
+ * Phone tilt, meant to be obvious without being pointed out: full effect at
+ * `degrees`, layers travel up to `gain` times the hover distance (the deepest
+ * full-frame layer, the sky, still stays inside the bleed), and `ease` is how
+ * quickly it follows the hand each frame. halalmo.de uses the same numbers.
+ */
+export const COUPLE_TILT = { degrees: 8, gain: 2.2, ease: 0.16 } as const;
+
+/**
+ * Device tilt (gamma, beta deltas in degrees) as screen x/y, for the screen's
+ * rotation in degrees: turned sideways, the device's axes swap on screen.
+ */
+export function tiltOnScreen(gamma: number, beta: number, angle: number) {
+  'worklet';
+  if (angle === 90) return { x: beta, y: -gamma };
+  if (angle === -90 || angle === 270) return { x: -beta, y: gamma };
+  if (angle === 180) return { x: -gamma, y: -beta };
+  return { x: gamma, y: beta };
+}
+/**
  * What every crop must keep: both faces, both hands with the heart between
  * them, and where each of them sits. On the narrowest phone heroes the woman's
  * trailing scarf and the man's back may fall outside; nothing else does.

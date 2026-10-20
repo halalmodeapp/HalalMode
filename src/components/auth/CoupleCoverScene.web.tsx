@@ -6,6 +6,7 @@ import { COUPLE_SCENE_ASSETS } from './coupleLayerAssets';
 import { COUPLE_SCENE_LAYERS } from './coupleSceneLayers';
 import { COUPLE_SCENE_MARKUP } from './coupleSceneMarkup';
 import { rubberBandOffset } from './coverMotion';
+import { COUPLE_TILT, tiltOnScreen } from './coupleSceneLayout';
 
 type CoupleCoverSceneProps = {
   width: number;
@@ -160,6 +161,7 @@ export function CoupleCoverScene({ active }: CoupleCoverSceneProps) {
     let baseGamma: number | null = null;
     let baseBeta: number | null = null;
     let permissionRequested = false;
+    let ease = 0.09;
 
     const write = () => {
       host.style.setProperty('--px', x.toFixed(4));
@@ -167,8 +169,8 @@ export function CoupleCoverScene({ active }: CoupleCoverSceneProps) {
     };
     const step = () => {
       frame = 0;
-      x += (targetX - x) * 0.09;
-      y += (targetY - y) * 0.09;
+      x += (targetX - x) * ease;
+      y += (targetY - y) * ease;
       if (Math.abs(targetX - x) < 0.002 && Math.abs(targetY - y) < 0.002) {
         x = targetX;
         y = targetY;
@@ -178,15 +180,16 @@ export function CoupleCoverScene({ active }: CoupleCoverSceneProps) {
       write();
       frame = window.requestAnimationFrame(step);
     };
-    const aim = (nextX: number, nextY: number) => {
-      targetX = motionActive ? clamp(nextX, -1, 1) : 0;
-      targetY = motionActive ? clamp(nextY, -1, 1) : 0;
+    const aim = (nextX: number, nextY: number, limit = 1) => {
+      targetX = motionActive ? clamp(nextX, -limit, limit) : 0;
+      targetY = motionActive ? clamp(nextY, -limit, limit) : 0;
       if (!frame) frame = window.requestAnimationFrame(step);
     };
     const inside = (event: PointerEvent, box: DOMRect) =>
       event.clientX >= box.left && event.clientX <= box.right && event.clientY >= box.top && event.clientY <= box.bottom;
     const onMove = (event: PointerEvent) => {
       if (!motionActive || event.pointerType === 'touch') return;
+      ease = 0.09;
       const box = host.getBoundingClientRect();
       if (!inside(event, box)) {
         aim(0, 0);
@@ -198,7 +201,15 @@ export function CoupleCoverScene({ active }: CoupleCoverSceneProps) {
       if (!motionActive || event.gamma === null || event.beta === null) return;
       baseGamma ??= event.gamma;
       baseBeta ??= event.beta;
-      aim((event.gamma - baseGamma) / 18, (event.beta - baseBeta) / 18);
+      const angle = window.screen.orientation?.angle ?? 0;
+      const tilt = tiltOnScreen(event.gamma - baseGamma, event.beta - baseBeta, angle);
+      ease = COUPLE_TILT.ease;
+      aim(tilt.x / COUPLE_TILT.degrees, tilt.y / COUPLE_TILT.degrees, COUPLE_TILT.gain);
+    };
+    // A rotation changes which way is "level": start again from the new hold.
+    const onRotate = () => {
+      baseGamma = null;
+      baseBeta = null;
     };
     const requestOrientationPermission = (event: PointerEvent) => {
       if (event.pointerType !== 'touch' || permissionRequested || !inside(event, host.getBoundingClientRect())) return;
@@ -211,12 +222,14 @@ export function CoupleCoverScene({ active }: CoupleCoverSceneProps) {
     window.addEventListener('pointermove', onMove, { passive: true });
     window.addEventListener('pointerdown', requestOrientationPermission, { passive: true });
     window.addEventListener('deviceorientation', onOrientation, { passive: true });
+    window.screen.orientation?.addEventListener('change', onRotate);
     aim(0, 0);
     return () => {
       if (frame) window.cancelAnimationFrame(frame);
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerdown', requestOrientationPermission);
       window.removeEventListener('deviceorientation', onOrientation);
+      window.screen.orientation?.removeEventListener('change', onRotate);
       host.style.setProperty('--px', '0');
       host.style.setProperty('--py', '0');
     };
