@@ -16,6 +16,8 @@ export function legalPage(doc, other) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3">
+<link rel="icon" type="image/png" href="/favicon.png?v=3">
 <title>${escape(doc.title)} · Halal Mode</title>
 <link rel="canonical" href="https://halalmo.de/legal/${doc.slug}">
 <style>

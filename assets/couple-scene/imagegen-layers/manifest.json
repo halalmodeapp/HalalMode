@@ -1,0 +1,45 @@
+{
+  "reference": "reference.webp",
+  "referenceSize": { "width": 1536, "height": 1024 },
+  "generatedWith": "ImageGen",
+  "stackOrder": [
+    "01-sky-gradient-and-sun.png",
+    "02-distant-city-broad-slab.png",
+    "03-blue-houses-broad-slab.png",
+    "04-blue-walls-broad-slab.png",
+    "05-stairs-broad-slab.png",
+    "06-woman-transparent.png",
+    "07-man-transparent.png",
+    "08-heart-transparent.png",
+    "09-bougainvillea-transparent.png",
+    "10a-left-ledge-pot-transparent.png",
+    "10b-stairs-pot-transparent.png",
+    "10c-right-ledge-pot-transparent.png",
+    "10d-right-roof-pot-transparent.png",
+    "11-left-plant-approved-transparent.png",
+    "12-right-plant-transparent.png"
+  ],
+  "depth": {
+    "01-sky-gradient-and-sun.png": -0.55,
+    "02-distant-city-broad-slab.png": -0.38,
+    "03-blue-houses-broad-slab.png": -0.18,
+    "04-blue-walls-broad-slab.png": 0.0,
+    "05-stairs-broad-slab.png": 0.08,
+    "06-woman-transparent.png": 0.22,
+    "07-man-transparent.png": 0.30,
+    "08-heart-transparent.png": 0.34,
+    "09-bougainvillea-transparent.png": 0.55,
+    "10a-left-ledge-pot-transparent.png": 0.60,
+    "10b-stairs-pot-transparent.png": 0.64,
+    "10c-right-ledge-pot-transparent.png": 0.68,
+    "10d-right-roof-pot-transparent.png": 0.72,
+    "11-left-plant-approved-transparent.png": 0.88,
+    "12-right-plant-transparent.png": 0.96
+  },
+  "rules": [
+    "Use reference.webp for exact resting alignment and visible pixels.",
+    "Keep broad back plates filled behind nearer layers; never crop them to the stair or roof silhouette.",
+    "Use real alpha transparency outside each plate/object.",
+    "Keep the sky behind all city/wall layers and keep people/plants above the architectural plates."
+  ]
+}
