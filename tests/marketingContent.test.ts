@@ -276,7 +276,8 @@ test('app and public referral pages explain the same referral counting rule', ()
   for (const [language, catalog] of catalogs) {
     assert.equal(websiteCopy(language, '/refer').t('referralNote'), catalog['referrals.note'], `${language}: referral note`);
   }
-  assert.match(en['referrals.note'], /Waitlist sign-ups don’t count by themselves/u);
+  assert.equal(en['referrals.note'], 'Referrals count after your friend completes their profile in the app.');
+  assert.doesNotMatch(en['referrals.note'], /Waitlist sign-ups/u);
   assert.match(en['referrals.note'], /completes their profile in the app/u);
   assert.doesNotMatch(en['referrals.note'], /confirm their waitlist email/u);
   assert.doesNotMatch(websiteCopy('en', '/refer').t('confirmBody'), /counts it for them/u);

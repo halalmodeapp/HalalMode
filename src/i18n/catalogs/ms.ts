@@ -879,7 +879,7 @@ export const ms: TranslationCatalog = {
   'referrals.tierCount': "{{joined}} daripada {{goal}}",
   'referrals.rewardMonths': "Anda telah memperoleh {{months}} bulan Premium.",
   'referrals.rewardMonth1': "Anda telah memperoleh 1 bulan Premium.",
-  'referrals.note': "Pendaftaran senarai menunggu sahaja tidak dikira; rujukan dikira selepas rakan anda melengkapkan profil dalam aplikasi.",
+  'referrals.note': "Rujukan dikira selepas rakan anda melengkapkan profil dalam aplikasi.",
   'referrals.share': "Kongsi pautan",
   'referrals.codeLabel': "Kod anda:",
 };

@@ -879,7 +879,7 @@ export const hi: TranslationCatalog = {
   'referrals.tierCount': "{{goal}} में से {{joined}}",
   'referrals.rewardMonths': "आपने {{months}} महीने प्रीमियम कमा लिए हैं।",
   'referrals.rewardMonth1': "आपने 1 महीना प्रीमियम कमा लिया है।",
-  'referrals.note': "वेटलिस्ट में शामिल होना अपने-आप में नहीं गिना जाता; रेफ़रल तब गिना जाएगा जब आपका दोस्त ऐप में अपनी प्रोफ़ाइल पूरी करेगा।",
+  'referrals.note': "रेफ़रल तब गिना जाएगा जब आपका दोस्त ऐप में अपनी प्रोफ़ाइल पूरी करेगा।",
   'referrals.share': "लिंक शेयर करें",
   'referrals.codeLabel': "आपका कोड:",
 };

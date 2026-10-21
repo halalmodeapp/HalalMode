@@ -879,7 +879,7 @@ export const am: TranslationCatalog = {
   'referrals.tierCount': "ከ{{goal}} {{joined}}",
   'referrals.rewardMonths': "{{months}} ወር ፕሪሚየም አግኝተዋል።",
   'referrals.rewardMonth1': "1 ወር ፕሪሚየም አግኝተዋል።",
-  'referrals.note': "ወደ መጠባበቂያ ዝርዝር መግባት ብቻውን አይቆጠርም፤ ጓደኛዎ በመተግበሪያው ላይ መገለጫውን ካጠናቀቀ በኋላ ብቻ ግብዣው ይቆጠራል።",
+  'referrals.note': "ጓደኛዎ በመተግበሪያው ላይ መገለጫውን ካጠናቀቀ በኋላ ብቻ ግብዣው ይቆጠራል።",
   'referrals.share': "ሊንኩን ያጋሩ",
   'referrals.codeLabel': "የእርስዎ ኮድ፦",
 };

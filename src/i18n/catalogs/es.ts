@@ -879,7 +879,7 @@ export const es: TranslationCatalog = {
   'referrals.tierCount': "{{joined}} de {{goal}}",
   'referrals.rewardMonths': "Has ganado {{months}} meses de Premium.",
   'referrals.rewardMonth1': "Has ganado 1 mes de Premium.",
-  'referrals.note': "Apuntarse a la lista de espera no cuenta por sí solo; la recomendación cuenta cuando tu amigo completa su perfil en la app.",
+  'referrals.note': "La recomendación cuenta cuando tu amigo completa su perfil en la app.",
   'referrals.share': "Compartir enlace",
   'referrals.codeLabel': "Tu código:",
 };

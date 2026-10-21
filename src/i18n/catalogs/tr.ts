@@ -879,7 +879,7 @@ export const tr: TranslationCatalog = {
   'referrals.tierCount': "{{goal}} kişiden {{joined}}",
   'referrals.rewardMonths': "{{months}} ay Premium kazandın.",
   'referrals.rewardMonth1': "1 ay Premium kazandın.",
-  'referrals.note': "Bekleme listesine kaydolmak tek başına sayılmaz; arkadaşın uygulamadaki profilini tamamladığında davet sayılır.",
+  'referrals.note': "Arkadaşın uygulamadaki profilini tamamladığında davet sayılır.",
   'referrals.share': "Bağlantıyı paylaş",
   'referrals.codeLabel': "Kodun:",
 };

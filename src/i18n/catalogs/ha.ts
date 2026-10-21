@@ -879,7 +879,7 @@ export const ha: TranslationCatalog = {
   'referrals.tierCount': "{{joined}} cikin {{goal}}",
   'referrals.rewardMonths': "Kun samu watanni {{months}} na Premium.",
   'referrals.rewardMonth1': "Kun samu wata 1 na Premium.",
-  'referrals.note': "Shiga jerin jira kaɗai ba ya ƙirguwa; ana ƙirga gayyata bayan abokinka ya kammala bayanansa a manhaja.",
+  'referrals.note': "Ana ƙirga gayyata bayan abokinka ya kammala bayanansa a manhaja.",
   'referrals.share': "Raba hanyar haɗi",
   'referrals.codeLabel': "Lambarku:",
 };

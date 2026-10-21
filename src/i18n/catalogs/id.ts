@@ -879,7 +879,7 @@ export const id: TranslationCatalog = {
   'referrals.tierCount': "{{joined}} dari {{goal}}",
   'referrals.rewardMonths': "Kamu mendapatkan {{months}} bulan Premium.",
   'referrals.rewardMonth1': "Kamu mendapatkan 1 bulan Premium.",
-  'referrals.note': "Pendaftaran daftar tunggu tidak dihitung sendiri; referral dihitung setelah temanmu melengkapi profil di aplikasi.",
+  'referrals.note': "Referral dihitung setelah temanmu melengkapi profil di aplikasi.",
   'referrals.share': "Bagikan tautan",
   'referrals.codeLabel': "Kodemu:",
 };
