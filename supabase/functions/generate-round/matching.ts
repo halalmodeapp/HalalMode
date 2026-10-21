@@ -19,6 +19,7 @@ import { resolveConfig, ALGORITHM_VERSION, type MatchingConfig } from '../../../
 import {
   directionalEstimate,
   evaluatePairResurface,
+  receptionSimilarityMultiplier,
   reciprocalScore,
   type MemberSignals,
   type PairHistory,
@@ -57,6 +58,10 @@ export interface MemberSignalRow {
   one_sided_pick_rate?: number;
   exposures_in_window: number;
   introductions_per_round: number;
+  /** Private estimate frozen when this matching run was prepared. */
+  reception_score?: number;
+  reception_confidence?: number;
+  reception_similarity_weight?: number;
 }
 
 export interface RoundPlan {
@@ -110,6 +115,9 @@ function toSignals(row: MemberSignalRow): MemberSignals {
     oneSidedPickRate: row.one_sided_pick_rate ?? 0,
     exposuresInWindow: row.exposures_in_window,
     introductionsPerRound: row.introductions_per_round,
+    receptionScore: row.reception_score,
+    receptionConfidence: row.reception_confidence,
+    receptionSimilarityWeight: row.reception_similarity_weight,
   };
 }
 
@@ -195,7 +203,11 @@ export function planRound(
       // Each direction is estimated against the *subject* of that direction.
       const lowPicksHigh = directionalEstimate(row.compat_low_to_high, high, history, config);
       const highPicksLow = directionalEstimate(row.compat_high_to_low, low, history, config);
-      const reciprocal = reciprocalScore(lowPicksHigh, highPicksLow, config);
+      // This is a soft preference only: hard score bands would deny lower-
+      // reception members good opportunities. Existing rotation/fairness stays
+      // independent and still protects their share of exposure.
+      const reciprocal = reciprocalScore(lowPicksHigh, highPicksLow, config)
+        * receptionSimilarityMultiplier(low, high);
 
       const repeat = evaluatePairResurface(
         history,

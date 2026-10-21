@@ -16,6 +16,7 @@
  */
 import OpenAI from 'npm:openai';
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { withLuna } from '../_shared/luna.ts';
 
 const MODEL = 'omni-moderation-latest';
 
@@ -31,6 +32,19 @@ interface Item {
 interface Verdict {
   decision: 'allow' | 'remove' | 'review';
   reason: string;
+}
+
+interface PhotoAnalysisItem {
+  photo_hash: string;
+  owner_id: string;
+  storage_path: string;
+}
+
+interface PresentationFeatures {
+  clarity: number;
+  lighting: number;
+  framing: number;
+  background_distraction: number;
 }
 
 /** Categories that take a photo down straight away when flagged. */
@@ -76,6 +90,22 @@ async function judge(
   if (flagged.length) return { decision: 'review', reason: `Flagged: ${top(flagged)}` };
   if (high.length) return { decision: 'review', reason: `Borderline: ${top(high)}` };
   return { decision: 'allow', reason: 'Nothing flagged.' };
+}
+
+function parsePresentationFeatures(value: string): PresentationFeatures {
+  const parsed: unknown = JSON.parse(value);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Luna returned an invalid photo presentation object');
+  }
+  const item = parsed as Record<string, unknown>;
+  const keys = ['clarity', 'lighting', 'framing', 'background_distraction'];
+  if (Object.keys(item).length !== keys.length || keys.some((key) =>
+    typeof item[key] !== 'number' || !Number.isFinite(item[key])
+      || (item[key] as number) < 0 || (item[key] as number) > 1
+  )) {
+    throw new Error('Luna returned out-of-range photo presentation values');
+  }
+  return item as unknown as PresentationFeatures;
 }
 
 Deno.serve(async (request) => {
@@ -127,5 +157,76 @@ Deno.serve(async (request) => {
       tally.failed += 1;
     }
   }
-  return Response.json({ model: MODEL, ...tally, firstError });
+
+  // This queue is empty while the Luna metric is off. Claiming it is bounded,
+  // and existing photos are never backfilled unless an operator asks for it.
+  const photoClaim = await client.rpc('claim_matching_photo_analysis_service', { p_limit: 2 });
+  if (photoClaim.error) {
+    firstError ??= `photo claim failed: ${photoClaim.error.message}`.slice(0, 300);
+  }
+  const photoItems = (photoClaim.data ?? []) as PhotoAnalysisItem[];
+  let photosAnalyzed = 0;
+  let photosFailed = 0;
+  for (const photo of photoItems) {
+    try {
+      const file = await client.storage.from('profile-photos').download(photo.storage_path);
+      if (file.error || !file.data) throw new Error(`photo download failed: ${file.error?.message}`);
+      const type = ['image/jpeg', 'image/png', 'image/webp'].includes(file.data.type)
+        ? file.data.type
+        : 'image/jpeg';
+      const image = `data:${type};base64,${toBase64(new Uint8Array(await file.data.arrayBuffer()))}`;
+      const { result, model } = await withLuna(openai, (selectedModel) => openai.responses.create({
+        model: selectedModel,
+        instructions: [
+          'Assess only the photograph as a piece of image presentation for a private profile.',
+          'Do not judge the person, their attractiveness, identity, age, ethnicity, religion, emotion, personality, or suitability.',
+          'Return four numbers from 0 to 1: clarity (sharpness and visibility), lighting (useful and even exposure), framing (the subject is sensibly composed), and background_distraction (1 means highly distracting, 0 means clean).',
+          'If uncertain, use 0.5. Do not infer personal traits from the image.',
+        ].join(' '),
+        input: [{
+          role: 'user',
+          content: [
+            { type: 'input_text', text: 'Score the presentation of this image.' },
+            { type: 'input_image', image_url: image, detail: 'low' },
+          ],
+        }],
+        max_output_tokens: 120,
+        text: {
+          format: {
+            type: 'json_schema',
+            name: 'photo_presentation',
+            strict: true,
+            schema: {
+              type: 'object',
+              properties: {
+                clarity: { type: 'number' },
+                lighting: { type: 'number' },
+                framing: { type: 'number' },
+                background_distraction: { type: 'number' },
+              },
+              required: ['clarity', 'lighting', 'framing', 'background_distraction'],
+              additionalProperties: false,
+            },
+          },
+        },
+      }));
+      const features = parsePresentationFeatures(result.output_text ?? '');
+      const saved = await client.rpc('complete_matching_photo_analysis_service', {
+        p_photo_hash: photo.photo_hash,
+        p_owner_id: photo.owner_id,
+        p_storage_path: photo.storage_path,
+        p_features: features,
+        p_model_id: model,
+        p_analysis_version: 'presentation-v1',
+      });
+      if (saved.error) throw new Error(`photo analysis save failed: ${saved.error.message}`);
+      photosAnalyzed += 1;
+    } catch (error) {
+      console.error('matching photo analysis failed', photo.photo_hash.slice(0, 12), String(error));
+      firstError ??= String(error).slice(0, 300);
+      await client.rpc('release_matching_photo_analysis_service', { p_photo_hash: photo.photo_hash });
+      photosFailed += 1;
+    }
+  }
+  return Response.json({ model: MODEL, ...tally, photosAnalyzed, photosFailed, firstError });
 });

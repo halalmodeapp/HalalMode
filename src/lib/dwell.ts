@@ -22,7 +22,11 @@
  * is what gets recorded. Everything below exists to make that question worth
  * asking, never to answer it.
  *
- * Timings never leave the device. What travels is the confirmed decision.
+ * Whole-profile time stays in memory until round submission. At that point a
+ * separately configured backend signal receives a five-second-rounded value
+ * capped at two minutes; raw milliseconds and visit counts stay on-device, and
+ * the database discards this value whenever that signal is switched off. The
+ * local soft-select prompt remains a separate use of these timings.
  */
 
 export interface DwellRecord {

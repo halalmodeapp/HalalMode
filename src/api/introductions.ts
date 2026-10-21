@@ -9,6 +9,7 @@ import {
   type NarrowingCriterion,
 } from '@/lib/dailyRoundState';
 import { TIER_LIMITS, type IntroductionRound, type MembershipTier } from '@/types';
+import type { MatchingEngagementObservation } from '@/lib/matchingEngagement';
 
 export interface CurrentRoundState {
   status: DailyRoundStatus;
@@ -129,7 +130,8 @@ export async function fetchCurrentRoundState(
  */
 export async function submitKeeps(
   roundId: string,
-  keptIntroductionIds: string[]
+  keptIntroductionIds: string[],
+  engagement: MatchingEngagementObservation[] = []
 ): Promise<{ mutualProfileIds: string[]; waitingMutualProfileIds?: string[] }> {
   if (USE_MOCKS) {
     // The sample flow always mutuals on the first keep so the match reveal,
@@ -147,10 +149,19 @@ export async function submitKeeps(
   // Premium member is asked which of their keeps comes first. Mutual first
   // choice is the metric all of this is judged against, and without an order it
   // is unmeasurable for Premium.
-  const { data, error } = await client.rpc('submit_round_selections_ranked', {
+  let { data, error } = await client.rpc('submit_round_selections_ranked_with_signals', {
     p_round_id: roundId,
     p_ordered_introduction_ids: keptIntroductionIds,
+    p_engagement: engagement,
   });
+  // Keep app upgrades safe when a client reaches an older database just before
+  // its migration is applied. No timing data is sent through the old endpoint.
+  if (error && ['PGRST202', '42883'].includes(error.code ?? '')) {
+    ({ data, error } = await client.rpc('submit_round_selections_ranked', {
+      p_round_id: roundId,
+      p_ordered_introduction_ids: keptIntroductionIds,
+    }));
+  }
   if (error) throw error;
   trackProductEvent('interest_submitted', { chosen: keptIntroductionIds.length });
   return data as {

@@ -20,7 +20,7 @@
  * Members are asked to accept it on their next visit.
  */
 
-export const LEGAL_VERSION = '2026-10-06';
+export const LEGAL_VERSION = '2026-10-21';
 
 /** Where both documents live: halalmo.de/legal/terms and /legal/privacy. */
 export const LEGAL_SITE = 'https://halalmo.de';
@@ -151,6 +151,7 @@ export const PRIVACY: LegalDocument = {
         'Your profile: name, date of birth, city and country, what you do, what you have written about yourself, your photographs, and an optional voice introduction.',
         'Your preferences: the age, distance, and other qualities you are looking for, and which of them are must-haves.',
         'Your activity: which introductions you were shown, which you kept, your answers to the questions, and your messages.',
+        'While an introduction is open, approximate time spent on the profile, its written bio, and each full-size photograph. These times are rounded to five-second steps and capped at two minutes per item.',
         'Your location, rounded to about one kilometre, with the nearest city and country. It comes from your device, is used only to work out how far apart two people are, and is never shown to anyone.',
         'Your background and faith: your sect or school, how you practise, religious dress, ethnicity, the countries your family are from, and whether you have or want children. Also your height and body type, which are never shown to anyone.',
       ],
@@ -183,7 +184,9 @@ export const PRIVACY: LegalDocument = {
     {
       heading: 'What nobody sees',
       body: [
-        'We keep a private score used to decide who to introduce to whom. It is never shown to anyone, including you. It is not a rating of you as a person, and it is not shared.',
+        'We combine private signals such as whether introductions were chosen, first-choice and mutual outcomes, and approximate time spent on a profile, its bio, and each photograph. This produces a confidence-aware reception estimate used only by the matching system to help predict reciprocal interest and gently prefer pairs with similar estimates. It is never shown to anyone, including you, and is not a rating of your worth or suitability.',
+        'A separate rotation gives members opportunities to be introduced. A lower reception estimate does not make you ineligible or remove your place in that rotation.',
+        'If private photo-presentation analysis is enabled, OpenAI processes current profile photographs for image clarity, lighting, framing, and background distraction only. It is not asked to judge attractiveness, identity, age, ethnicity, religion, emotion, personality, or suitability. This optional analysis is off by default; its result is private and used only as a small input to matching.',
         'Your answers are shown to the other person only once they have answered all of their own questions, and theirs to you only once you have answered all of yours.',
         'Blocks, reports and hides are private. The person is not told. If you hide someone, you are hidden from them too.',
         'Your exact location is never kept. It is rounded to about a kilometre before it is stored, and used only to measure distance.',
@@ -235,6 +238,7 @@ export const PRIVACY: LegalDocument = {
       heading: 'How long we keep things',
       body: [
         'While your account is open, we keep your profile and messages so the service works.',
+      'Approximate profile, bio, and photo viewing observations are kept for up to 180 days. A derived private matching estimate is kept while your account is active and is deleted with your profile. Photo-presentation results are deleted when the photo is removed or your profile is deleted.',
         'When you close your account, we remove your profile, photographs, preferences and messages after a 30-day recovery period.',
         'Safety reports, and the record of an account removed for breaking the terms, are kept for up to two years so that a removed member cannot simply return. Payment records are kept as long as tax law requires, usually six years.',
         'Waitlist email addresses are deleted when you join, or whenever you ask.',

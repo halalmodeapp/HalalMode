@@ -2,7 +2,7 @@ import { ProfileImage as Image } from '@/components/ui/ProfileImage';
 import { getProfilePhotoGallery, getProfilePhotoSource } from '@/data/demoProfilePhotos';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AudioGreeting } from '@/components/introductions/AudioGreeting';
@@ -24,23 +24,62 @@ import { profileDetailLines } from '@/lib/profileDetails';
 export default function IntroductionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { localeTag, isRTL, language, t } = useI18n();
-  const { round, refresh, selected, toggleSelect, keepLimit, profileOpened, profileClosed } =
-    useRound();
+  const {
+    round, refresh, selected, toggleSelect, keepLimit, profileOpened, profileClosed,
+    bioVisibility, photoVisibility,
+  } = useRound();
   const [limitOpen, setLimitOpen] = useState(false);
-
-  // Before the early return below, because hooks cannot be conditional. Reading
-  // a profile is timed on the device so that at most one question can be asked
-  // at submission; the timings themselves are never sent anywhere.
-  useFocusEffect(
-    useCallback(() => {
-      if (!id) return;
-      profileOpened(id);
-      return () => profileClosed(id);
-    }, [id, profileClosed, profileOpened])
-  );
+  const timingLayout = useRef({
+    focused: false,
+    offset: 0,
+    viewport: 0,
+    heroTop: 0,
+    heroHeight: 0,
+    bioTop: 0,
+    bioHeight: 0,
+  });
 
   const introduction =
     round?.introductions.find((item) => item.id === id) ?? null;
+  const firstPhotoPath = introduction?.profile.photoMedia?.[0]?.storagePath;
+  const firstPhotoPathRef = useRef(firstPhotoPath);
+  const updateVisibleTiming = useCallback(() => {
+    const layout = timingLayout.current;
+    if (!layout.focused || layout.viewport <= 0) return;
+    const visibleRatio = (top: number, height: number) => {
+      if (height <= 0) return 0;
+      const visible = Math.max(0, Math.min(top + height, layout.offset + layout.viewport)
+        - Math.max(top, layout.offset));
+      return visible / height;
+    };
+    if (id) {
+      photoVisibility(id, firstPhotoPathRef.current, visibleRatio(layout.heroTop, layout.heroHeight) >= 0.5);
+      bioVisibility(id, visibleRatio(layout.bioTop, layout.bioHeight) >= 0.5);
+    }
+  }, [bioVisibility, id, photoVisibility]);
+
+  useEffect(() => {
+    firstPhotoPathRef.current = firstPhotoPath;
+    updateVisibleTiming();
+  }, [firstPhotoPath, updateVisibleTiming]);
+
+  // Before the early return below, because hooks cannot be conditional. The
+  // old local dwell is only used for the optional soft-select prompt. Separate,
+  // bounded visible-time metrics are submitted with the member's round choice.
+  useFocusEffect(
+    useCallback(() => {
+      if (!id) return;
+      timingLayout.current.focused = true;
+      profileOpened(id);
+      updateVisibleTiming();
+      return () => {
+        timingLayout.current.focused = false;
+        photoVisibility(id, firstPhotoPathRef.current, false);
+        bioVisibility(id, false);
+        profileClosed(id);
+      };
+    }, [bioVisibility, id, photoVisibility, profileClosed, profileOpened, updateVisibleTiming])
+  );
 
   if (!introduction) {
     return (
@@ -64,6 +103,15 @@ export default function IntroductionDetailScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={100}
+        onLayout={(event) => {
+          timingLayout.current.viewport = event.nativeEvent.layout.height;
+          updateVisibleTiming();
+        }}
+        onScroll={(event) => {
+          timingLayout.current.offset = event.nativeEvent.contentOffset.y;
+          updateVisibleTiming();
+        }}
       >
         <ScreenHeader
           action="back"
@@ -81,6 +129,11 @@ export default function IntroductionDetailScreen() {
           accessibilityRole="imagebutton"
           accessibilityLabel={t('intro.photosA11y', { name: profile.firstName })}
           onPress={() => router.push(`/gallery/${introduction.id}`)}
+          onLayout={(event) => {
+            timingLayout.current.heroTop = event.nativeEvent.layout.y;
+            timingLayout.current.heroHeight = event.nativeEvent.layout.height;
+            updateVisibleTiming();
+          }}
           style={styles.hero}
         >
           <Image
@@ -116,7 +169,16 @@ export default function IntroductionDetailScreen() {
           ))}
         </View>
 
-        <Text style={styles.bio}>{profile.bio}</Text>
+        <Text
+          style={styles.bio}
+          onLayout={(event) => {
+            timingLayout.current.bioTop = event.nativeEvent.layout.y;
+            timingLayout.current.bioHeight = event.nativeEvent.layout.height;
+            updateVisibleTiming();
+          }}
+        >
+          {profile.bio}
+        </Text>
 
         {profile.audioDurationSeconds ? (
           <View style={styles.section}>

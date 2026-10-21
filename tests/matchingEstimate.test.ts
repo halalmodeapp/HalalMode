@@ -11,6 +11,7 @@ import {
   appeal,
   confidence,
   directionalEstimate,
+  effectiveReception,
   evaluatePairResurface,
   allowedAppearances,
   mayResurface,
@@ -19,6 +20,7 @@ import {
   repeatGenerosity,
   NO_PAIR_HISTORY,
   reciprocalScore,
+  receptionSimilarityMultiplier,
   type MemberSignals,
   type PairHistory,
 } from '../src/matching/estimate';
@@ -57,6 +59,28 @@ test('confidence ramps linearly and saturates at the configured threshold', () =
   assert.equal(confidence(member({ timesShown: 15 }), config), 1);
   assert.equal(confidence(member({ timesShown: 30 }), config), 1);
   assert.ok(Math.abs(confidence(member({ timesShown: 5 }), config) - 1 / 3) < 1e-9);
+});
+
+test('the modular reception estimate replaces the old keep-rate only as evidence accumulates', () => {
+  const partial = member({
+    timesShown: 20,
+    timesKept: 10,
+    receptionScore: 0.9,
+    receptionConfidence: 0.5,
+  });
+  assert.equal(appeal(partial), 0.7);
+  assert.equal(effectiveReception(partial), 0.7);
+  assert.equal(effectiveReception(member({ receptionScore: 0.95, receptionConfidence: 0 })), 0.5);
+});
+
+test('similar reception is a small soft preference, never a hard eligibility gate', () => {
+  const high = member({ receptionScore: 0.9, receptionConfidence: 1, receptionSimilarityWeight: 0.2 });
+  const low = member({ receptionScore: 0.1, receptionConfidence: 1, receptionSimilarityWeight: 0.2 });
+  const newMember = member({ receptionScore: 0.1, receptionConfidence: 0, receptionSimilarityWeight: 0.2 });
+  assert.ok(Math.abs(receptionSimilarityMultiplier(high, low) - 0.84) < 1e-9);
+  assert.equal(receptionSimilarityMultiplier(high, high), 1);
+  assert.ok(Math.abs(receptionSimilarityMultiplier(high, newMember) - 0.92) < 1e-9);
+  assert.ok(receptionSimilarityMultiplier(high, low) > 0.8);
 });
 
 test('the confidence threshold is configurable, not hardcoded', () => {
