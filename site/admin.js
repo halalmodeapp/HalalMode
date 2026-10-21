@@ -19,7 +19,7 @@
   const REFRESH_MS = 60000;
   const IDLE_MS = 15 * 60000;
 
-  // Plain names for the match signals, with what each one means.
+  // Plain names for what goes into a member's score, with what each one means.
   const SIGNALS = {
     selection_rate: ['Picked rate', 'How often people choose this member when they are shown to them.'],
     first_choice_rate: ['Picked first', 'How often this member is someone’s first choice.'],
@@ -47,9 +47,10 @@
     home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10',
     waitlist: 'M9 11l3 3 8-8M20 12v7a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2h9',
     members: 'M16 20v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 10a4 4 0 100-8 4 4 0 000 8zM22 20v-2a4 4 0 00-3-3.9M16 2.1a4 4 0 010 7.8',
-    invites: 'M4 4h16v16H4zM22 6l-10 7L2 6',
+    referrals: 'M4 4h16v16H4zM22 6l-10 7L2 6',
+    stats: 'M3 3v18h18M7 15l4-4 3 3 5-6',
     matches: 'M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 00-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 000-7.8z',
-    signals: 'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',
+    scoring: 'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',
     reports: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
     email: 'M22 2L11 13M22 2l-7 20-4-9-9-4z',
     features: 'M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7',
@@ -69,12 +70,12 @@
     { group: 'People' },
     { id: 'waitlist', label: 'Waitlist', key: 'W', tip: 'Everyone who signed up on halalmo.de before the app opens.' },
     { id: 'members', label: 'Members', key: 'M', tip: 'People with an app account, and how many are ready to be matched.' },
-    { id: 'invites', label: 'Invites', key: 'I', tip: 'Friends invited by members, and which invites count toward rewards.' },
+    { id: 'referrals', label: 'Referrals', key: 'R', tip: 'Friends referred by members, and which referrals count toward rewards.' },
     { group: 'Matching' },
-    { id: 'matches', label: 'Daily matches', key: 'D', tip: 'Each day’s matching run, and whether everyone is getting a fair turn.' },
-    { id: 'signals', label: 'Match signals', key: 'S', tip: 'Private signals that help decide who to introduce. Members never see them, and they never stop anyone being matched.' },
+    { id: 'stats', label: 'Match stats', key: 'A', tip: 'How often members are shown, picked and matched, who is picked but not matched, and who is still waiting.' },
+    { id: 'scoring', label: 'Member scoring', key: 'S', tip: 'Private scores that help the matcher choose introductions. Members never see them, and they never stop anyone being matched.' },
     { group: 'Safety' },
-    { id: 'reports', label: 'Reports', key: 'R', tip: 'Reports from members, and automatic checks on photos and bios.', badge: function (d) { return d && d.safety.open_reports; } },
+    { id: 'reports', label: 'Reports', key: 'P', tip: 'Reports from members, and automatic checks on photos and bios.', badge: function (d) { return d && d.safety.open_reports; } },
     { group: 'System' },
     { id: 'email', label: 'Email', key: 'E', tip: 'Emails waiting to send, sent today, and the daily sending limit.' },
     { id: 'features', label: 'Features', key: 'F', tip: 'Turn app features on or off, for everyone or some members.' },
@@ -371,7 +372,7 @@
     list.push({ label: 'Add an admin', hint: 'Team', icon: 'team', run: function () { go('team'); addMember(); } });
     list.push({ label: 'Keyboard shortcuts', hint: '?', icon: 'search', run: showShortcuts });
     list.push({ label: 'Sign out', hint: 'Account', icon: 'lock', run: function () { signOut(); } });
-    SIGNAL_ORDER.forEach(function (k) { list.push({ label: SIGNALS[k][0], hint: 'Match signal', icon: 'signals', run: function () { go('signals'); } }); });
+    SIGNAL_ORDER.forEach(function (k) { list.push({ label: SIGNALS[k][0], hint: 'Member scoring', icon: 'scoring', run: function () { go('scoring'); } }); });
     ((state.settings && state.settings.flags) || []).forEach(function (f) {
       list.push({ label: (FEATURES[f.key] || [f.key])[0], hint: 'Feature', icon: 'features', run: function () { go('features'); editFeature(f); } });
     });
@@ -448,7 +449,7 @@
     if (DEMO) {
       state.session = { demo: true };
       state.me = { admin: true, role: 'owner', name: 'Demo owner', mfa: true, step_up_until: 0 };
-      state.overview = sampleOverview(); state.settings = sampleSettings(); state.demoReports = sampleReports();
+      state.overview = sampleOverview(); state.settings = sampleSettings(); state.demoReports = sampleReports(); state.demoMatcher = sampleMatcher();
       state.loadedAt = new Date().toISOString();
       return boot();
     }
@@ -549,7 +550,7 @@
   }
   function render() {
     hideTip();
-    const fn = { home: pageHome, waitlist: pageWaitlist, members: pageMembers, invites: pageInvites, matches: pageMatches, signals: pageSignals, reports: pageReports, email: pageEmail, features: pageFeatures, team: pageTeam, log: pageLog }[state.page];
+    const fn = { home: pageHome, waitlist: pageWaitlist, members: pageMembers, referrals: pageReferrals, stats: pageStats, scoring: pageScoring, reports: pageReports, email: pageEmail, features: pageFeatures, team: pageTeam, log: pageLog }[state.page];
     renderShell(fn());
   }
   // An owner can preview the panel as a viewer sees it (Team page).
@@ -640,15 +641,15 @@
     if (sf.open_reports) todo.push(['bad', sf.open_reports + ' report' + (sf.open_reports > 1 ? 's' : '') + ' to look at', 'reports']);
     if (mail.failing) todo.push(['bad', mail.failing + ' emails failed to send', 'email']);
     if (sf.moderation_stuck) todo.push(['bad', sf.moderation_stuck + ' photo or bio checks are stuck', 'reports']);
-    if (lastRun && lastRun.failed) todo.push(['bad', 'The last daily match run failed', 'matches']);
-    else if (lastRun && lastRun.breaches) todo.push(['warn', 'The last daily match run had a warning', 'matches']);
+    if (lastRun && lastRun.failed) todo.push(['bad', 'The last matching run failed', 'stats']);
+    else if (lastRun && lastRun.breaches) todo.push(['warn', 'The last matching run had a warning', 'stats']);
     if (mail.pending > 200) todo.push(['warn', n(mail.pending) + ' emails are waiting to send', 'email']);
-    if (luna.failed) todo.push(['warn', luna.failed + ' photo quality checks failed', 'signals']);
+    if (luna.failed) todo.push(['warn', luna.failed + ' photo quality checks failed', 'scoring']);
     return h('div', { class: 'stack' },
       h('div', { class: 'big-kpis' },
         kpi('On the waitlist', n(w.total), '+' + n(w.last_24h) + ' today', 'Everyone who signed up on halalmo.de.'),
         kpi('Ready to match', n(m.ready_for_matching), 'of ' + n(m.total) + ' members', 'Members whose profile is complete enough to be matched.'),
-        kpi('Invites that count', n(r.waitlist_counted + r.app_counted), n(r.waitlist_attributed + r.app_claimed) + ' invited in total', 'An invite counts only when the friend finishes their app profile.'),
+        kpi('Referrals that count', n(r.waitlist_counted + r.app_counted), n(r.waitlist_attributed + r.app_claimed) + ' referred in total', 'A referral counts only when the friend finishes their app profile.'),
         kpi('Matches made', n(d.connections.total), '+' + n(d.connections.last_7d) + ' this week', 'Pairs who chose each other.')),
       card('Needs your attention', 'Problems show up here first. Click one to go to it.', null,
         h('div', { class: 'attention' }, todo.length ? todo.map(function (t) {
@@ -747,41 +748,112 @@
       h('p', { class: 'note', text: 'Members are shown only as totals. Names, photos and messages are not shown here, on purpose.' }));
   }
 
-  function pageInvites() {
+  function pageReferrals() {
     const w = state.overview.waitlist, r = state.overview.referrals, st = state.settings;
     return h('div', { class: 'stack' },
       h('div', { class: 'kpis' },
-        kpi('Invites that count', n(r.waitlist_counted + r.app_counted), null, 'The friend finished their app profile, so it counts toward rewards.'),
-        kpi('Waiting to count', n(r.waitlist_attributed + r.app_claimed - r.waitlist_counted - r.app_counted), null, 'Invited, but the friend hasn’t finished their app profile yet.'),
+        kpi('Referrals that count', n(r.waitlist_counted + r.app_counted), null, 'The friend finished their app profile, so it counts toward rewards.'),
+        kpi('Waiting to count', n(r.waitlist_attributed + r.app_claimed - r.waitlist_counted - r.app_counted), null, 'Referred, but the friend hasn’t finished their app profile yet.'),
         kpi('Counted this week', n(r.counted_last_7d))),
-      card('How invites turn into rewards', 'Each step must happen before the next one counts.', null, [
-        steps([['On the waitlist', w.total], ['Came from a friend', r.waitlist_attributed, 'Signed up using a friend’s invite link.'], ['Counted', r.waitlist_counted, 'Then finished their app profile.'],
-          ['Entered a code in the app', r.app_claimed, 'Typed a friend’s invite code when joining the app.'], ['Counted (app)', r.app_counted]], w.total),
-        h('p', { class: 'note', style: 'margin-top:14px', text: 'Rule: an invite counts only once the friend finishes their app profile. Signing up or confirming an email is not enough.' })]),
-      card('Invite link', null, null, setting('Invite link address', 'Every invite link is this address plus the member’s code. It can only point to halalmo.de.',
+      card('How referrals turn into rewards', 'Each step must happen before the next one counts.', null, [
+        steps([['On the waitlist', w.total], ['Came from a friend', r.waitlist_attributed, 'Signed up using a friend’s referral link.'], ['Counted', r.waitlist_counted, 'Then finished their app profile.'],
+          ['Entered a code in the app', r.app_claimed, 'Typed a friend’s referral code when joining the app.'], ['Counted (app)', r.app_counted]], w.total),
+        h('p', { class: 'note', style: 'margin-top:14px', text: 'Rule: a referral counts only once the friend finishes their app profile. Signing up or confirming an email is not enough.' })]),
+      card('Referral link', null, null, setting('Referral link address', 'Every referral link is this address plus the member’s code. It can only point to halalmo.de.',
         'Keep https://halalmo.de/?ref= until launch.',
         [h('span', { class: 'mono', text: st.referral_link_base + 'CODE' }), editBtn('Change', function () {
           const input = h('input', { type: 'text', value: st.referral_link_base, spellcheck: 'false' });
           dialog({
-            title: 'Change the invite link address', body: 'It must start with https://halalmo.de/ and end with ?ref=',
+            title: 'Change the referral link address', body: 'It must start with https://halalmo.de/ and end with ?ref=',
             extra: h('label', { class: 'field' }, 'Address', input),
             run: function (why) {
               if (DEMO) return demoWrite('referral.link_base', { before: st.referral_link_base, after: input.value, reason: why }, function () { st.referral_link_base = input.value; });
               return rpc('admin_set_referral_link_base', { p_link_base: input.value.trim(), p_reason: why });
             }
-          }).then(function (done) { if (done) { toast('Invite links updated.'); reload(); } });
+          }).then(function (done) { if (done) { toast('Referral links updated.'); reload(); } });
         })])));
   }
 
-  function pageMatches() {
+  // Plain names and safe explanations for the matcher settings owners may change.
+  const MATCHER = {
+    min_reciprocal_score: ['Minimum chance of a match', 'Pairs less likely than this to choose each other are not introduced. Lower means more introductions, but more one-sided ones.'],
+    no_match_boost_weight: ['Help for members without a match', 'How much the matcher favours people who have gone a while without a match.'],
+    exposure_boost_weight: ['Help for members shown less', 'How much the matcher favours people who have been shown less often.'],
+    boost_cap: ['Most help anyone can get', 'The upper limit on the two kinds of help above, added together.'],
+    no_match_rounds_full: ['Days until full help', 'How many days without a match before someone gets the full help.'],
+    exposure_window_rounds: ['Days counted for fairness', 'How many recent days are counted when checking who has been shown less.'],
+    repeat_cooldown_days: ['Days before showing a pair again', 'How long to wait before two people can be introduced again.'],
+    max_pair_appearances: ['Most times a pair is shown', 'How many times the same two people can ever be introduced.']
+  };
+  function matcherSettingsCard() {
+    const box = h('div', null, h('div', { class: 'skeleton' }));
+    (DEMO ? Promise.resolve(state.demoMatcher) : rpc('admin_matcher_settings')).then(function (cfg) {
+      box.replaceChildren.apply(box, [h('p', { class: 'muted small', style: 'margin-bottom:6px', text: 'Matcher version ' + cfg.version + ' · active since ' + when(cfg.activated_at) })].concat((cfg.settings || []).map(function (st) {
+        const meta = MATCHER[st.key] || [st.key, ''];
+        return setting(meta[0], meta[1] + ' Allowed: ' + st.min + ' to ' + st.max + '.', null,
+          [h('b', { class: 'num', text: String(st.value) }), editBtn('Change', function () {
+            const input = h('input', { type: 'number', min: String(st.min), max: String(st.max), step: st.whole ? '1' : '0.01', value: String(st.value) });
+            dialog({
+              title: meta[0], body: meta[1],
+              extra: h('label', { class: 'field' }, 'New value (' + st.min + ' to ' + st.max + ')', input),
+              diff: [['Now', String(st.value)]],
+              typed: 'MATCHER',
+              run: function (why) {
+                const v = Number(input.value);
+                if (DEMO) return demoWrite('matcher.set', { setting: st.key, before: st.value, after: v, version: cfg.version + 1, reason: why }, function () { st.value = v; cfg.version += 1; cfg.activated_at = new Date().toISOString(); });
+                return rpc('admin_set_matcher_setting', { p_key: st.key, p_value: v, p_reason: why });
+              }
+            }).then(function (done) { if (done) { toast('Saved as a new matcher version.'); render(); } });
+          })]);
+      })));
+    }, function (e) { box.replaceChildren(h('p', { class: 'error', text: e.message })); });
+    return card('Advanced: matcher settings', 'How the matcher balances good matches against giving everyone a turn. Each change makes a new version, used from the next daily match. To undo, set the old value again.',
+      pill('warn', 'Changes who meets whom'), box);
+  }
+
+  function pageStats() {
     const mt = state.overview.matching, f = mt.fairness || {};
-    return h('div', { class: 'stack' },
+    const days = state.statsDays || 30;
+    const box = h('div', { class: 'stack' }, h('div', { class: 'skeleton' }));
+    (DEMO ? Promise.resolve(sampleMatchStats(days)) : rpc('admin_match_stats', { p_days: days })).then(function (st) {
+      const wt = st.waiting || {};
+      const g = st.by_gender || {};
+      const genderRow = function (key, label) {
+        const x = g[key] || { shown: 0, picked: 0, members: 0, matched: 0 };
+        return h('tr', null, h('td', { style: 'font-weight:600', text: label }), h('td', { class: 'num', text: n(x.members) }),
+          h('td', { class: 'num', text: pct(x.picked, x.shown) }), h('td', { class: 'num', text: n(x.matched) + '  ·  ' + pct(x.matched, x.members) }));
+      };
+      const waitBar = function (label, v, tip) { return [label, v, tip]; };
+      box.replaceChildren(
+        h('div', { class: 'kpis' },
+          kpi('Times shown', n(st.shown), 'introductions decided', 'Each time someone saw a profile in their daily set and decided.'),
+          kpi('Picks', n(st.picks), pct(st.picks, st.shown) + ' of times shown', 'Times someone chose the person they were shown.'),
+          kpi('Matches', n(st.matches), pct(st.matches * 2, st.picks) + ' of picks matched', 'Both people picked each other.'),
+          kpi('One-sided picks', n(st.one_sided_picks), pct(st.one_sided_picks, st.picks) + ' of picks', 'Someone picked a person who did not pick them back.', st.picks && st.one_sided_picks / st.picks > 0.85)),
+        h('div', { class: 'grid cols-2' },
+          card('Who isn’t getting matches', 'Members shown in this period, and where they got stuck.', null, steps([
+            ['Shown to someone', st.members_shown],
+            ['Picked by nobody', st.picked_by_nobody, 'Shown at least 3 times and never picked. Their profile may need help (photos, bio).'],
+            ['Picked, but no match', st.picked_not_matched, 'Someone wanted them, but they did not pick that person back, or haven’t yet.'],
+            ['Matched', st.members_matched, 'Got at least one match in this period.']], st.members_shown)),
+          card('How long since their last match', 'From the latest daily match: how many days members have gone without a match.', null, steps([
+            waitBar('0–3 days', wt.r0_3), waitBar('4–7 days', wt.r4_7), waitBar('8–13 days', wt.r8_13, 'The matcher gives these members extra help.'),
+            waitBar('14+ days', wt.r14, 'If this grows, raise “Help for members without a match” in Member scoring → Advanced.')], wt.members))),
+        card('Women and men', 'How each side is picked and matched. Big gaps can mean one side has many more choices.', null, h('div', { class: 'table-wrap' }, h('table', null,
+          h('thead', null, h('tr', null, ['', 'Members shown', 'Picked rate', 'Matched'].map(function (t) { return h('th', { text: t }); }))),
+          h('tbody', null, genderRow('female', 'Women'), genderRow('male', 'Men'))))),
+        card('Matches per day', 'New matches each day in this period.', null, barChart((st.daily_matches || []).slice(-30))));
+    }, function (e) { box.replaceChildren(h('p', { class: 'error', text: e.message })); });
+    const chips = h('div', { class: 'filters' }, [7, 30, 90, 365].map(function (d) {
+      return h('button', { type: 'button', class: 'chip', 'aria-pressed': String(d === days), text: d === 365 ? '1 year' : d + ' days', onclick: function () { state.statsDays = d; render(); } });
+    }));
+    return h('div', { class: 'stack' }, chips, box,
       card('Is everyone getting a turn?', 'The matcher makes sure people who were matched less get a turn. These numbers check that it works.', null, rows([
         ['People in the last daily match', n(f.members), null, 1],
         ['Waiting 3+ days for a match', n(f.waiting_3_plus_rounds) + '  ·  ' + pct(f.waiting_3_plus_rounds, f.members), 'Should stay low.'],
-        ['Members with lower signals', n(f.low_score_members), 'Members whose match signals are lower than most.'],
-        ['…of those, waiting 3+ days', n(f.low_score_waiting_3_plus) + '  ·  ' + pct(f.low_score_waiting_3_plus, f.low_score_members), 'If this is much higher than the line above, lower the signal importance in Match signals.', 1]])),
-      card('Daily match runs', 'Each time the matcher made the day’s introductions.', null, h('div', { class: 'table-wrap' }, h('table', null,
+        ['Members with lower scores', n(f.low_score_members), 'Members whose private score is lower than most.'],
+        ['…of those, waiting 3+ days', n(f.low_score_waiting_3_plus) + '  ·  ' + pct(f.low_score_waiting_3_plus, f.low_score_members), 'If this is much higher than the line above, lower the importance of the score parts in Member scoring.', 1]])),
+      card('Matching runs', 'Each time the matcher made the day’s introductions.', null, h('div', { class: 'table-wrap' }, h('table', null,
         h('thead', null, h('tr', null, ['When', 'Type', 'People', 'Pairs made', 'Result'].map(function (t) { return h('th', { text: t }); }))),
         h('tbody', null, (mt.runs || []).length ? mt.runs.map(function (x) {
           const st = x.failed ? pill('bad', 'Failed') : !x.finished_at ? pill('warn', 'Running') : x.breaches ? pill('warn', 'Warning', 'It finished, but something was slower or bigger than expected.') : pill('good', 'OK');
@@ -791,7 +863,7 @@
         }) : h('tr', null, h('td', { colspan: '5', class: 'muted', text: 'No runs yet.' })))))));
   }
 
-  function pageSignals() {
+  function pageScoring() {
     const sig = state.overview.signals, luna = state.overview.luna;
     const byKey = {};
     (sig.metrics || []).forEach(function (x) { byKey[x.key] = { enabled: x.enabled, weight: Number(x.weight) }; });
@@ -855,11 +927,11 @@
     });
     update();
     return h('div', { class: 'stack' },
-      card('Signals', 'Switch each signal on or off and set how important it is. Importance is shared between the signals that are on.',
+      card('What goes into the score', 'Switch each part on or off and set how important it is. Importance is shared between the parts that are on.',
         h('span', { class: 'muted small', text: 'Version ' + sig.config_version + ' · changed ' + ago(sig.config_updated_at) }), list,
-        [h('span', { class: 'muted small', style: 'flex:1', text: canEdit() ? 'Turning one off shares its importance among the rest.' : 'Only owners can change signals.' }), undoBtn, saveBtn]),
+        [h('span', { class: 'muted small', style: 'flex:1', text: canEdit() ? 'Turning a part off shares its importance among the rest.' : 'Only owners can change scoring.' }), undoBtn, saveBtn]),
       h('div', { class: 'grid cols-wide' },
-        card('How members are spread', 'Each bar is a group of members, from lower signals to higher. Darker means more certain. Nobody is named.', null, [spreadChart(sig.distribution || []),
+        card('How scores are spread', 'Each bar is a group of members, from lower scores to higher. Darker means more certain. Nobody is named.', null, [spreadChart(sig.distribution || []),
           h('div', { class: 'legend' },
             h('span', null, h('i', { style: 'background:var(--conf-low)' }), 'New members (not much to go on yet)'),
             h('span', null, h('i', { style: 'background:var(--conf-mid)' }), 'Some history'),
@@ -868,7 +940,8 @@
           ['Members can see it', 'Never', null, 1], ['Stops anyone being matched', 'Never', null, 1],
           ['New members start', 'In the middle', 'With little history, everyone starts in the middle and moves slowly.'],
           ['Looks back', '180 days', 'Older activity is forgotten.'],
-          ['Last updated', ago(sig.last_computed_at)]]))));
+          ['Last updated', ago(sig.last_computed_at)]]))),
+      matcherSettingsCard());
   }
   function checkExistingPhotos() {
     const count = h('input', { type: 'number', min: '1', max: '50', value: '20' });
@@ -1101,7 +1174,7 @@
   }
 
   // ---------------------------------------------------------------- activity log
-  const LOG_ICON = { report: 'reports', matching_metric: 'signals', luna: 'signals', flag: 'features', referral: 'invites', mail: 'email', team: 'team', admin: 'lock' };
+  const LOG_ICON = { report: 'reports', matching_metric: 'scoring', luna: 'scoring', matcher: 'stats', flag: 'features', referral: 'referrals', mail: 'email', team: 'team', admin: 'lock' };
   function describe(a) {
     const x = a.detail || {};
     const arrow = function (b, af) { return String(b == null ? 'none' : b) + ' → ' + String(af == null ? 'none' : af); };
@@ -1112,12 +1185,13 @@
       }
       case 'luna.backfill': return 'Started checking ' + x.queued + ' existing photos';
       case 'flag.set': return (FEATURES[x.flag] || [x.flag])[0] + ': ' + whoGets({ enabled: x.after && x.after.enabled, rollout: x.after && x.after.rollout, members: 1 });
-      case 'referral.link_base': return 'Invite link: ' + arrow(x.before, x.after);
+      case 'referral.link_base': return 'Referral link: ' + arrow(x.before, x.after);
       case 'mail.daily_limit': return 'Email daily limit: ' + arrow(x.before == null ? 'none' : x.before, x.after == null ? 'none' : x.after);
       case 'team.add': return 'Added ' + (x.name || 'a person') + ' as ' + (x.role === 'owner' ? 'an owner' : 'a viewer');
       case 'team.role': return (x.name || 'A person') + ' is now ' + (x.after === 'owner' ? 'an owner' : 'a viewer');
       case 'team.remove': return 'Removed ' + (x.name || 'a person');
       case 'admin.sign_in': return 'Signed in';
+      case 'matcher.set': return ((typeof MATCHER !== 'undefined' && MATCHER[x.setting]) || [x.setting])[0] + ': ' + arrow(x.before, x.after) + ' (version ' + x.version + ')';
       case 'report.dismiss': return 'Dismissed a report about member ' + x.member;
       case 'report.suspend': return 'Suspended member ' + x.member + ' for 7 days';
       case 'report.ban': return 'Banned member ' + x.member;
@@ -1134,7 +1208,7 @@
     }));
   }
   function pageLog() {
-    const cats = [['', 'Everything'], ['report', 'Reports'], ['matching_metric', 'Match signals'], ['flag', 'Features'], ['referral', 'Invites'], ['mail', 'Email'], ['team', 'Team'], ['admin', 'Sign-ins']];
+    const cats = [['', 'Everything'], ['report', 'Reports'], ['matching_metric', 'Member scoring'], ['matcher', 'Matcher settings'], ['flag', 'Features'], ['referral', 'Referrals'], ['mail', 'Email'], ['team', 'Team'], ['admin', 'Sign-ins']];
     const box = h('div', null, h('div', { class: 'skeleton' }));
     const more = h('button', { type: 'button', class: 'btn ghost sm', text: 'Show older', hidden: true });
     let items = [];
@@ -1242,6 +1316,24 @@
       out.push({ day: d, waitlist: Math.round(60 + 520 * t * t + 40 * Math.sin(i)), members: Math.round(4 + 22 * t + 3 * Math.cos(i)) });
     }
     return { days: days, before_waitlist: Math.max(0, 8412 - out.reduce(function (a, r) { return a + r.waitlist; }, 0)), before_members: Math.max(0, 312 - out.reduce(function (a, r) { return a + r.members; }, 0)), rows: out };
+  }
+  function sampleMatchStats(days) {
+    const f = days / 30;
+    const daily = [];
+    for (let i = Math.min(days, 30) - 1; i >= 0; i--) daily.push({ day: new Date(Date.now() - i * 86400000).toISOString().slice(0, 10), count: Math.max(0, Math.round(1 + (30 - i) / 8 + Math.sin(i) * 1.5)) });
+    return {
+      days: days, shown: Math.round(6120 * f), picks: Math.round(1480 * f), matches: Math.round(41 * f), one_sided_picks: Math.round(1398 * f),
+      members_shown: 296, picked_by_nobody: 38, picked_not_matched: 151, members_matched: Math.min(220, Math.round(70 * f)),
+      by_gender: { female: { shown: Math.round(2900 * f), picked: Math.round(910 * f), members: 141, matched: Math.round(36 * f) }, male: { shown: Math.round(3220 * f), picked: Math.round(570 * f), members: 155, matched: Math.round(34 * f) } },
+      waiting: { members: 204, r0_3: 58, r4_7: 71, r8_13: 52, r14: 23 }, daily_matches: daily
+    };
+  }
+  function sampleMatcher() {
+    return { version: 9, activated_at: new Date(Date.now() - 6 * 86400000).toISOString(), settings: [
+      { key: 'boost_cap', value: 0.25, min: 0, max: 0.5, whole: false }, { key: 'exposure_boost_weight', value: 0.3, min: 0, max: 0.6, whole: false },
+      { key: 'exposure_window_rounds', value: 7, min: 3, max: 30, whole: true }, { key: 'max_pair_appearances', value: 3, min: 1, max: 10, whole: true },
+      { key: 'min_reciprocal_score', value: 0.15, min: 0, max: 0.5, whole: false }, { key: 'no_match_boost_weight', value: 0.2, min: 0, max: 0.6, whole: false },
+      { key: 'no_match_rounds_full', value: 8, min: 2, max: 30, whole: true }, { key: 'repeat_cooldown_days', value: 14, min: 1, max: 90, whole: true }] };
   }
   function sampleSettings() {
     const iso = function (ms) { return new Date(Date.now() - ms).toISOString(); };

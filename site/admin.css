@@ -151,7 +151,7 @@ label.field .hint{font-weight:400;color:var(--muted);font-size:12px}
 .meter{height:6px;border-radius:999px;background:var(--surface-2);overflow:hidden;margin-top:5px}
 .meter span{display:block;height:100%;background:var(--gold);border-radius:999px}
 .funnel{display:grid;gap:10px}
-.funnel .step{display:grid;grid-template-columns:150px minmax(0,1fr) 70px;gap:12px;align-items:center;font-size:13px}
+.funnel .step{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) 64px;gap:12px;align-items:center;font-size:13px}
 .funnel .bar{height:24px;border-radius:6px;background:var(--pink-soft);overflow:hidden}
 .funnel .bar span{display:block;height:100%;background:var(--pink);border-radius:6px}
 
