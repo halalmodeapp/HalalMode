@@ -30,9 +30,9 @@ correctly refused the test harness mid-run.
    closed, unconditionally. Recorded in `0092`, with the misleading comment that
    caused a near-miss corrected in the live function.
 
-2. **The waitlist lives at `/join`** and is the page halalmo.de points at. Same
-   backend, separate route from the app's sign-in splash, and it retires when
-   signups open. Collects email, city, age range.
+2. **The waitlist is the static site at halalmo.de** (`site/index.html`,
+   calling `join_waitlist_now`). The app is not published on the web; `/app`
+   redirects to the homepage. Collects email, city, age range.
 
 ## Still open
 
