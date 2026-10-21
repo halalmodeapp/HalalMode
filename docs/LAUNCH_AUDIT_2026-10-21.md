@@ -6,6 +6,17 @@ This is the current status for `feature/halal-cards`, updated after CI run `3956
 
 As of CI run `39569908699`, the branch is green for review: local typecheck, lint, SQL checks and all 435 unit tests pass; CI also passes Edge Function typecheck, client checks plus Android JS export, and all 57 database contract files (775 pgTAP assertions). The legacy contract failures found during this continuation were fixed without weakening the asserted behavior. This is not a production deployment: the migration and mail worker remain undeployed, and production email quotas, Supabase Auth limits and Apple sign-in setup still need owner-side checks. Branch roles remain split: GitHub defaults to `feature/social-sign-in`, Expo preview OTA listens to `codex/premium-foundation`, and `main` exists but is not default. The waitlist intentionally remains without rate limits or a confirm step, accepting the spam/queue-exhaustion risk.
 
+### Live production check (read-only; 21 October 2026)
+
+Production-state correction to the summary above: the `send-mail` function is already deployed and active at version 16; the worker itself is not missing. These checks did not change production.
+
+- Supabase CLI is linked to the active `Halal Mode` project in `eu-west-2` (`lfuuywsmydruvqkqwvzw`, `ACTIVE_HEALTHY`). Remote migration history is applied through `20261020110000`; `20261021090000_fair_waitlist_and_launch_premium.sql` and `20261021090001_restore_message_consent_guards.sql` are still pending.
+- The `halal-mode-send-mail` cron is active every minute and its URL points to the current project, not either retired project URL.
+- The production `mail_settings.daily_limit` is **100/day**. Secret-name metadata shows the SES access-key pair, `MAIL_FROM`, `OPERATOR_EMAIL`, and Resend API key are present, but `SES_REGION` is absent. The current worker reads that region secret before attempting SES, so it falls back to Resend today. Secret values were not read.
+- Live SES account status could not be confirmed: AWS CLI is not installed here, and the separate SES console tab reached sign-in rather than an authenticated account. SES production access, sending-enabled status and quotas are region-specific; verify `GetAccount` and the actual send quota for `eu-north-1` before enabling the region secret. See AWS [GetAccount](https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetAccount.html) and [SES quotas](https://docs.aws.amazon.com/ses/latest/dg/quotas.html).
+
+**Readiness consequence:** CI is green and the existing mail worker is operational through Resend, but this branch is not ready for the planned waitlist/premium launch until the two pending migrations are approved and applied. SES is integration-ready in code, not yet verified or switched on in the live account.
+
 ## Previous CI status (superseded)
 
 The paragraph below records the status before CI run `39569908699`; it is retained as history only.
@@ -17,7 +28,7 @@ The requested code work is in place, and client checks, Android JS export and Ed
 | Production app configuration | **Fixed in code** | Public project URL/key and analytics defaults are bundled by design, with environment overrides. No EAS build or update has been published. |
 | Waitlist scope | **Matches the decision** | The static site is the only waitlist. App `/join` was removed; app routes stay out of the waitlist. The new migration and waitlist-only web rules still need deployment. |
 | Waitlist throttling | **Intentionally none** | The migration removes the hourly and network caps. There is a one-million-row ceiling, not an anti-abuse limit. This is the owner's chosen trade-off; see load risks below. |
-| Waitlist email | **Code ready; quota/deploy pending** | Resend remains the fallback. The worker uses SES only when AWS reports production access and sending enabled, then honors AWS's actual daily and per-second quotas. Current database default is 100 emails per day, with 10 reserved for operational mail. |
+| Waitlist email | **Worker active; SES not selected** | Production `send-mail` is active. The database limit is 100/day, and the worker falls back to Resend because `SES_REGION` is absent. The SES account's production status and quotas still need an authenticated AWS check. |
 | Premium launch rewards | **Full CI passes; not live** | `0198` passes, including the trusted profile-tier update and expiry. The owner must approve applying the migration. |
 | Email canonicalization and referral credit | **Full CI passes; not live** | `0192`, `0196` and `0198` pass as part of the complete suite; production behavior remains unchanged until migration deployment. |
 | iOS provider display | **Fixed in code** | Apple is always shown on iOS; the owner must still configure Apple in Supabase Auth before App Store submission. Android and web show Google only. |
@@ -47,7 +58,7 @@ These estimates assume one welcome message per new join, a 24-hour mail budget, 
 ### Critical / launch gates
 
 - **C1 — Store builds without backend config: fixed in code.** `src/lib/publicConfig.ts` supplies only public Supabase/PostHog values as safe defaults and still allows local/EAS overrides. These are intentionally public client values, not secrets. No EAS build/update was run here.
-- **C2 — Email capacity: code prepared; owner decision still required before a large announcement.** SES fallback checks `ProductionAccessEnabled` and `SendingEnabled` and uses the live quota. Until SES is approved and the worker is deployed with its required secrets, the current database budget is 100/day (10 reserved). Do not promise fast delivery at 500–10,000 joins/hour based on the source code alone.
+- **C2 — Email capacity: current Resend fallback confirmed; SES account status unknown.** The active worker falls back to Resend because `SES_REGION` is not configured. The database budget is 100/day (10 reserved). Do not promise fast delivery at 500–10,000 joins/hour until AWS production access and actual quotas are confirmed for the configured region.
 - **C3 — Promised launch Premium: migration implemented and fully CI-verified; production pending.** The migration grants rewards when the profile is ready and lets rewards grow with referral tiers. It is not effective until approved and applied.
 - **C4 — Apple sign-in: app behavior fixed, Apple setup pending.** The iOS screen always offers Apple. The owner's Apple Developer credentials and Supabase Auth configuration are still required before review.
 - **C5 — App email limits: recovery fixed, dashboard status unknown.** HTTP 429 now offers Google sign-in. Check Supabase Auth custom SMTP, per-hour email limit and sign-in/IP limits in the dashboard before launch.
@@ -78,6 +89,7 @@ These estimates assume one welcome message per new join, a 24-hour mail budget, 
 - GeoNames attribution and CC BY 4.0 notice are included in `site/licenses/geonames.html` and linked from the generated Privacy page. Dataset source: [GeoNames export](https://www.geonames.org/export/).
 - GitHub Actions run [39569908699](https://github.com/halalmodeapp/HalalMode/actions/runs/39569908699): Edge Function typecheck, client checks, Android JS export, and isolated database contracts **all passed**. The pgTAP suite ran all **57 files / 775 tests**. Docker is unavailable locally, so CI ran the database tests.
 - `npm run verify:sql`: **passed** after the CI-driven test fixes (210 migrations, 57 database tests, 78 PL/pgSQL bodies, zero parser problems).
+- Read-only production checks: linked Supabase project is `ACTIVE_HEALTHY`; mail cron points to the correct project; `send-mail` is active at v16; the two 21 October migrations are pending; SES access-key secret names exist but `SES_REGION` does not; database mail limit is 100/day.
 - No production signup, email delivery, database migration, function deployment, static-site deploy, EAS build or OTA update was performed.
 
 ## Owner-side launch actions
