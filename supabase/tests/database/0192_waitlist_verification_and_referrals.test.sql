@@ -15,14 +15,14 @@ select ok(
 );
 select ok(
   -- Retired for the public in 20261020100000; join_waitlist_now replaces it.
-  not has_function_privilege('anon', 'public.request_waitlist_verification(text,text,text,text,text)', 'EXECUTE')
+  to_regprocedure('public.request_waitlist_verification(text,text,text,text,text)') is null
   and has_function_privilege('anon', 'public.referral_code_exists(text)', 'EXECUTE')
   and not has_function_privilege('anon', 'public.verify_waitlist_token(text)', 'EXECUTE'),
   'anonymous callers can validate codes, but cannot read verification state directly'
 );
 select ok(
   position('pg_advisory_xact_lock' in pg_get_functiondef(
-    'public.request_waitlist_verification(text,text,text,text,text)'::regprocedure
+    'public.join_waitlist_now(text,text,text,text,text)'::regprocedure
   )) > 0,
   'waitlist intake is serialized'
 );

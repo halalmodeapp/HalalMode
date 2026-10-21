@@ -1,10 +1,10 @@
 begin;
 set local search_path = public, extensions, halal_mode_private;
-select plan(14);
+select plan(12);
 
 -- The old app join endpoint is closed; the website's stays open.
 select ok(
-  not has_function_privilege('anon', 'public.request_waitlist_verification(text,text,text,text,text)', 'EXECUTE')
+  to_regprocedure('public.request_waitlist_verification(text,text,text,text,text)') is null
   and has_function_privilege('anon', 'public.join_waitlist_now(text,text,text,text,text)', 'EXECUTE'),
   'only one public way to join the waitlist'
 );
@@ -28,30 +28,21 @@ select is(
 );
 update halal_mode_private.waitlist set joined_rank = joined_rank - 20000 where email = 'pgtap.hard.second@gmail.com';
 
--- Per-network limit: 5 new places an hour from one address.
+-- No per-network limit (20261021090000): a campus, mosque or office Wi-Fi is
+-- many people, and every one of them joins at once.
 select set_config('request.headers', '{"cf-connecting-ip": "203.0.113.7"}', true);
 select lives_ok(
   $$ select public.join_waitlist_now('pgtap.hard.net' || n || '@gmail.com', 'Bristol', '25-29', 'en', null)
-     from generate_series(1, 5) n $$,
-  'five sign-ups from one network are accepted'
+     from generate_series(1, 150) n $$,
+  'a hundred and fifty sign-ups from one network are all accepted'
 );
-select throws_ok(
-  $$ select public.join_waitlist_now('pgtap.hard.net6@gmail.com', 'Bristol', '25-29', 'en', null) $$,
-  'P0001', 'Too many sign-ups from this network', 'the sixth is asked to wait'
+select is(
+  (select count(*)::integer from halal_mode_private.waitlist
+   where email like 'pgtap.hard.net%@gmail.com' and joined_rank is not null),
+  150, 'each with a place in line straight away'
 );
-select throws_ok(
-  $$ select public.join_waitlist_now('pgtap.hard.net1@gmail.com', 'Bristol', '25-29', 'en', null) $$,
-  'P0001', 'Too many sign-ups from this network', 'and so is an address already listed, the same way'
-);
-select ok(
-  not exists (select 1 from halal_mode_private.waitlist_intake_sources where source_hash like '%203.0.113%'),
-  'only a hash of the network address is kept'
-);
-select set_config('request.headers', '{"cf-connecting-ip": "198.51.100.9"}', true);
-select lives_ok(
-  $$ select public.join_waitlist_now('pgtap.hard.othernet@gmail.com', 'Bristol', '25-29', 'en', null) $$,
-  'another network is unaffected'
-);
+select ok(to_regclass('halal_mode_private.waitlist_intake_sources') is null,
+  'and no record of anyone''s network is kept');
 select set_config('request.headers', '', true);
 
 -- Asking for the link again resends the same link while it is valid.

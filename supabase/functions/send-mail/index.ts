@@ -315,18 +315,69 @@ function ses(region: string, accessKeyId: string, secretAccessKey: string): Send
   };
 }
 
-/** SES when configured, otherwise Resend, with a pause that fits each one's per-second limit. */
-function mailer(): { send: Send; pauseMs: number } | null {
+interface Mailer {
+  provider: 'ses' | 'resend';
+  send: Send;
+  pauseMs: number;
+  batch: number;
+  /** The provider's own 24-hour quota, or null to use mail_settings.daily_limit. */
+  dailyLimit: number | null;
+}
+
+interface SesAccount {
+  ProductionAccessEnabled?: boolean;
+  SendingEnabled?: boolean;
+  SendQuota?: { Max24HourSend?: number; MaxSendRate?: number };
+}
+
+/**
+ * Amazon SES, but only once AWS has granted production access. In the sandbox
+ * SES only delivers to verified addresses, so every waitlist email would
+ * fail; until the account says otherwise, Resend keeps sending. That makes it
+ * safe to set SES_REGION now: the switch happens on its own when AWS approves,
+ * at the quota and speed AWS granted.
+ */
+async function sesMailer(region: string, accessKeyId: string, secretAccessKey: string): Promise<Mailer | null> {
+  const aws = new AwsClient({ accessKeyId, secretAccessKey, region, service: 'ses' });
+  try {
+    const response = await aws.fetch(`https://email.${region}.amazonaws.com/v2/email/account`);
+    if (!response.ok) return null;
+    const account = (await response.json()) as SesAccount;
+    if (account.ProductionAccessEnabled !== true || account.SendingEnabled !== true) return null;
+    const rate = Math.max(1, account.SendQuota?.MaxSendRate ?? 1);
+    const quota = Math.floor(account.SendQuota?.Max24HourSend ?? 0);
+    const pauseMs = Math.ceil(1000 / rate) + 20;
+    return {
+      provider: 'ses',
+      send: ses(region, accessKeyId, secretAccessKey),
+      pauseMs,
+      // About 45 seconds of sending, so a run finishes inside its minute.
+      batch: Math.max(1, Math.min(200, Math.floor(45_000 / (pauseMs + 120)))),
+      dailyLimit: quota > 10 ? quota : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** SES once it is in production, otherwise Resend, each paced for its per-second limit. */
+async function mailer(): Promise<Mailer | null> {
   const region = Deno.env.get('SES_REGION');
   const keyId = Deno.env.get('SES_ACCESS_KEY_ID');
   const secret = Deno.env.get('SES_SECRET_ACCESS_KEY');
-  // New SES accounts may send 1 email a second; this keeps 40 inside the minute.
-  if (region && keyId && secret) return { send: ses(region, keyId, secret), pauseMs: 1100 };
+  if (region && keyId && secret) {
+    const viaSes = await sesMailer(region, keyId, secret);
+    if (viaSes) return viaSes;
+  }
   const apiKey = Deno.env.get('RESEND_API_KEY');
-  // Resend's default limit is 2 requests a second.
-  if (apiKey) return { send: resend(apiKey), pauseMs: 600 };
+  // Resend's default limit is 2 requests a second; its daily plan limit is
+  // kept in mail_settings.daily_limit.
+  if (apiKey) return { provider: 'resend', send: resend(apiKey), pauseMs: 600, batch: 40, dailyLimit: null };
   return null;
 }
+
+/** Stop starting new sends after this long, so one run never overlaps the next. */
+const RUN_BUDGET_MS = 50_000;
 
 Deno.serve(async (request) => {
   const client = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
@@ -335,19 +386,26 @@ Deno.serve(async (request) => {
   });
   if (verified.error || verified.data !== true) return new Response('forbidden', { status: 403 });
 
-  const mail = mailer();
+  const started = Date.now();
+  const mail = await mailer();
   const operator = Deno.env.get('OPERATOR_EMAIL');
   if (!mail || !operator) return new Response('Mail provider secrets and OPERATOR_EMAIL are not set', { status: 503 });
   const send = mail.send;
 
   const secret = await client.rpc('mail_link_secret_service');
-  // Runs every minute: 40 paced sends finish inside it, about 2,400 an hour.
-  const claimed = await client.rpc('claim_mail_service', { p_limit: 40 });
+  // Runs every minute. Resend: 40 paced sends, about 2,400 an hour. SES: as
+  // many as its send rate fits in 45 seconds, up to 200 (12,000 an hour).
+  const claimed = await client.rpc('claim_mail_service', { p_limit: mail.batch, p_daily_limit: mail.dailyLimit });
   if (claimed.error || secret.error) return new Response('claim failed', { status: 500 });
 
   let sent = 0;
   let first = true;
   for (const item of (claimed.data ?? []) as Claimed[]) {
+    if (Date.now() - started > RUN_BUDGET_MS) {
+      // Out of time: hand it back for the next run without using an attempt.
+      await client.rpc('settle_mail_service', { p_id: item.id, p_ok: false, p_error: '429 rate deferred to the next run' });
+      continue;
+    }
     if (!first) await new Promise((resolve) => setTimeout(resolve, mail.pauseMs));
     first = false;
     let error: string | null = null;
@@ -379,5 +437,5 @@ Deno.serve(async (request) => {
     await client.rpc('settle_mail_service', { p_id: item.id, p_ok: error === null, p_error: error });
     if (error === null) sent += 1;
   }
-  return Response.json({ sent });
+  return Response.json({ provider: mail.provider, sent });
 });
