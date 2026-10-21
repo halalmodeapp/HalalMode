@@ -157,8 +157,6 @@ declare
 begin
   return jsonb_build_object(
     'role', v_role,
-    'launch', (select jsonb_build_object('launched', l.launched, 'launched_at', l.launched_at)
-               from halal_mode_private.launch_settings l where l.id),
     'referral_link_base', (select r.link_base from halal_mode_private.referral_settings r where r.id),
     'mail_daily_limit', (select m.daily_limit from halal_mode_private.mail_settings m where m.id),
     'flags', (
@@ -269,36 +267,6 @@ end;
 $function$;
 revoke all on function public.admin_set_release_flag(text, boolean, integer, text, text) from public, anon;
 grant execute on function public.admin_set_release_flag(text, boolean, integer, text, text) to authenticated;
-
--- The launch switch changes launch-day copy everywhere at once.
-create or replace function public.admin_set_launched(p_launched boolean, p_confirm text, p_reason text)
-returns jsonb
-language plpgsql
-security definer
-set search_path = halal_mode_private, pg_catalog
-as $function$
-declare
-  v_before boolean;
-  v_reason text;
-  v_result jsonb;
-begin
-  perform halal_mode_private.require_admin(true);
-  v_reason := halal_mode_private.admin_reason(p_reason);
-  if p_launched is null or p_confirm is distinct from (case when p_launched then 'LAUNCH' else 'UNLAUNCH' end) then
-    raise exception 'Type LAUNCH (or UNLAUNCH) to confirm' using errcode = '22023';
-  end if;
-  select launched into v_before from halal_mode_private.launch_settings where id for update;
-  if v_before = p_launched then
-    return jsonb_build_object('changed', false);
-  end if;
-  v_result := halal_mode_private.set_launched(p_launched);
-  perform halal_mode_private.admin_audit('launch.set', jsonb_build_object(
-    'before', v_before, 'after', p_launched, 'reason', v_reason));
-  return v_result || jsonb_build_object('changed', true);
-end;
-$function$;
-revoke all on function public.admin_set_launched(boolean, text, text) from public, anon;
-grant execute on function public.admin_set_launched(boolean, text, text) to authenticated;
 
 -- Referral links may only point at halalmo.de, so a compromised admin
 -- session cannot redirect every shared invite to another site.

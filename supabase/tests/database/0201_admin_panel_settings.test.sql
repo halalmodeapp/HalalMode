@@ -1,15 +1,14 @@
 begin;
 set local search_path = public, extensions, halal_mode_private;
-select plan(22);
+select plan(20);
 
 select ok(
   not has_function_privilege('anon', 'public.admin_settings()', 'EXECUTE')
   and not has_function_privilege('anon', 'public.admin_set_release_flag(text, boolean, integer, text, text)', 'EXECUTE')
-  and not has_function_privilege('anon', 'public.admin_set_launched(boolean, text, text)', 'EXECUTE')
   and not has_function_privilege('anon', 'public.admin_add_member(text, text, text, text)', 'EXECUTE')
   and not has_function_privilege('anon', 'public.admin_remove_member(uuid, text)', 'EXECUTE')
   and not has_function_privilege('authenticated', 'halal_mode_private.require_admin(boolean)', 'EXECUTE'),
-  'settings, flags, launch and team RPCs are closed to signed-out callers'
+  'settings, flags and team RPCs are closed to signed-out callers'
 );
 
 insert into auth.users (id, email, created_at) values
@@ -32,13 +31,13 @@ $$;
 select set_config('request.jwt.claims',
   '{"sub":"00000000-0000-0000-0000-000000020103","role":"authenticated","aal":"aal2"}', true);
 select throws_ok($$ select public.admin_settings() $$, '42501', null, 'a member cannot read settings');
-select throws_ok($$ select public.admin_set_launched(true, 'LAUNCH', 'not mine to launch') $$, '42501', null,
-  'or flip the launch switch');
+select throws_ok($$ select public.admin_set_mail_daily_limit(500, 'not mine to change') $$, '42501', null,
+  'or change one');
 
 -- Step-up: an owner whose code is older than 15 minutes can read but not change.
 select pg_temp.as_owner(3600);
 select is(public.admin_session()->>'step_up_seconds', '0', 'the page is told changes are locked');
-select ok(public.admin_settings() ?& array['launch', 'flags', 'team', 'referral_link_base', 'mail_daily_limit'],
+select ok(public.admin_settings() ?& array['flags', 'team', 'referral_link_base', 'mail_daily_limit'],
   'settings stay readable');
 select throws_ok(
   $$ select public.admin_set_mail_daily_limit(500, 'raise the budget') $$,
@@ -66,11 +65,6 @@ select is(public.admin_set_release_flag('tester_tools', true, 10, 'tester_tools'
 select ok((select enabled and rollout_percentage = 10 from halal_mode_private.release_flags where key = 'tester_tools'),
   'the flag is saved');
 
--- Launch switch.
-select throws_ok($$ select public.admin_set_launched(true, 'launch', 'go live') $$, '22023', null,
-  'launching needs LAUNCH in capitals');
-select is(public.admin_set_launched(true, 'LAUNCH', 'go live')->>'launched', 'true', 'the owner can launch');
-
 -- Team.
 select throws_ok($$ select public.admin_add_member('nobody@example.test', 'viewer', null, 'add a helper') $$,
   '22023', null, 'only existing accounts can be added');
@@ -83,7 +77,7 @@ select throws_ok(
 select ok(
   (select count(*) from halal_mode_private.admin_audit_log
    where actor_id = '00000000-0000-0000-0000-000000020101'
-     and action in ('mail.daily_limit', 'referral.link_base', 'flag.set', 'launch.set', 'team.add')) = 5,
+     and action in ('mail.daily_limit', 'referral.link_base', 'flag.set', 'team.add')) = 4,
   'every change is in the audit log'
 );
 select ok(
