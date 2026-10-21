@@ -51,9 +51,11 @@ select throws_ok(
   $$ select public.admin_set_matching_metric('bio_attention', false, 0.1, 'testing a viewer') $$,
   '42501', 'Only an owner can change settings', 'a viewer cannot change settings');
 
--- The owner.
-select set_config('request.jwt.claims',
-  '{"sub":"00000000-0000-0000-0000-000000020001","role":"authenticated","aal":"aal2"}', true);
+-- The owner, who entered their authenticator code a minute ago.
+select set_config('request.jwt.claims', jsonb_build_object(
+  'sub', '00000000-0000-0000-0000-000000020001', 'role', 'authenticated', 'aal', 'aal2',
+  'amr', jsonb_build_array(jsonb_build_object('method', 'totp', 'timestamp', extract(epoch from now())::bigint - 60))
+)::text, true);
 select is(public.admin_set_matching_metric('bio_attention', false, 0.12, 'pausing bio timing')->>'changed', 'true',
   'the owner can switch a signal off and reweight it');
 select ok(
