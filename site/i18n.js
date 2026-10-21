@@ -63,7 +63,6 @@
       feature3Body: 'A match only becomes a conversation once you’ve both answered a few icebreakers you chose together. You see their answers after sharing yours, so there’s less ghosting and more intention.',
       cardsTitle: 'Building relationships that last.',
       cardsBody: 'Halal Cards give you practical tools for a healthy, lasting marriage: {{count}} interactive quizzes, exercises and adventures to explore communication, expectations and compatibility together. Available in {{languages}} languages.',
-      cardsPremium: '{{free}} are free to try on your own. Halal Mode Premium opens all {{total}}: {{lab}} Lab workshops with {{scenarios}} scenarios, {{quizzes}} quizzes for every stage and {{stories}} stories. Play them with any match, and they play free.',
     },
     ar: {
       referralCodeLabel: 'رمزك:',
@@ -102,7 +101,6 @@
       feature3Body: 'لا يتحول التطابق إلى محادثة إلا بعد أن يجيب كلاكما على بعض أسئلة التعارف التي اخترتماها معًا. ترى إجاباته بعد أن تشارك إجاباتك، فيقلّ التجاهل ويزيد الجدّ.',
       cardsTitle: 'علاقات تدوم.',
       cardsBody: 'بطاقات حلال تمنحكما أدوات عملية لزواج صحي ودائم: {{count}} من الاختبارات والتمارين والمغامرات التفاعلية لاكتشاف التواصل والتوقعات والتوافق معًا. متاحة بـ{{languages}} لغة.',
-      cardsPremium: 'تقدر تجرّب بعضها مجانًا لوحدك ({{free}}). وحلال مود Premium يفتحها كلها ({{total}}): ورش المختبر ({{lab}}) بمواقفها ({{scenarios}})، واختبارات لكل مرحلة ({{quizzes}})، وقصص ({{stories}}). العبوها مع أي تعارف، والطرف الثاني يلعب مجانًا.'
     },
     ur: {
       referralCodeLabel: 'آپ کا کوڈ:',
@@ -141,7 +139,6 @@
       feature3Body: 'میچ تبھی گفتگو بنتا ہے جب آپ دونوں مل کر چنے گئے چند آئس بریکر سوالوں کے جواب دے دیں۔ اپنے جواب شیئر کرنے کے بعد ہی آپ ان کے جواب دیکھتے ہیں، اس لیے غائب ہونا کم اور سنجیدگی زیادہ۔',
       cardsTitle: 'دیرپا رشتے بنانا۔',
       cardsBody: 'حلال کارڈز آپ کو صحت مند اور دیرپا شادی کے لیے عملی اوزار دیتے ہیں: {{count}} انٹرایکٹو کوئزز، مشقیں اور مہمات، تاکہ آپ مل کر بات چیت، توقعات اور ہم آہنگی کو سمجھ سکیں۔ {{languages}} زبانوں میں دستیاب۔',
-      cardsPremium: '{{free}} چیزیں اکیلے مفت آزما سکتے ہیں۔ حلال موڈ Premium تمام {{total}} کھول دیتا ہے: {{scenarios}} منظرناموں والی {{lab}} ورکشاپس، ہر مرحلے کے لیے {{quizzes}} کوئز اور {{stories}} کہانیاں۔ کسی بھی میچ کے ساتھ کھیلیں، ان کے لیے مفت۔'
     },
     hi: {
       referralCodeLabel: 'आपका कोड:',
@@ -180,7 +177,6 @@
       feature3Body: 'मैच तभी बातचीत बनता है जब आप दोनों मिलकर चुने गए कुछ आइसब्रेकर सवालों के जवाब दे दें। अपने जवाब साझा करने के बाद ही आप उनके जवाब देखते हैं, इसलिए घोस्टिंग कम और इरादा ज़्यादा।',
       cardsTitle: 'लंबे चलने वाले रिश्ते बनाना।',
       cardsBody: 'हलाल कार्ड्स आपको एक स्वस्थ, लंबी शादी के लिए व्यावहारिक साधन देते हैं: {{count}} इंटरैक्टिव क्विज़, अभ्यास और रोमांच, ताकि आप साथ मिलकर बातचीत, उम्मीदें और तालमेल समझ सकें। {{languages}} भाषाओं में उपलब्ध।',
-      cardsPremium: '{{free}} चीज़ें आप अकेले मुफ़्त आज़मा सकते हैं। हलाल मोड Premium सभी {{total}} खोल देता है: {{scenarios}} परिस्थितियों वाली {{lab}} वर्कशॉप, हर पड़ाव के लिए {{quizzes}} क्विज़ और {{stories}} कहानियाँ। किसी भी मैच के साथ खेलें, उनके लिए मुफ़्त।'
     },
     id: {
       referralCodeLabel: 'Kodemu:',
@@ -219,7 +215,6 @@
       feature3Body: 'Kecocokan baru menjadi percakapan setelah kalian berdua menjawab beberapa pertanyaan pembuka yang kalian pilih bersama. Kamu melihat jawabannya setelah membagikan jawabanmu, jadi lebih sedikit ghosting dan lebih banyak kesungguhan.',
       cardsTitle: 'Membangun hubungan yang langgeng.',
       cardsBody: 'Halal Cards memberi kalian alat praktis untuk pernikahan yang sehat dan langgeng: {{count}} kuis, latihan, dan petualangan interaktif untuk menjelajahi komunikasi, harapan, dan kecocokan bersama. Tersedia dalam {{languages}} bahasa.',
-      cardsPremium: '{{free}} bisa dicoba gratis sendiri. Halal Mode Premium membuka semua {{total}}: {{lab}} lokakarya Lab dengan {{scenarios}} skenario, {{quizzes}} kuis untuk setiap tahap, dan {{stories}} cerita. Mainkan dengan siapa pun yang cocok, gratis untuknya.'
     },
     ms: {
       referralCodeLabel: 'Kod anda:',
@@ -258,7 +253,6 @@
       feature3Body: 'Padanan hanya menjadi perbualan selepas anda berdua menjawab beberapa soalan pemecah ais yang dipilih bersama. Anda melihat jawapannya selepas berkongsi jawapan anda, jadi kurang ghosting dan lebih kesungguhan.',
       cardsTitle: 'Membina hubungan yang kekal.',
       cardsBody: 'Halal Cards memberi anda alat praktikal untuk perkahwinan yang sihat dan berkekalan: {{count}} kuiz, latihan dan pengembaraan interaktif untuk meneroka komunikasi, harapan dan keserasian bersama. Tersedia dalam {{languages}} bahasa.',
-      cardsPremium: '{{free}} boleh dicuba percuma sendiri. Halal Mode Premium membuka kesemua {{total}}: {{lab}} bengkel Lab dengan {{scenarios}} senario, {{quizzes}} kuiz untuk setiap peringkat dan {{stories}} cerita. Mainkan dengan sesiapa padanan anda, percuma untuknya.'
     },
     bn: {
       referralCodeLabel: 'আপনার কোড:',
@@ -297,7 +291,6 @@
       feature3Body: 'আপনারা দুজনে মিলে বেছে নেওয়া কয়েকটি আইসব্রেকার প্রশ্নের উত্তর দিলে তবেই ম্যাচ কথোপকথনে পরিণত হয়। নিজের উত্তর শেয়ার করার পরই আপনি তাঁর উত্তর দেখেন, তাই ঘোস্টিং কমে আর আন্তরিকতা বাড়ে।',
       cardsTitle: 'দীর্ঘস্থায়ী সম্পর্ক গড়া।',
       cardsBody: 'হালাল কার্ডস আপনাদের সুস্থ ও দীর্ঘস্থায়ী বিয়ের জন্য ব্যবহারিক উপকরণ দেয়: {{count}}টি ইন্টারঅ্যাকটিভ কুইজ, অনুশীলন ও অভিযান, যাতে একসঙ্গে যোগাযোগ, প্রত্যাশা ও মিল বুঝতে পারেন। {{languages}}টি ভাষায় পাওয়া যায়।',
-      cardsPremium: '{{free}}টি একা বিনামূল্যে চেষ্টা করতে পারেন। হালাল মোড Premium খুলে দেয় সব {{total}}টি: {{scenarios}}টি পরিস্থিতিসহ {{lab}}টি কর্মশালা, প্রতিটি পর্যায়ের জন্য {{quizzes}}টি কুইজ আর {{stories}}টি গল্প। যেকোনো ম্যাচের সাথে খেলুন, তাঁর জন্য বিনামূল্যে।'
     },
     fr: {
       referralCodeLabel: 'Votre code :',
@@ -336,7 +329,6 @@
       feature3Body: 'Une rencontre ne devient une conversation qu’une fois que vous avez tous deux répondu à quelques questions brise-glace choisies ensemble. Vous voyez ses réponses après avoir partagé les vôtres : moins de ghosting, plus d’intention.',
       cardsTitle: 'Construire une relation qui dure.',
       cardsBody: 'Halal Cards vous donne des outils concrets pour un mariage sain et durable : {{count}} quiz, exercices et aventures interactifs pour explorer ensemble la communication, les attentes et la compatibilité. Disponible en {{languages}} langues.',
-      cardsPremium: '{{free}} sont à essayer gratuitement, seul. Halal Mode Premium ouvre les {{total}} : {{lab}} ateliers avec {{scenarios}} situations, {{quizzes}} quiz pour chaque étape et {{stories}} histoires. Jouez-y avec n’importe quel contact, gratuitement pour l’autre.'
     },
     tr: {
       referralCodeLabel: 'Kodun:',
@@ -375,7 +367,6 @@
       feature3Body: 'Bir eşleşme, ancak ikiniz de birlikte seçtiğiniz birkaç tanışma sorusunu yanıtladığınızda sohbete dönüşür. Kendi cevaplarını paylaştıktan sonra onunkileri görürsün; böylece ortadan kaybolma azalır, niyet artar.',
       cardsTitle: 'Kalıcı ilişkiler kurmak.',
       cardsBody: 'Halal Cards size sağlıklı ve kalıcı bir evlilik için pratik araçlar sunar: iletişimi, beklentileri ve uyumu birlikte keşfetmeniz için {{count}} etkileşimli test, alıştırma ve macera. {{languages}} dilde mevcut.',
-      cardsPremium: '{{free}} tanesini tek başınıza ücretsiz deneyebilirsiniz. Halal Mode Premium {{total}} etkinliğin hepsini açar: {{scenarios}} senaryolu {{lab}} atölye, her aşama için {{quizzes}} test ve {{stories}} hikâye. Her eşleşmeyle oynayın, karşı taraf için ücretsiz.'
     },
     fa: {
       referralCodeLabel: 'کد شما:',
@@ -414,7 +405,6 @@
       feature3Body: 'یک تطابق فقط وقتی به گفتگو تبدیل می‌شود که هر دو به چند سؤال یخ‌شکنِ انتخاب‌شده با هم پاسخ دهید. پاسخ‌های او را بعد از به اشتراک گذاشتن پاسخ‌های خودتان می‌بینید؛ پس غیب‌شدن کمتر و قصد جدی بیشتر.',
       cardsTitle: 'ساختن رابطه‌ای ماندگار.',
       cardsBody: 'کارت‌های حلال ابزارهای کاربردی برای ازدواجی سالم و ماندگار به شما می‌دهد: {{count}} آزمون، تمرین و ماجرای تعاملی برای کشف ارتباط، انتظارات و سازگاری با هم. در {{languages}} زبان در دسترس است.',
-      cardsPremium: '{{free}} مورد را می‌توانید رایگان و به‌تنهایی امتحان کنید. حلال مود Premium همهٔ {{total}} مورد را باز می‌کند: {{lab}} کارگاه با {{scenarios}} موقعیت، {{quizzes}} آزمونک برای هر مرحله و {{stories}} داستان. با هر آشنایی بازی کنید، برای طرف مقابل رایگان.'
     },
     ha: {
       referralCodeLabel: 'Lambarku:',
@@ -453,7 +443,6 @@
       feature3Body: 'Haɗi yana zama tattaunawa ne kawai bayan ku duka kun amsa wasu tambayoyin buɗe magana da kuka zaɓa tare. Kuna ganin amsoshinsa bayan kun raba naku, don haka ɓacewa ta ragu kuma niyya ta ƙaru.',
       cardsTitle: 'Gina dangantaka mai ɗorewa.',
       cardsBody: 'Halal Cards na ba ku kayan aiki masu amfani don aure mai lafiya da ɗorewa: tambayoyi, atisaye da kasada guda {{count}} masu mu’amala don bincika sadarwa, tsammani da dacewa tare. Akwai su cikin harsuna {{languages}}.',
-      cardsPremium: 'Za ku iya gwada guda {{free}} kyauta da kanku. Halal Mode Premium yana buɗe duka {{total}}: bita {{lab}} masu yanayi {{scenarios}}, tambayoyi {{quizzes}} na kowane mataki da labarai {{stories}}. Ku yi wasa da kowane wanda kuka dace, kyauta gare shi/ita.'
     },
     am: {
       referralCodeLabel: 'የእርስዎ ኮድ፦',
@@ -492,7 +481,6 @@
       feature3Body: 'ተዛማጅ ወደ ውይይት የሚቀየረው ሁለታችሁም አብራችሁ የመረጣችኋቸውን ጥቂት የመተዋወቂያ ጥያቄዎች ከመለሳችሁ በኋላ ብቻ ነው። የራስዎን መልሶች ካጋሩ በኋላ የእነሱን ያያሉ፤ ስለዚህ መጥፋት ይቀንሳል፣ ቁርጠኝነት ይጨምራል።',
       cardsTitle: 'ዘላቂ ግንኙነት መገንባት።',
       cardsBody: 'Halal Cards ለጤናማና ዘላቂ ትዳር ተግባራዊ መሣሪያዎችን ይሰጣችኋል፦ ግንኙነትን፣ የሚጠበቁ ነገሮችንና ተስማሚነትን አብራችሁ ለመመርመር {{count}} በይነተገናኝ ጥያቄዎች፣ ልምምዶችና ጀብዱዎች። በ{{languages}} ቋንቋዎች ይገኛል።',
-      cardsPremium: '{{free}}ቱን ብቻችሁን በነጻ መሞከር ትችላላችሁ። ሃላል ሞድ Premium ሁሉንም {{total}} ይከፍታል፦ {{scenarios}} ሁኔታዎች ያሏቸው {{lab}} ወርክሾፖች፣ ለእያንዳንዱ ደረጃ {{quizzes}} ጥያቄዎችና {{stories}} ታሪኮች። ከማንኛውም ተዛማጅ ጋር ተጫወቱ፣ ለእነሱ በነጻ።'
     },
     so: {
       referralCodeLabel: 'Koodkaaga:',
@@ -531,7 +519,6 @@
       feature3Body: 'Isu-dhigmid waxay noqotaa wada-hadal oo keliya marka aad labadiinuba ka jawaabtaan dhowr su’aalood oo isbarasho ah oo aad wada doorateen. Jawaabahiisa waxaad aragtaa kadib markaad wadaagto kuwaaga, sidaas darteed baaba’a ayaa yaraada, niyaddana way korodhaa.',
       cardsTitle: 'Dhisidda xiriir waara.',
       cardsBody: 'Halal Cards waxay idin siinayaan qalab wax ku ool ah oo loogu talagalay guur caafimaad qaba oo waara: {{count}} imtixaan, layli iyo tacaburro is-dhexgal ah si aad wada sahamisaan xiriirka, filashooyinka iyo is-waafaqsanaanta. Waxaa lagu heli karaa {{languages}} luqadood.',
-      cardsPremium: '{{free}} ayaad keligaa bilaash ku tijaabin kartaa. Halal Mode Premium wuxuu furaa dhammaan {{total}}: {{lab}} aqoon-is-weydaarsi oo leh {{scenarios}} xaaladood, {{quizzes}} kediska oo heer kasta ah iyo {{stories}} sheeko. La ciyaar qof kasta oo aad isku aaddan tihiin, bilaash isaga/iyada.'
     },
     es: {
       referralCodeLabel: 'Tu código:',
@@ -570,7 +557,6 @@
       feature3Body: 'Un match solo se convierte en conversación cuando ambos responden algunas preguntas para romper el hielo que eligieron juntos. Ves sus respuestas después de compartir las tuyas, así que hay menos ghosting y más intención.',
       cardsTitle: 'Construir relaciones que duran.',
       cardsBody: 'Halal Cards les da herramientas prácticas para un matrimonio sano y duradero: {{count}} cuestionarios, ejercicios y aventuras interactivos para explorar juntos la comunicación, las expectativas y la compatibilidad. Disponible en {{languages}} idiomas.',
-      cardsPremium: '{{free}} se pueden probar gratis a solas. Halal Mode Premium abre las {{total}}: {{lab}} talleres con {{scenarios}} situaciones, {{quizzes}} cuestionarios para cada etapa y {{stories}} historias. Jugad con cualquier conexión, gratis para la otra persona.'
     },
     ru: {
       referralCodeLabel: 'Ваш код:',
@@ -609,7 +595,6 @@
       feature3Body: 'Совпадение становится разговором только после того, как вы оба ответите на несколько вопросов для знакомства, выбранных вместе. Вы видите ответы собеседника после того, как поделитесь своими, — меньше игнора и больше серьёзных намерений.',
       cardsTitle: 'Отношения, которые длятся.',
       cardsBody: 'Halal Cards дают практичные инструменты для здорового и крепкого брака: {{count}} интерактивных тестов, упражнений и приключений, чтобы вместе исследовать общение, ожидания и совместимость. Доступно на {{languages}} языках.',
-      cardsPremium: '{{free}} можно бесплатно попробовать в одиночку. Halal Mode Premium открывает все {{total}}: мастерские ({{lab}}) с ситуациями ({{scenarios}}), викторины для каждого этапа ({{quizzes}}) и истории ({{stories}}). Играйте с любым знакомством, для второго бесплатно.'
     },
     'zh-Hans': {
       referralCodeLabel: '你的邀请码：',
@@ -648,7 +633,6 @@
       feature3Body: '只有当你们都回答了一起选定的几个破冰问题后，匹配才会变成对话。分享你的答案后才能看到对方的答案，从而减少“消失”，增加诚意。',
       cardsTitle: '建立长久的关系。',
       cardsBody: 'Halal Cards 为你们提供实用工具，帮助建立健康、长久的婚姻：{{count}} 个互动测验、练习和冒险，一起探索沟通、期望与契合度。支持 {{languages}} 种语言。',
-      cardsPremium: '有 {{free}} 项可以免费独自体验。Halal Mode Premium 解锁全部 {{total}} 项：{{lab}} 个工作坊共 {{scenarios}} 个情景、{{quizzes}} 个覆盖各个阶段的测验和 {{stories}} 个故事。可与任何配对一起玩，对方免费。'
     }
   };
 
