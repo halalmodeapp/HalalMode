@@ -2,7 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { router } from 'expo-router';
 import { Linking, Pressable, StyleSheet, Switch, View } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 
+import { ADMIN_PANEL_URL, fetchIsAdmin } from '@/api/admin';
 import { fetchMyReadReceipts, fetchMySampleMembers, requestAccountDeletion, setMyReadReceipts, setMySampleMembers, setMyTestPremium, setProfilePaused } from '@/api/account';
 import { fetchMyHighLatitudeFajrSettings, setMyHighLatitudeFajrMethod, type HighLatitudeFajrSettings } from '@/api/profile';
 import { disableMyNotifications, enableMyNotifications, fetchMyNotificationConsent } from '@/api/notifications';
@@ -72,6 +74,7 @@ export function SettingsTab({
     },
   });
   const sampleMembersQuery = useQuery({ queryKey: ['sample-members'], queryFn: fetchMySampleMembers });
+  const isAdminQuery = useQuery({ queryKey: ['admin-session'], queryFn: fetchIsAdmin, staleTime: 10 * 60_000 });
   const fajrSettingsQuery = useQuery({
     queryKey: queryKeys.highLatitudeFajrSettings,
     queryFn: fetchMyHighLatitudeFajrSettings,
@@ -513,6 +516,19 @@ export function SettingsTab({
           <Button label={t('settings.signOut')} variant="secondary" loading={accountActionPending} onPress={() => void signOutSafely()} />
         </View>
       </Section>
+
+      {/* Operators only, and in English like the panel itself. The panel asks
+          for its own Google and authenticator sign-in; this is just the way in. */}
+      {isAdminQuery.data ? (
+        <Section eyebrow="Admin" title="Halal Mode admin">
+          <SettingRow
+            title="Open admin panel"
+            subtitle="Growth, matching, scoring, feature flags, settings and the audit log. Needs your authenticator code."
+            testID={testIds.settings.adminPanel}
+            onPress={() => void WebBrowser.openBrowserAsync(ADMIN_PANEL_URL)}
+          />
+        </Section>
+      ) : null}
 
       <Section eyebrow={t('settings.account')} title={t('settings.dangerZone')}>
         <SettingRow

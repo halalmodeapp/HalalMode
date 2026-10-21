@@ -56,6 +56,7 @@ export const testIds = {
     moderation: 'settings-moderation',
     delete: 'settings-delete-account',
     deleteDialog: 'settings-delete-dialog',
+    adminPanel: 'settings-admin-panel',
   },
   recap: { compatibility: 'compatibility-breakdown', open: 'recap-open-connection' },
   gallery: { close: 'gallery-close', recovery: 'gallery-recovery' },
