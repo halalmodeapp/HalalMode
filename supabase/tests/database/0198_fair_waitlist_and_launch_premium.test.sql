@@ -49,14 +49,19 @@ select is(halal_mode_private.referral_progress('HMFAIRAPP1')->>'referral_count',
   'waitlist email confirmation alone does not count the referral');
 insert into auth.users (id, email, email_confirmed_at, created_at)
 values ('00000000-0000-0000-0000-000000019804', 'pgtap.fair.friend@gmail.com', now(), now());
-insert into public.profiles (id, name, first_name, birth_date, gender, city, country, bio, photos, onboarding_complete)
-values (
+insert into public.profiles (
+  id, name, first_name, birth_date, gender, city, country, bio, photos,
+  languages_spoken, education, has_children, family_goals_answered_at,
+  religious_dress, ethnicities, heritage_countries, onboarding_complete
+) values (
   '00000000-0000-0000-0000-000000019804', 'Friend Member', 'Friend', '1994-01-01', 'female',
   'Leeds', 'United Kingdom', 'A thoughtful person who values family, faith and kindness.',
-  array['profile/fair-friend.jpg'], true
+  array['profile/fair-friend.jpg'], array['English'], 'University', 'no', now(),
+  'hijab', array['arab'], array['GB'], true
 );
-insert into public.private_preferences (user_id, matching_preferences_completed_at)
-values ('00000000-0000-0000-0000-000000019804', now());
+insert into public.private_preferences (
+  user_id, matching_preferences_completed_at, own_height_cm, own_build
+) values ('00000000-0000-0000-0000-000000019804', now(), 165, 'Average');
 select is(halal_mode_private.referral_progress('HMFAIRAPP1')->>'referral_count', '1',
   'the referral counts after the friend completes their app profile');
 

@@ -1,6 +1,6 @@
 begin;
 set local search_path = public, extensions, halal_mode_private;
-select plan(17);
+select plan(18);
 
 select ok(
   has_function_privilege('authenticated', 'public.my_referral_progress()', 'EXECUTE')
@@ -47,14 +47,24 @@ select ok(public.my_referral_progress()::text not like '%@%', 'the reply never i
 
 -- A never-confirmed waitlist place is confirmed by the signed-in account.
 -- Completing the matching-ready profile is the qualifying milestone.
-insert into public.profiles (id, name, first_name, birth_date, gender, city, country, bio, photos, onboarding_complete)
-values (
+insert into public.profiles (
+  id, name, first_name, birth_date, gender, city, country, bio, photos,
+  languages_spoken, education, has_children, family_goals_answered_at,
+  religious_dress, ethnicities, heritage_countries, onboarding_complete
+) values (
   '00000000-0000-0000-0000-000000019506', 'Friend Member', 'Friend', '1994-01-01', 'female',
   'Leeds', 'United Kingdom', 'A thoughtful person who values family, faith and kindness.',
-  array['profile/friend.jpg'], true
+  array['profile/friend.jpg'], array['English'], 'University', 'no', now(),
+  'hijab', array['arab'], array['GB'], true
 );
 insert into public.private_preferences (user_id, matching_preferences_completed_at)
 values ('00000000-0000-0000-0000-000000019506', now());
+select is(public.my_referral_progress()->>'referral_count', '0',
+  'a profile still missing height and build does not count yet');
+-- Height and build are the last step, so the referral must be noticed then.
+update public.private_preferences
+set own_height_cm = 165, own_build = 'Average'
+where user_id = '00000000-0000-0000-0000-000000019506';
 
 select set_config('request.jwt.claims',
   '{"sub":"00000000-0000-0000-0000-000000019502","role":"authenticated"}', true);

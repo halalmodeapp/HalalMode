@@ -21,8 +21,14 @@ select throws_ok(
   'Current legal documents must be accepted',
   'stale document versions are rejected against the registry'
 );
+-- Read the current versions from the registry, the database copy of
+-- LEGAL_VERSION, so publishing a new notice does not need this test edited.
 select lives_ok(
-  $$ select complete_onboarding('Consent Member', 'Consent', '1990-01-01', 'female', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, '2026-10-06', '2026-10-06') $$,
+  format(
+    $$ select complete_onboarding('Consent Member', 'Consent', '1990-01-01', 'female', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, %L, %L) $$,
+    (select version from legal_document_registry where document_type = 'terms' and is_current),
+    (select version from legal_document_registry where document_type = 'privacy' and is_current)
+  ),
   'current registry versions create the profile and immutable history'
 );
 
