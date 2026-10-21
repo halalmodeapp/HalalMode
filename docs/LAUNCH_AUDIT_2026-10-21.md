@@ -1,10 +1,10 @@
 # Halal Mode launch audit — refreshed 21 October 2026
 
-This is the current status for `feature/halal-cards`. It replaces the earlier 20 October audit's stale counts and status claims. The work described here is still local until committed, pushed, reviewed by CI and—where needed—approved and deployed. No production database, function, website or Expo update was changed during this audit.
+This is the current status for `feature/halal-cards`. It replaces the earlier 20 October audit's stale counts and status claims. The work is committed and pushed, but the overall database-contract CI job is still red; no production database, function, website or Expo update was changed.
 
 ## Current verdict
 
-The requested code work is in place and the client verification passes. The remaining launch gates are operational: the new database migration and mail worker have not been deployed, production email quotas and Supabase Auth limits still need the owner's dashboard checks, and Apple sign-in still needs the owner's Apple credentials. The waitlist has deliberately been left without a rate limit or email-confirmation gate, as requested; that keeps shared Wi-Fi from blocking real groups but leaves spam/queue exhaustion as an accepted risk.
+The requested code work is in place, and client checks, Android JS export and Edge Function typecheck pass. The new migration's targeted contracts (`0192`, `0196`, `0198`) also pass in CI. The full database-contract job is nevertheless red on older contract files; the same failure set was present on the preceding `620d1ca` run, before this continuation's changes. Do not promote this branch to the default/release branch until the repository's full database suite is green or those baseline failures have been deliberately resolved. The migration and mail worker remain undeployed; production email quotas, Supabase Auth limits and Apple sign-in setup still need owner-side checks. The waitlist has deliberately been left without rate limits or a confirm step, as requested, accepting the spam/queue-exhaustion risk.
 
 | Area | Current status | What remains |
 |---|---|---|
@@ -12,8 +12,8 @@ The requested code work is in place and the client verification passes. The rema
 | Waitlist scope | **Matches the decision** | The static site is the only waitlist. App `/join` was removed; app routes stay out of the waitlist. The new migration and waitlist-only web rules still need deployment. |
 | Waitlist throttling | **Intentionally none** | The migration removes the hourly and network caps. There is a one-million-row ceiling, not an anti-abuse limit. This is the owner's chosen trade-off; see load risks below. |
 | Waitlist email | **Code ready; quota/deploy pending** | Resend remains the fallback. The worker uses SES only when AWS reports production access and sending enabled, then honors AWS's actual daily and per-second quotas. Current database default is 100 emails per day, with 10 reserved for operational mail. |
-| Premium launch rewards | **Migration written; not live** | CI must pass pgTAP, then the owner must approve applying the migration. |
-| Email canonicalization and referral credit | **Migration written; not live** | Alias matching and app-member referral credit are covered by the new database tests; production behavior remains unchanged until migration deployment. |
+| Premium launch rewards | **Targeted CI contract passes; not live** | `0198` passes, including the trusted profile-tier update and expiry. The owner must approve applying the migration; overall database CI remains red on older contracts. |
+| Email canonicalization and referral credit | **Targeted CI contracts pass; not live** | `0192`, `0196` and `0198` pass; production behavior remains unchanged until migration deployment. Overall database CI remains red on older contracts. |
 | iOS provider display | **Fixed in code** | Apple is always shown on iOS; the owner must still configure Apple in Supabase Auth before App Store submission. Android and web show Google only. |
 | Email sign-in 429 | **Fixed in code** | The screen explains the limit and offers a direct Google sign-in action. Supabase SMTP and Auth limits remain owner-side checks. |
 | Privacy and Terms | **Fixed in code** | App, database registry and website derive from one legal-document source. Website deployment is pending. |
@@ -70,7 +70,8 @@ These estimates assume one welcome message per new join, a 24-hour mail budget, 
 - `npm run verify:client`: **passed** — typecheck, lint with zero warnings, SQL parse check (209 migrations, 57 database tests, 78 PL/pgSQL bodies, zero issues), and **435/435 unit tests**.
 - `npx expo export --platform web`: **passed**. The export produced a separate `geonames-cities15000` chunk at about 1.2 MB, rather than adding the dataset to the initial app bundle. Exported 31 static routes. This is a local build, not a website deployment.
 - GeoNames attribution and CC BY 4.0 notice are included in `site/licenses/geonames.html` and linked from the generated Privacy page. Dataset source: [GeoNames export](https://www.geonames.org/export/).
-- pgTAP for 0192, 0196 and 0198 has **not** run locally because Docker is unavailable. It must pass in GitHub Actions after push; assertions must not be weakened to get a green result.
+- GitHub Actions run [39554067064](https://github.com/halalmodeapp/HalalMode/actions/runs/39554067064): client checks + Android JS export **passed**; Edge Function typecheck **passed**; targeted pgTAP files `0192`, `0196` and `0198` **passed**. The complete database suite **failed** (57 files, 557 tests) on older contracts. The same older failure files and assertions failed in the prior run at `620d1ca` (56 files, 538 tests), so this continuation did not introduce that red baseline. Docker is unavailable locally; CI ran the database tests.
+- `npm run verify:sql`: **passed** after the CI-driven test fixes (209 migrations, 57 database tests, 78 PL/pgSQL bodies, zero parser problems).
 - No production signup, email delivery, database migration, function deployment, static-site deploy, EAS build or OTA update was performed.
 
 ## Owner-side launch actions
@@ -84,4 +85,4 @@ These estimates assume one welcome message per new join, a 24-hour mail budget, 
 
 ## Branch / commit plan
 
-Keep `feature/halal-cards` as the working branch while its focused commits and database tests are reviewed. Once CI is green and the release contents are agreed, promote the verified result to the current default/release branch in one reviewed merge. The default branch also triggers the Expo preview workflow, so merge/push there is a release action—not merely a way to tidy the branch list. The existing Halal Cards copy commit remains separate from these launch-fix commits.
+Keep `feature/halal-cards` as the working branch while the pre-existing database-contract failures are resolved. Once the whole quality-gates workflow is green and the release contents are agreed, promote the verified result to the current default/release branch in one reviewed merge. The default branch also triggers the Expo preview workflow, so merge/push there is a release action—not merely a way to tidy the branch list. The existing Halal Cards copy commit remains separate from these launch-fix commits.

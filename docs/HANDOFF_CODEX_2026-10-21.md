@@ -111,5 +111,12 @@ The waitlist has **no throttling** (owner's decision). Limits now matter only fo
 
 - Implemented all four remaining handoff items: every incomplete profile checklist step scrolls to its first missing field; web GPS city naming uses a bundled GeoNames extract; email sign-in HTTP 429 offers Google; and `docs/POST_LAUNCH_REFERRALS.md` records the homepage and Android Play Install Referrer plan without switching routing.
 - `npm run verify:client` passed: typecheck, lint, SQL parsing and 435/435 unit tests. `npx expo export --platform web` passed and emitted the GeoNames data as its own ~1.2 MB lazy web chunk.
-- The migration and function have not been deployed. pgTAP must pass in CI after push; Docker is not available locally. No production changes or Expo updates were made.
+- The launch-fix work is committed and pushed to `feature/halal-cards`; the Halal Cards copy commit remains separate. No production migration, function, website or Expo update was deployed.
 - Owner Halal Cards copy is already isolated in its own commit. The launch fixes, database work, and refreshed audit remain in their own logical commits.
+
+## Post-push CI follow-up — 21 October 2026
+
+- GitHub Actions run [39554067064](https://github.com/halalmodeapp/HalalMode/actions/runs/39554067064): client checks + Android JS export passed; Edge Function typecheck passed.
+- Targeted pgTAP files `0192`, `0196` and `0198` passed. `0192` now checks the two-argument budgeted mail-claim function and asserts the old overload is absent. `0198` exercises the trusted server path against the authenticated profile guard; the reward and expiry functions now set the server-controlled profile-update context.
+- The full database-contract job is still red on older tests (57 files, 557 tests). The same older failing contracts were present in the preceding run at `620d1ca` (56 files, 538 tests), before this continuation's changes. Keep the branch off the default/release branch until those baseline failures are addressed or intentionally resolved.
+- `npm run verify:sql` passes after the pgTAP fixes. Docker is unavailable locally, so pgTAP validation came from GitHub Actions.
