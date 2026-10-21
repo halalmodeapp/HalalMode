@@ -12,7 +12,7 @@ select ok(
 insert into auth.users (id, email, created_at) values
   ('00000000-0000-0000-0000-000000020501', 'pgtap.invite.ali@example.test', now()),
   ('00000000-0000-0000-0000-000000020502', 'pgtap.invite.friend@example.test', now()),
-  ('00000000-0000-0000-0000-000000020503', 'pgtap.invite.other@example.test', now());
+  ('00000000-0000-0000-0000-000000020503', 'pgtap.invite.other@gmail.com', now());
 insert into public.profiles (id, name, first_name, birth_date, gender) values
   ('00000000-0000-0000-0000-000000020501', 'Ali Member', 'Ali', '1990-01-01', 'male');
 insert into halal_mode_private.referral_codes (code, user_id) values
@@ -40,7 +40,7 @@ select ok(exists (select 1 from halal_mode_private.member_referrals
 select is(public.claim_invite('HMINVITE02')->>'state', 'already', 'a second invite does not replace the first');
 
 -- First referrer wins across the waitlist too.
-select public.join_waitlist_now('pgtap.invite.other@example.test', 'York', '25-29', 'en', 'HMINVITE02');
+select public.join_waitlist_now('pgtap.invite.other@gmail.com', 'York', '25-29', 'en', 'HMINVITE02');
 select set_config('request.jwt.claims',
   '{"sub":"00000000-0000-0000-0000-000000020503","role":"authenticated"}', true);
 select is(public.claim_invite('HMINVITE01')->>'state', 'already', 'someone referred on the waitlist keeps that referrer');
