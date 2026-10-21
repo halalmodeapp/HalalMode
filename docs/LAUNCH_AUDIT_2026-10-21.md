@@ -1,8 +1,14 @@
 # Halal Mode launch audit — refreshed 21 October 2026
 
-This is the current status for `feature/halal-cards`. It replaces the earlier 20 October audit's stale counts and status claims. The work is committed and pushed, but the overall database-contract CI job is still red; no production database, function, website or Expo update was changed.
+This is the current status for `feature/halal-cards`, updated after CI run `39569908699`. The code and test fixes are committed and pushed. All quality-gate jobs now pass, including the complete isolated database-contract suite. No production database, function, website or Expo update was changed.
 
-## Current verdict
+## Current status
+
+As of CI run `39569908699`, the branch is green for review: local typecheck, lint, SQL checks and all 435 unit tests pass; CI also passes Edge Function typecheck, client checks plus Android JS export, and all 57 database contract files (775 pgTAP assertions). The legacy contract failures found during this continuation were fixed without weakening the asserted behavior. This is not a production deployment: the migration and mail worker remain undeployed, and production email quotas, Supabase Auth limits and Apple sign-in setup still need owner-side checks. Branch roles remain split: GitHub defaults to `feature/social-sign-in`, Expo preview OTA listens to `codex/premium-foundation`, and `main` exists but is not default. The waitlist intentionally remains without rate limits or a confirm step, accepting the spam/queue-exhaustion risk.
+
+## Previous CI status (superseded)
+
+The paragraph below records the status before CI run `39569908699`; it is retained as history only.
 
 The requested code work is in place, and client checks, Android JS export and Edge Function typecheck pass. The new migration's targeted contracts (`0192`, `0196`, `0198`) also pass in CI. The full database-contract job is nevertheless red on older contract files; the same failure set was present on the preceding `620d1ca` run, before this continuation's changes. Do not promote this branch until the full database suite is green or those baseline failures have been deliberately resolved. Branch roles are also currently split: GitHub's default is `feature/social-sign-in`, Expo's preview OTA workflow listens to `codex/premium-foundation`, and `main` exists but is not the default. The migration and mail worker remain undeployed; production email quotas, Supabase Auth limits and Apple sign-in setup still need owner-side checks. The waitlist has deliberately been left without rate limits or a confirm step, as requested, accepting the spam/queue-exhaustion risk.
 
@@ -12,8 +18,8 @@ The requested code work is in place, and client checks, Android JS export and Ed
 | Waitlist scope | **Matches the decision** | The static site is the only waitlist. App `/join` was removed; app routes stay out of the waitlist. The new migration and waitlist-only web rules still need deployment. |
 | Waitlist throttling | **Intentionally none** | The migration removes the hourly and network caps. There is a one-million-row ceiling, not an anti-abuse limit. This is the owner's chosen trade-off; see load risks below. |
 | Waitlist email | **Code ready; quota/deploy pending** | Resend remains the fallback. The worker uses SES only when AWS reports production access and sending enabled, then honors AWS's actual daily and per-second quotas. Current database default is 100 emails per day, with 10 reserved for operational mail. |
-| Premium launch rewards | **Targeted CI contract passes; not live** | `0198` passes, including the trusted profile-tier update and expiry. The owner must approve applying the migration; overall database CI remains red on older contracts. |
-| Email canonicalization and referral credit | **Targeted CI contracts pass; not live** | `0192`, `0196` and `0198` pass; production behavior remains unchanged until migration deployment. Overall database CI remains red on older contracts. |
+| Premium launch rewards | **Full CI passes; not live** | `0198` passes, including the trusted profile-tier update and expiry. The owner must approve applying the migration. |
+| Email canonicalization and referral credit | **Full CI passes; not live** | `0192`, `0196` and `0198` pass as part of the complete suite; production behavior remains unchanged until migration deployment. |
 | iOS provider display | **Fixed in code** | Apple is always shown on iOS; the owner must still configure Apple in Supabase Auth before App Store submission. Android and web show Google only. |
 | Email sign-in 429 | **Fixed in code** | The screen explains the limit and offers a direct Google sign-in action. Supabase SMTP and Auth limits remain owner-side checks. |
 | Privacy and Terms | **Fixed in code** | App, database registry and website derive from one legal-document source. Website deployment is pending. |
@@ -42,7 +48,7 @@ These estimates assume one welcome message per new join, a 24-hour mail budget, 
 
 - **C1 — Store builds without backend config: fixed in code.** `src/lib/publicConfig.ts` supplies only public Supabase/PostHog values as safe defaults and still allows local/EAS overrides. These are intentionally public client values, not secrets. No EAS build/update was run here.
 - **C2 — Email capacity: code prepared; owner decision still required before a large announcement.** SES fallback checks `ProductionAccessEnabled` and `SendingEnabled` and uses the live quota. Until SES is approved and the worker is deployed with its required secrets, the current database budget is 100/day (10 reserved). Do not promise fast delivery at 500–10,000 joins/hour based on the source code alone.
-- **C3 — Promised launch Premium: migration implemented, production pending.** The migration grants rewards when the profile is ready and lets rewards grow with referral tiers. It is not effective until approved and applied.
+- **C3 — Promised launch Premium: migration implemented and fully CI-verified; production pending.** The migration grants rewards when the profile is ready and lets rewards grow with referral tiers. It is not effective until approved and applied.
 - **C4 — Apple sign-in: app behavior fixed, Apple setup pending.** The iOS screen always offers Apple. The owner's Apple Developer credentials and Supabase Auth configuration are still required before review.
 - **C5 — App email limits: recovery fixed, dashboard status unknown.** HTTP 429 now offers Google sign-in. Check Supabase Auth custom SMTP, per-hour email limit and sign-in/IP limits in the dashboard before launch.
 
@@ -53,7 +59,7 @@ These estimates assume one welcome message per new join, a 24-hour mail budget, 
 - **H3 — App-owned referral codes on the waitlist: migration implemented, production pending.** Confirmed joins can credit an app member's code and are counted once across the waitlist and app by canonical inbox.
 - **H4 — Legal links and single source: fixed in code, website deploy pending.** The static site and app use the shared legal URLs and include the GeoNames attribution where relevant.
 - **H5 — Spam can delay genuine mail: accepted consequence of H1.** The 100/day default and queued delivery amplify the impact of junk joins while Resend is active. Deploy SES only after AWS production access is granted; monitor the queue and bounce/complaint rates after launch.
-- **H6 — Branch roles are split.** GitHub's current default branch is `feature/social-sign-in`; `.eas/workflows/android-preview.yml` publishes to the `preview` channel on pushes to `codex/premium-foundation`; `main` exists but is not the default. Keep this work on `feature/halal-cards`. A push to `codex/premium-foundation` can update compatible preview installs, but is not a production deployment. Do not consolidate/rename branches until the legacy database CI failures are resolved and the owner approves aligning the default branch and Expo trigger.
+- **H6 — Branch roles are split.** GitHub's current default branch is `feature/social-sign-in`; `.eas/workflows/android-preview.yml` publishes to the `preview` channel on pushes to `codex/premium-foundation`; `main` exists but is not the default. Keep this work on `feature/halal-cards` pending an explicit canonical-branch decision. A push to `codex/premium-foundation` can update compatible preview installs, but is not a production deployment. The database suite is now green; aligning GitHub's default and the Expo trigger is a separate repository/release decision, not an automatic follow-up to fixing CI.
 
 ### Medium / low
 
@@ -67,11 +73,11 @@ These estimates assume one welcome message per new join, a 24-hour mail budget, 
 
 ## Verification evidence
 
-- `npm run verify:client`: **passed** — typecheck, lint with zero warnings, SQL parse check (209 migrations, 57 database tests, 78 PL/pgSQL bodies, zero issues), and **435/435 unit tests**.
+- `npm run verify:client`: **passed** — typecheck, lint with zero warnings, SQL parse check (210 migrations, 57 database tests, 78 PL/pgSQL bodies, zero issues), and **435/435 unit tests**.
 - `npx expo export --platform web`: **passed**. The export produced a separate `geonames-cities15000` chunk at about 1.2 MB, rather than adding the dataset to the initial app bundle. Exported 31 static routes. This is a local build, not a website deployment.
 - GeoNames attribution and CC BY 4.0 notice are included in `site/licenses/geonames.html` and linked from the generated Privacy page. Dataset source: [GeoNames export](https://www.geonames.org/export/).
-- GitHub Actions run [39554067064](https://github.com/halalmodeapp/HalalMode/actions/runs/39554067064): client checks + Android JS export **passed**; Edge Function typecheck **passed**; targeted pgTAP files `0192`, `0196` and `0198` **passed**. The complete database suite **failed** (57 files, 557 tests) on older contracts. The same older failure files and assertions failed in the prior run at `620d1ca` (56 files, 538 tests), so this continuation did not introduce that red baseline. Docker is unavailable locally; CI ran the database tests.
-- `npm run verify:sql`: **passed** after the CI-driven test fixes (209 migrations, 57 database tests, 78 PL/pgSQL bodies, zero parser problems).
+- GitHub Actions run [39569908699](https://github.com/halalmodeapp/HalalMode/actions/runs/39569908699): Edge Function typecheck, client checks, Android JS export, and isolated database contracts **all passed**. The pgTAP suite ran all **57 files / 775 tests**. Docker is unavailable locally, so CI ran the database tests.
+- `npm run verify:sql`: **passed** after the CI-driven test fixes (210 migrations, 57 database tests, 78 PL/pgSQL bodies, zero parser problems).
 - No production signup, email delivery, database migration, function deployment, static-site deploy, EAS build or OTA update was performed.
 
 ## Owner-side launch actions
@@ -85,4 +91,4 @@ These estimates assume one welcome message per new join, a 24-hour mail budget, 
 
 ## Branch / commit plan
 
-Keep `feature/halal-cards` as the working branch while the pre-existing database-contract failures are resolved. Once the whole quality-gates workflow is green and the release contents are agreed, consolidate in one reviewed merge to the chosen canonical branch. GitHub currently defaults to `feature/social-sign-in`, while Expo's preview OTA trigger is `codex/premium-foundation`; `main` is not the current default. Align those settings deliberately before treating a branch name as the single source of truth. The existing Halal Cards copy commit remains separate from these launch-fix commits.
+Keep `feature/halal-cards` as the working branch for review. CI is green, so the remaining decision is which branch should become canonical and when to merge; do not change GitHub's default or Expo's preview OTA trigger without the owner's explicit release choice. GitHub currently defaults to `feature/social-sign-in`, while Expo's preview OTA trigger is `codex/premium-foundation`; `main` is not the current default. Align those settings deliberately before treating a branch name as the single source of truth. The existing Halal Cards copy commit remains separate from these launch-fix commits.
