@@ -46,6 +46,23 @@ select ('00000000-0000-0000-0000-' || lpad(n::text, 12, '0'))::uuid,
        18, 50, array['Saudi Arabia'], 100, now()
 from generate_series(5801, 5806) n;
 
+update public.profiles
+set bio = repeat('r', 80),
+    languages_spoken = array['Arabic'],
+    education = 'University',
+    has_children = 'no',
+    family_goals_answered_at = now(),
+    religious_dress = case when gender::text = 'female' then 'hijab' else null end,
+    ethnicities = array['arab'],
+    heritage_countries = array['SA']
+where id between '00000000-0000-0000-0000-000000005801'
+             and '00000000-0000-0000-0000-000000005806';
+update public.private_preferences
+set own_height_cm = 170,
+    own_build = 'Average'
+where user_id between '00000000-0000-0000-0000-000000005801'
+                  and '00000000-0000-0000-0000-000000005806';
+
 insert into halal_mode_private.member_legal_consent_history (
   user_id, document_type, version, acceptance_context
 )

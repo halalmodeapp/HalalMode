@@ -105,10 +105,21 @@ insert into private_preferences (
 ) values
   ('00000000-0000-0000-0000-000000140001', 25, 35, 150, 190, array['Athletic'], array['Saudi Arabia'], 100, array['very_practicing']::religious_practice[], array['within_6_months']::marriage_timeline[], array['wants_children_soon']::family_goals[], array['sunni']::sect[], '{}', 180, 'Athletic', now()),
   ('00000000-0000-0000-0000-000000140002', 25, 50, 150, 190, array['Average'], array['Saudi Arabia'], 100, array['practicing']::religious_practice[], array['within_1_year']::marriage_timeline[], array['open_to_children']::family_goals[], array['sunni']::sect[], '{}', 175, 'Average', now()),
-  ('00000000-0000-0000-0000-000000140003', 25, 35, 150, 190, array['Slim'], array['Saudi Arabia'], 100, array['moderate']::religious_practice[], array['within_1_year']::marriage_timeline[], array['wants_children_later']::family_goals[], array['shia']::sect[], '{"age":true,"distance":true}', 178, 'Lean', now()),
+  ('00000000-0000-0000-0000-000000140003', 25, 35, 150, 190, array['Slim'], array['Saudi Arabia'], 100, array['moderate']::religious_practice[], array['within_1_year']::marriage_timeline[], array['wants_children_later']::family_goals[], array['shia']::sect[], '{"age":true,"distance":true}', 178, 'Slim', now()),
   ('00000000-0000-0000-0000-000000140004', 18, 70, 150, 200, '{}', array['Saudi Arabia'], 100, '{}', '{}', '{}', '{}', '{}', 165, 'Average', now()),
   ('00000000-0000-0000-0000-000000140005', 18, 70, 150, 200, '{}', array['Saudi Arabia'], 100, '{}', '{}', '{}', '{}', '{}', 168, 'Slim', now()),
   ('00000000-0000-0000-0000-000000140006', 18, 70, 150, 200, '{}', array['Saudi Arabia'], 100, '{}', '{}', '{}', '{}', '{}', 170, 'Athletic', now());
+
+update public.profiles
+set bio = repeat('r', 80),
+    education = 'University',
+    has_children = 'no',
+    family_goals_answered_at = now(),
+    religious_dress = case when gender::text = 'female' then 'hijab' else null end,
+    ethnicities = array['arab'],
+    heritage_countries = array['SA']
+where id between '00000000-0000-0000-0000-000000140001'
+             and '00000000-0000-0000-0000-000000140006';
 
 insert into halal_mode_private.member_legal_consent_history (
   user_id, document_type, version, acceptance_context

@@ -62,6 +62,27 @@ insert into profiles (
 insert into private_preferences (user_id, matching_preferences_completed_at) values
   ('00000000-0000-0000-0000-000000005301', now()),
   ('00000000-0000-0000-0000-000000005303', now());
+
+update public.profiles
+set bio = repeat('r', 80),
+    languages_spoken = array['Arabic'],
+    education = 'University',
+    has_children = 'no',
+    family_goals_answered_at = now(),
+    religious_dress = case when gender::text = 'female' then 'hijab' else null end,
+    ethnicities = array['arab'],
+    heritage_countries = array['SA']
+where id in (
+  '00000000-0000-0000-0000-000000005301',
+  '00000000-0000-0000-0000-000000005303'
+);
+update public.private_preferences
+set own_height_cm = 170,
+    own_build = 'Average'
+where user_id in (
+  '00000000-0000-0000-0000-000000005301',
+  '00000000-0000-0000-0000-000000005303'
+);
 insert into halal_mode_private.member_legal_consent_history (
   user_id, document_type, version, acceptance_context
 )

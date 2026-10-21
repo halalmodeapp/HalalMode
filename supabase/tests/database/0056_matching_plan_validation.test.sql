@@ -54,6 +54,43 @@ select ('00000000-0000-0000-0000-' || lpad(n::text, 12, '0'))::uuid,
        18, 50, array['Saudi Arabia'], 100, now()
 from generate_series(5621, 5626) n;
 
+update public.profiles
+set bio = repeat('r', 80),
+    languages_spoken = array['Arabic'],
+    education = 'University',
+    has_children = 'no',
+    family_goals_answered_at = now(),
+    religious_dress = case when gender::text = 'female' then 'hijab' else null end,
+    ethnicities = array['arab'],
+    heritage_countries = array['SA']
+where id in (
+  '00000000-0000-0000-0000-000000005601',
+  '00000000-0000-0000-0000-000000005602',
+  '00000000-0000-0000-0000-000000005603',
+  '00000000-0000-0000-0000-000000005604',
+  '00000000-0000-0000-0000-000000005621',
+  '00000000-0000-0000-0000-000000005622',
+  '00000000-0000-0000-0000-000000005623',
+  '00000000-0000-0000-0000-000000005624',
+  '00000000-0000-0000-0000-000000005625',
+  '00000000-0000-0000-0000-000000005626'
+);
+update public.private_preferences
+set own_height_cm = 170,
+    own_build = 'Average'
+where user_id in (
+  '00000000-0000-0000-0000-000000005601',
+  '00000000-0000-0000-0000-000000005602',
+  '00000000-0000-0000-0000-000000005603',
+  '00000000-0000-0000-0000-000000005604',
+  '00000000-0000-0000-0000-000000005621',
+  '00000000-0000-0000-0000-000000005622',
+  '00000000-0000-0000-0000-000000005623',
+  '00000000-0000-0000-0000-000000005624',
+  '00000000-0000-0000-0000-000000005625',
+  '00000000-0000-0000-0000-000000005626'
+);
+
 insert into halal_mode_private.member_legal_consent_history (
   user_id, document_type, version, acceptance_context
 )

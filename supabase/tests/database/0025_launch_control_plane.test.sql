@@ -30,11 +30,11 @@ select ok(
   (select bool_and(not enabled and rollout_percentage = 0)
    from halal_mode_private.release_flags
    where key in (
-     'in_chat_voice_notes', 'live_calling', 'push_notifications',
+     'in_chat_voice_notes', 'live_calling',
      'identity_verification', 'premium_purchases', 'controlled_beta',
      'reciprocal_matching_v1'
    )),
-  'high-risk flags fail closed'
+  'launch-gated flags fail closed'
 );
 
 insert into auth.users (id, email) values

@@ -44,6 +44,29 @@ insert into private_preferences (
   ('00000000-0000-0000-0000-000000005202', 18, 50, array['Saudi Arabia'], 100, now()),
   ('00000000-0000-0000-0000-000000005203', 18, 50, array['Saudi Arabia'], 100, now());
 
+update public.profiles
+set bio = repeat('r', 80),
+    languages_spoken = array['Arabic'],
+    education = 'University',
+    has_children = 'no',
+    family_goals_answered_at = now(),
+    religious_dress = case when gender::text = 'female' then 'hijab' else null end,
+    ethnicities = array['arab'],
+    heritage_countries = array['SA']
+where id in (
+  '00000000-0000-0000-0000-000000005201',
+  '00000000-0000-0000-0000-000000005202',
+  '00000000-0000-0000-0000-000000005203'
+);
+update public.private_preferences
+set own_height_cm = 170,
+    own_build = 'Average'
+where user_id in (
+  '00000000-0000-0000-0000-000000005201',
+  '00000000-0000-0000-0000-000000005202',
+  '00000000-0000-0000-0000-000000005203'
+);
+
 insert into halal_mode_private.member_legal_consent_history (
   user_id, document_type, version, acceptance_context
 )

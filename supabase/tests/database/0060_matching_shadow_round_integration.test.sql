@@ -42,6 +42,17 @@ select
   now()
 from generate_series(6001, 6008) n;
 
+update public.profiles
+set bio = repeat('r', 80),
+    education = 'University',
+    has_children = 'no',
+    family_goals_answered_at = now(),
+    religious_dress = case when gender::text = 'female' then 'hijab' else null end,
+    ethnicities = array['arab'],
+    heritage_countries = array['SA']
+where id between '00000000-0000-0000-0000-000000006001'
+             and '00000000-0000-0000-0000-000000006008';
+
 insert into selection_scores (user_id, score, band, times_shown, times_kept)
 select
   ('00000000-0000-0000-0000-' || lpad(n::text, 12, '0'))::uuid,
@@ -50,6 +61,12 @@ select
   (n - 5998),
   greatest(0, n - 6002)
 from generate_series(6001, 6008) n;
+
+update public.private_preferences
+set own_height_cm = 170,
+    own_build = 'Average'
+where user_id between '00000000-0000-0000-0000-000000006001'
+                  and '00000000-0000-0000-0000-000000006008';
 
 insert into halal_mode_private.member_legal_consent_history (
   user_id, document_type, version, acceptance_context

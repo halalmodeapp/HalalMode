@@ -1,6 +1,6 @@
 begin;
 set local search_path = public, extensions, halal_mode_private;
-select plan(14);
+select plan(16);
 
 select ok(
   exists (
@@ -246,6 +246,18 @@ select throws_ok(
   '42501',
   'Current legal documents must be accepted',
   'a stale member is rejected before the underlying member-facing RPC runs'
+);
+select throws_ok(
+  $$ select public.get_connection_messages('00000000-0000-0000-0000-000000004711') $$,
+  '42501',
+  'Current legal documents must be accepted',
+  'stale consent is checked before message history is read'
+);
+select throws_ok(
+  $$ select public.mark_connection_messages_read('00000000-0000-0000-0000-000000004711') $$,
+  '42501',
+  'Current legal documents must be accepted',
+  'stale consent is checked before read receipts are changed'
 );
 
 select * from finish();
