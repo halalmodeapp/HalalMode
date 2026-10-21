@@ -1,11 +1,12 @@
 begin;
 set local search_path = public, extensions, halal_mode_private;
-select plan(11);
+select plan(14);
 
 select ok(
   not has_function_privilege('anon', 'public.admin_reports(text, integer)', 'EXECUTE')
   and not has_function_privilege('anon', 'public.admin_authorize_report_action(uuid, text, text)', 'EXECUTE')
-  and not has_function_privilege('anon', 'public.admin_signups(integer)', 'EXECUTE'),
+  and not has_function_privilege('anon', 'public.admin_signups(integer)', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'public.apply_admin_report_action_service(uuid, text, uuid, text)', 'EXECUTE'),
   'reports and trends are closed to signed-out callers'
 );
 
@@ -48,12 +49,24 @@ select set_config('request.jwt.claims', jsonb_build_object(
 select throws_ok(
   $$ select public.admin_authorize_report_action('00000000-0000-0000-0000-0000000202a1', 'ban', '') $$,
   '22023', null, 'acting on a report needs a reason');
-select ok(public.admin_authorize_report_action('00000000-0000-0000-0000-0000000202a1', 'suspend', 'repeated harassment'),
-  'the owner may act on an open report');
+select is(public.admin_authorize_report_action('00000000-0000-0000-0000-0000000202a1', 'suspend', 'repeated harassment')->>'actor',
+  '00000000-0000-0000-0000-000000020201', 'the owner may act on an open report');
+select ok(not exists (select 1 from halal_mode_private.admin_audit_log where action like 'report.%'),
+  'approval alone writes nothing to the activity log');
+
+-- The worker applies the action; the log row lands in the same transaction.
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+select public.claim_report_action_service('00000000-0000-0000-0000-0000000202a1', 'suspend');
+select throws_ok(
+  $$ select public.apply_admin_report_action_service('00000000-0000-0000-0000-0000000202a1', 'suspend', '00000000-0000-0000-0000-000000020202', 'viewer try') $$,
+  '42501', null, 'only an owner can be recorded as acting');
+select is(public.apply_admin_report_action_service('00000000-0000-0000-0000-0000000202a1', 'suspend',
+  '00000000-0000-0000-0000-000000020201', 'repeated harassment')->>'action', 'suspend', 'the action is applied');
 select ok(exists (
   select 1 from halal_mode_private.admin_audit_log
-  where action = 'report.suspend' and detail->>'reason' = 'repeated harassment'
-), 'and the decision is in the activity log');
+  where action = 'report.suspend' and actor_id = '00000000-0000-0000-0000-000000020201' and detail->>'reason' = 'repeated harassment'
+) and (select resolved_at is not null from public.reports where id = '00000000-0000-0000-0000-0000000202a1'),
+  'and the activity log records it together with the outcome');
 
 select * from finish();
 rollback;

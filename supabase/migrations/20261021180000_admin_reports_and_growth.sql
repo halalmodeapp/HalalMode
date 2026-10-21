@@ -53,34 +53,63 @@ revoke all on function public.admin_reports(text, integer) from public, anon;
 grant execute on function public.admin_reports(text, integer) to authenticated;
 
 -- The report-action Edge Function calls this with the admin's own session
--- before it suspends, bans or dismisses. It is the authorization gate and
--- the audit record; the existing claim/apply functions then do the work.
+-- before it suspends, bans or dismisses. It is the authorization gate only:
+-- it returns the admin's id and checked reason, and writes nothing, so the
+-- activity log never claims an action that then failed.
 create or replace function public.admin_authorize_report_action(p_report_id uuid, p_action text, p_reason text)
-returns boolean
+returns jsonb
 language plpgsql
 security definer
 set search_path = public, halal_mode_private, pg_catalog
 as $function$
 declare
   v_reason text;
-  v_subject uuid;
 begin
   perform halal_mode_private.require_admin(true);
   v_reason := halal_mode_private.admin_reason(p_reason);
   if p_action not in ('dismiss', 'suspend', 'ban') then
     raise exception 'Unknown action' using errcode = '22023';
   end if;
-  select subject_id into v_subject from public.reports where id = p_report_id and resolved_at is null;
-  if v_subject is null then
+  if not exists (select 1 from public.reports where id = p_report_id and resolved_at is null) then
     raise exception 'This report is already closed or does not exist' using errcode = 'P0001';
   end if;
-  perform halal_mode_private.admin_audit('report.' || p_action, jsonb_build_object(
-    'report', left(p_report_id::text, 8), 'member', left(v_subject::text, 8), 'reason', v_reason));
-  return true;
+  return jsonb_build_object('actor', auth.uid(), 'reason', v_reason);
 end;
 $function$;
 revoke all on function public.admin_authorize_report_action(uuid, text, text) from public, anon;
 grant execute on function public.admin_authorize_report_action(uuid, text, text) to authenticated;
+
+-- The last step of an admin's report action: applies it and writes the
+-- activity-log row in one transaction, so the log and the outcome always
+-- agree. Service role only; the actor comes from admin_authorize_report_action
+-- and is checked again here.
+create or replace function public.apply_admin_report_action_service(
+  p_report_id uuid, p_action text, p_actor uuid, p_reason text
+) returns jsonb
+language plpgsql
+security definer
+set search_path = public, halal_mode_private, pg_catalog
+as $function$
+declare
+  v_result jsonb;
+begin
+  if auth.role() <> 'service_role' then
+    raise exception 'Report action requires service role' using errcode = '42501';
+  end if;
+  if not exists (select 1 from halal_mode_private.admin_members where user_id = p_actor and role = 'owner') then
+    raise exception 'Only an owner can act on reports' using errcode = '42501';
+  end if;
+  v_result := public.apply_report_action_service(p_report_id, p_action);
+  insert into halal_mode_private.admin_audit_log (actor_id, action, detail)
+  values (p_actor, 'report.' || p_action, jsonb_build_object(
+    'report', left(p_report_id::text, 8),
+    'member', left((v_result ->> 'subject_id'), 8),
+    'reason', halal_mode_private.admin_reason(p_reason)));
+  return v_result;
+end;
+$function$;
+revoke all on function public.apply_admin_report_action_service(uuid, text, uuid, text) from public, anon, authenticated;
+grant execute on function public.apply_admin_report_action_service(uuid, text, uuid, text) to service_role;
 
 -- Waitlist sign-ups and new app accounts per day, for 7 to 365 days.
 create or replace function public.admin_signups(p_days integer default 30)

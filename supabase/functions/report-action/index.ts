@@ -10,8 +10,10 @@
  *
  * The admin panel (halalmo.de/admin) uses the same actions with the admin's
  * own session instead of a signed link. admin_authorize_report_action checks,
- * as that admin, the admin list, owner role and a recent authenticator code,
- * and writes the audit row; only then does this function act.
+ * as that admin, the admin list, owner role and a recent authenticator code.
+ * The activity-log row is written by apply_admin_report_action_service in the
+ * same transaction that applies the action, so the log never shows an action
+ * that failed.
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
@@ -47,6 +49,7 @@ Deno.serve(async (request) => {
   const body = await request.json().catch(() => ({})) as { r?: string; a?: string; e?: string; t?: string; why?: string; admin?: boolean };
   const { r, a, e, t } = body;
   const client = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+  let admin: { actor: string; reason: string } | null = null;
 
   if (body.admin === true) {
     const bearer = request.headers.get('authorization') ?? '';
@@ -59,9 +62,10 @@ Deno.serve(async (request) => {
       auth: { persistSession: false },
     });
     const allowed = await asAdmin.rpc('admin_authorize_report_action', { p_report_id: r, p_action: a, p_reason: body.why ?? '' });
-    if (allowed.error || allowed.data !== true) {
+    if (allowed.error || !allowed.data) {
       return Response.json({ error: allowed.error?.message ?? 'forbidden', hint: allowed.error?.hint ?? null }, { status: 403, headers: CORS });
     }
+    admin = allowed.data as { actor: string; reason: string };
   } else {
     if (!r || !a || !e || !t || !(a in BAN_FOR)) return Response.json({ error: 'invalid' }, { status: 400, headers: CORS });
     if (Number(e) < Date.now() / 1000) return Response.json({ error: 'expired' }, { status: 410, headers: CORS });
@@ -86,7 +90,9 @@ Deno.serve(async (request) => {
   // The database action is applied only after the external Auth side effect
   // succeeds. If the worker dies here, the claim makes the same signed action
   // retryable without allowing a different action or a second notice.
-  const applied = await client.rpc('apply_report_action_service', { p_report_id: r, p_action: a });
+  const applied = admin
+    ? await client.rpc('apply_admin_report_action_service', { p_report_id: r, p_action: a, p_actor: admin.actor, p_reason: admin.reason })
+    : await client.rpc('apply_report_action_service', { p_report_id: r, p_action: a });
   if (applied.error) return Response.json({ error: applied.error.message }, { status: 500, headers: CORS });
   return Response.json({ done: a }, { headers: CORS });
 });
