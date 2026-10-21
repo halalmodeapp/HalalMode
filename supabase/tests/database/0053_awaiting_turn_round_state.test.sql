@@ -17,13 +17,14 @@ select ok(
   'queue outcomes cannot be inspected by clients'
 );
 select ok(
-  position('get_current_round()' in pg_get_functiondef('public.get_current_round_state()'::regprocedure)) > 0
+  position('get_current_round_state_before_answer_gate()' in pg_get_functiondef('public.get_current_round_state()'::regprocedure)) > 0
+  and position('get_current_round()' in pg_get_functiondef('halal_mode_private.get_current_round_state_before_answer_gate()'::regprocedure)) > 0
   and position('member_has_current_legal_consents' in pg_get_functiondef('public.get_current_round_state()'::regprocedure)) > 0,
   'ready cards and legal consent retain their reviewed sources'
 );
 select ok(
-  position('passes_criteria' in pg_get_functiondef('public.get_current_round_state()'::regprocedure)) = 0
-  and position('selection_scores' in pg_get_functiondef('public.get_current_round_state()'::regprocedure)) = 0,
+  position('passes_criteria' in pg_get_functiondef('halal_mode_private.get_current_round_state_before_answer_gate()'::regprocedure)) = 0
+  and position('selection_scores' in pg_get_functiondef('halal_mode_private.get_current_round_state_before_answer_gate()'::regprocedure)) = 0,
   'empty-state explanations do not inspect candidates or private scores'
 );
 
@@ -71,6 +72,13 @@ from (values
 ) member(id)
 cross join halal_mode_private.legal_document_registry document
 where document.is_current;
+
+update public.profiles p
+set sensitive_consent_at = now()
+where 2 = (select count(*)
+  from halal_mode_private.member_legal_consent_history h
+  join halal_mode_private.legal_document_registry d using (document_type, version)
+  where h.user_id = p.id and d.is_current);
 
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000005301","role":"authenticated"}', true);
 select is(

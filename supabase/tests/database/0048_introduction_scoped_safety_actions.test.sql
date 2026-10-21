@@ -80,13 +80,19 @@ select ok(
 );
 
 select ok(
-  position('require_current_legal_consents(v_viewer)' in pg_get_functiondef(
+  position('Authentication required' in pg_get_functiondef(
     'public.report_introduction_member(uuid,text)'::regprocedure
   )) > 0
-  and position('require_current_legal_consents(v_viewer)' in pg_get_functiondef(
+  and position('Authentication required' in pg_get_functiondef(
     'public.block_introduction_member(uuid)'::regprocedure
-  )) > 0,
-  'both RPCs preserve the current legal-consent boundary'
+  )) > 0
+  and position('require_current_legal_consents' in pg_get_functiondef(
+    'public.report_introduction_member(uuid,text)'::regprocedure
+  )) = 0
+  and position('require_current_legal_consents' in pg_get_functiondef(
+    'public.block_introduction_member(uuid)'::regprocedure
+  )) = 0,
+  'both authenticated safety RPCs remain usable without first accepting updated terms'
 );
 
 select ok(
@@ -154,6 +160,13 @@ where p.id in (
   '00000000-0000-0000-0000-000000000482',
   '00000000-0000-0000-0000-000000000483'
 ) and d.is_current;
+
+update public.profiles p
+set sensitive_consent_at = now()
+where 2 = (select count(*)
+  from halal_mode_private.member_legal_consent_history h
+  join halal_mode_private.legal_document_registry d using (document_type, version)
+  where h.user_id = p.id and d.is_current);
 
 insert into rounds (id, user_id, tier, expires_at) values
   (

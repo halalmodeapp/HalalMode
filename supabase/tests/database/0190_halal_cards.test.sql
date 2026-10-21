@@ -32,6 +32,13 @@ from (values
 cross join halal_mode_private.legal_document_registry d
 where d.is_current;
 
+update public.profiles p
+set sensitive_consent_at = now()
+where 2 = (select count(*)
+  from halal_mode_private.member_legal_consent_history h
+  join halal_mode_private.legal_document_registry d using (document_type, version)
+  where h.user_id = p.id and d.is_current);
+
 insert into connections (id, user_a, user_b, stage) values (
   '00000000-0000-0000-0000-00000001900c',
   '00000000-0000-0000-0000-000000019001',

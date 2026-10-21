@@ -45,6 +45,13 @@ select '00000000-0000-0000-0000-000000000191', d.document_type, d.version, 'reac
 from halal_mode_private.legal_document_registry d
 where d.is_current;
 
+update public.profiles p
+set sensitive_consent_at = now()
+where 2 = (select count(*)
+  from halal_mode_private.member_legal_consent_history h
+  join halal_mode_private.legal_document_registry d using (document_type, version)
+  where h.user_id = p.id and d.is_current);
+
 create temporary table capacity_fillers (id uuid primary key) on commit drop;
 insert into capacity_fillers select gen_random_uuid() from generate_series(1, 9);
 insert into auth.users (id, email)

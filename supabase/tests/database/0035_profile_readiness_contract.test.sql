@@ -10,10 +10,20 @@ select ok(
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-000000000351', 'readiness@example.test');
-insert into profiles (id, name, first_name, birth_date, gender, city, country, bio, photos, onboarding_complete) values
-  ('00000000-0000-0000-0000-000000000351', 'Ready Member', 'Ready', '1990-01-01', 'female', 'Madinah', 'Saudi Arabia', repeat('a', 40), array['member/photo.jpg'], true);
-insert into private_preferences (user_id, matching_preferences_completed_at) values
-  ('00000000-0000-0000-0000-000000000351', now());
+insert into profiles (
+  id, name, first_name, birth_date, gender, city, country, bio, photos,
+  languages_spoken, education, has_children, family_goals_answered_at,
+  religious_dress, ethnicities, heritage_countries, onboarding_complete
+) values (
+  '00000000-0000-0000-0000-000000000351', 'Ready Member', 'Ready', '1990-01-01',
+  'female', 'Madinah', 'Saudi Arabia', repeat('a', 80), array['member/photo.jpg'],
+  array['Arabic'], 'University', 'no', now(), 'hijab', array['arab'], array['SA'], true
+);
+insert into private_preferences (
+  user_id, matching_preferences_completed_at, own_height_cm, own_build
+) values (
+  '00000000-0000-0000-0000-000000000351', now(), 165, 'Average'
+);
 do $$ begin
   perform set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000351","role":"authenticated"}', true);
 end $$;

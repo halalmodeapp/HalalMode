@@ -69,6 +69,13 @@ from (values
 cross join halal_mode_private.legal_document_registry document
 where document.is_current;
 
+update public.profiles p
+set sensitive_consent_at = now()
+where 2 = (select count(*)
+  from halal_mode_private.member_legal_consent_history h
+  join halal_mode_private.legal_document_registry d using (document_type, version)
+  where h.user_id = p.id and d.is_current);
+
 -- One exposure is immediately before the fixed window and one is on its
 -- first day. Only the latter may contribute to the frozen fairness signal.
 insert into rounds (

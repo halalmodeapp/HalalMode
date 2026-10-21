@@ -22,7 +22,7 @@ select throws_ok(
   'stale document versions are rejected against the registry'
 );
 select lives_ok(
-  $$ select complete_onboarding('Consent Member', 'Consent', '1990-01-01', 'female', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, '2026-07-29', '2026-07-29') $$,
+  $$ select complete_onboarding('Consent Member', 'Consent', '1990-01-01', 'female', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, '2026-10-06', '2026-10-06') $$,
   'current registry versions create the profile and immutable history'
 );
 

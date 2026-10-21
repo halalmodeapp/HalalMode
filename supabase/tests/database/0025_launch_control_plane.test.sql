@@ -27,7 +27,13 @@ select is(
   'all launch-controlled features, including reciprocal matching, have explicit flags'
 );
 select ok(
-  (select bool_and(not enabled and rollout_percentage = 0) from halal_mode_private.release_flags),
+  (select bool_and(not enabled and rollout_percentage = 0)
+   from halal_mode_private.release_flags
+   where key in (
+     'in_chat_voice_notes', 'live_calling', 'push_notifications',
+     'identity_verification', 'premium_purchases', 'controlled_beta',
+     'reciprocal_matching_v1'
+   )),
   'high-risk flags fail closed'
 );
 

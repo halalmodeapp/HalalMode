@@ -65,8 +65,6 @@ select is(
       ('public.send_message(uuid,text,text)'),
       ('public.mark_connection_messages_read(uuid)'),
       ('public.get_connection_messages(uuid,timestamp with time zone,uuid,integer)'),
-      ('public.report_connection_member(uuid,text)'),
-      ('public.block_connection_member(uuid)'),
       ('public.get_my_blocked_members()'),
       ('public.unblock_my_member(uuid)')
     )
@@ -76,8 +74,8 @@ select is(
       in pg_get_functiondef(signature::regprocedure)
     ) > 0
   ),
-  16,
-  'every intended member-facing RPC checks current legal consent first'
+  14,
+  'every non-safety member RPC checks current legal consent first'
 );
 
 select is(

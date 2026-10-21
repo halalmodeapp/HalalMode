@@ -57,6 +57,13 @@ from (
 cross join halal_mode_private.legal_document_registry document
 where document.is_current;
 
+update public.profiles p
+set sensitive_consent_at = now()
+where 2 = (select count(*)
+  from halal_mode_private.member_legal_consent_history h
+  join halal_mode_private.legal_document_registry d using (document_type, version)
+  where h.user_id = p.id and d.is_current);
+
 -- A/B will reach the repeat limit on this live appearance. C/D has declined
 -- far enough from its first score to support a score-collapse retirement.
 insert into halal_mode_private.pair_exposure (
@@ -321,6 +328,9 @@ insert into halal_mode_private.member_legal_consent_history (
 )
 select '00000000-0000-0000-0000-000000005899', document_type, version, 'onboarding'
 from halal_mode_private.legal_document_registry where is_current;
+update public.profiles
+set sensitive_consent_at = now()
+where id = '00000000-0000-0000-0000-000000005899';
 
 select throws_ok(
   format(

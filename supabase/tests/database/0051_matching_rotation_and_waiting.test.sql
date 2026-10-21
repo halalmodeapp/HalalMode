@@ -61,12 +61,12 @@ select is(
   'exactly one matching configuration is active'
 );
 
--- The active version moves as configuration is tuned; what must hold is that
--- the newest is the active one, and that it is the only one claiming to be.
+-- The active version is explicit. Later experiments may add a newer inactive
+-- config without changing which version serves members.
 select is(
   halal_mode_private.active_matching_config_version(),
-  (select max(version) from halal_mode_private.matching_config),
-  'the newest configuration is the sole active version'
+  (select version from halal_mode_private.matching_config where activated_at is not null),
+  'the serving version is the single explicitly activated configuration'
 );
 
 select is(

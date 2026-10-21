@@ -121,6 +121,13 @@ from (
 cross join halal_mode_private.legal_document_registry document
 where document.is_current;
 
+update public.profiles p
+set sensitive_consent_at = now()
+where 2 = (select count(*)
+  from halal_mode_private.member_legal_consent_history h
+  join halal_mode_private.legal_document_registry d using (document_type, version)
+  where h.user_id = p.id and d.is_current);
+
 insert into halal_mode_private.pair_exposure (
   user_low, user_high, times_shown, first_reciprocal_score,
   last_reciprocal_score, explicit_pass_count, soft_select_count
@@ -298,6 +305,13 @@ from (
 ) member
 cross join halal_mode_private.legal_document_registry document
 where document.is_current;
+
+update public.profiles p
+set sensitive_consent_at = now()
+where 2 = (select count(*)
+  from halal_mode_private.member_legal_consent_history h
+  join halal_mode_private.legal_document_registry d using (document_type, version)
+  where h.user_id = p.id and d.is_current);
 
 create temporary table set_large_context as
 select public.matching_run_start_service(
