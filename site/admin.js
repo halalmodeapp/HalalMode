@@ -275,13 +275,21 @@
         .then(function (enrolled) { codeScreen(enrolled.id, enrolled.totp); });
     }).catch(function (e) { save(null); showSignIn(e.message); });
   }
+  // Supabase returns the QR code as an SVG data URL with the markup unescaped,
+  // which browsers refuse to draw (a '#' in it ends the URL). Re-encode it.
+  function qrSrc(qr) {
+    const raw = String(qr || '');
+    const svgAt = raw.indexOf('<svg');
+    if (svgAt < 0) return raw;
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(raw.slice(svgAt));
+  }
   function codeScreen(factorId, totp) {
     const input = h('input', { type: 'text', class: 'code', inputmode: 'numeric', autocomplete: 'one-time-code', maxlength: '6', 'aria-label': '6-digit code' });
     const button = h('button', { type: 'submit', class: 'btn', style: 'width:100%', text: 'Continue' });
     const form = h('form', { style: 'display:grid;gap:12px;width:100%' }, input, button);
     const err = gate(totp ? 'Set up your code' : 'Enter your code',
       totp ? 'Scan this with an authenticator app (like Google Authenticator), then type the 6-digit code it shows.' : 'Type the 6-digit code from your authenticator app.',
-      [totp && h('img', { class: 'qr', src: totp.qr_code, alt: 'QR code for your authenticator app' }), totp && h('code', { text: totp.secret }), form]);
+      [totp && h('img', { class: 'qr', src: qrSrc(totp.qr_code), alt: 'QR code for your authenticator app' }), totp && h('code', { text: totp.secret }), form]);
     input.focus();
     form.addEventListener('submit', function (ev) {
       ev.preventDefault();
