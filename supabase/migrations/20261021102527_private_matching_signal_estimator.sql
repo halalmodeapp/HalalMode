@@ -417,7 +417,7 @@ begin
         sum(value.metric_value * config.weight) filter (where config.enabled)
         / nullif(sum(config.weight) filter (where config.enabled), 0),
         0.5
-      )))::numeric(5,4) as score,
+      ))))::numeric(5,4) as score,
       jsonb_build_object(
         'selection_rate', round(raw.selection_rate, 4),
         'first_choice_rate', round(raw.first_choice_rate, 4),
