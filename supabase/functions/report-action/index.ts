@@ -46,22 +46,41 @@ Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
   if (request.method !== 'POST') return new Response('method not allowed', { status: 405, headers: CORS });
 
-  const body = await request.json().catch(() => ({})) as { r?: string; a?: string; e?: string; t?: string; why?: string; admin?: boolean };
+  const body = await request.json().catch(() => ({})) as { r?: string; a?: string; e?: string; t?: string; why?: string; admin?: boolean; member?: string };
   const { r, a, e, t } = body;
   const client = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
   let admin: { actor: string; reason: string } | null = null;
+  const bearer = request.headers.get('authorization') ?? '';
+  // Runs as the admin, so the database decides with their own session.
+  const asAdmin = () => createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_ANON_KEY') ?? '', {
+    global: { headers: { Authorization: bearer } },
+    auth: { persistSession: false },
+  });
+
+  // Account actions from the admin panel's Trust & safety pages: suspend,
+  // ban or unban a member directly, without a report.
+  if (body.admin === true && body.member) {
+    const ACCOUNT: Record<string, string> = { suspend: '168h', ban: '876000h', unban: 'none' };
+    if (!a || !(a in ACCOUNT) || !bearer.startsWith('Bearer ')) {
+      return Response.json({ error: 'invalid' }, { status: 400, headers: CORS });
+    }
+    const allowed = await asAdmin().rpc('admin_authorize_member_action', { p_user_id: body.member, p_action: a, p_reason: body.why ?? '' });
+    if (allowed.error || !allowed.data) {
+      return Response.json({ error: allowed.error?.message ?? 'forbidden', hint: allowed.error?.hint ?? null }, { status: 403, headers: CORS });
+    }
+    const ok = allowed.data as { actor: string; reason: string };
+    const changed = await client.auth.admin.updateUserById(body.member, { ban_duration: ACCOUNT[a] });
+    if (changed.error) return Response.json({ error: changed.error.message }, { status: 500, headers: CORS });
+    const applied = await client.rpc('apply_admin_member_action_service', { p_user_id: body.member, p_action: a, p_actor: ok.actor, p_reason: ok.reason });
+    if (applied.error) return Response.json({ error: applied.error.message }, { status: 500, headers: CORS });
+    return Response.json({ done: a }, { headers: CORS });
+  }
 
   if (body.admin === true) {
-    const bearer = request.headers.get('authorization') ?? '';
     if (!r || !a || !(a in BAN_FOR) || !bearer.startsWith('Bearer ')) {
       return Response.json({ error: 'invalid' }, { status: 400, headers: CORS });
     }
-    // Runs as the admin, so the database decides with their own session.
-    const asAdmin = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_ANON_KEY') ?? '', {
-      global: { headers: { Authorization: bearer } },
-      auth: { persistSession: false },
-    });
-    const allowed = await asAdmin.rpc('admin_authorize_report_action', { p_report_id: r, p_action: a, p_reason: body.why ?? '' });
+    const allowed = await asAdmin().rpc('admin_authorize_report_action', { p_report_id: r, p_action: a, p_reason: body.why ?? '' });
     if (allowed.error || !allowed.data) {
       return Response.json({ error: allowed.error?.message ?? 'forbidden', hint: allowed.error?.hint ?? null }, { status: 403, headers: CORS });
     }
