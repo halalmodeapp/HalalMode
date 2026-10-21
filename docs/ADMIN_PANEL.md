@@ -34,17 +34,17 @@ Optional extra layer: put `halalmo.de/admin*` behind **Cloudflare Access**. It i
 
 Sidebar groups, each page with a one-key shortcut:
 
-| Group | Page (key) | Can change |
+| Group | Pages (key) | What you can do |
 |---|---|---|
-| | Home (H) | Shows what needs attention |
-| People | Waitlist (W), Members (M), Referrals (R) | Time range and series on charts; referral link address |
-| Matching | Match stats (A), Member scoring (S) | Score parts on/off and importance, including Photo quality check (Luna); checking existing photos; advanced matcher settings (each change is a new matcher version) |
-| Safety | Reports (P) | Read reports and dismiss, suspend for 7 days, or ban |
-| System | Email (E), Features (F) | Email daily limit; turn app features on, off or partly on |
-| Admin | Team (T), Activity log (L) | People with access, preview as a viewer, sign out everywhere |
+| | Home (H) | See what needs attention |
+| Growth & business | Waitlist (W), Referrals (R), Subscriptions (B) | Chart range and series; referral link address; Premium status counts (no revenue data exists yet) |
+| Members | Members (M) | Totals and readiness |
+| Matchmaking | Matchmaking health (A), Member scoring (S) | Reciprocity stats; score parts and importance; Photo quality check (Luna); advanced matcher settings (each change is a new matcher version) |
+| Trust & safety | Reports (P), Review queue (Q), Suspicious accounts (K), Find a member (N) | Act on reports; mark flagged items reviewed; suspend, ban or unban any member |
+| Admin | System health (Y), Email (E), Features (F), Team (T), Activity log (L) | Job, worker, push, email and matching failures; email limit; features; access; history |
 
 Ctrl K or / searches every page and action. U unlocks changes. ? lists shortcuts. Every term has a hover tooltip.
 
-Report actions from the panel go through the `report-action` Edge Function. With an admin session it first calls `admin_authorize_report_action` as that admin (owner, recent code), then uses the same claim and ban steps as the email links; `apply_admin_report_action_service` applies the action and writes the activity-log row in one transaction. **Redeploy `report-action`** along with the migrations.
+Report and account actions from the panel go through the `report-action` Edge Function. With an admin session it first calls `admin_authorize_report_action` as that admin (owner, recent code), then uses the same claim and ban steps as the email links; `apply_admin_report_action_service` applies the action and writes the activity-log row in one transaction. **Redeploy `report-action`** along with the migrations.
 
 The launch switch was removed on 19 Oct (`20261019160000_remove_launch_switch.sql`), so it is not in the panel.

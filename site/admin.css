@@ -295,3 +295,4 @@ kbd,.kbd{display:inline-grid;place-items:center;min-width:20px;height:20px;paddi
 .search-btn svg,.gate .security svg,.lock svg{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 kbd,.kbd{white-space:nowrap}
 .topbar .updated{white-space:nowrap}
+.btn+.btn{margin-left:6px}

@@ -49,6 +49,11 @@
     members: 'M16 20v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 10a4 4 0 100-8 4 4 0 000 8zM22 20v-2a4 4 0 00-3-3.9M16 2.1a4 4 0 010 7.8',
     referrals: 'M4 4h16v16H4zM22 6l-10 7L2 6',
     stats: 'M3 3v18h18M7 15l4-4 3 3 5-6',
+    subscriptions: 'M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6',
+    review: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 100-6 3 3 0 000 6z',
+    suspicious: 'M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0zM12 9v4M12 17h.01',
+    lookup: 'M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.3-4.3',
+    health: 'M22 12h-4l-3 9L9 3l-3 9H2',
     matches: 'M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 00-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 000-7.8z',
     scoring: 'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',
     reports: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
@@ -67,19 +72,24 @@
   // The whole panel, in sidebar order. `key` is the one-letter shortcut.
   const PAGES = [
     { id: 'home', label: 'Home', key: 'H', tip: 'The most important numbers, and anything that needs your attention.' },
-    { group: 'People' },
-    { id: 'waitlist', label: 'Waitlist', key: 'W', tip: 'Everyone who signed up on halalmo.de before the app opens.' },
-    { id: 'members', label: 'Members', key: 'M', tip: 'People with an app account, and how many are ready to be matched.' },
+    { group: 'Growth & business' },
+    { id: 'waitlist', label: 'Waitlist', key: 'W', tip: 'Everyone who signed up on halalmo.de, and sign-ups over time.' },
     { id: 'referrals', label: 'Referrals', key: 'R', tip: 'Friends referred by members, and which referrals count toward rewards.' },
-    { group: 'Matching' },
-    { id: 'stats', label: 'Match stats', key: 'A', tip: 'How often members are shown, picked and matched, who is picked but not matched, and who is still waiting.' },
+    { id: 'subscriptions', label: 'Subscriptions', key: 'B', tip: 'Premium members, payment problems, ended and revoked subscriptions.' },
+    { group: 'Members' },
+    { id: 'members', label: 'Members', key: 'M', tip: 'People with an app account, and how many are ready to be matched.' },
+    { group: 'Matchmaking' },
+    { id: 'stats', label: 'Matchmaking health', key: 'A', tip: 'How often members are shown, picked and matched, who is picked but not matched, and who is still waiting.' },
     { id: 'scoring', label: 'Member scoring', key: 'S', tip: 'Private scores that help the matcher choose introductions. Members never see them, and they never stop anyone being matched.' },
-    { group: 'Safety' },
-    { id: 'reports', label: 'Reports', key: 'P', tip: 'Reports from members, and automatic checks on photos and bios.', badge: function (d) { return d && d.safety.open_reports; } },
-    { group: 'System' },
+    { group: 'Trust & safety' },
+    { id: 'reports', label: 'Reports', key: 'P', tip: 'Reports from members. Read each one and decide.', badge: function (d) { return d && d.safety.open_reports; } },
+    { id: 'review', label: 'Review queue', key: 'Q', tip: 'Photos and bios the automatic check wasn’t sure about, waiting for a person.', badge: function (d) { return d && d.safety.moderation_review; } },
+    { id: 'suspicious', label: 'Suspicious accounts', key: 'K', tip: 'Accounts with warning signs of being fake, spam or a bot. Signs for you to check, never automatic decisions.' },
+    { id: 'lookup', label: 'Find a member', key: 'N', tip: 'Look up one member by exact email or member reference, then suspend, ban or unban.' },
+    { group: 'Admin' },
+    { id: 'health', label: 'System health', key: 'Y', tip: 'Scheduled jobs, background workers, push notifications, email and matching runs.' },
     { id: 'email', label: 'Email', key: 'E', tip: 'Emails waiting to send, sent today, and the daily sending limit.' },
     { id: 'features', label: 'Features', key: 'F', tip: 'Turn app features on or off, for everyone or some members.' },
-    { group: 'Admin' },
     { id: 'team', label: 'Team', key: 'T', tip: 'Who can use this panel, what they can do, and security.' },
     { id: 'log', label: 'Activity log', key: 'L', tip: 'Every change made here: who, what, when and why.' }
   ];
@@ -449,7 +459,7 @@
     if (DEMO) {
       state.session = { demo: true };
       state.me = { admin: true, role: 'owner', name: 'Demo owner', mfa: true, step_up_until: 0 };
-      state.overview = sampleOverview(); state.settings = sampleSettings(); state.demoReports = sampleReports(); state.demoMatcher = sampleMatcher();
+      state.overview = sampleOverview(); state.settings = sampleSettings(); state.demoReports = sampleReports(); state.demoMatcher = sampleMatcher(); Object.assign(state, sampleTrust());
       state.loadedAt = new Date().toISOString();
       return boot();
     }
@@ -550,7 +560,7 @@
   }
   function render() {
     hideTip();
-    const fn = { home: pageHome, waitlist: pageWaitlist, members: pageMembers, referrals: pageReferrals, stats: pageStats, scoring: pageScoring, reports: pageReports, email: pageEmail, features: pageFeatures, team: pageTeam, log: pageLog }[state.page];
+    const fn = { home: pageHome, waitlist: pageWaitlist, members: pageMembers, referrals: pageReferrals, stats: pageStats, scoring: pageScoring, subscriptions: pageSubscriptions, review: pageReview, suspicious: pageSuspicious, lookup: pageLookup, health: pageHealth, reports: pageReports, email: pageEmail, features: pageFeatures, team: pageTeam, log: pageLog }[state.page];
     renderShell(fn());
   }
   // An owner can preview the panel as a viewer sees it (Team page).
@@ -640,8 +650,9 @@
     const todo = [];
     if (sf.open_reports) todo.push(['bad', sf.open_reports + ' report' + (sf.open_reports > 1 ? 's' : '') + ' to look at', 'reports']);
     if (mail.failing) todo.push(['bad', mail.failing + ' emails failed to send', 'email']);
-    if (sf.moderation_stuck) todo.push(['bad', sf.moderation_stuck + ' photo or bio checks are stuck', 'reports']);
-    if (lastRun && lastRun.failed) todo.push(['bad', 'The last matching run failed', 'stats']);
+    if (sf.moderation_stuck) todo.push(['bad', sf.moderation_stuck + ' photo or bio checks are stuck', 'health']);
+    if (sf.moderation_review) todo.push(['warn', sf.moderation_review + ' photos or bios need a person to check', 'review']);
+    if (lastRun && lastRun.failed) todo.push(['bad', 'The last matching run failed', 'health']);
     else if (lastRun && lastRun.breaches) todo.push(['warn', 'The last matching run had a warning', 'stats']);
     if (mail.pending > 200) todo.push(['warn', n(mail.pending) + ' emails are waiting to send', 'email']);
     if (luna.failed) todo.push(['warn', luna.failed + ' photo quality checks failed', 'scoring']);
@@ -1174,7 +1185,7 @@
   }
 
   // ---------------------------------------------------------------- activity log
-  const LOG_ICON = { report: 'reports', matching_metric: 'scoring', luna: 'scoring', matcher: 'stats', flag: 'features', referral: 'referrals', mail: 'email', team: 'team', admin: 'lock' };
+  const LOG_ICON = { report: 'reports', member: 'suspicious', review: 'review', matching_metric: 'scoring', luna: 'scoring', matcher: 'stats', flag: 'features', referral: 'referrals', mail: 'email', team: 'team', admin: 'lock' };
   function describe(a) {
     const x = a.detail || {};
     const arrow = function (b, af) { return String(b == null ? 'none' : b) + ' → ' + String(af == null ? 'none' : af); };
@@ -1191,6 +1202,10 @@
       case 'team.role': return (x.name || 'A person') + ' is now ' + (x.after === 'owner' ? 'an owner' : 'a viewer');
       case 'team.remove': return 'Removed ' + (x.name || 'a person');
       case 'admin.sign_in': return 'Signed in';
+      case 'member.suspend': return 'Suspended member ' + x.member + ' for 7 days';
+      case 'member.ban': return 'Banned member ' + x.member;
+      case 'member.unban': return 'Unbanned member ' + x.member;
+      case 'review.done': return 'Reviewed a flagged item for member ' + x.member;
       case 'matcher.set': return ((typeof MATCHER !== 'undefined' && MATCHER[x.setting]) || [x.setting])[0] + ': ' + arrow(x.before, x.after) + ' (version ' + x.version + ')';
       case 'report.dismiss': return 'Dismissed a report about member ' + x.member;
       case 'report.suspend': return 'Suspended member ' + x.member + ' for 7 days';
@@ -1208,7 +1223,7 @@
     }));
   }
   function pageLog() {
-    const cats = [['', 'Everything'], ['report', 'Reports'], ['matching_metric', 'Member scoring'], ['matcher', 'Matcher settings'], ['flag', 'Features'], ['referral', 'Referrals'], ['mail', 'Email'], ['team', 'Team'], ['admin', 'Sign-ins']];
+    const cats = [['', 'Everything'], ['report', 'Reports'], ['member', 'Account actions'], ['review', 'Reviews'], ['matching_metric', 'Member scoring'], ['matcher', 'Matcher settings'], ['flag', 'Features'], ['referral', 'Referrals'], ['mail', 'Email'], ['team', 'Team'], ['admin', 'Sign-ins']];
     const box = h('div', null, h('div', { class: 'skeleton' }));
     const more = h('button', { type: 'button', class: 'btn ghost sm', text: 'Show older', hidden: true });
     let items = [];
@@ -1239,6 +1254,170 @@
     }));
     loadFirst();
     return h('div', { class: 'stack' }, chips, card(null, null, null, box, more), h('p', { class: 'note', text: 'Nobody can edit or delete this log, not even owners.' }));
+  }
+
+  // ---------------------------------------------------------------- trust & safety, subscriptions, system health
+  const ACCOUNT_ACTIONS = {
+    suspend: ['Suspend 7 days', 'Hide their profile and block sign-in for 7 days.'],
+    ban: ['Ban', 'Hide their profile and block sign-in for good.'],
+    unban: ['Unban', 'Let them sign in again and show their profile again.']
+  };
+  function memberAction(m, action, after) {
+    const meta = ACCOUNT_ACTIONS[action];
+    dialog({
+      title: meta[0] + ': ' + (m.first_name || m.ref) + '?', body: meta[1], danger: action !== 'unban',
+      typed: action === 'ban' ? 'BAN' : null, confirm: meta[0],
+      run: function (why) {
+        if (DEMO) return demoWrite('member.' + action, { member: m.ref, reason: why }, function () { m.banned = action !== 'unban'; m.paused = action !== 'unban'; m.banned_until = action === 'unban' ? null : new Date(Date.now() + (action === 'ban' ? 3e12 : 6048e5)).toISOString(); });
+        return fresh().then(function () { return request('/functions/v1/report-action', { method: 'POST', body: { admin: true, member: m.user_id, a: action, why: why } }); });
+      }
+    }).then(function (done) { if (done) { toast('Done.'); if (after) after(); else render(); } });
+  }
+  function actionButtons(m, after) {
+    const banned = m.banned || (m.banned_until && new Date(m.banned_until) > new Date());
+    return (banned ? ['unban'] : ['suspend', 'ban']).map(function (a) {
+      return h('button', { type: 'button', class: 'btn sm' + (a === 'ban' ? ' danger' : a === 'unban' ? ' ghost' : ''), disabled: !canEdit(), tip: ACCOUNT_ACTIONS[a][1], onclick: function () { memberAction(m, a, after); } }, ACCOUNT_ACTIONS[a][0]);
+    });
+  }
+  function loading(promise, draw) {
+    const box = h('div', { class: 'stack' }, h('div', { class: 'skeleton' }));
+    promise.then(function (data) { const out = draw(data); box.replaceChildren.apply(box, Array.isArray(out) ? out : [out]); },
+      function (e) { box.replaceChildren(h('p', { class: 'error', text: e.message })); });
+    return box;
+  }
+  function empty(text) { return h('div', { class: 'card' }, h('div', { class: 'card-body' }, h('p', { class: 'muted', text: text }))); }
+
+  function pageReview() {
+    return h('div', { class: 'stack' },
+      loading(DEMO ? Promise.resolve(state.demoReview) : rpc('admin_review_queue', { p_limit: 100 }), function (list) {
+        if (!list.length) return empty('Nothing waiting. All clear.');
+        return list.map(function (it) {
+          const m = it.member;
+          return h('section', { class: 'card' }, h('div', { class: 'card-body' },
+            h('div', { style: 'display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px' },
+              pill('warn', it.kind === 'bio' ? 'Bio' : 'Photo'), h('b', { text: m.first_name + ' · ' + m.ref }),
+              h('span', { class: 'muted small', text: 'flagged ' + ago(it.flagged_at) }),
+              it.still_on_profile ? null : pill('off', 'Already changed', 'The member has since changed or removed it.')),
+            it.text ? h('p', { style: 'margin-bottom:8px', text: '“' + it.text + '”' }) : h('p', { class: 'muted', style: 'margin-bottom:8px', text: 'Photo files stay private and are not shown here.' }),
+            h('p', { class: 'muted small', text: 'Why it was flagged: ' + (it.reason || 'not given') })),
+            h('div', { class: 'card-foot' },
+              h('button', { type: 'button', class: 'btn sm ghost', disabled: !canEdit(), tip: 'It’s fine, or you have dealt with it. Removes it from this list.', onclick: function () {
+                dialog({ title: 'Mark as reviewed?', confirm: 'Mark reviewed', run: function (why) {
+                  if (DEMO) return demoWrite('review.done', { item: it.id, member: m.ref, reason: why }, function () { state.demoReview = state.demoReview.filter(function (x) { return x !== it; }); state.overview.safety.moderation_review = Math.max(0, state.overview.safety.moderation_review - 1); });
+                  return rpc('admin_mark_reviewed', { p_id: it.id, p_reason: why });
+                } }).then(function (done) { if (done) { toast('Reviewed.'); reload(); } });
+              } }, 'Mark reviewed'),
+              actionButtons({ user_id: m.user_id, ref: m.ref, first_name: m.first_name })));
+        });
+      }));
+  }
+
+  const SIGNS = {
+    reported_by_several: ['Reported by 2+ people', 'Different members reported this account.'],
+    reported_as_fake: ['Reported as fake or spam', 'At least one report says fake, scam, spam, bot or catfish.'],
+    content_removed: ['Content removed', 'A photo or bio was removed by the automatic check in the last 30 days.'],
+    contact_details_in_bio: ['Contact details in bio', 'Tried to share a phone number, social account or link. Common with spam.'],
+    picks_almost_everyone: ['Picks almost everyone', 'Picked 90%+ of 20 or more people this week. Common with bots and spam.']
+  };
+  function pageSuspicious() {
+    return h('div', { class: 'stack' },
+      loading(DEMO ? Promise.resolve(state.demoSuspicious) : rpc('admin_suspicious_members', { p_limit: 100 }), function (list) {
+        if (!list.length) return empty('No accounts show warning signs right now.');
+        return card(null, null, null, h('div', { class: 'table-wrap' }, h('table', null,
+          h('thead', null, h('tr', null, ['Member', 'Warning signs', 'Reports', 'Status', ''].map(function (t) { return h('th', { text: t }); }))),
+          h('tbody', null, list.map(function (m) {
+            const banned = m.banned;
+            return h('tr', null,
+              h('td', null, h('div', { style: 'font-weight:600', text: m.first_name + ' · ' + m.ref }), h('div', { class: 'muted small', text: (m.city || '') + ' · joined ' + ago(m.joined_at) })),
+              h('td', null, h('div', { class: 'pill-row' }, m.signs.map(function (sg) { const meta = SIGNS[sg] || [sg, '']; return pill('warn', meta[0], meta[1]); }))),
+              h('td', { class: 'num', text: n(m.reports) }),
+              h('td', null, banned ? pill('bad', 'Banned') : m.paused ? pill('off', 'Hidden') : pill('good', 'Active')),
+              h('td', { style: 'text-align:right;white-space:nowrap' }, actionButtons(m)));
+          })))));
+      }));
+  }
+
+  function pageLookup() {
+    const input = h('input', { type: 'text', placeholder: 'Exact email, or member reference like 0c44d1e8', 'aria-label': 'Email or member reference', value: state.lookupQuery || '' });
+    const results = h('div', { class: 'stack' });
+    function search() {
+      const q = input.value.trim();
+      state.lookupQuery = q;
+      if (q.length < 8) { results.replaceChildren(h('p', { class: 'error', text: 'Type a full email or an 8-character member reference.' })); return; }
+      results.replaceChildren(loading(DEMO ? Promise.resolve(demoLookup(q)) : rpc('admin_find_member', { p_query: q }), function (list) {
+        if (!list.length) return empty('No member found. Check the spelling: it must be exact.');
+        return list.map(function (m) {
+          const banned = m.banned_until && new Date(m.banned_until) > new Date();
+          return card(m.first_name ? m.first_name + ' · ' + m.ref : 'Account ' + m.ref, null,
+            banned ? pill('bad', 'Banned until ' + when(m.banned_until)) : m.paused ? pill('off', 'Hidden') : pill('good', 'Active'),
+            rows([
+              ['Email', m.email, null, 1], ['Where', [m.city, m.country].filter(Boolean).join(', ') || '–'],
+              ['Joined', when(m.joined_at)], ['Last signed in', ago(m.last_sign_in)],
+              ['Ready to match', m.ready ? 'Yes' : m.has_profile ? 'Not yet' : 'No profile'],
+              ['ID check', m.verification || 'Not started', 'Identity verification, when it is turned on.'],
+              ['Plan', m.tier === 'premium' ? 'Premium' : 'Free'],
+              ['Reports about them', n(m.reports_about) + ' (' + n(m.reports_open) + ' open)', null, m.reports_about > 0],
+              ['Reports they made', n(m.reports_made)], ['Matches', n(m.matches)]]),
+            actionButtons(m, search));
+        });
+      }));
+    }
+    const form = h('form', { style: 'display:flex;gap:8px' }, input, h('button', { type: 'submit', class: 'btn', text: 'Find' }));
+    form.addEventListener('submit', function (e) { e.preventDefault(); search(); });
+    if (state.lookupQuery) setTimeout(search, 0);
+    return h('div', { class: 'stack' },
+      card('Find a member', 'Exact matches only, so nobody can browse members from here. Every action is logged.', null, form),
+      results);
+  }
+
+  function pageSubscriptions() {
+    return h('div', { class: 'stack' },
+      loading(DEMO ? Promise.resolve(state.demoSubs) : rpc('admin_subscriptions'), function (sb) {
+        const src = sb.by_source || {};
+        const SRC = { launch_reward: 'Free month (launch reward)', tester: 'Tester', app_store: 'App Store', play_store: 'Google Play', revenuecat: 'In-app purchase', unknown: 'Other' };
+        return [
+          h('div', { class: 'kpis' },
+            kpi('Premium now', n(sb.active), null, 'Members with Premium right now.'),
+            kpi('Payment problems', n(sb.payment_problem), 'still have Premium for now', 'The store couldn’t take payment. Premium continues for a short grace period.', sb.payment_problem > 0),
+            kpi('Ending in 7 days', n(sb.ending_7d), null, 'Premium that ends in the next 7 days unless renewed.'),
+            kpi('Ended', n(sb.ended), null, 'Premium that ran out.'),
+            kpi('Revoked', n(sb.revoked), null, 'Taken back by the store, for example after a refund.')),
+          card('Where Premium comes from', 'How current Premium members got it.', null, rows(Object.keys(src).length ? Object.keys(src).map(function (k) { return [SRC[k] || k, n(src[k]), null, 1]; }) : [['No Premium members yet', '–']])),
+          h('p', { class: 'note', text: 'Revenue and refund amounts appear here once in-app purchases are switched on and connected. Today there is no payment data to show.' })];
+      }));
+  }
+
+  function pageHealth() {
+    return h('div', { class: 'stack' },
+      loading(DEMO ? Promise.resolve(state.demoHealth) : rpc('admin_system_health'), function (hl) {
+        const jobs = hl.jobs || [], w = hl.workers || {}, push = hl.push || {}, mail = hl.email || {}, mt = hl.matching || {}, mod = hl.moderation || {};
+        const failingJobs = jobs.filter(function (j) { return j.failed_24h > 0; }).length;
+        return [
+          h('div', { class: 'kpis' },
+            kpi('Scheduled jobs failing', n(failingJobs), 'of ' + n(jobs.length) + ' jobs, last 24 h', 'Jobs the scheduler reported as failed.', failingJobs > 0),
+            kpi('Worker errors', n(w.failed_24h), 'of ' + n(w.total_24h) + ' calls, last 24 h', 'Background functions (email, moderation, matching, notifications) that answered with an error or timed out.', w.failed_24h > 0),
+            kpi('Push failures', n(push.failed), n(push.sent_24h) + ' sent in 24 h', 'Notifications that failed 5 times and were given up on.', push.failed > 0),
+            kpi('Email failures', n(mail.failed), n(mail.sent_24h) + ' sent in 24 h', 'Emails that failed many times and were given up on.', mail.failed > 0),
+            kpi('Matching run failures', n(mt.failed_7d), 'of ' + n(mt.runs_7d) + ' runs, last 7 days', null, mt.failed_7d > 0)),
+          card('Scheduled jobs', 'Everything the database runs on a timer.', null, h('div', { class: 'table-wrap' }, h('table', null,
+            h('thead', null, h('tr', null, ['Job', 'Runs', 'Runs (24 h)', 'Failed (24 h)', 'Last run', ''].map(function (t) { return h('th', { text: t }); }))),
+            h('tbody', null, jobs.length ? jobs.map(function (j) {
+              return h('tr', null, h('td', { class: 'mono', text: j.job }), h('td', { class: 'mono muted', text: j.schedule }),
+                h('td', { class: 'num', text: n(j.runs_24h) }), h('td', { class: 'num', text: n(j.failed_24h) }),
+                h('td', { class: 'nowrap muted', text: ago(j.last_run) }),
+                h('td', null, !j.active ? pill('off', 'Paused') : j.failed_24h ? pill('bad', 'Failing', j.last_error || '') : pill('good', 'OK')));
+            }) : h('tr', null, h('td', { colspan: '6', class: 'muted', text: 'No scheduled jobs found.' })))))),
+          h('div', { class: 'grid cols-2' },
+            card('Recent worker errors', 'The last few errors from background functions, newest first.', null, (w.recent_failures || []).length ? h('ul', { class: 'list' }, w.recent_failures.map(function (f) {
+              return h('li', { style: 'display:block' }, h('div', { style: 'display:flex;justify-content:space-between;gap:8px' }, h('b', { text: f.timed_out ? 'Timed out' : 'Error ' + (f.status || '') }), h('span', { class: 'muted small', text: when(f.at) })),
+                h('div', { class: 'muted small mono', text: f.message || '' }));
+            })) : h('p', { class: 'muted', text: 'No errors in the last 24 hours.' })),
+            card('Queues', 'Work waiting in the background.', null, rows([
+              ['Push notifications waiting', n(push.waiting)], ['Emails waiting', n(mail.waiting)],
+              ['Photo and bio checks waiting', n(mod.waiting)], ['Photo and bio checks stuck', n(mod.stuck), 'Failed 4 times. Check worker errors.', mod.stuck > 0],
+              ['Last push error', push.last_error || 'none'], ['Last email error', mail.last_error || 'none'], ['Last matching error', mt.last_error || 'none']]))),
+          h('p', { class: 'note', text: 'Read from the database’s own records. Chat errors and hosting outages are not recorded there, so they don’t appear here.' })];
+      }));
   }
 
   // ---------------------------------------------------------------- demo
@@ -1334,6 +1513,46 @@
       { key: 'exposure_window_rounds', value: 7, min: 3, max: 30, whole: true }, { key: 'max_pair_appearances', value: 3, min: 1, max: 10, whole: true },
       { key: 'min_reciprocal_score', value: 0.15, min: 0, max: 0.5, whole: false }, { key: 'no_match_boost_weight', value: 0.2, min: 0, max: 0.6, whole: false },
       { key: 'no_match_rounds_full', value: 8, min: 2, max: 30, whole: true }, { key: 'repeat_cooldown_days', value: 14, min: 1, max: 90, whole: true }] };
+  }
+  function sampleTrust() {
+    const iso = function (ms) { return new Date(Date.now() - ms).toISOString(); };
+    const yusuf = { user_id: 'u-yusuf', ref: '0c44d1e8', first_name: 'Yusuf', city: 'Leeds', joined_at: iso(40 * 864e5), paused: false, banned: false, reports: 3, signs: ['reported_by_several', 'contact_details_in_bio'] };
+    return {
+      demoReview: [
+        { id: 1, kind: 'bio', reason: 'Looks like contact details.', flagged_at: iso(2 * 36e5), text: 'Serious only. Add me on insta @yusuf.real, I don’t check this app much', still_on_profile: true, member: { user_id: 'u-yusuf', first_name: 'Yusuf', ref: '0c44d1e8' } },
+        { id: 2, kind: 'photo', reason: 'Borderline: sexual 41%', flagged_at: iso(9 * 36e5), still_on_profile: true, member: { user_id: 'u-lina', first_name: 'Lina', ref: '5b2e90aa' } },
+        { id: 3, kind: 'bio', reason: 'Borderline: harassment 38%', flagged_at: iso(30 * 36e5), text: 'Not interested in time wasters. If you can’t reply properly don’t bother.', still_on_profile: false, member: { user_id: 'u-omar', first_name: 'Omar', ref: '1a2b3c4d' } }
+      ],
+      demoSuspicious: [
+        yusuf,
+        { user_id: 'u-sara', ref: '9d10a7b3', first_name: 'Sara', city: 'Birmingham', joined_at: iso(3 * 864e5), paused: false, banned: false, reports: 1, signs: ['picks_almost_everyone', 'reported_as_fake'] },
+        { user_id: 'u-adam', ref: '77ac01f2', first_name: 'Adam', city: 'London', joined_at: iso(864e5), paused: false, banned: false, reports: 0, signs: ['picks_almost_everyone'] }
+      ],
+      demoSubs: { active: 9, payment_problem: 1, ended: 4, revoked: 1, ending_7d: 2, changed_30d: 11, by_source: { tester: 6, launch_reward: 3 } },
+      demoHealth: {
+        jobs: [
+          { job: 'halal-mode-generate-round', schedule: '0 4 * * *', active: true, runs_24h: 1, failed_24h: 0, last_run: iso(5 * 36e5) },
+          { job: 'halal-mode-launch-rewards', schedule: '*/10 * * * *', active: true, runs_24h: 144, failed_24h: 0, last_run: iso(4 * 6e4) },
+          { job: 'halal-mode-moderate', schedule: '*/2 * * * *', active: true, runs_24h: 720, failed_24h: 0, last_run: iso(6e4) },
+          { job: 'halal-mode-prune-matching-engagement', schedule: '17 3 * * *', active: true, runs_24h: 1, failed_24h: 0, last_run: iso(6 * 36e5) },
+          { job: 'halal-mode-send-mail', schedule: '* * * * *', active: true, runs_24h: 1440, failed_24h: 2, last_run: iso(3e4), last_error: 'connection reset' },
+          { job: 'halal-mode-send-notifications', schedule: '* * * * *', active: true, runs_24h: 1440, failed_24h: 0, last_run: iso(3e4) }
+        ],
+        workers: { total_24h: 3742, ok_24h: 3739, failed_24h: 3, recent_failures: [
+          { at: iso(2 * 36e5), status: 429, timed_out: false, message: 'rate limit exceeded' }, { at: iso(7 * 36e5), status: null, timed_out: true, message: 'Timeout of 120000 ms reached' }] },
+        push: { sent_24h: 312, waiting: 4, failed: 1, failed_24h: 1, last_error: 'DeviceNotRegistered' },
+        email: { sent_24h: 96, waiting: 37, failed: 0, last_error: null },
+        matching: { runs_7d: 8, failed_7d: 0, last_error: null },
+        moderation: { waiting: 4, stuck: 0 }
+      }
+    };
+  }
+  function demoLookup(q) {
+    const iso = function (ms) { return new Date(Date.now() - ms).toISOString(); };
+    if (q.toLowerCase().indexOf('0c44d1e8') < 0 && q.indexOf('@') < 0) return [];
+    return [{ user_id: 'u-yusuf', ref: '0c44d1e8', email: q.indexOf('@') >= 0 ? q : 'yusuf@example.com', first_name: 'Yusuf', city: 'Leeds', country: 'United Kingdom',
+      joined_at: iso(40 * 864e5), last_sign_in: iso(3 * 36e5), has_profile: true, ready: true, paused: false, banned_until: null, tier: 'free', verification: null,
+      reports_about: 3, reports_open: 2, reports_made: 0, matches: 2 }];
   }
   function sampleSettings() {
     const iso = function (ms) { return new Date(Date.now() - ms).toISOString(); };
