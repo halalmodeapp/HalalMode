@@ -73,6 +73,7 @@
     "backToChat": "Sohbete dön",
     "premiumTitle": "Halal Cards, Premium'a dâhil",
     "premiumBody": "İkinizden biri Premium üyesiyse, bu bağlantı için Halal Cards'ı açabilir ve {{name}}'i oynamaya davet edebilir. Onun ayrıca abone olması gerekmez.",
+    "premiumIncludes": "{{free}} tanesini tek başınıza ücretsiz deneyebilirsiniz. Halal Mode Premium {{total}} etkinliğin hepsini açar: {{scenarios}} senaryolu {{lab}} atölye, her aşama için {{quizzes}} test ve {{stories}} hikâye. Her eşleşmeyle oynayın, karşı taraf için ücretsiz.",
     "premiumCta": "Premium'u gör",
     "premiumSoon": "Premium yakında açılacak",
     "premiumSoonBody": "O zamana kadar tek başınıza bir önizlemeyi deneyin ya da {{name}}'den başlatmasını isteyin; belki onun erişimi vardır.",

@@ -42,8 +42,17 @@ export const ADVENTURES: Adventure[] = [
 
 export const ALL_ACTIVITIES: Activity[] = [...LAB_LESSONS, ...QUIZZES, ...ADVENTURES];
 
-/** Public copy should always reflect the registered catalogue, not a stale number. */
-export const HALAL_CARDS_ACTIVITY_COUNT = ALL_ACTIVITIES.length;
+/** Public copy should always reflect the registered catalogue, not stale numbers. */
+export const CATALOGUE_COUNTS = {
+  total: ALL_ACTIVITIES.length,
+  lab: LAB_LESSONS.length,
+  scenarios: LAB_LESSONS.reduce((sum, lesson) => sum + lesson.steps.filter((step) => step.type === 'scenario').length, 0),
+  quizzes: QUIZZES.length,
+  stories: ADVENTURES.length,
+  free: ALL_ACTIVITIES.filter((activity) => activity.soloPreview).length,
+} as const;
+
+export const HALAL_CARDS_ACTIVITY_COUNT = CATALOGUE_COUNTS.total;
 
 const byId = new Map(ALL_ACTIVITIES.map((activity) => [activity.id, activity]));
 

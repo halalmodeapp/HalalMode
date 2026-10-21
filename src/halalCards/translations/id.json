@@ -73,6 +73,7 @@
     "backToChat": "Kembali ke obrolan",
     "premiumTitle": "Halal Cards termasuk dalam Premium",
     "premiumBody": "Jika salah satu dari kalian punya Premium, Halal Cards bisa dibuka untuk hubungan ini dan {{name}} bisa diajak bermain, mereka tidak perlu berlangganan.",
+    "premiumIncludes": "{{free}} bisa dicoba gratis sendiri. Halal Mode Premium membuka semua {{total}}: {{lab}} lokakarya Lab dengan {{scenarios}} skenario, {{quizzes}} kuis untuk setiap tahap, dan {{stories}} cerita. Mainkan dengan siapa pun yang cocok, gratis untuknya.",
     "premiumCta": "Lihat Premium",
     "premiumSoon": "Premium segera tersedia",
     "premiumSoonBody": "Sementara itu, Anda bisa mencoba pratinjau sendiri, atau minta {{name}} memulainya, siapa tahu ia bisa.",

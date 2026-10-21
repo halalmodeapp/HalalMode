@@ -73,6 +73,7 @@
     "backToChat": "Volver al chat",
     "premiumTitle": "Halal Cards forma parte de Premium",
     "premiumBody": "Si uno de los dos tiene Premium, pueden desbloquear Halal Cards para ustedes e invitar a {{name}} a jugar. La otra persona no necesita suscribirse.",
+    "premiumIncludes": "{{free}} se pueden probar gratis a solas. Halal Mode Premium abre las {{total}}: {{lab}} talleres con {{scenarios}} situaciones, {{quizzes}} cuestionarios para cada etapa y {{stories}} historias. Jugad con cualquier conexión, gratis para la otra persona.",
     "premiumCta": "Ver Premium",
     "premiumSoon": "Premium llega pronto",
     "premiumSoonBody": "Mientras tanto, prueba una vista previa por tu cuenta ,o pregúntale a {{name}}, por si puede empezar una.",

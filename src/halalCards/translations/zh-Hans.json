@@ -73,6 +73,7 @@
     "backToChat": "返回聊天",
     "premiumTitle": "Halal Cards 属于高级会员功能",
     "premiumBody": "只要你们其中一人开通高级会员，就能为这段配对解锁 Halal Cards，并邀请 {{name}} 一起玩。对方无需订阅。",
+    "premiumIncludes": "有 {{free}} 项可以免费独自体验。Halal Mode Premium 解锁全部 {{total}} 项：{{lab}} 个工作坊共 {{scenarios}} 个情景、{{quizzes}} 个覆盖各个阶段的测验和 {{stories}} 个故事。可与任何配对一起玩，对方免费。",
     "premiumCta": "查看高级会员",
     "premiumSoon": "高级会员即将开放",
     "premiumSoonBody": "开放前，你可以先自己体验预览版，也可以问问 {{name}} 能不能由对方发起。",

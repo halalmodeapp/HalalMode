@@ -73,6 +73,7 @@
     "backToChat": "Ku noqo sheekada",
     "premiumTitle": "Halal Cards wuxuu ka mid yahay Premium",
     "premiumBody": "Haddii midkiin leeyahay Premium, waxaad Halal Cards uga furi kartaan xiriirkiinna oo {{name}} ku casuumi kartaa ciyaarta, uma baahna inuu isagu isdiiwaangeliyo.",
+    "premiumIncludes": "{{free}} ayaad keligaa bilaash ku tijaabin kartaa. Halal Mode Premium wuxuu furaa dhammaan {{total}}: {{lab}} aqoon-is-weydaarsi oo leh {{scenarios}} xaaladood, {{quizzes}} kediska oo heer kasta ah iyo {{stories}} sheeko. La ciyaar qof kasta oo aad isku aaddan tihiin, bilaash isaga/iyada.",
     "premiumCta": "Eeg Premium",
     "premiumSoon": "Premium goor dhow ayuu furmayaa",
     "premiumSoonBody": "Inta ka horreysa, adigu hordhac tijaabi, ama {{name}} waydii haddii ciyaar ka bilaabi karaan dhinacooda.",

@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {
   ADVENTURES,
   ALL_ACTIVITIES,
+  CATALOGUE_COUNTS,
   HALAL_CARDS_ACTIVITY_COUNT,
   LAB_LESSONS,
   QUIZZES,
@@ -64,6 +65,9 @@ test('the catalogue has what the first build promised', () => {
   assert.ok(ADVENTURES.length >= 15, 'every outlined adventure is built');
   const ids = ALL_ACTIVITIES.map((activity) => activity.id);
   assert.equal(HALAL_CARDS_ACTIVITY_COUNT, ALL_ACTIVITIES.length, 'public count follows the catalogue');
+  assert.equal(CATALOGUE_COUNTS.total, CATALOGUE_COUNTS.lab + CATALOGUE_COUNTS.quizzes + CATALOGUE_COUNTS.stories);
+  assert.equal(CATALOGUE_COUNTS.scenarios, LAB_LESSONS.reduce((sum, lesson) => sum + lesson.steps.filter((step) => step.type === 'scenario').length, 0));
+  assert.equal(CATALOGUE_COUNTS.free, ALL_ACTIVITIES.filter((activity) => activity.soloPreview).length);
   assert.equal(new Set(ids).size, ids.length, 'activity ids are unique');
   assert.equal(findActivity('lab-rule-one')?.title, 'Sweat the small stuff');
 });

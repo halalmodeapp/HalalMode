@@ -14,6 +14,8 @@ import { PermissionExplainer } from '@/components/ui/PermissionExplainer';
 import { Text } from '@/components/ui/Text';
 import { ModerationSheet } from '@/components/safety/ModerationSheet';
 import { BlockedMembersSheet } from '@/components/you/BlockedMembersSheet';
+import { useCardsCopy } from '@/halalCards/copy';
+import { CATALOGUE_COUNTS } from '@/halalCards/content';
 import { useI18n } from '@/i18n';
 import { LanguageSheet } from '@/components/ui/LanguageSheet';
 import { localeName } from '@/i18n/locales';
@@ -42,6 +44,7 @@ export function SettingsTab({
   profilePaused: boolean;
 }) {
   const { t, isRTL, localeTag, nativeRestartRequired } = useI18n();
+  const cardsCopy = useCardsCopy();
   const { tier, setTier, language, entitlementStatus, refreshEntitlement } = useSession();
   const [languageOpen, setLanguageOpen] = useState(false);
   const { signOut } = useAuth();
@@ -140,6 +143,7 @@ export function SettingsTab({
     t('settings.premium.f4'),
     t('profile.travelMode'),
     t('halalCards.premiumFeature'),
+    cardsCopy('premiumIncludes', CATALOGUE_COUNTS),
   ];
 
   useEffect(() => setPaused(profilePaused), [profilePaused]);

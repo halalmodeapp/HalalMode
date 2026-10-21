@@ -81,6 +81,7 @@ export const ENGLISH_COPY = {
 
   'premiumTitle': 'Halal Cards is part of Premium',
   'premiumBody': 'If either of you has Premium, you can unlock Halal Cards for this connection and invite {{name}} to play, they never need to subscribe.',
+  'premiumIncludes': '{{free}} are free to try on your own. Halal Mode Premium opens all {{total}}: {{lab}} Lab workshops with {{scenarios}} scenarios, {{quizzes}} quizzes for every stage and {{stories}} stories. Play them with any match, and they play free.',
   'premiumCta': 'See Premium',
   'premiumSoon': 'Premium opens soon',
   'premiumSoonBody': 'Until then, try a preview on your own, or ask {{name}}, in case they can start one.',

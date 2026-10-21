@@ -73,6 +73,7 @@
     "backToChat": "Komawa hira",
     "premiumTitle": "Halal Cards na cikin Premium",
     "premiumBody": "Idan ɗayanku na da Premium, za ku iya buɗe Halal Cards domin ku biyun kuma ku gayyaci {{name}} don wasa, ba sai sun yi rajista ba.",
+    "premiumIncludes": "Za ku iya gwada guda {{free}} kyauta da kanku. Halal Mode Premium yana buɗe duka {{total}}: bita {{lab}} masu yanayi {{scenarios}}, tambayoyi {{quizzes}} na kowane mataki da labarai {{stories}}. Ku yi wasa da kowane wanda kuka dace, kyauta gare shi/ita.",
     "premiumCta": "Duba Premium",
     "premiumSoon": "Premium zai buɗe nan ba da daɗewa ba",
     "premiumSoonBody": "Har sai lokacin, ku gwada wasa da kanku, ko ku tambayi {{name}}, ko za su iya fara muku.",
