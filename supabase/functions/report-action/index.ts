@@ -7,13 +7,18 @@
  *
  * Each link carries an HMAC over (report, action, expiry) made with the vault
  * secret, so only links this service sent are honoured, and only for 14 days.
+ *
+ * The admin panel (halalmo.de/admin) uses the same actions with the admin's
+ * own session instead of a signed link. admin_authorize_report_action checks,
+ * as that admin, the admin list, owner role and a recent authenticator code,
+ * and writes the audit row; only then does this function act.
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const CORS = {
   'Access-Control-Allow-Origin': 'https://halalmo.de',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'content-type',
+  'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info',
 };
 
 const BAN_FOR: Record<string, string | null> = {
@@ -39,15 +44,31 @@ Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
   if (request.method !== 'POST') return new Response('method not allowed', { status: 405, headers: CORS });
 
-  const body = await request.json().catch(() => ({})) as { r?: string; a?: string; e?: string; t?: string };
+  const body = await request.json().catch(() => ({})) as { r?: string; a?: string; e?: string; t?: string; why?: string; admin?: boolean };
   const { r, a, e, t } = body;
-  if (!r || !a || !e || !t || !(a in BAN_FOR)) return Response.json({ error: 'invalid' }, { status: 400, headers: CORS });
-  if (Number(e) < Date.now() / 1000) return Response.json({ error: 'expired' }, { status: 410, headers: CORS });
-
   const client = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
-  const secret = await client.rpc('mail_link_secret_service');
-  if (secret.error || !equal(await sign(secret.data as string, `${r}.${a}.${e}`), t)) {
-    return Response.json({ error: 'forbidden' }, { status: 403, headers: CORS });
+
+  if (body.admin === true) {
+    const bearer = request.headers.get('authorization') ?? '';
+    if (!r || !a || !(a in BAN_FOR) || !bearer.startsWith('Bearer ')) {
+      return Response.json({ error: 'invalid' }, { status: 400, headers: CORS });
+    }
+    // Runs as the admin, so the database decides with their own session.
+    const asAdmin = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_ANON_KEY') ?? '', {
+      global: { headers: { Authorization: bearer } },
+      auth: { persistSession: false },
+    });
+    const allowed = await asAdmin.rpc('admin_authorize_report_action', { p_report_id: r, p_action: a, p_reason: body.why ?? '' });
+    if (allowed.error || allowed.data !== true) {
+      return Response.json({ error: allowed.error?.message ?? 'forbidden', hint: allowed.error?.hint ?? null }, { status: 403, headers: CORS });
+    }
+  } else {
+    if (!r || !a || !e || !t || !(a in BAN_FOR)) return Response.json({ error: 'invalid' }, { status: 400, headers: CORS });
+    if (Number(e) < Date.now() / 1000) return Response.json({ error: 'expired' }, { status: 410, headers: CORS });
+    const secret = await client.rpc('mail_link_secret_service');
+    if (secret.error || !equal(await sign(secret.data as string, `${r}.${a}.${e}`), t)) {
+      return Response.json({ error: 'forbidden' }, { status: 403, headers: CORS });
+    }
   }
 
   const duration = BAN_FOR[a];
