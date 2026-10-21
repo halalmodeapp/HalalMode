@@ -1,6 +1,6 @@
 begin;
 set local search_path = public, extensions, halal_mode_private;
-select plan(17);
+select plan(20);
 
 -- ---------------------------------------------------------------- one inbox, one place
 select is(halal_mode_private.canonical_email(' Pg.Tap+News@GoogleMail.com '), 'pgtap@gmail.com',
@@ -86,17 +86,22 @@ select public.join_waitlist_now('pgtap.fair.reward@gmail.com', 'London', '25-29'
 select is(halal_mode_private.launch_reward_months('00000000-0000-0000-0000-000000019803'), 1,
   'a first-10,000 place earns a month, found through any alias of the inbox');
 
-select ok(halal_mode_private.grant_launch_reward('00000000-0000-0000-0000-000000019803', 1)
-  and (select tier = 'premium' from public.profiles where id = '00000000-0000-0000-0000-000000019803'),
-  'the month is granted and the member is Premium');
+select set_config('request.jwt.claims',
+  '{"sub":"00000000-0000-0000-0000-000000019803","role":"authenticated"}', true);
+select ok(halal_mode_private.grant_launch_reward('00000000-0000-0000-0000-000000019803', 1),
+  'the trusted server path grants the month');
+select is((select tier from public.profiles where id = '00000000-0000-0000-0000-000000019803'),
+  'premium', 'the grant updates the server-controlled profile tier');
+select is((select provider from halal_mode_private.member_entitlements
+  where user_id = '00000000-0000-0000-0000-000000019803'),
+  'launch_reward', 'the entitlement records the launch reward as its source');
 select ok(not halal_mode_private.grant_launch_reward('00000000-0000-0000-0000-000000019803', 1),
   'granting the same reward again adds nothing');
-select ok(
-  halal_mode_private.grant_launch_reward('00000000-0000-0000-0000-000000019803', 3)
-  and (select expires_at > now() + interval '85 days'
-       from halal_mode_private.member_entitlements where user_id = '00000000-0000-0000-0000-000000019803'),
-  'reaching a referral tier adds the difference on top'
-);
+select ok(halal_mode_private.grant_launch_reward('00000000-0000-0000-0000-000000019803', 3),
+  'reaching a referral tier grants the additional reward');
+select ok((select expires_at > now() + interval '85 days'
+  from halal_mode_private.member_entitlements where user_id = '00000000-0000-0000-0000-000000019803'),
+  'the additional reward extends the existing month to three months total');
 
 update halal_mode_private.member_entitlements set expires_at = now() - interval '1 minute'
 where user_id = '00000000-0000-0000-0000-000000019803';

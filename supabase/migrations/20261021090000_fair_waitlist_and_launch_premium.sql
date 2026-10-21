@@ -678,6 +678,9 @@ begin
   on conflict (user_id) do update set
     tier = 'premium', state = 'active', provider = 'launch_reward', provider_reference_hash = null,
     expires_at = excluded.expires_at, updated_at = now();
+  -- The profile trigger rejects client-controlled tier changes. This function
+  -- is a trusted server path, like the tester Premium switch.
+  perform set_config('app.account_control_rpc', 'true', true);
   update public.profiles set tier = 'premium' where id = p_user_id;
 
   insert into halal_mode_private.launch_reward_grants (user_id, months)
@@ -700,6 +703,9 @@ as $function$
 declare
   v_ended integer;
 begin
+  -- The profile trigger rejects client-controlled tier changes. This function
+  -- is a trusted server path, like the tester Premium switch.
+  perform set_config('app.account_control_rpc', 'true', true);
   with ended as (
     update halal_mode_private.member_entitlements
     set tier = 'free', state = 'expired', updated_at = now()
