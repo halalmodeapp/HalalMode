@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>You’re invited to Halal Mode</title>
+<meta name="description" content="Accept your invite to Halal Mode.">
+<meta name="theme-color" content="#FCFCFB">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3">
+<link rel="icon" type="image/png" href="/favicon.png?v=3">
+<link rel="stylesheet" href="/logo-effect.css?v=20261019c">
+<link rel="stylesheet" href="/ui.css?v=20261019a">
+<link rel="stylesheet" href="/i18n.css?v=20261019d">
+<style>
+:root{--surface:#FCFCFB;--ink:#0A0A0A;--soft:#3B3934;--muted:#6C6A65;--label:#8B8880;--gold:#B8914F;--line:rgba(184,145,79,.2);--green:#2F5D4A;--pink:#FC3C6C}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;display:flex;flex-direction:column;min-height:100svh;background:radial-gradient(ellipse 76% 40% at 50% 0%,#f7f1e6 0%,rgba(247,241,230,0) 100%),var(--surface);color:var(--ink);font:17px/1.55 ui-serif,Georgia,"Times New Roman",serif}
+button,input,.btn,.store,.tick-row,.note,.small,footer{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{width:100%;max-width:640px;margin:0 auto;padding:0 22px;display:flex;flex:1;flex-direction:column}
+header{padding:22px 0;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.logo{height:28px;width:auto;display:block}
+.logo-tm{position:absolute;left:100%;top:-2px;margin-left:3px;font:600 12px/1 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:0;pointer-events:none;color:var(--ink)}
+.header-links{display:flex;gap:10px;align-items:center}
+main{flex:1;display:flex;flex-direction:column;justify-content:center;padding:clamp(20px,6vh,64px) 0}
+.card{padding:clamp(22px,4vw,34px);border:1px solid var(--line);border-radius:24px;background:#fff;box-shadow:0 18px 50px rgba(10,10,10,.06)}
+.card[hidden],[hidden]{display:none!important}
+h1{font-weight:600;font-size:clamp(30px,6vw,44px);line-height:1.08;letter-spacing:-.03em;margin:0 0 16px}
+.tick-row{display:flex;align-items:center;gap:10px;margin:0 0 18px;padding:12px 14px;border-radius:14px;background:rgba(47,93,74,.08);color:var(--green);font-weight:600;font-size:15px;line-height:1.35}
+.tick{display:grid;place-items:center;width:24px;height:24px;flex:none;border-radius:50%;background:var(--green)}
+.tick svg,.big-tick svg{fill:none;stroke:#FCFCFB;stroke-linecap:round;stroke-linejoin:round}
+.tick svg{width:15px;height:15px;stroke-width:3}
+.code{font-weight:700;letter-spacing:.03em;white-space:nowrap}
+.lead{margin:0 0 20px;color:var(--muted)}
+.buttons{display:grid;gap:10px}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;min-height:54px;padding:0 20px;border:1px solid var(--ink);border-radius:999px;background:var(--ink);color:var(--surface);font-size:16px;font-weight:600;text-decoration:none;cursor:pointer}
+.btn svg{width:20px;height:20px;flex:none}
+.btn.light{background:#fff;color:var(--ink);border-color:rgba(10,10,10,.18)}
+.btn:disabled{opacity:.55;cursor:wait}
+.btn:focus-visible,input:focus-visible{outline:3px solid rgba(184,145,79,.5);outline-offset:3px}
+.email-form{display:grid;gap:10px;margin-top:4px}
+.email-form input{font-size:16px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--ink)}
+.note{margin:14px 0 0;color:var(--muted);font-size:14px;line-height:1.5}
+.note.bad{color:#C2124A}
+.done{text-align:center}
+.big-tick{display:grid;place-items:center;width:64px;height:64px;margin:0 auto 14px;border-radius:50%;background:var(--green);animation:pop .5s cubic-bezier(.34,1.56,.64,1) both}
+.big-tick svg{width:34px;height:34px;stroke-width:2.6}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.done .lead{margin-bottom:22px}
+.get-title{margin:0 0 12px;font:600 15px ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--soft)}
+.stores{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.store{display:flex;align-items:center;justify-content:center;gap:10px;min-height:56px;padding:8px 16px;border-radius:14px;background:var(--ink);color:var(--surface);text-decoration:none;text-align:start}
+.store svg{width:24px;height:24px;flex:none;fill:currentColor}
+.store small{display:block;font:500 11px/1.1 ui-sans-serif,system-ui,sans-serif;opacity:.75}
+.store b{display:block;font:600 16px/1.2 ui-sans-serif,system-ui,sans-serif}
+.store.soon{opacity:.45;pointer-events:none}
+.qr{margin:0 auto 18px;max-width:220px}
+.qr img{display:block;width:100%;height:auto;border-radius:16px;border:1px solid var(--line)}
+.qr p{margin:10px 0 0;font:600 14px ui-sans-serif,system-ui,sans-serif;color:var(--soft)}
+.small{font-size:13px;color:var(--label);margin:16px 0 0}
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:20}
+footer{padding:24px 0 36px;border-top:1px solid var(--line);color:var(--muted);font-size:14px;display:flex;flex-wrap:wrap;gap:10px 32px;justify-content:space-between}
+footer a{color:var(--gold)}
+html[dir=rtl] main{text-align:right}
+html[dir=rtl] .done{text-align:center}
+@media(max-width:480px){header{padding:16px 0}.logo{height:24px}}
+@media(prefers-reduced-motion:reduce){.big-tick{animation:none}}
+</style>
+</head>
+<body>
+<canvas id="confetti" aria-hidden="true" hidden></canvas>
+<div class="wrap">
+<header>
+  <a class="logo-link" href="/" aria-label="Halal Mode" data-brand-name-aria><img class="logo" src="/logo.svg" alt="Halal Mode"><sup class="logo-tm" aria-hidden="true">™</sup><span class="logo-effect" aria-hidden="true"><span class="logo-shader"></span></span></a>
+  <div class="header-links"><a class="pill-link" href="/how-it-works"><span data-i18n="navHow">How it works</span> <span class="pill-arrow" aria-hidden="true">→</span></a></div>
+</header>
+
+<main aria-live="polite">
+  <!-- 1. Who invited you, the code, and how to sign in. -->
+  <section id="step-start" class="card" hidden>
+    <h1 id="invite-title"></h1>
+    <p class="tick-row"><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg></span><span id="invite-ready"></span></p>
+    <p class="lead" data-i18n="inviteLead">Sign in to link it to your account. It takes a few seconds.</p>
+    <div class="buttons" id="sign-in-buttons">
+      <button type="button" class="btn" id="btn-apple"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg><span data-i18n="continueApple">Continue with Apple</span></button>
+      <button type="button" class="btn light" id="btn-google"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5a5.6 5.6 0 0 1-2.4 3.6v3h3.9c2.2-2.1 3.5-5.1 3.5-8.8z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 7.9-2.9l-3.9-3c-1.1.7-2.4 1.2-4 1.2-3.1 0-5.7-2.1-6.6-4.9h-4v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.4 14.4a7.2 7.2 0 0 1 0-4.7V6.6h-4a12 12 0 0 0 0 10.9l4-3.1z"/><path fill="#EA4335" d="M12 4.8c1.7 0 3.3.6 4.5 1.8l3.4-3.4A12 12 0 0 0 1.4 6.6l4 3.1C6.3 6.9 8.9 4.8 12 4.8z"/></svg><span data-i18n="continueGoogle">Continue with Google</span></button>
+      <button type="button" class="btn light" id="btn-email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M4 6l8 7 8-7"/></svg><span data-i18n="continueEmail">Continue with email</span></button>
+    </div>
+    <form class="email-form" id="email-form" novalidate hidden>
+      <input id="email" type="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="you@example.com" required>
+      <button type="submit" class="btn" id="email-send"><span data-i18n="inviteEmailButton">Send sign-in link</span></button>
+    </form>
+    <p class="note" id="start-note" role="status"></p>
+  </section>
+
+  <!-- While the sign-in comes back and the referral is saved. -->
+  <section id="step-working" class="card" hidden><p class="lead" style="margin:0">…</p></section>
+
+  <!-- 2. Linked: congratulations, then the right app store. -->
+  <section id="step-done" class="card done" hidden>
+    <div class="big-tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg></div>
+    <h1 id="done-title" data-i18n="inviteDone">Congratulations!</h1>
+    <p class="lead" id="done-body"></p>
+    <p class="get-title" data-i18n="inviteGetApp">Now download the app</p>
+    <div class="qr" id="qr" hidden><img src="/img/get-app-qr.svg" alt="QR code to get the Halal Mode app"><p data-i18n="inviteScan">Scan with your phone</p></div>
+    <div class="stores">
+      <a class="store" id="store-ios" href="#"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg><span><small data-i18n="downloadOn">Download on the</small><b>App Store</b></span></a>
+      <a class="store" id="store-android" href="#"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 1.6a1.6 1.6 0 0 0-.6 1.3v18.2c0 .5.2 1 .6 1.3l10-10.4L3.6 1.6z"/><path opacity=".78" d="m16.9 8.6-3.3 3.4 3.3 3.4 3.7-2.1c1-.6 1-1.9 0-2.5l-3.7-2.2z"/><path opacity=".9" d="M3.6 22.4c.4.3 1 .3 1.5 0l9.5-5.4-3-3.1-8 8.5z"/><path opacity=".9" d="m14.6 7-9.5-5.4a1.5 1.5 0 0 0-1.5 0l8 8.5 3-3.1z"/></svg><span><small data-i18n="getItOn">Get it on</small><b>Google Play</b></span></a>
+    </div>
+    <p class="small" data-i18n="inviteSameAccount">In the app, sign in with the same account.</p>
+  </section>
+
+  <!-- Anything else: not valid, own link, already invited, already a member. -->
+  <section id="step-other" class="card" hidden>
+    <h1 id="other-title"></h1>
+    <p class="lead" id="other-body"></p>
+    <a class="btn" id="other-action" href="/"></a>
+  </section>
+</main>
+
+<footer data-site-footer></footer>
+</div>
+<script src="/launch.js?v=20261021a"></script>
+<script src="/site-footer.js?v=20261021a"></script>
+<script src="/i18n.js?v=20261021d"></script>
+<script src="/invite.js?v=20261021a"></script>
+<script type="module" src="/logo-effect.js?v=20261019d"></script>
+</body>
+</html>

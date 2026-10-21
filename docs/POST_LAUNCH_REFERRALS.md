@@ -1,31 +1,29 @@
 # Post-launch referral routing
 
-Keep every existing share URL as `https://halalmo.de/?ref=CODE`. Do not change the referral URL stored by the app, database, or email. The homepage decides what to do based on launch state; the waitlist remains the only signup surface until the owner explicitly launches the app.
+Every share URL stays `https://halalmo.de/?ref=CODE`. Before launch it joins the waitlist (with a green "referral code added" tick). After launch the same link opens the invite page, so links already shared keep working.
 
-## Launch switch
+## The invite flow (built, switched off until launch)
 
-When the owner approves app launch, change only the homepage route:
+One flow for iPhone, Android and computers. No app links are needed: everyone goes through the website first.
 
-1. Read and validate `ref` with the same `HM` plus eight uppercase alphanumeric characters rule used by the app.
-2. Store the first valid code under `halal-mode-referral-code`; do not replace an earlier valid inviter code.
-3. If an installed app opens through a verified App Link / Universal Link, the existing `useReferralLinkCapture` hook stores the code and onboarding claims it.
-4. Otherwise send Android visitors to Google Play and iOS visitors to the App Store. A visitor choosing the web app goes to `/app`, where browser storage is shared with the homepage and the existing onboarding reads the saved code.
-5. Keep the typed invite-code field in onboarding as the recovery path when a store install cannot carry attribution.
+1. **`/invite?ref=CODE`**: "**Ali** invited you to Halal Mode" (first name; a masked email such as `a•••@gmail.com` when the inviter has no profile yet), a green tick with "Your referral code HM… is ready", and **Continue with Apple / Google / email**. Apple is first on iPhone, Google first elsewhere.
+2. **Sign-in** happens on the web with Supabase Auth (OAuth, or an email sign-in link). On return the page calls `claim_invite(code)`, which saves the referral to the new account and keeps "first referrer wins" (including referrals made on the waitlist). The web session is then signed out.
+3. **Congratulations** with confetti: "Your invite from Ali is now linked to your account." iPhone sees the App Store button, Android the Google Play button (each opens automatically after a moment), and computers a QR code plus both buttons. The QR code points to `/get`, which sends each phone to its own store.
+4. **In the app** they sign in the same way; the referral counts once their profile is complete, as before. The typed code in onboarding stays as the last resort.
 
-Do not route to `/app` or a store before launch. The current static homepage stays waitlist-only.
+Database: `referral_inviter(code)` (anyone; first name or masked email only) and `claim_invite(code)` (signed in). See `supabase/migrations/20261021210000_invite_flow.sql` and pgTAP `0205`.
 
-## Android deferred install attribution
+Preview without switching it on: `https://halalmo.de/invite?demo` (sample data, no sign-in) or `/invite?ref=CODE&preview` (real sign-in).
 
-For a Google Play link, pass `referrer=ref%3DCODE` (URL-encoded `ref=CODE`) to the Play Store listing. On the first Android app launch, use Google's Play Install Referrer client library through a small Expo native module/config plugin:
+## Switching it on at launch
 
-1. Request the referrer once, close the connection, and parse only the `ref` parameter.
-2. Validate it with the shared referral-code validator; never accept arbitrary query data as a code.
-3. Save it to the existing `halal-mode-referral-code` storage key only when no valid code is already stored. This preserves the first inviter and reuses the current onboarding claim path.
-4. Ignore unavailable Play Store responses and keep typed-code onboarding as the fallback. Do not block startup or sign-up on this API.
-5. Add focused parser/storage tests and an Android test for first-install, invalid, repeated, and missing-referrer cases.
+1. In `site/launch.js`, set `appStoreUrl` to the App Store listing and `inviteFlow: true`. (`playStoreUrl` is already set from the package name `com.halalmode.app`.)
+2. Supabase → Auth → URL configuration: add `https://halalmo.de/invite**` to the redirect URLs.
+3. Supabase → Auth → Providers: Apple must be configured for the web (Services ID and key), as well as Google.
+4. `npm run deploy:web`.
 
-Google documents the official API at [developer.android.com/google/play/installreferrer](https://developer.android.com/google/play/installreferrer). It requires Google Play Console distribution and native Android code, so this is intentionally a post-launch build item; no dependency, native config, or EAS build is added here.
+If a sign-in ever returns to the homepage instead (redirect not allowed), the homepage forwards it to `/invite` to finish.
 
-## App links are a separate owner-input gate
+## Android install referrer (optional extra)
 
-Verified links require the Android release-signing SHA-256 fingerprint and Apple Team ID. Once the owner supplies them, add the `halalmo.de` Android `assetlinks.json`, Apple `apple-app-site-association`, and the corresponding Expo `intentFilters` / `associatedDomains`. Until then, keep the typed-code fallback and do not claim that the links open the installed app.
+For people who skip the website sign-in, a Google Play link can also carry `referrer=ref%3DCODE`, read on first launch with the Play Install Referrer library through a small Expo native module. Not built; the website sign-in covers the main path.

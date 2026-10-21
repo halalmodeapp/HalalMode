@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Get Halal Mode</title>
+<meta name="theme-color" content="#FCFCFB">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3">
+<style>
+:root{--surface:#FCFCFB;--ink:#0A0A0A;--muted:#6C6A65}
+*{box-sizing:border-box}
+body{margin:0;min-height:100svh;display:grid;place-items:center;padding:24px;background:var(--surface);color:var(--ink);font:16px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;text-align:center}
+.logo{height:28px;margin:0 auto 20px;display:block}
+.stores{display:grid;gap:10px;width:min(320px,90vw);margin:18px auto 0}
+.store{display:flex;align-items:center;justify-content:center;gap:10px;min-height:56px;border-radius:14px;background:var(--ink);color:var(--surface);text-decoration:none;font-weight:600}
+.store[aria-disabled=true]{opacity:.45;pointer-events:none}
+p{color:var(--muted);margin:0}
+</style>
+</head>
+<body>
+<!-- The QR code on the invite page points here: each phone goes straight to
+     its own store; anything else sees both. Store links live in launch.js. -->
+<main>
+  <img class="logo" src="/logo.svg" alt="Halal Mode">
+  <p id="msg">Get the Halal Mode app</p>
+  <div class="stores">
+    <a class="store" id="ios" href="#">App Store</a>
+    <a class="store" id="android" href="#">Google Play</a>
+  </div>
+</main>
+<script src="/launch.js?v=20261021a"></script>
+<script>
+(function () {
+  var L = window.HALAL_MODE_LAUNCH || {};
+  var ua = navigator.userAgent || '';
+  var ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var android = /Android/.test(ua);
+  [['ios', L.appStoreUrl], ['android', L.playStoreUrl]].forEach(function (s) {
+    var a = document.getElementById(s[0]);
+    if (s[1]) a.href = s[1]; else a.setAttribute('aria-disabled', 'true');
+  });
+  if (!L.inviteFlow) { document.getElementById('msg').textContent = 'Halal Mode is coming soon. Join the waitlist at halalmo.de.'; return; }
+  if (ios && L.appStoreUrl) location.replace(L.appStoreUrl);
+  else if (android && L.playStoreUrl) location.replace(L.playStoreUrl);
+})();
+</script>
+</body>
+</html>
