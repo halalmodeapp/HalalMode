@@ -104,8 +104,8 @@ where 2 = (select count(*)
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000005301","role":"authenticated"}', true);
 select is(
   public.get_current_round_state() ->> 'status',
-  'no_suitable_introductions',
-  'no live outcome is not mislabelled as deferred'
+  'waiting_for_first_set',
+  'a member with no live outcome is waiting for the first set, not queued'
 );
 
 insert into halal_mode_private.matching_runs (
@@ -140,8 +140,8 @@ where run_id = '00000000-0000-0000-0000-000000005321'
   and user_id = '00000000-0000-0000-0000-000000005301';
 select is(
   public.get_current_round_state() ->> 'status',
-  'no_suitable_introductions',
-  'an expired deferred outcome cannot claim the member is still queued'
+  'waiting_for_first_set',
+  'an expired deferred outcome does not claim the member is still queued'
 );
 delete from halal_mode_private.matching_member_run_outcomes
 where run_id = '00000000-0000-0000-0000-000000005321';
@@ -154,7 +154,7 @@ insert into halal_mode_private.matching_member_run_outcomes (
 );
 select is(
   public.get_current_round_state() ->> 'status',
-  'no_suitable_introductions',
+  'waiting_for_first_set',
   'a shadow-only outcome cannot affect member-facing state'
 );
 

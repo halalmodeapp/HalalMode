@@ -306,6 +306,22 @@ select
   18, 70, array['Saudi Arabia'], 1000, now()
 from generate_series(141001, 141088) n;
 
+update public.profiles
+set bio = repeat('r', 80),
+    education = 'University',
+    has_children = 'no',
+    family_goals_answered_at = now(),
+    religious_dress = case when gender::text = 'female' then 'hijab' else null end,
+    ethnicities = array['arab'],
+    heritage_countries = array['SA']
+where id between '00000000-0000-0000-0000-000000141001'
+             and '00000000-0000-0000-0000-000000141088';
+update public.private_preferences
+set own_height_cm = 170,
+    own_build = 'Average'
+where user_id between '00000000-0000-0000-0000-000000141001'
+                  and '00000000-0000-0000-0000-000000141088';
+
 insert into halal_mode_private.member_legal_consent_history (
   user_id, document_type, version, acceptance_context
 )

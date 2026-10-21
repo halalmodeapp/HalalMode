@@ -12,7 +12,7 @@ select ok(
 );
 select ok(
   position('length(trim(p.bio)) >= 50' in pg_get_functiondef('public.profile_is_ready_for_matching(uuid)'::regprocedure)) > 0
-    and position('cardinality(photos) >= 1' in pg_get_functiondef('public.profile_is_ready_for_matching(uuid)'::regprocedure)) > 0,
+    and position('cardinality(p.photos) >= 1' in pg_get_functiondef('public.profile_is_ready_for_matching(uuid)'::regprocedure)) > 0,
   'readiness requires a substantive bio and photo'
 );
 select ok(
