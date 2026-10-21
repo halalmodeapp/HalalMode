@@ -12,7 +12,7 @@ The rule is now consistent across referral progress, the public `/refer` page, t
 
 > A waitlist signup or email confirmation does not count as a referral. Credit is awarded only after the referred person creates an app account and completes the existing profile-readiness requirements.
 
-The current readiness gate is `public.profile_is_ready_for_matching`: first name, city, country, a bio of at least 40 characters, at least one photo, and saved matching preferences. The database sets a referral's `referral_counted_at` once this gate passes. It is sticky: editing a profile later does not take away earned credit. Referral attribution is still captured at waitlist signup, deduped by canonical email, and can qualify after the app launches. Existing waitlist entries are backfilled only if they already have a matching-ready app profile.
+The current readiness gate is `public.profile_is_ready_for_matching`: first name, city and country; a bio of at least 50 characters; at least one photo and language; education, children and family-goals answers; ethnicity and heritage; plus saved matching preferences, height and build. Religious dress is required only for women. The database sets a referral's `referral_counted_at` once this gate passes. It is sticky: editing a profile later does not take away earned credit. Referral attribution is still captured at waitlist signup, deduped by canonical email, and can qualify after the app launches. Existing waitlist entries are backfilled only if they already have a matching-ready app profile.
 
 Invitees do not need an email-confirmation link. A newly added waitlist member receives a welcome message through the existing optional mail worker; lack of email delivery does not block the signup or referral attribution. The referrer's own email-verification flow for retrieving their referral link remains separate and is not the referred friend's qualifying event.
 
@@ -92,7 +92,9 @@ This is not a substitute for protecting the scoring pipeline. The matching worke
 ## Verification and release status
 
 - Client verification has passed locally after this handoff document was added: typecheck, lint, SQL parsing, and JavaScript tests (442/442).
-- SQL parsing is not the same as running pgTAP. The pgTAP suite was not run locally because Docker is unavailable; CI must run it before merge.
+- The first CI database attempt caught a missing parenthesis in the estimator migration; that is fixed in follow-up commit `21303f9`.
+- The next CI run successfully applied migrations and ran pgTAP, but the database job is **not green yet**. Three assertions fail: `0037_versioned_legal_consent.test.sql` still submits the old legal version `2026-10-06` instead of the new `2026-10-21`; `0195_my_referral_progress.test.sql` and `0198_fair_waitlist_and_launch_premium.test.sql` use incomplete profile fixtures, so they do not pass the full readiness gate above and correctly remain uncounted. Update the fixtures and legal-version expectation without weakening either rule, then rerun CI.
+- The CI client/Android bundle and Edge Function typecheck passed. The isolated database contract job failed as described above.
 - No production migration, function deployment, secret change, website deployment, or EAS build/update has been performed.
 - This document is a review handoff, not approval to deploy. Review findings should be grouped as **must fix before merge**, **safe with monitoring**, and **defer**, with concrete file/function evidence.
 

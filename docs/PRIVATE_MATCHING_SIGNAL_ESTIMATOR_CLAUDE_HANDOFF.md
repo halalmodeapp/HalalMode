@@ -81,7 +81,7 @@ There is no admin dashboard in this implementation. A separate `halalmo.de/admin
 
 ## Verification status at handoff
 
-`npm run verify:client` passed locally (typecheck, lint, SQL parser, and 442/442 JS tests). The SQL parser confirms migration/test syntax parses, but pgTAP itself has not been run locally; run it in CI before merge. The user asked for a green, healthy client build. No migration, function, secret, website, or app deployment has been performed here.
+`npm run verify:client` passed locally (typecheck, lint, SQL parser, and 442/442 JS tests). CI applied the migrations after a missing-parenthesis fix in commit `21303f9`, and the estimator-specific pgTAP file `0199_private_matching_signals.test.sql` passed. The overall database job is still failing in the consent-version and referral-profile fixtures; see `CLAUDE_HANDOFF_REFERRALS_ESTIMATOR_ADMIN_DASHBOARD.md` for exact failures. No migration, function, secret, website, or app deployment has been performed here.
 
 ## Decisions requested from Claude
 
