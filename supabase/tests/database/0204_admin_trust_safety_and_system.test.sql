@@ -62,7 +62,7 @@ select throws_ok(
   '22023', null, 'admins cannot be banned from the panel');
 select is(public.admin_authorize_member_action('00000000-0000-0000-0000-000000020405', 'ban', 'fake account')->>'reason',
   'fake account', 'an owner may ban a member');
-select is(public.admin_mark_reviewed((select id from halal_mode_private.moderation_queue where user_id = '00000000-0000-0000-0000-000000020405'), 'contact details, warned')->>'changed',
+select is(public.admin_mark_reviewed((select id from halal_mode_private.moderation_queue where user_id = '00000000-0000-0000-0000-000000020405' and decision = 'review'), 'contact details, warned')->>'changed',
   'true', 'and mark a flagged item as reviewed');
 
 select set_config('request.jwt.claims', '{"role":"service_role"}', true);
