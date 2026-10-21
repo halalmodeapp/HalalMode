@@ -2,9 +2,11 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import 'react-native-url-polyfill/auto';
 
 import { authStorage } from './authStorage';
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from './publicConfig';
 
-const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+// The live project unless a local .env names another (see publicConfig).
+const url = SUPABASE_URL;
+const anonKey = SUPABASE_ANON_KEY;
 
 /**
  * When true the app serves bundled sample content and never touches the
@@ -15,7 +17,7 @@ export const USE_MOCKS =
 
 if (!USE_MOCKS && (!url || !anonKey)) {
   throw new Error(
-    'Live Halal Mode builds require EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY. Set EXPO_PUBLIC_USE_MOCKS=1 only for intentional demo builds.'
+    'EXPO_PUBLIC_SUPABASE_URL names another project, so EXPO_PUBLIC_SUPABASE_ANON_KEY must be set for it too. Set EXPO_PUBLIC_USE_MOCKS=1 only for intentional demo builds.'
   );
 }
 

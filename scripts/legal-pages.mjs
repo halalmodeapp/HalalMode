@@ -11,6 +11,9 @@ export function legalPage(doc, other) {
   const sections = doc.sections
     .map((section) => `<h2>${escape(section.heading)}</h2>\n${section.body.map((line) => `<p>${escape(line)}</p>`).join('\n')}`)
     .join('\n');
+  const attribution = doc.slug === 'privacy'
+    ? '<p>Browser-based city names use a locally bundled GeoNames dataset. Your location is not sent to GeoNames. <a href="/licenses/geonames.html">GeoNames attribution and licence</a>.</p>'
+    : '';
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -19,7 +22,7 @@ export function legalPage(doc, other) {
 <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3">
 <link rel="icon" type="image/png" href="/favicon.png?v=3">
 <title>${escape(doc.title)} · Halal Mode</title>
-<link rel="canonical" href="https://halalmo.de/legal/${doc.slug}">
+<link rel="canonical" href="${escape(doc.url)}">
 <style>
   :root { --ink:#0a0a0a; --soft:#3b3934; --faint:#6c6a65; --surface:#fcfcfb; }
   body { margin:0; background:var(--surface); color:var(--ink); font:16px/1.6 system-ui, sans-serif; }
@@ -34,7 +37,8 @@ export function legalPage(doc, other) {
 <p class="updated">Last updated ${escape(doc.updated)}</p>
 <p>${escape(doc.intro)}</p>
 ${sections}
-<p style="margin-top:40px"><a href="/legal/${other.slug}">${otherLabel}</a> · <a href="/legal-notice">Legal notice</a></p>
+${attribution}
+<p style="margin-top:40px"><a href="${escape(new URL(other.url).pathname)}">${otherLabel}</a> · <a href="/legal-notice">Legal notice</a></p>
 </main></body>
 </html>
 `;

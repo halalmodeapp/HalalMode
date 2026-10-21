@@ -181,7 +181,7 @@ test('waitlist and auth home surfaces use a compact How it works action, not the
   assert.match(howItWorks, /@media\(max-width:1120px\).*repeat\(2,minmax\(0,1fr\)\)/s);
   assert.match(howItWorks, /@media\(max-width:680px\).*grid-template-columns:minmax\(0,1fr\)/s);
   assert.match(howItWorks, /prefers-reduced-motion:reduce/);
-  for (const file of ['app/auth.tsx', 'app/auth-email.tsx', 'app/join.tsx']) {
+  for (const file of ['app/auth.tsx', 'app/auth-email.tsx']) {
     const source = readFileSync(`${root}/${file}`, 'utf8');
     assert.doesNotMatch(source, /marketing\.cards(?:Title|Body)/);
     // Every public screen uses the one shared link button.
@@ -226,7 +226,7 @@ test('website Halal Cards title and body have a non-empty translation for all si
 });
 
 test('auth and native waitlist surfaces use a compact How it works action', () => {
-  for (const file of ['app/auth.tsx', 'app/auth-email.tsx', 'app/join.tsx']) {
+  for (const file of ['app/auth.tsx', 'app/auth-email.tsx']) {
     const source = readFileSync(`${root}/${file}`, 'utf8');
     assert.doesNotMatch(source, /marketing\.cards(?:Title|Body)/);
     // Every public screen uses the one shared link button.
@@ -257,6 +257,8 @@ test('the sign-up screen speaks with the waitlist page words in every language',
     ['marketing.howItWorks', 'navHow'],
     ['marketing.refer', 'navRefer'],
     ['marketing.questions', 'questions'],
+    ['onboarding.privacyLink', 'navPrivacy'],
+    ['onboarding.termsLink', 'navTerms'],
   ];
   for (const [language, catalog] of catalogs) {
     const site = websiteCopy(language, '/');

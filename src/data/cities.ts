@@ -6,13 +6,14 @@ import { attachListTranslations } from './translations';
  *
  * Three jobs, one list:
  *
- *   A member who says no to location is not stuck. Onboarding used to accept
- *   the device's answer and nothing else, so "Don't Allow", which iOS only
- *   offers once, locked that person out of the app for good.
+ *   Onboarding still requires the device's location (2026-10-03, see
+ *   app/onboarding.tsx): a picked city would let anyone claim to live
+ *   anywhere. A member who said no is shown how to turn it back on; this
+ *   list is what Premium travel mode picks from.
  *
- *   The web works at all. A browser will give coordinates but has no way to
- *   turn them into a city name, so on the web every member failed the location
- *   step. The nearest city on this list names them instead.
+ *   Native reverse geocoding may not return a city name. This compact list is
+ *   the native fallback and the Premium travel-mode picker. Web uses a separate,
+ *   locally bundled GeoNames list, loaded only when browser GPS is requested.
  *
  *   A chosen city stores the city centre, not a doorstep, which is all distance
  *   matching needs and more than some members would like to share.

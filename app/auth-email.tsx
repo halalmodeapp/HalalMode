@@ -15,7 +15,7 @@ import { useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { authReturnAddress } from '@/api/auth';
+import { authReturnAddress, signInWithProvider } from '@/api/auth';
 import { useI18n } from '@/i18n';
 import { testIds } from '@/lib/testIds';
 import { requireSupabase } from '@/lib/supabase';
@@ -27,6 +27,7 @@ import { RTL_LAYOUT } from '@/lib/rtl';
 import { LinkPill } from '@/components/brand/LinkPill';
 import { howItWorksUrl } from '@/lib/publicLinks';
 import { useSession } from '@/state/session';
+import { isHttpRateLimitError } from '@/lib/authErrors';
 
 const C = {
   surface: '#FCFCFB',
@@ -47,6 +48,8 @@ export default function AuthEmailScreen() {
   const wide = useBreakpoint() !== 'phone';
   const [email, setEmail] = useState('');
   const [sending, setSending] = useState(false);
+  const [googleSending, setGoogleSending] = useState(false);
+  const [rateLimited, setRateLimited] = useState(false);
   const [secondsUntilResend, setSecondsUntilResend] = useState(0);
   const [notice, setNotice] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
 
@@ -67,6 +70,7 @@ export default function AuthEmailScreen() {
     }
     clearAuthError();
     setNotice(null);
+    setRateLimited(false);
     setSending(true);
     try {
       const { error } = await requireSupabase().auth.signInWithOtp({
@@ -77,10 +81,31 @@ export default function AuthEmailScreen() {
       trackProductEvent('auth_link_requested');
       setSecondsUntilResend(60);
       setNotice({ tone: 'ok', text: `${t('auth.checkEmail')}. ${t('auth.linkSent')}` });
-    } catch {
-      setNotice({ tone: 'error', text: `${t('auth.sendFailed')}. ${t('auth.sendFailedBody')}` });
+    } catch (error) {
+      const limited = isHttpRateLimitError(error);
+      setRateLimited(limited);
+      setNotice({
+        tone: 'error',
+        text: limited
+          ? t('auth.emailRateLimited')
+          : `${t('auth.sendFailed')}. ${t('auth.sendFailedBody')}`,
+      });
     } finally {
       setSending(false);
+    }
+  };
+
+  const continueWithGoogle = async () => {
+    if (googleSending) return;
+    clearAuthError();
+    setNotice(null);
+    setGoogleSending(true);
+    try {
+      await signInWithProvider('google');
+    } catch {
+      setNotice({ tone: 'error', text: `${t('auth.providerFailed')}. ${t('auth.providerFailedBody')}` });
+    } finally {
+      setGoogleSending(false);
     }
   };
 
@@ -141,6 +166,7 @@ export default function AuthEmailScreen() {
               onChangeText={(value) => {
                 setEmail(value);
                 setNotice(null);
+                setRateLimited(false);
                 if (authError) clearAuthError();
               }}
               onSubmitEditing={() => void sendLink()}
@@ -158,6 +184,26 @@ export default function AuthEmailScreen() {
               >
                 {notice.tone === 'ok' ? '✓ ' : ''}{notice.text}
               </Text>
+            ) : null}
+
+            {rateLimited ? (
+              <Pressable
+                testID={testIds.auth.google}
+                accessibilityRole="button"
+                accessibilityLabel={t('auth.continueGoogle')}
+                accessibilityState={{ busy: googleSending, disabled: googleSending }}
+                disabled={googleSending}
+                onPress={() => void continueWithGoogle()}
+                style={({ pressed }) => [styles.recoveryButton, pressed && styles.pressed]}
+              >
+                {googleSending ? (
+                  <ActivityIndicator color={C.ink} />
+                ) : (
+                  <Text style={[styles.recoveryLabel, { fontFamily: isRTL ? appFont.arabic : appFont.bodySemi }]}>
+                    {t('auth.continueGoogle')}
+                  </Text>
+                )}
+              </Pressable>
             ) : null}
 
             <Pressable
@@ -230,6 +276,8 @@ const styles = StyleSheet.create({
   },
   error: { color: C.error, fontSize: 14, lineHeight: 20 },
   success: { color: C.ink, fontSize: 14, lineHeight: 20, fontWeight: '600' },
+  recoveryButton: { minHeight: 48, paddingHorizontal: 18, borderRadius: 999, borderWidth: 1, borderColor: C.line, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  recoveryLabel: { color: C.ink, fontSize: 15, fontWeight: '600', textAlign: 'center' },
   submit: { minHeight: 52, paddingHorizontal: 18, borderRadius: 999, backgroundColor: C.ink, alignItems: 'center', justifyContent: 'center' },
   submitLabel: { color: C.surface, fontSize: 16, fontWeight: '600', textAlign: 'center' },
   disabled: { opacity: 0.55 },

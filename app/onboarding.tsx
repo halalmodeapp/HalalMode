@@ -25,7 +25,8 @@ import { fetchMyLegalConsentStatus, recordSensitiveConsent } from '@/api/legalCo
 import { documentFromStatus, type LegalConsentStatus } from '@/lib/legalConsent';
 import { queryKeys } from '@/lib/queryClient';
 import { PermissionExplainer } from '@/components/ui/PermissionExplainer';
-import { browserDeviceCoordinates, nativeDevicePlace, placeFromDevice } from '@/lib/deviceLocation';
+import { browserDeviceCoordinates, nativeDevicePlace } from '@/lib/deviceLocation';
+import { placeFromBrowserCoordinates } from '@/lib/browserPlace';
 import { namesFromIdentity } from '@/lib/identityNames';
 import {
   clearOnboardingDraft,
@@ -200,7 +201,7 @@ export default function OnboardingScreen() {
       // reverse geocoder.
       if (Platform.OS === 'web') {
         const coordinates = await browserDeviceCoordinates();
-        const resolved = placeFromDevice(undefined, coordinates);
+        const resolved = await placeFromBrowserCoordinates(coordinates);
         if (!resolved) {
           setErrors({ city: t('onboarding.locationFailed') });
           return;

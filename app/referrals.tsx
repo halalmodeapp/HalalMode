@@ -61,7 +61,10 @@ function ShareCard({ progress }: { progress: Extract<ReferralProgress, { state: 
   const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const url = progress.referralUrl;
-  const message = t('referrals.shareMessage', { url });
+  // The link and the code: an install from the store can lose the link, and the
+  // code can still be typed in at sign-up.
+  const message = `${t('referrals.shareMessage', { url })}
+${t('referrals.shareCode', { code: progress.referralCode })}`;
   const reward =
     progress.rewardMonths === 1
       ? t('referrals.rewardMonth1')

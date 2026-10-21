@@ -43,7 +43,8 @@ import { testIds } from '@/lib/testIds';
 
 import { BIO_MIN_LENGTH, getProfileReadiness, readinessSteps } from '@/lib/profileReadiness';
 import { ReadinessChecklist } from '@/components/readiness/ReadinessChecklist';
-import { browserDeviceCoordinates, nativeDevicePlace, placeFromDevice } from '@/lib/deviceLocation';
+import { browserDeviceCoordinates, nativeDevicePlace } from '@/lib/deviceLocation';
+import { placeFromBrowserCoordinates } from '@/lib/browserPlace';
 import { CITY_GROUPS, placeForCity } from '@/data/cities';
 import { useI18n, type Translate } from '@/i18n';
 import { useSession } from '@/state/session';
@@ -64,6 +65,7 @@ import { alpha, color, font, radius } from '@/theme/tokens';
 import type { MarriageTimeline, PrivatePreferences, Profile, ReligiousPractice } from '@/types';
 import { RTL_LAYOUT } from '@/lib/rtl';
 import { errorMessage } from '@/lib/errorMessage';
+import type { ReadinessStep } from '@/lib/profileReadiness';
 
 function profileSchema(t: Translate) {
   return z.object({
@@ -87,6 +89,8 @@ function profileSchema(t: Translate) {
 }
 
 type FormValues = z.infer<ReturnType<typeof profileSchema>>;
+type ChecklistTarget = ReadinessStep | 'displayName' | 'location' | 'education' | 'languages'
+  | 'childrenWhen' | 'dress' | 'ethnicity' | 'heritage' | 'height' | 'bodyType';
 
 interface PhotoTile {
   /** Stable across a reorder, so a dragged tile keeps its identity. */
@@ -107,11 +111,13 @@ export function ProfileTab({
   profile,
   preferences,
   onOpenPreferences,
+  onScrollToTarget,
 }: {
   profile: Profile;
   /** For the member's own height, weight and build, kept private but edited here. */
   preferences?: PrivatePreferences;
   onOpenPreferences?: () => void;
+  onScrollToTarget: (target: View | null) => void;
 }) {
   const { localeTag, isRTL, language, t } = useI18n();
   const { tier } = useSession();
@@ -241,6 +247,32 @@ export function ProfileTab({
   const readyToShow = !unsaved && liveReadiness.ready
     && (USE_MOCKS || serverReadinessQuery.data?.ready === true);
   const steps = readinessSteps(liveReadiness.missing, profile.gender);
+  const checklistTargets = useRef<Partial<Record<ChecklistTarget, View | null>>>({});
+  const setChecklistTarget = (targetName: ChecklistTarget, target: View | null) => {
+    checklistTargets.current[targetName] = target;
+  };
+  const pressChecklistStep = (step: ReadinessStep) => {
+    if (step === 'preferences') {
+      onOpenPreferences?.();
+      return;
+    }
+    const targetName: ChecklistTarget = step === 'essentials'
+      ? (String(draft.name ?? '').trim().length < 2 ? 'displayName' : 'location')
+      : step === 'details'
+        ? (!(draft.education ?? '').trim() ? 'education' : 'languages')
+        : step === 'children'
+          ? (!hasChildren ? 'children' : 'childrenWhen')
+          : step === 'faith'
+            ? (profile.gender === 'female' && !religiousDress
+              ? 'dress'
+              : ethnicities.length === 0 ? 'ethnicity' : 'heritage')
+            : step === 'background'
+              ? (ethnicities.length === 0 ? 'ethnicity' : 'heritage')
+              : step === 'body'
+                ? (heightMissing ? 'height' : 'bodyType')
+                : step;
+    onScrollToTarget(checklistTargets.current[targetName] ?? null);
+  };
 
   useEffect(() => {
     setMedia(mediaFrom(profile));
@@ -439,7 +471,7 @@ export function ProfileTab({
     try {
       if (Platform.OS === 'web') {
         const coordinates = await browserDeviceCoordinates();
-        const resolved = placeFromDevice(undefined, coordinates);
+        const resolved = await placeFromBrowserCoordinates(coordinates);
         if (!resolved) {
           setLocationError(t('profile.locationUnavailable'));
           return;
@@ -743,14 +775,15 @@ export function ProfileTab({
           <ReadinessChecklist
             steps={steps}
             lead={liveReadiness.ready ? t('readiness.saveToFinish') : t('readiness.lead')}
-            isPressable={(step) => step === 'preferences' && Boolean(onOpenPreferences)}
-            onPressStep={() => onOpenPreferences?.()}
+            isPressable={(step) => step !== 'preferences' || Boolean(onOpenPreferences)}
+            onPressStep={pressChecklistStep}
           />
         )}
         {save.isPending ? (
           <Text variant="caption" style={styles.readinessBody}>{t('common.saving')}</Text>
         ) : null}
       </Card>
+      <View ref={(target) => setChecklistTarget('photo', target)} collapsable={false}>
       {photos.length === 0 ? (
         <Card testID={testIds.you.photoGuide} tone="filled" style={styles.photoGuide}>
           <Text variant="micro">{t('profile.photoGuideTitle')}</Text>
@@ -851,6 +884,7 @@ export function ProfileTab({
           </Pressable>
         </View>
       </Card>
+      </View>
 
       <Card>
         <Text variant="micro">{t('profile.voice')}</Text>
@@ -914,7 +948,11 @@ export function ProfileTab({
         <Text variant="caption" style={styles.requiredNote}>
           {t('profile.requiredNote')}
         </Text>
-        <View style={styles.formRow}>
+        <View
+          ref={(target) => setChecklistTarget('displayName', target)}
+          collapsable={false}
+          style={styles.formRow}
+        >
           <Controller
             control={control}
             name="name"
@@ -929,7 +967,7 @@ export function ProfileTab({
           />
         </View>
 
-        <View style={styles.locationBlock}>
+        <View ref={(target) => setChecklistTarget('location', target)} collapsable={false} style={styles.locationBlock}>
           <Text variant="micro">{required(t('profile.locationCurrent'))}</Text>
           <Text
             accessibilityLabel={`${t('profile.locationCurrent')}: ${currentLocation}`}
@@ -1028,6 +1066,7 @@ export function ProfileTab({
           )}
         />
 
+        <View ref={(target) => setChecklistTarget('education', target)} collapsable={false}>
         <Controller
           control={control}
           name="education"
@@ -1056,7 +1095,9 @@ export function ProfileTab({
             </>
           )}
         />
+        </View>
 
+        <View ref={(target) => setChecklistTarget('bio', target)} collapsable={false}>
         <Controller
           control={control}
           name="bio"
@@ -1073,6 +1114,7 @@ export function ProfileTab({
             />
           )}
         />
+        </View>
 
         <Controller
           control={control}
@@ -1088,6 +1130,7 @@ export function ProfileTab({
           )}
         />
 
+        <View ref={(target) => setChecklistTarget('languages', target)} collapsable={false}>
         <Controller
           control={control}
           name="languages"
@@ -1115,6 +1158,7 @@ export function ProfileTab({
             </>
           )}
         />
+        </View>
 
         <View style={styles.profileChoice}>
           <Text variant="micro">{required(t('profile.practice'))}</Text>
@@ -1218,7 +1262,7 @@ export function ProfileTab({
           ) : null}
         </View>
 
-        <View style={styles.profileChoice}>
+        <View ref={(target) => setChecklistTarget('children', target)} collapsable={false} style={styles.profileChoice}>
           <Text variant="micro">{required(t('profile.hasChildren'))}</Text>
           <View style={[styles.choiceChips, ownChecked && !hasChildren && styles.choiceMissing]}>
             {HAS_CHILDREN_PROFILE.map((option) => (
@@ -1232,7 +1276,7 @@ export function ProfileTab({
           </View>
         </View>
 
-        <View style={styles.profileChoice}>
+        <View ref={(target) => setChecklistTarget('childrenWhen', target)} collapsable={false} style={styles.profileChoice}>
           <Text variant="micro">{required(t('profile.childrenWhen'))}</Text>
           <View style={[styles.choiceChips, ownChecked && !familyGoals && styles.choiceMissing]}>
             {FAMILY_CHOICES.map(([value, key]) => (
@@ -1248,7 +1292,11 @@ export function ProfileTab({
 
         {/* Religious dress is asked of women only. */}
         {profile.gender === 'female' ? (
-        <View style={styles.profileChoice}>
+        <View
+          ref={(target) => setChecklistTarget('dress', target)}
+          collapsable={false}
+          style={styles.profileChoice}
+        >
           <SelectField
             label={required(t('profile.dress'))}
             error={ownChecked && !religiousDress ? ' ' : undefined}
@@ -1271,7 +1319,14 @@ export function ProfileTab({
         </View>
         ) : null}
 
-        <View style={styles.profileChoice}>
+        <View
+          ref={(target) => {
+            setChecklistTarget('ethnicity', target);
+            if (profile.gender !== 'female') setChecklistTarget('background', target);
+          }}
+          collapsable={false}
+          style={styles.profileChoice}
+        >
           {/* Two questions cover everyone: a broad ethnicity (two for mixed
               heritage) and the countries you or your family are from. */}
           <SelectField
@@ -1297,7 +1352,7 @@ export function ProfileTab({
           />
         </View>
 
-        <View style={styles.profileChoice}>
+        <View ref={(target) => setChecklistTarget('heritage', target)} collapsable={false} style={styles.profileChoice}>
           <SelectField
             label={required(t('profile.heritage'))}
             error={ownChecked && heritage.length === 0 ? ' ' : undefined}
@@ -1319,10 +1374,10 @@ export function ProfileTab({
           />
         </View>
 
-        <View style={styles.profileChoice}>
+        <View ref={(target) => setChecklistTarget('body', target)} collapsable={false} style={styles.profileChoice}>
           <Text variant="micro">{t('filters.yourTitle')}</Text>
           <Text variant="caption" style={styles.choiceNote}>{t('filters.yourBody')}</Text>
-          <View style={[styles.formRow, isRTL && styles.rowRTL]}>
+          <View ref={(target) => setChecklistTarget('height', target)} collapsable={false} style={[styles.formRow, isRTL && styles.rowRTL]}>
             <Field
               label={required(t('filters.yourHeight'))}
               keyboardType="number-pad"
@@ -1337,13 +1392,15 @@ export function ProfileTab({
               onChangeText={(text) => { setOwnWeight(text.replace(/\D/g, '')); setOwnDirty(true); }}
             />
           </View>
-          <SelectField
-            label={required(t('filters.yourBodyType'))}
-            value={ownBuilds.map((build) => buildLabel(build as (typeof BUILD_OPTIONS)[number], t)).join(', ')}
-            placeholder={t('filters.yourBodyType')}
-            onPress={() => setBuildPicker(true)}
-            error={ownChecked && buildMissing ? ' ' : undefined}
-          />
+          <View ref={(target) => setChecklistTarget('bodyType', target)} collapsable={false}>
+            <SelectField
+              label={required(t('filters.yourBodyType'))}
+              value={ownBuilds.map((build) => buildLabel(build as (typeof BUILD_OPTIONS)[number], t)).join(', ')}
+              placeholder={t('filters.yourBodyType')}
+              onPress={() => setBuildPicker(true)}
+              error={ownChecked && buildMissing ? ' ' : undefined}
+            />
+          </View>
           <PickerSheet
             visible={buildPicker}
             groups={buildGroups(t)}

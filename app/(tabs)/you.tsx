@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { fetchConnections } from '@/api/connections';
 import { fetchMyPreferences, fetchMyProfile, fetchMyProfileReadiness } from '@/api/profile';
@@ -53,6 +53,18 @@ export default function YouScreen() {
   // never shown it again on opening the screen.
   const router = useRouter();
   const queryClient = useQueryClient();
+  const profileScrollRef = useRef<ScrollView | null>(null);
+  const scrollToChecklistTarget = useCallback((target: View | null) => {
+    const scrollView = profileScrollRef.current;
+    if (!target || !scrollView) return;
+    const nativeScrollRef = scrollView.getNativeScrollRef();
+    if (!nativeScrollRef) return;
+    target.measureLayout(
+      nativeScrollRef,
+      (_left, top) => scrollView.scrollTo({ y: Math.max(0, top - 20), animated: true }),
+      () => undefined,
+    );
+  }, []);
   const readinessQuery = useQuery({
     queryKey: queryKeys.profileReadiness,
     queryFn: fetchMyProfileReadiness,
@@ -130,6 +142,7 @@ export default function YouScreen() {
       </View>
 
       <StretchScrollView
+        ref={profileScrollRef}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -153,7 +166,17 @@ export default function YouScreen() {
           </View>
         </View>
 
-        {tab === 'profile' ? <ProfileTab profile={profile} preferences={preferences} onOpenPreferences={() => setTab('private')} /> : null}
+        {tab === 'profile' ? (
+          <ProfileTab
+            profile={profile}
+            preferences={preferences}
+            onOpenPreferences={() => {
+              profileScrollRef.current?.scrollTo({ y: 0, animated: false });
+              setTab('private');
+            }}
+            onScrollToTarget={scrollToChecklistTarget}
+          />
+        ) : null}
         {tab === 'private' ? <PrivateTab preferences={preferences} /> : null}
         {tab === 'settings' ? (
           <SettingsTab

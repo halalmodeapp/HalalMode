@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { Script } from 'node:vm';
 import test from 'node:test';
 
 import { findDynamicWebRoutes, pagesRedirects } from '../scripts/web-routes.mjs';
@@ -34,10 +36,26 @@ test('a waitlist-only deploy sends every app address away and keeps the legal pa
     '/app/* / 302',
   ]);
 
-  const doc = { slug: 'terms', title: 'Terms <of> Service', updated: '2026-10-06', intro: 'Hello & welcome.', sections: [{ heading: 'One', body: ['A line.'] }] };
-  const html = legalPage(doc, { slug: 'privacy' });
+  const doc = { slug: 'terms', title: 'Terms <of> Service', updated: '2026-10-06', url: 'https://halalmo.de/legal/terms', intro: 'Hello & welcome.', sections: [{ heading: 'One', body: ['A line.'] }] };
+  const html = legalPage(doc, { slug: 'privacy', url: 'https://halalmo.de/legal/privacy' });
+  assert.match(html, /<link rel="canonical" href="https:\/\/halalmo\.de\/legal\/terms">/);
   assert.match(html, /<title>Terms &lt;of&gt; Service · Halal Mode<\/title>/);
   assert.match(html, /Hello &amp; welcome\./);
   assert.match(html, /href="\/legal\/privacy">Read the Privacy Notice/);
   assert.doesNotMatch(html, /<script/);
+  const privacy = legalPage(
+    { slug: 'privacy', title: 'Privacy', updated: '2026-10-06', url: 'https://halalmo.de/legal/privacy', intro: 'Privacy.', sections: [] },
+    { slug: 'terms', url: 'https://halalmo.de/legal/terms' },
+  );
+  assert.match(privacy, /locally bundled GeoNames dataset/u);
+  assert.match(privacy, /href="\/licenses\/geonames\.html"/u);
+});
+
+test('the referral page scripts parse and its share message carries the link and code', () => {
+  const html = readFileSync('site/refer.html', 'utf8');
+  const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/giu)].map((match) => match[1]);
+  assert.ok(scripts.length > 0);
+  for (const script of scripts) new Script(script);
+  assert.match(html, /t\('shareMessage'\)[\s\S]*t\('shareCode'\)/u);
+  assert.match(html, /encodeURIComponent\(t\('shareMessage'\)[^;]*\\n[^;]*t\('shareCode'\)/u);
 });

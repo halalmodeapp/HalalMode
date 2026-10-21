@@ -156,9 +156,12 @@ export default function MatchScreen() {
           </View>
         </Animated.View>
 
-        <Text variant="bodySmall" center style={styles.explainer}>
-          {t('match.body')}
-        </Text>
+        {/* Only true while questions are still to come. */}
+        {connection.stage === 'choosing_questions' ? (
+          <Text variant="bodySmall" center style={styles.explainer}>
+            {t('match.body')}
+          </Text>
+        ) : null}
 
         <Button
           label={

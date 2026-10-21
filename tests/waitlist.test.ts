@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import test from 'node:test';
 
@@ -62,41 +62,14 @@ test('the summary reports counts and never an address', () => {
   );
 });
 
-test('the app join page reaches the server through the same function as the website', () => {
-  const api = read('src/api/waitlist.ts');
-  assert.match(api, /rpc\('join_waitlist_now'/u);
-  assert.doesNotMatch(api, /request_waitlist_verification/u);
-  // Lowercased and trimmed before it leaves, so the same person signing up from
-  // two devices is one row rather than two.
-  assert.match(api, /\.trim\(\)\.toLowerCase\(\)/u);
-
-  const screen = read('app/join.tsx');
-  assert.match(screen, /testIds\.join\.submit/u);
-  assert.match(screen, /testIds\.join\.success/u);
-});
-
-test('the public page is reachable without an account', () => {
+test('the waitlist is halalmo.de alone: the app (mobile or web) has no join screen', () => {
+  assert.equal(existsSync('app/join.tsx'), false);
+  assert.equal(existsSync('src/api/waitlist.ts'), false);
   const gate = read('src/state/auth.tsx');
-  // It is the page a domain points at: a visitor who has never signed in must
-  // land on it rather than be bounced to a sign-in screen for an app they have
-  // not heard of yet.
-  assert.match(gate, /rootSegment === 'join'/u);
-  assert.match(gate, /if \(inJoin \|\| inLegalPage\) return;/u);
-  // Terms and the Privacy Notice sit behind the same exemption: somebody
-  // deciding whether to agree has to be able to read them first.
+  assert.doesNotMatch(gate, /rootSegment === 'join'/u);
+  // Terms and the Privacy Notice stay readable without an account.
   assert.match(gate, /rootSegment === 'terms' \|\| rootSegment === 'privacy'/u);
-});
-
-test('the waitlist speaks both languages', () => {
-  const catalog = read('src/i18n/catalog.ts');
-  for (const key of [
-    'join.title', 'join.body', 'join.formTitle', 'join.email', 'join.city',
-    'join.ageRange', 'join.submit', 'join.privacyNote',
-    'join.successTitle', 'join.successBody',
-  ]) {
-    const hits = catalog.split(`'${key}':`).length - 1;
-    assert.equal(hits, 2, `${key} must be translated in both catalogs, found ${hits}`);
-  }
+  assert.match(gate, /if \(inLegalPage\) return;/u);
 });
 
 test('the public offer is verification-backed and the referral UI has no client-side reward authority', () => {

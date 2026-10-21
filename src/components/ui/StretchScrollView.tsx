@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import { ScrollView, type ScrollViewProps } from 'react-native';
 
 /**
@@ -5,9 +6,13 @@ import { ScrollView, type ScrollViewProps } from 'react-native';
  * content is shorter than its viewport. iOS uses the bounce props; Android
  * uses overScrollMode.
  */
-export function StretchScrollView({ children, ...props }: ScrollViewProps) {
+export const StretchScrollView = forwardRef<ScrollView, ScrollViewProps>(function StretchScrollView(
+  { children, ...props },
+  ref,
+) {
   return (
     <ScrollView
+      ref={ref}
       bounces
       alwaysBounceVertical
       overScrollMode="always"
@@ -16,4 +21,4 @@ export function StretchScrollView({ children, ...props }: ScrollViewProps) {
       {children}
     </ScrollView>
   );
-}
+});

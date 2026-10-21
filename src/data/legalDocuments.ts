@@ -7,11 +7,24 @@
  * lawyer review the wording before public launch; the facts here are correct,
  * the legal framing is not a substitute for advice.
  *
- * The versions must match `legal_document_registry` in the database, because
- * that is what members' acceptance is recorded against.
+ * The one source for both documents: their words, version, date and address.
+ * The app's /terms and /privacy screens and the website's /legal pages
+ * (scripts/legal-pages.mjs) are drawn from here, and the app's links
+ * (src/lib/publicLinks.ts, src/lib/legalDocuments.ts) are derived from it.
+ * What cannot import this file is held to it by tests/legalDocuments.test.ts:
+ * the current rows of `legal_document_registry`, which members' acceptance is
+ * recorded against, and the website's footer and plain pages.
+ *
+ * To publish a new version: change the words, set LEGAL_VERSION to the new
+ * date, and add a migration making that version current in the registry.
+ * Members are asked to accept it on their next visit.
  */
 
 export const LEGAL_VERSION = '2026-10-06';
+
+/** Where both documents live: halalmo.de/legal/terms and /legal/privacy. */
+export const LEGAL_SITE = 'https://halalmo.de';
+export const legalPath = (slug: 'terms' | 'privacy') => `/legal/${slug}`;
 
 /** Who runs the service. Shown in both documents and on halalmo.de/impressum. */
 export const OPERATOR = {
@@ -29,6 +42,7 @@ export interface LegalDocument {
   slug: 'terms' | 'privacy';
   title: string;
   updated: string;
+  url: string;
   intro: string;
   sections: LegalSection[];
 }
@@ -37,6 +51,7 @@ export const TERMS: LegalDocument = {
   slug: 'terms',
   title: 'Terms of Service',
   updated: LEGAL_VERSION,
+  url: LEGAL_SITE + legalPath('terms'),
   intro:
     'Halal Mode introduces a small number of people to each other each day, for the purpose of marriage. These terms explain what we promise you, and what we ask of you in return. Halal Mode is run by Halal Mode LLC, 1209 Mountain Road Pl NE, Ste R, Albuquerque, NM 87110, USA.',
   sections: [
@@ -125,6 +140,7 @@ export const PRIVACY: LegalDocument = {
   slug: 'privacy',
   title: 'Privacy Notice',
   updated: LEGAL_VERSION,
+  url: LEGAL_SITE + legalPath('privacy'),
   intro:
     'This explains exactly what Halal Mode stores, who can see it, and what is never shown to anyone. It is written to be read, not to be skipped. Halal Mode LLC, 1209 Mountain Road Pl NE, Ste R, Albuquerque, NM 87110, USA, is responsible for your data (the “controller”). Write to hello@halalmo.de about anything here.',
   sections: [

@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -17,7 +16,8 @@ import Head from 'expo-router/head';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 
-import { fetchEnabledProviders, signInWithProvider, type AuthProvider } from '@/api/auth';
+import { signInWithProvider, type AuthProvider } from '@/api/auth';
+import { signInProviders } from '@/lib/signInProviders';
 import { HalftoneHero } from '@/components/auth/HalftoneHero';
 import { LogoLight } from '@/components/auth/LogoLight';
 import { useI18n } from '@/i18n';
@@ -74,15 +74,9 @@ export default function AuthScreen() {
   const [busyProvider, setBusyProvider] = useState<AuthProvider | null>(null);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [providerError, setProviderError] = useState<string | null>(null);
-  const primaryProvider: AuthProvider = Platform.OS === 'ios' ? 'apple' : 'google';
-  // Only providers switched on in Supabase; Google alone until they load.
-  const enabledProviders = useQuery({
-    queryKey: ['auth-providers'],
-    queryFn: fetchEnabledProviders,
-    staleTime: 60 * 60 * 1000,
-  }).data ?? ['google'];
-  const providerOrder: AuthProvider[] = (primaryProvider === 'apple' ? ['apple', 'google'] as const : ['google', 'apple'] as const)
-    .filter((provider) => enabledProviders.includes(provider));
+  // Apple and Google on iPhone, Google elsewhere: by platform, never by what
+  // the dashboard has switched on (see signInProviders).
+  const providerOrder: AuthProvider[] = signInProviders(Platform.OS);
 
   const continueWith = async (provider: AuthProvider) => {
     if (busyProvider) return;

@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 import { setAnalyticsSink, type ProductEvent } from '@/lib/analytics';
+import { POSTHOG_HOST, POSTHOG_KEY } from '@/lib/publicConfig';
 
 /**
  * Sends product events to PostHog's capture endpoint with a plain request, so
@@ -9,10 +10,11 @@ import { setAnalyticsSink, type ProductEvent } from '@/lib/analytics';
  * event name and simple metadata, against an anonymous id for the device,
  * never a member id, email, profile text or location.
  *
- * Off unless EXPO_PUBLIC_POSTHOG_KEY is set (a public, write-only key).
+ * On in release builds with the project's public, write-only key; development
+ * builds only when EXPO_PUBLIC_POSTHOG_KEY is set (see publicConfig).
  */
-const KEY = process.env.EXPO_PUBLIC_POSTHOG_KEY;
-const HOST = process.env.EXPO_PUBLIC_POSTHOG_HOST ?? 'https://eu.i.posthog.com';
+const KEY = POSTHOG_KEY;
+const HOST = POSTHOG_HOST;
 const ID_KEY = 'hm.analytics.device';
 
 let deviceId: Promise<string> | null = null;
