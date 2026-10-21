@@ -890,7 +890,7 @@ export const en = {
   'referrals.tierCount': "{{joined}} of {{goal}}",
   'referrals.rewardMonths': "You’ve earned {{months}} months of Premium.",
   'referrals.rewardMonth1': "You’ve earned 1 month of Premium.",
-  'referrals.note': "A friend counts as joined once they’ve completed their profile in the app.",
+  'referrals.note': "Waitlist sign-ups don’t count by themselves. A referral counts after your friend completes their profile in the app.",
   'referrals.share': "Share link",
   'referrals.codeLabel': "Your code:",
 } as const;
@@ -1777,7 +1777,7 @@ export const ar: TranslationCatalog = {
   'referrals.tierCount': "{{joined}} من {{goal}}",
   'referrals.rewardMonths': "لقد كسبت {{months}} أشهر من بريميوم.",
   'referrals.rewardMonth1': "لقد كسبت شهرًا من بريميوم.",
-  'referrals.note': "يُحتسب الصديق منضمًا بعد أن يُكمل ملفه الشخصي في التطبيق.",
+  'referrals.note': "لا تُحتسب إضافات قائمة الانتظار وحدها؛ تُحتسب الإحالة بعد أن يُكمل صديقك ملفه الشخصي في التطبيق.",
   'referrals.share': "مشاركة الرابط",
   'referrals.codeLabel': "رمزك:",
 };

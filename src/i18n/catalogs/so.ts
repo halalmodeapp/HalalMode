@@ -879,7 +879,7 @@ export const so: TranslationCatalog = {
   'referrals.tierCount': "{{joined}} ka mid ah {{goal}}",
   'referrals.rewardMonths': "Waxaad heshay {{months}} bilood oo Premium ah.",
   'referrals.rewardMonth1': "Waxaad heshay 1 bil oo Premium ah.",
-  'referrals.note': "Saaxiib waxaa loo tiriyaa inuu ku biiray marka uu dhammaystiro astaantiisa app-ka.",
+  'referrals.note': "Ku biirista liiska sugitaanka keligeed lama tiriyo; casuumaaddu waxay tirsamaysaa marka saaxiibkaa dhammaystiro astaantiisa abka.",
   'referrals.share': "Wadaag xiriirka",
   'referrals.codeLabel': "Koodkaaga:",
 };

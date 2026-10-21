@@ -267,6 +267,30 @@ test('the sign-up screen speaks with the waitlist page words in every language',
   }
 });
 
+test('app and public referral pages explain the same referral counting rule', () => {
+  const catalogs: [string, Record<string, string>][] = [
+    ['en', en], ['ar', ar], ['ur', ur], ['fa', fa], ['hi', hi], ['id', id],
+    ['ms', ms], ['bn', bn], ['fr', fr], ['tr', tr], ['ha', ha], ['am', am],
+    ['so', so], ['es', es], ['ru', ru], ['zh-Hans', zhHans],
+  ];
+  for (const [language, catalog] of catalogs) {
+    assert.equal(websiteCopy(language, '/refer').t('referralNote'), catalog['referrals.note'], `${language}: referral note`);
+  }
+  assert.match(en['referrals.note'], /Waitlist sign-ups don’t count by themselves/u);
+  assert.match(en['referrals.note'], /completes their profile in the app/u);
+  assert.doesNotMatch(en['referrals.note'], /confirm their waitlist email/u);
+  assert.doesNotMatch(websiteCopy('en', '/refer').t('confirmBody'), /counts it for them/u);
+});
+
+test('waitlist welcome email is complete without asking the recipient to confirm', () => {
+  const mail = readFileSync(`${root}/supabase/functions/send-mail/index.ts`, 'utf8');
+  const welcome = mail.slice(mail.indexOf('const WELCOME:'), mail.indexOf('const VERIFICATION:'));
+  assert.match(welcome, /function welcomeEmail\(locale: string, eligible: boolean\)/u);
+  assert.match(welcome, /Your place is saved/u);
+  assert.match(welcome, /complete your profile in the app/u);
+  assert.doesNotMatch(welcome, /Confirm my email|confirm your email|ref=verify/u);
+});
+
 test('there is no launch switch: the app is after-launch copy, the waitlist site before-launch', () => {
   assert.equal(Object.keys(en).filter((key) => key.endsWith('Launched')).length, 0);
   const site = readFileSync(`${root}/site/i18n.js`, 'utf8');

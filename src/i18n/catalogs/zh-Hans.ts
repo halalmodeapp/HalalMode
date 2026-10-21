@@ -879,7 +879,7 @@ export const zhHans: TranslationCatalog = {
   'referrals.tierCount': "{{joined}}/{{goal}}",
   'referrals.rewardMonths': "你已获得 {{months}} 个月 Premium。",
   'referrals.rewardMonth1': "你已获得 1 个月 Premium。",
-  'referrals.note': "好友在应用中完善个人资料后，才算加入。",
+  'referrals.note': "仅加入等候名单不计入推荐；好友完成应用内个人资料后，推荐才会计入。",
   'referrals.share': "分享链接",
   'referrals.codeLabel': "你的邀请码：",
 };

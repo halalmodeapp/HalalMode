@@ -879,7 +879,7 @@ export const ur: TranslationCatalog = {
   'referrals.tierCount': "{{goal}} میں سے {{joined}}",
   'referrals.rewardMonths': "آپ نے {{months}} مہینے پریمیم حاصل کر لیے ہیں۔",
   'referrals.rewardMonth1': "آپ نے ایک مہینہ پریمیم حاصل کر لیا ہے۔",
-  'referrals.note': "دوست تب شامل شمار ہوتا ہے جب وہ ایپ میں اپنی پروفائل مکمل کر لے۔",
+  'referrals.note': "ویٹ لسٹ میں شامل ہونا بذاتِ خود شمار نہیں ہوتا؛ ریفرل تب شمار ہوگا جب آپ کا دوست ایپ میں اپنا پروفائل مکمل کرے گا۔",
   'referrals.share': "لنک شیئر کریں",
   'referrals.codeLabel': "آپ کا کوڈ:",
 };

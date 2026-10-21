@@ -879,7 +879,7 @@ export const fa: TranslationCatalog = {
   'referrals.tierCount': "{{joined}} از {{goal}}",
   'referrals.rewardMonths': "{{months}} ماه پریمیوم به دست آوردید.",
   'referrals.rewardMonth1': "۱ ماه پریمیوم به دست آوردید.",
-  'referrals.note': "دوست شما وقتی عضو حساب می‌شود که نمایه‌اش را در اپ کامل کند.",
+  'referrals.note': "ثبت‌نام در فهرست انتظار به‌تنهایی حساب نمی‌شود؛ دعوت زمانی حساب می‌شود که دوستتان نمایه‌اش را در اپ کامل کند.",
   'referrals.share': "اشتراک‌گذاری پیوند",
   'referrals.codeLabel': "کد شما:",
 };

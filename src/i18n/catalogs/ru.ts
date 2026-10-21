@@ -879,7 +879,7 @@ export const ru: TranslationCatalog = {
   'referrals.tierCount': "{{joined}} из {{goal}}",
   'referrals.rewardMonths': "Вы получили месяцев Premium: {{months}}.",
   'referrals.rewardMonth1': "Вы получили 1 месяц Premium.",
-  'referrals.note': "Друг засчитывается, когда заполнит профиль в приложении.",
+  'referrals.note': "Запись в лист ожидания сама по себе не засчитывается; приглашение засчитывается, когда ваш друг заполнит профиль в приложении.",
   'referrals.share': "Поделиться ссылкой",
   'referrals.codeLabel': "Ваш код:",
 };

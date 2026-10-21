@@ -1,6 +1,6 @@
 begin;
 set local search_path = public, extensions, halal_mode_private;
-select plan(20);
+select plan(21);
 
 -- ---------------------------------------------------------------- one inbox, one place
 select is(halal_mode_private.canonical_email(' Pg.Tap+News@GoogleMail.com '), 'pgtap@gmail.com',
@@ -40,13 +40,25 @@ select is(
   'HMFAIRAPP1', 'a friend joining from an app member''s link is remembered'
 );
 select ok(
-  (select verification_token_hash is not null from halal_mode_private.waitlist where email = 'pgtap.fair.friend@gmail.com'),
-  'and gets a confirm link with their welcome'
+  (select verification_token_hash is null from halal_mode_private.waitlist where email = 'pgtap.fair.friend@gmail.com'),
+  'the welcome does not require an email confirmation link'
 );
 select halal_mode_private.waitlist_confirm(
   (select id from halal_mode_private.waitlist where email = 'pgtap.fair.friend@gmail.com'));
+select is(halal_mode_private.referral_progress('HMFAIRAPP1')->>'referral_count', '0',
+  'waitlist email confirmation alone does not count the referral');
+insert into auth.users (id, email, email_confirmed_at, created_at)
+values ('00000000-0000-0000-0000-000000019804', 'pgtap.fair.friend@gmail.com', now(), now());
+insert into public.profiles (id, name, first_name, birth_date, gender, city, country, bio, photos, onboarding_complete)
+values (
+  '00000000-0000-0000-0000-000000019804', 'Friend Member', 'Friend', '1994-01-01', 'female',
+  'Leeds', 'United Kingdom', 'A thoughtful person who values family, faith and kindness.',
+  array['profile/fair-friend.jpg'], true
+);
+insert into public.private_preferences (user_id, matching_preferences_completed_at)
+values ('00000000-0000-0000-0000-000000019804', now());
 select is(halal_mode_private.referral_progress('HMFAIRAPP1')->>'referral_count', '1',
-  'once confirmed, they count for the app member');
+  'the referral counts after the friend completes their app profile');
 
 -- Referral links follow one setting, so launch repoints them all at once.
 update halal_mode_private.referral_settings set link_base = 'https://halalmo.de/app?ref=';

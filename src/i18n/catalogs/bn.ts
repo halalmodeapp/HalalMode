@@ -879,7 +879,7 @@ export const bn: TranslationCatalog = {
   'referrals.tierCount': "{{goal}} জনের মধ্যে {{joined}}",
   'referrals.rewardMonths': "আপনি {{months}} মাস প্রিমিয়াম অর্জন করেছেন।",
   'referrals.rewardMonth1': "আপনি ১ মাস প্রিমিয়াম অর্জন করেছেন।",
-  'referrals.note': "বন্ধু অ্যাপে প্রোফাইল সম্পূর্ণ করলে তবেই যোগ দিয়েছেন বলে গোনা হয়।",
+  'referrals.note': "ওয়েটলিস্টে যোগ দেওয়া নিজে থেকে গণ্য হয় না; বন্ধু অ্যাপে নিজের প্রোফাইল সম্পূর্ণ করলে তবেই রেফারেল গণ্য হবে।",
   'referrals.share': "লিংক শেয়ার করুন",
   'referrals.codeLabel': "আপনার কোড:",
 };

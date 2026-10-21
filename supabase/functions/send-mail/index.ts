@@ -119,35 +119,30 @@ ${shown}
   };
 }
 
-const WELCOME: Record<string, { subject: string; thanks: string; offer: string; next: string; confirm: string; button: string }> = {
+const WELCOME: Record<string, { subject: string; thanks: string; offer: string; next: string; referralNote: string }> = {
   en: {
-    subject: 'You’re on the Halal Mode waitlist ✓',
-    thanks: 'Thank you for joining Halal Mode. You don’t need to do anything else: your place is saved.',
+    subject: 'You’re on the Halal Mode waitlist',
+    thanks: 'Thanks for joining Halal Mode. Your place is saved—there’s nothing else you need to do.',
     offer: 'You’re one of the first 10,000, so 1 month of Premium is reserved for you, free, at launch.',
-    next: 'We’re opening city by city, and we’ll write to you as soon as introductions begin where you are.',
-    confirm: 'A friend invited you. Confirm your email so they get the credit:',
-    button: 'Confirm my email',
+    next: 'We’re opening city by city. We’ll be in touch when Halal Mode is ready in your city.',
+    referralNote: 'If a friend invited you, they’ll receive referral credit only after you complete your profile in the app. Joining the waitlist or receiving this email does not count by itself.',
   },
   ar: {
-    subject: 'أنت على قائمة انتظار حلال مود ✓',
-    thanks: 'شكرًا لانضمامك إلى حلال مود. لا تحتاج إلى فعل أي شيء آخر: مكانك محفوظ.',
+    subject: 'أنت على قائمة انتظار حلال مود',
+    thanks: 'شكرًا لانضمامك إلى حلال مود. مكانك محفوظ، ولا تحتاج إلى فعل أي شيء آخر.',
     offer: 'أنت من أول 10,000 شخص، لذلك حجزنا لك شهرًا من بريميوم مجانًا عند الإطلاق.',
-    next: 'نفتح مدينةً تلو الأخرى، وسنكتب إليك فور بدء التعارفات في مدينتك.',
-    confirm: 'دعاك صديق. أكّد بريدك الإلكتروني ليُحتسب له ذلك:',
-    button: 'تأكيد بريدي',
+    next: 'نفتتح التطبيق مدينةً تلو الأخرى، وسنتواصل معك عندما يصبح حلال مود جاهزًا في مدينتك.',
+    referralNote: 'إذا دعاك صديق، فلن تُحتسب له الإحالة إلا بعد إكمال ملفك الشخصي في التطبيق. الانضمام إلى قائمة الانتظار أو استلام هذا البريد لا يُحتسب وحده.',
   },
 };
 
-function welcomeEmail(locale: string, eligible: boolean, token: string | null) {
+function welcomeEmail(locale: string, eligible: boolean) {
   const words = WELCOME[locale] ?? WELCOME.en;
   const rtl = locale === 'ar';
   const offer = eligible ? `<p><b>${escape(words.offer)}</b></p>` : '';
-  const confirm = token
-    ? `<p>${escape(words.confirm)}</p><p><a href="https://halalmo.de/refer?verify=${encodeURIComponent(token)}" style="display:inline-block;padding:11px 17px;border-radius:999px;background:#0a0a0a;color:#fff;text-decoration:none;font-weight:600">${escape(words.button)}</a></p>`
-    : '';
   return {
     subject: words.subject,
-    html: `<div dir="${rtl ? 'rtl' : 'ltr'}" style="font-family:system-ui,sans-serif;font-size:16px;line-height:1.6;color:#0a0a0a"><p>${escape(words.thanks)}</p>${offer}<p>${escape(words.next)}</p>${confirm}<p>Halal Mode</p></div>`,
+    html: `<div dir="${rtl ? 'rtl' : 'ltr'}" style="font-family:system-ui,sans-serif;font-size:16px;line-height:1.6;color:#0a0a0a"><p>${escape(words.thanks)}</p>${offer}<p>${escape(words.next)}</p><p>${escape(words.referralNote)}</p><p>Halal Mode</p></div>`,
   };
 }
 
@@ -160,7 +155,7 @@ const VERIFICATION: Record<string, {
     intro: 'Confirm your email to get your referral link. Invite a few good people and unlock more Premium.',
     button: 'Get my referral link',
     expiry: 'This link expires in 7 days.',
-    introConfirmed: 'Here is your referral link page, with how many friends have joined and the Premium you have earned.',
+    introConfirmed: 'Here is your referral progress, including how many friends have completed their app profiles and the Premium you have earned.',
     buttonConfirmed: 'See my referral link',
     expiryConfirmed: 'This link works for 30 days.',
   },
@@ -169,7 +164,7 @@ const VERIFICATION: Record<string, {
     intro: 'أكّد بريدك الإلكتروني لتحصل على رابط الدعوة. ادعُ أشخاصًا طيبين واحصل على مزيد من بريميوم.',
     button: 'احصل على رابطي',
     expiry: 'ينتهي هذا الرابط خلال 7 أيام.',
-    introConfirmed: 'هذه صفحة رابط الدعوة الخاص بك، وفيها عدد الأصدقاء الذين انضموا وما كسبته من بريميوم.',
+    introConfirmed: 'هذه صفحة تقدم إحالاتك، وفيها عدد الأصدقاء الذين أكملوا ملفاتهم في التطبيق ومقدار بريميوم الذي كسبته.',
     buttonConfirmed: 'اعرض رابطي',
     expiryConfirmed: 'يعمل هذا الرابط لمدة 30 يومًا.',
   },
@@ -214,16 +209,16 @@ function notJoinedEmail(locale: string) {
   };
 }
 
-// A friend's confirmation just counted. Progress toward the next reward, the
-// Premium reserved so far, and a fresh 30-day link to their page.
+// A referred friend joined the waitlist. This message reports completed app
+// profiles only; a waitlist or email confirmation alone never changes the count.
 const JOINED: Record<string, {
   subject: string; counted: string; next: string; top: string; months: string; month: string; button: string; expiry: string;
   rewards: Record<number, string>;
 }> = {
   en: {
-    subject: 'A friend joined Halal Mode with your link',
-    counted: '{joined} of {goal} friends have joined with your link.',
-    next: '{left} more for {reward}.',
+    subject: 'A friend joined the Halal Mode waitlist',
+    counted: '{joined} referred friends have completed their profiles and count toward your reward.',
+    next: '{left} more completed profiles to reach {reward}.',
     top: 'You have reached the top reward: 1 year of Premium, free.',
     months: 'Premium reserved for you so far: {months} months.',
     month: 'Premium reserved for you so far: 1 month.',
@@ -232,9 +227,9 @@ const JOINED: Record<string, {
     rewards: { 3: '3 months free', 5: '6 months free', 10: '1 year free' },
   },
   ar: {
-    subject: 'انضم صديق إلى حلال مود عبر رابطك',
-    counted: 'انضم {joined} من {goal} أصدقاء عبر رابطك.',
-    next: 'تبقّى {left} للحصول على {reward}.',
+    subject: 'انضم صديق إلى قائمة انتظار حلال مود عبر رابطك',
+    counted: 'أكمل {joined} من الأصدقاء الذين دعوتهم ملفاتهم الشخصية، ويُحتسبون ضمن مكافأتك.',
+    next: 'أكمل {left} أصدقاء آخرين ملفاتهم للوصول إلى {reward}.',
     top: 'وصلت إلى أعلى مكافأة: سنة من بريميوم مجانًا.',
     months: 'بريميوم المحجوز لك حتى الآن: {months} أشهر.',
     month: 'بريميوم المحجوز لك حتى الآن: شهر واحد.',
@@ -417,7 +412,7 @@ Deno.serve(async (request) => {
         const mail = await moderationEmail(item.moderation, client);
         error = await send(operator, mail.subject, mail.html, `mail-${item.id}`);
       } else if (item.kind === 'waitlist_welcome' && item.to) {
-        const mail = welcomeEmail(item.locale, item.welcome?.eligible === true, item.verification?.token ?? null);
+        const mail = welcomeEmail(item.locale, item.welcome?.eligible === true);
         error = await send(item.to, mail.subject, mail.html, `mail-${item.id}`);
       } else if (item.kind === 'waitlist_verification' && item.to && item.verification?.token) {
         const mail = verificationEmail(item.locale, item.verification.token, item.verification.confirmed === true);
