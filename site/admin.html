@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Halal Mode Admin</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/admin.css?v=20261021a">
+</head>
+<body>
+<!-- This page holds no secrets and grants nothing by itself. Every number and
+     every change goes through admin RPCs that check, on the server, that the
+     caller is on the admin list and signed in with two-factor. -->
+<header class="top">
+  <a class="brand" href="/admin"><img src="/logo.svg" alt="Halal Mode"><sup>™</sup><span>Admin</span></a>
+  <div class="top-actions" id="top-actions" hidden>
+    <span class="muted" id="updated"></span>
+    <button type="button" class="btn ghost" id="refresh">Refresh</button>
+    <button type="button" class="btn ghost" id="sign-out">Sign out</button>
+  </div>
+</header>
+<div class="demo-banner" id="demo-banner" hidden>Sample data. Nothing here is real and nothing is saved.</div>
+<main id="app" aria-live="polite">
+  <section class="gate" id="loading"><p class="muted">Loading…</p></section>
+</main>
+<template id="t-gate">
+  <section class="gate card">
+    <h1 data-title></h1>
+    <p class="muted" data-body></p>
+    <div data-slot></div>
+    <p class="error" data-error role="alert"></p>
+  </section>
+</template>
+<script src="/admin.js?v=20261021a"></script>
+</body>
+</html>
