@@ -256,3 +256,42 @@ td.nowrap{white-space:nowrap}
   .topbar .env{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------------------------------------------------------------- simple mode: tooltips, shortcuts, search */
+.tooltip{position:fixed;z-index:50;max-width:280px;padding:8px 11px;border-radius:9px;background:var(--ink);color:var(--bg);font:400 12.5px/1.45 ui-sans-serif,system-ui,sans-serif;box-shadow:var(--shadow-lg);pointer-events:none;opacity:0;transition:opacity .08s}
+.tooltip.show{opacity:1}
+.info{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--line-strong);color:var(--muted);font:700 10px/1 ui-sans-serif,system-ui,sans-serif;cursor:help;flex:none;vertical-align:1px;margin-left:5px}
+.info:hover,.info:focus-visible{color:var(--gold);border-color:var(--gold)}
+kbd,.kbd{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:5px;border:1px solid var(--line-strong);border-bottom-width:2px;background:var(--surface);color:var(--muted);font:600 11px/1 ui-sans-serif,system-ui,sans-serif}
+.nav .kbd{margin-left:auto;opacity:.7}
+.nav a:hover .kbd,.nav a[aria-current=page] .kbd{opacity:1}
+.nav .count+.kbd{margin-left:6px}
+.search-btn{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;margin-bottom:6px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);cursor:pointer;font-size:13px}
+.search-btn .kbd{margin-left:auto}
+.palette{position:fixed;inset:0;z-index:30;background:rgba(10,10,10,.45);display:flex;justify-content:center;align-items:flex-start;padding:12vh 16px 16px}
+.palette-box{width:100%;max-width:560px;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);overflow:hidden}
+.palette-box input{border:0;border-bottom:1px solid var(--line);border-radius:0;padding:16px 18px;font-size:16px;background:transparent}
+.palette-box input:focus-visible{outline:none}
+.palette-list{max-height:52vh;overflow-y:auto;padding:6px}
+.palette-item{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;border-radius:10px;background:transparent;text-align:left;cursor:pointer}
+.palette-item svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;color:var(--muted)}
+.palette-item small{color:var(--muted);margin-left:auto;font-size:12px}
+.palette-item[aria-selected=true]{background:var(--pink-soft)}
+.palette-empty{padding:18px;color:var(--muted);text-align:center}
+.attention{display:grid;gap:8px}
+.attention a{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;text-decoration:none;color:inherit;border:1px solid var(--line);background:var(--surface)}
+.attention a:hover{border-color:var(--line-strong)}
+.attention .dot{width:10px;height:10px;border-radius:50%;flex:none}
+.attention .bad .dot{background:var(--bad)}.attention .warn .dot{background:var(--warn)}.attention .good .dot{background:var(--good)}
+.attention b{font-weight:600}
+.attention span.go{margin-left:auto;color:var(--muted);font-size:12px}
+.big-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.big-kpis .kpi .value{font-size:36px}
+.lead{font-size:14px;color:var(--ink-2);max-width:720px}
+.shortcuts{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;align-items:center;font-size:13px}
+.metric .extra{grid-column:2/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill-row{display:flex;gap:6px;flex-wrap:wrap}
+@media (max-width:860px){.nav .kbd,.search-btn .kbd{display:none}}
+.search-btn svg,.gate .security svg,.lock svg{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+kbd,.kbd{white-space:nowrap}
+.topbar .updated{white-space:nowrap}

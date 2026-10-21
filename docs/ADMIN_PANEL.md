@@ -28,14 +28,23 @@ Optional extra layer: put `halalmo.de/admin*` behind **Cloudflare Access**. It i
    insert into halal_mode_private.admin_members (user_id, role, note)
    select id, 'owner', 'Mohammed' from auth.users where email = 'YOUR_ADMIN_EMAIL';
    ```
-5. Open `/admin`, continue with Google, and scan the QR code with an authenticator app. Add further admins from **Team & access**.
+5. Open `/admin`, continue with Google, and scan the QR code with an authenticator app. Add more people from **Team**.
 
-## What it controls
+## Layout
 
-- **Scoring:** switches and weights for each signal. Similarity is capped at 0.20.
-- **Luna:** on/off, typed confirmation, bounded backfill.
-- **Feature flags:** on/off and rollout percentage.
-- **Settings:** referral link address and email daily limit.
-- **Team:** add, change role, remove.
+Sidebar groups, each page with a one-key shortcut:
+
+| Group | Page (key) | Can change |
+|---|---|---|
+| | Home (H) | Shows what needs attention |
+| People | Waitlist (W), Members (M), Invites (I) | Time range and series on charts; invite link address |
+| Matching | Daily matches (D), Match signals (S) | Signals on/off and importance, including Photo quality check (Luna), and checking existing photos |
+| Safety | Reports (R) | Read reports and dismiss, suspend for 7 days, or ban |
+| System | Email (E), Features (F) | Email daily limit; turn app features on, off or partly on |
+| Admin | Team (T), Activity log (L) | People with access, preview as a viewer, sign out everywhere |
+
+Ctrl K or / searches every page and action. U unlocks changes. ? lists shortcuts. Every term has a hover tooltip.
+
+Report actions from the panel go through the `report-action` Edge Function. With an admin session it first calls `admin_authorize_report_action` as that admin (owner, recent code, logged), then uses the same claim, ban and apply steps as the email links. **Redeploy `report-action`** along with the migrations.
 
 The launch switch was removed on 19 Oct (`20261019160000_remove_launch_switch.sql`), so it is not in the panel.
