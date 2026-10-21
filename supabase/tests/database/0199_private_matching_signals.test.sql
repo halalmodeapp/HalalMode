@@ -1,6 +1,6 @@
 begin;
 set local search_path = public, extensions, halal_mode_private;
-select plan(15);
+select plan(16);
 
 select has_table('halal_mode_private', 'matching_signal_metric_config',
   'matching signal inputs have one private configuration table');
@@ -70,6 +70,12 @@ select ok(
   'a backend can independently disable the pair preference and adjust its weight'
 );
 select public.configure_matching_signal_metric_service('reception_similarity', true, 0.08);
+
+select ok(
+  (select command like '%lfuuywsmydruvqkqwvzw.supabase.co/functions/v1/moderate%'
+   from cron.job where jobname = 'halal-mode-moderate'),
+  'the moderation job calls the live London project'
+);
 
 select * from finish();
 rollback;
