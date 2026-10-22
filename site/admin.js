@@ -467,7 +467,7 @@
     if (DEMO) {
       state.session = { demo: true };
       state.me = { admin: true, role: 'owner', name: 'Demo owner', mfa: true, step_up_until: 0 };
-      state.overview = sampleOverview(); state.settings = sampleSettings(); state.demoReports = sampleReports(); state.demoMatcher = sampleMatcher(); Object.assign(state, sampleTrust());
+      state.overview = sampleOverview(); state.origins = sampleOrigins(); state.settings = sampleSettings(); state.demoReports = sampleReports(); state.demoMatcher = sampleMatcher(); Object.assign(state, sampleTrust());
       state.loadedAt = new Date().toISOString();
       return boot();
     }
@@ -488,8 +488,9 @@
   }
   function loadData() {
     if (DEMO) return Promise.resolve();
-    return Promise.all([rpc('admin_overview'), rpc('admin_settings'), refreshSession()])
-      .then(function (r) { state.overview = r[0]; state.settings = r[1]; state.loadedAt = new Date().toISOString(); state.lastLoad = Date.now(); });
+    // Origins are a nice-to-have: if the call fails the rest of the panel still loads.
+    return Promise.all([rpc('admin_overview'), rpc('admin_settings'), refreshSession(), rpc('admin_waitlist_origins').catch(function () { return null; })])
+      .then(function (r) { state.overview = r[0]; state.settings = r[1]; state.origins = r[3]; state.loadedAt = new Date().toISOString(); state.lastLoad = Date.now(); });
   }
   function reload() {
     return loadData().then(render).catch(function (e) {
@@ -749,7 +750,35 @@
           return h('li', { style: 'display:block' }, h('div', { style: 'display:flex;justify-content:space-between' }, h('span', { text: c.city }), h('span', { class: 'num', text: n(c.count) })),
             h('div', { class: 'meter' }, h('span', { style: 'width:' + Math.round((c.count / topMax) * 100) + '%' })));
         }))),
-        card('Ages', 'The age range people chose when they signed up.', null, rows(ages.map(function (k) { const v = (w.age_ranges || {})[k] || 0; return [k, n(v) + '  ·  ' + pct(v, w.total)]; })))));
+        card('Ages', 'The age range people chose when they signed up.', null, rows(ages.map(function (k) { const v = (w.age_ranges || {})[k] || 0; return [k, n(v) + '  ·  ' + pct(v, w.total)]; })))),
+      originsCards(w));
+  }
+  // Country comes from where the visitor connected from, not from what they typed;
+  // source is the ad or post link they arrived on.
+  function countryName(code) {
+    try { return new Intl.DisplayNames(['en'], { type: 'region' }).of(code) || code; } catch (_e) { return code; }
+  }
+  function originList(list, label, total) {
+    const max = Math.max(1, (list[0] || {}).count || 1);
+    if (!list.length) return h('p', { class: 'note', text: 'Nothing yet. This fills in as new people sign up.' });
+    return h('ul', { class: 'list' }, list.map(function (c) {
+      return h('li', { style: 'display:block' }, h('div', { style: 'display:flex;justify-content:space-between' }, h('span', { text: label(c) }), h('span', { class: 'num', text: n(c.count) + '  ·  ' + pct(c.count, total) })),
+        h('div', { class: 'meter' }, h('span', { style: 'width:' + Math.round((c.count / max) * 100) + '%' })));
+    }));
+  }
+  function originsCards(w) {
+    const o = state.origins;
+    if (!o) return h('p', { class: 'note', text: 'Countries and sources are not available yet. They appear once the latest database update is applied.' });
+    return h('div', { class: 'grid cols-2' },
+      card('Countries', 'Where people connected from when they signed up (' + n(o.with_country) + ' of ' + n(o.total) + ' have one). Only people who joined after this was switched on are counted.', null,
+        originList(o.countries || [], function (c) { return countryName(c.country_code); }, o.with_country)),
+      card('Where they came from', 'The ad or post link people arrived on, from utm_source/utm_medium/utm_campaign, or the site that sent them (' + n(o.with_source) + ' of ' + n(o.total) + ' have one).', null,
+        originList(o.sources || [], function (c) { return c.source; }, o.with_source)));
+  }
+  function sampleOrigins() {
+    return { total: 8412, with_country: 5230, with_source: 3610,
+      countries: [['GB', 2480], ['US', 790], ['CA', 520], ['AE', 410], ['FR', 330], ['DE', 260], ['SA', 190], ['AU', 150]].map(function (c) { return { country_code: c[0], count: c[1] }; }),
+      sources: [['reddit/paid/wave1', 1420], ['ref:old.reddit.com', 880], ['ref:out.reddit.com', 640], ['reddit/post/marriage', 410], ['ref:t.co', 260]].map(function (c) { return { source: c[0], count: c[1] }; }) };
   }
 
   function pageMembers() {

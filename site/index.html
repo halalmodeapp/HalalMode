@@ -293,6 +293,7 @@ button:disabled{opacity:.55;cursor:wait}
 <script src="/site-footer.js?v=20261021a"></script>
 <script src="/i18n.js?v=20261022a"></script>
 <script src="/waitlist-email.js?v=20261018a"></script>
+<script src="/waitlist-source.js?v=20261022b"></script>
 <script>
 /* ---------- Waitlist ---------- */
 (function(){
@@ -317,6 +318,7 @@ button:disabled{opacity:.55;cursor:wait}
       if(exists===true){try{localStorage.setItem(REFERRAL_STORAGE,code)}catch(_){} }
     }).catch(function(){});
   }
+  var source=window.HalalWaitlistSource?window.HalalWaitlistSource.current(window):'';
   var referralReady=rememberReferral().then(function(){
     var code=readReferral();
     if(code){document.getElementById('ref-code').textContent=code;document.getElementById('ref-added').hidden=false}
@@ -332,7 +334,7 @@ button:disabled{opacity:.55;cursor:wait}
     if(!age)return say('validationAge');
     go.disabled=true;say('');
     referralReady.then(function(){
-      return fetch(URL_,restOptions({p_email:email,p_city:city,p_age_range:age,p_locale:window.HalalI18n.language,p_referral_code:readReferral()}));
+      return fetch(URL_,restOptions({p_email:email,p_city:city,p_age_range:age,p_locale:window.HalalI18n.language,p_referral_code:readReferral(),p_source:source||null}));
     })
     .then(function(r){return r.json().catch(function(){return {}}).then(function(data){if(!r.ok){var err=new Error(r.status);err.status=r.status;err.code=data&&data.code;err.detail=String(data&&data.message||'');throw err}return data})})
     .then(function(data){
