@@ -22,7 +22,7 @@ select ok(
 );
 select ok(
   position('pg_advisory_xact_lock' in pg_get_functiondef(
-    'public.join_waitlist_now(text,text,text,text,text)'::regprocedure
+    'public.join_waitlist_now(text,text,text,text,text,text)'::regprocedure
   )) > 0,
   'waitlist intake is serialized'
 );

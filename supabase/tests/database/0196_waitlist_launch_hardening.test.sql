@@ -5,7 +5,7 @@ select plan(12);
 -- The old app join endpoint is closed; the website's stays open.
 select ok(
   to_regprocedure('public.request_waitlist_verification(text,text,text,text,text)') is null
-  and has_function_privilege('anon', 'public.join_waitlist_now(text,text,text,text,text)', 'EXECUTE'),
+  and has_function_privilege('anon', 'public.join_waitlist_now(text,text,text,text,text,text)', 'EXECUTE'),
   'only one public way to join the waitlist'
 );
 

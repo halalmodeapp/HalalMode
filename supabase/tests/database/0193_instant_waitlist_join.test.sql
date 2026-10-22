@@ -52,7 +52,7 @@ select is(
   'an unlisted address gets the same reply'
 );
 select ok(
-  has_function_privilege('anon', 'public.join_waitlist_now(text,text,text,text,text)', 'EXECUTE')
+  has_function_privilege('anon', 'public.join_waitlist_now(text,text,text,text,text,text)', 'EXECUTE')
   and has_function_privilege('anon', 'public.request_referral_link(text,text)', 'EXECUTE')
   and not has_function_privilege('anon', 'public.verify_waitlist_token(text)', 'EXECUTE'),
   'anonymous callers can join and ask for a link, but cannot read verification state'

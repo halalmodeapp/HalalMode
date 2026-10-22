@@ -1,6 +1,6 @@
 begin;
 set local search_path = public, extensions, halal_mode_private;
-select plan(17);
+select plan(16);
 
 -- ---------------------------------------------------------------- the country header
 select set_config('request.headers', '{"cf-ipcountry":"gb"}', true);
