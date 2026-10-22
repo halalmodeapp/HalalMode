@@ -1,18 +1,14 @@
 /**
- * Short, shareable campaign addresses: halalmo.de/<name> forwards to the
- * homepage with UTM labels, so each channel's visits can be told apart in
- * Cloudflare Web Analytics without the long address showing anywhere.
+ * Campaign addresses. Each one serves the normal homepage (and waitlist) at
+ * its own clean path, so the address bar stays tidy and Cloudflare Web
+ * Analytics counts that path's visits separately: halalmo.de/waitlist is the
+ * Reddit ad's link, and its visits are the ad's visits.
  *
- * To add one, add a line below and run `npm run deploy:web`.
- * Never put a personal referral code (?ref=) in a campaign link.
+ * To add one, add a path below and run `npm run deploy:web`. Use a new path
+ * per channel. Never put a personal referral code (?ref=) in a campaign link.
  */
-export const CAMPAIGN_LINKS = {
-  reddit: { source: 'reddit', medium: 'paid', campaign: 'waitlist' },
-};
+export const CAMPAIGN_PATHS = ['waitlist'];
 
 export function campaignRedirects() {
-  return Object.entries(CAMPAIGN_LINKS)
-    .map(([path, { source, medium, campaign }]) =>
-      `/${path} /?utm_source=${source}&utm_medium=${medium}&utm_campaign=${campaign} 302`)
-    .join('\n') + '\n';
+  return CAMPAIGN_PATHS.map((path) => `/${path} / 200`).join('\n') + '\n';
 }

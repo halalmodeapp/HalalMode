@@ -60,9 +60,9 @@ test('the referral page scripts parse and its share message carries the link and
   assert.match(html, /encodeURIComponent\(t\('shareMessage'\)[^;]*\\n[^;]*t\('shareCode'\)/u);
 });
 
-test('campaign short links forward to the homepage with tracking labels, never a referral code', async () => {
+test('campaign paths serve the homepage at their own clean address, never with a referral code', async () => {
   const { campaignRedirects } = await import('../scripts/campaign-links.mjs');
   const rules = campaignRedirects().trimEnd().split(/\r?\n/);
-  assert.ok(rules.includes('/reddit /?utm_source=reddit&utm_medium=paid&utm_campaign=waitlist 302'));
+  assert.ok(rules.includes('/waitlist / 200'));
   for (const rule of rules) assert.doesNotMatch(rule, /[?&]ref=/);
 });
