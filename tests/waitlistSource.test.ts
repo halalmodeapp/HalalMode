@@ -26,6 +26,7 @@ test('the Reddit ad address is labelled as the ad, ahead of the referring site',
   assert.equal(build('', '', 'halalmo.de', '/Waitlist/'), 'reddit/paid/waitlist');
   assert.equal(build('?utm_source=instagram', '', 'halalmo.de', '/waitlist'), 'instagram', 'utm tags still win');
   assert.equal(build('', 'https://www.reddit.com/', 'halalmo.de', '/'), 'ref:reddit.com');
+  assert.equal(build('', 'https://t.co/abc', 'halalmo.de', '/waitlistx'), 'x/paid/waitlist', 'the X ad has its own address');
 });
 
 test('every campaign address served by the site is recognised', () => {
