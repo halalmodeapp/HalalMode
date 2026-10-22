@@ -6,6 +6,7 @@
 //    web session, and celebrate.
 // 4. Send them to their phone's app store, or show a QR code on a computer.
 // Until launch.js turns `inviteFlow` on, referral links go to the waitlist.
+// The inviter is shown by first name, or by email when they have no name yet.
 // `?demo` shows every screen with sample data and no sign-in.
 (function () {
   'use strict';
@@ -54,7 +55,7 @@
         return res.text().then(function (text) {
           let body = null;
           try { body = text ? JSON.parse(text) : null; } catch (_e) { body = text; }
-          if (!res.ok) { const err = new Error((body && (body.message || body.msg)) || ('HTTP ' + res.status)); err.status = res.status; throw err; }
+          if (!res.ok) { const err = new Error((body && (body.message || body.msg)) || ('HTTP ' + res.status)); err.status = res.status; err.hint = body && body.hint; throw err; }
           return body;
         });
       });
@@ -65,7 +66,7 @@
     ['step-start', 'step-working', 'step-done', 'step-other'].forEach(function (s) { $(s).hidden = s !== id; });
     current = id;
   }
-  function who() { return inviter && (inviter.name || inviter.masked_email); }
+  function who() { return inviter && (inviter.name || inviter.email); }
   function renderStart() {
     $('invite-title').textContent = who() ? t('inviteBy', { name: who() }) : t('inviteAnon');
     const ready = $('invite-ready');
@@ -152,7 +153,15 @@
         request('/auth/v1/logout', { token: token }).catch(function () { return null; });
         finish(result);
       })
-      .catch(function () { $('step-other').dataset.state = 'failed'; show('step-other'); renderOther('failed'); });
+      .catch(function (e) {
+        // Not signed in (or the sign-in expired): back to the buttons, saying why.
+        if (e.status === 401 || e.status === 403 || e.hint === 'sign_in') {
+          show('step-start'); renderStart();
+          $('start-note').textContent = t('inviteSignInFirst'); $('start-note').className = 'note bad';
+          return;
+        }
+        $('step-other').dataset.state = 'failed'; show('step-other'); renderOther('failed');
+      });
   }
 
   // ---------------------------------------------------------------- confetti

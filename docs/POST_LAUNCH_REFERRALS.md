@@ -6,12 +6,12 @@ Every share URL stays `https://halalmo.de/?ref=CODE`. Before launch it joins the
 
 One flow for iPhone, Android and computers. No app links are needed: everyone goes through the website first.
 
-1. **`/invite?ref=CODE`**: "**Ali** invited you to Halal Mode" (first name; a masked email such as `a•••@gmail.com` when the inviter has no profile yet), a green tick with "Your referral code HM… is ready", and **Continue with Apple / Google / email**. Apple is first on iPhone, Google first elsewhere.
+1. **`/invite?ref=CODE`**: "**Ali** invited you to Halal Mode" (first name, or their email when the inviter has no name yet), a green tick with "Your referral code HM… is ready", and **Continue with Apple / Google / email**. Apple is first on iPhone, Google first elsewhere.
 2. **Sign-in** happens on the web with Supabase Auth (OAuth, or an email sign-in link). On return the page calls `claim_invite(code)`, which saves the referral to the new account and keeps "first referrer wins" (including referrals made on the waitlist). The web session is then signed out.
 3. **Congratulations** with confetti: "Your invite from Ali is now linked to your account." iPhone sees the App Store button, Android the Google Play button (each opens automatically after a moment), and computers a QR code plus both buttons. The QR code points to `/get`, which sends each phone to its own store.
 4. **In the app** they sign in the same way; the referral counts once their profile is complete, as before. The typed code in onboarding stays as the last resort.
 
-Database: `referral_inviter(code)` (anyone; first name or masked email only) and `claim_invite(code)` (signed in). See `supabase/migrations/20261021210000_invite_flow.sql` and pgTAP `0205`.
+Database: `referral_inviter(code)` (anyone; first name, or email when there is no name) and `claim_invite(code)` (asks you to sign in if you are not). See `supabase/migrations/20261021210000_invite_flow.sql` and pgTAP `0205`.
 
 Preview without switching it on: `https://halalmo.de/invite?demo` (sample data, no sign-in) or `/invite?ref=CODE&preview` (real sign-in).
 

@@ -1,12 +1,11 @@
 begin;
 set local search_path = public, extensions, halal_mode_private;
-select plan(9);
+select plan(10);
 
 select ok(
   has_function_privilege('anon', 'public.referral_inviter(text)', 'EXECUTE')
-  and not has_function_privilege('anon', 'public.claim_invite(text)', 'EXECUTE')
   and has_function_privilege('authenticated', 'public.claim_invite(text)', 'EXECUTE'),
-  'anyone can see who invited them; only a signed-in account can claim'
+  'anyone can see who invited them, and the invite page can claim'
 );
 
 insert into auth.users (id, email, created_at) values
@@ -27,8 +26,10 @@ select 'HMINVITE02', id from halal_mode_private.waitlist where email = 'pgtap.in
 on conflict (code) do nothing;
 
 select is(public.referral_inviter('hminvite01')->>'name', 'Ali', 'the invite page shows the inviter''s first name');
-select is(public.referral_inviter('HMINVITE02')->>'masked_email', 'p•••@gmail.com', 'or a masked email when there is no name');
-select ok(public.referral_inviter('HMINVITE02')::text not like '%pgtap.invite.waiter%', 'never the full email');
+select is(public.referral_inviter('HMINVITE02')->>'email', 'pgtap.invite.waiter@gmail.com', 'or their email when there is no name');
+select ok(public.referral_inviter('hminvite01') -> 'email' = 'null'::jsonb, 'and no email when there is a name');
+select throws_ok($$ select public.claim_invite('HMINVITE01') $$, '42501',
+  'Please sign in with Apple, Google or email to link your invite.', 'claiming signed out says to sign in');
 select is(public.referral_inviter('HMNOTREAL1')->>'valid', 'false', 'unknown codes are invalid');
 
 select set_config('request.jwt.claims',
