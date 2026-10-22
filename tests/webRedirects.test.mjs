@@ -64,6 +64,7 @@ test('campaign paths serve the homepage at their own clean address, never with a
   const { campaignRedirects } = await import('../scripts/campaign-links.mjs');
   const rules = campaignRedirects().trimEnd().split(/\r?\n/);
   assert.ok(rules.includes('/waitlist / 200'));
+  assert.ok(rules.includes('/x / 200'));
   assert.ok(rules.includes('/waitlistx / 200'));
   for (const rule of rules) assert.doesNotMatch(rule, /[?&]ref=/);
 });
