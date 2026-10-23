@@ -1,8 +1,8 @@
 /* Where a waitlist visitor came from, kept with their sign-up so the admin
  * panel can show which ads and posts bring people in. The label comes from,
  * in order: utm_source/utm_medium/utm_campaign on the link; the campaign
- * address they landed on (halalmo.de/waitlist is the Reddit ad, /x and the
- * older /waitlistx the X ad); or the site
+ * address they landed on (halalmo.de/waitlist is the Reddit ad, /x the link
+ * in our own X posts, /waitlistx the paused X ad); or the site
  * that sent them. It is read when the page opens and kept in memory only:
  * nothing is stored in the browser, so no consent banner is needed.
  * Mirrors the shape public.join_waitlist_now() accepts in
@@ -12,7 +12,7 @@
 (function (root) {
   const CAMPAIGN_PATHS = {
     '/waitlist': 'reddit/paid/waitlist',
-    '/x': 'x/paid/waitlist',
+    '/x': 'x/organic',
     '/waitlistx': 'x/paid/waitlist'
   };
 
