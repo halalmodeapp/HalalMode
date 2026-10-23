@@ -45,6 +45,8 @@ Sidebar groups, each page with a one-key shortcut:
 
 Ctrl K or / searches every page and action. U unlocks changes. ? lists shortcuts. Every term has a hover tooltip.
 
-Report and account actions from the panel go through the `report-action` Edge Function. With an admin session it first calls `admin_authorize_report_action` as that admin (owner, recent code), then uses the same claim and ban steps as the email links; `apply_admin_report_action_service` applies the action and writes the activity-log row in one transaction. **Redeploy `report-action`** along with the migrations.
+Report and account actions from the panel go through the `report-action` Edge Function. With an admin session it first calls `admin_authorize_report_action` as that admin (owner, recent code), then claims the report and applies the ban; `apply_admin_report_action_service` applies the action and writes the activity-log row in one transaction. **Redeploy `report-action`** along with the migrations.
+
+This is the only way to act on a report. Report emails link to Reports in the panel; they no longer carry signed Suspend, Ban or Dismiss links (retired on 2026-10-23 by `20261023090000_email_moderation_links_retired.sql`, because those links worked without a second factor and left no log entry). `report-action` refuses any call without an admin session, and old links that reach `halalmo.de/moderate` are sent to the panel.
 
 The launch switch was removed on 19 Oct (`20261019160000_remove_launch_switch.sql`), so it is not in the panel.

@@ -62,25 +62,15 @@ const MODERATION_MEDIA_LINK_TTL_SECONDS = 60 * 60;
 const escape = (value: unknown) =>
   String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 
-async function sign(secret: string, message: string): Promise<string> {
-  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message));
-  return Array.from(new Uint8Array(signature)).map((b) => b.toString(16).padStart(2, '0')).join('');
-}
+/**
+ * Decisions are made in the admin panel, which asks for the admin's
+ * two-factor code and writes every action to the audit log. The email only
+ * points there: a link that could suspend or ban by itself would let anyone
+ * who sees this inbox act with no second factor and no record.
+ */
+const ADMIN_REPORTS_URL = 'https://halalmo.de/admin#/reports';
 
-/** A link to a confirmation page, valid for 14 days. */
-async function actionLink(secret: string, reportId: string, action: string): Promise<string> {
-  const expires = Math.floor(Date.now() / 1000) + 14 * 24 * 3600;
-  const token = await sign(secret, `${reportId}.${action}.${expires}`);
-  return `https://halalmo.de/moderate?r=${reportId}&a=${action}&e=${expires}&t=${token}`;
-}
-
-async function reportEmail(report: Report, secret: string) {
-  const [suspend, ban, dismiss] = await Promise.all(
-    ['suspend', 'ban', 'dismiss'].map((action) => actionLink(secret, report.id, action)),
-  );
-  const button = (href: string, label: string, colour: string) =>
-    `<a href="${href}" style="display:inline-block;margin:4px 8px 4px 0;padding:10px 16px;border-radius:999px;background:${colour};color:#fff;text-decoration:none;font-weight:600">${label}</a>`;
+function reportEmail(report: Report) {
   const subject = `Report: ${report.subject_name ?? 'member'}, ${report.reason}${report.subject_report_count > 1 ? ` (${report.subject_report_count} reports)` : ''}`;
   const html = `<div style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.5;color:#0a0a0a">
 <p><b>Reason:</b> ${escape(report.reason)}</p>
@@ -90,8 +80,8 @@ async function reportEmail(report: Report, secret: string) {
 Reports against them in total: <b>${report.subject_report_count}</b>${report.subject_paused ? ' · already hidden' : ''}</p>
 <p><b>Reported by:</b> ${escape(report.reporter_name)} <code>${escape(report.reporter_id)}</code><br>
 <b>When:</b> ${escape(new Date(report.created_at).toUTCString())}</p>
-<p>${button(suspend, 'Suspend 7 days', '#8A6A34')}${button(ban, 'Ban', '#B3261E')}${button(dismiss, 'Dismiss', '#3B3934')}</p>
-<p style="color:#6C6A65;font-size:13px">Each button opens a page to confirm, so nothing happens by accident. Links work for 14 days.</p>
+<p><a href="${ADMIN_REPORTS_URL}" style="display:inline-block;margin:4px 0;padding:10px 16px;border-radius:999px;background:#0A0A0A;color:#fff;text-decoration:none;font-weight:600">Decide in the admin panel</a></p>
+<p style="color:#6C6A65;font-size:13px">Suspend, ban or dismiss from Reports in the admin panel. It asks for your two-factor code, and every decision is logged.</p>
 </div>`;
   return { subject, html };
 }
@@ -387,11 +377,10 @@ Deno.serve(async (request) => {
   if (!mail || !operator) return new Response('Mail provider secrets and OPERATOR_EMAIL are not set', { status: 503 });
   const send = mail.send;
 
-  const secret = await client.rpc('mail_link_secret_service');
   // Runs every minute. Resend: 40 paced sends, about 2,400 an hour. SES: as
   // many as its send rate fits in 45 seconds, up to 200 (12,000 an hour).
   const claimed = await client.rpc('claim_mail_service', { p_limit: mail.batch, p_daily_limit: mail.dailyLimit });
-  if (claimed.error || secret.error) return new Response('claim failed', { status: 500 });
+  if (claimed.error) return new Response('claim failed', { status: 500 });
 
   let sent = 0;
   let first = true;
@@ -406,7 +395,7 @@ Deno.serve(async (request) => {
     let error: string | null = null;
     try {
       if (item.kind === 'report' && item.report) {
-        const mail = await reportEmail(item.report, secret.data as string);
+        const mail = reportEmail(item.report);
         error = await send(operator, mail.subject, mail.html, `mail-${item.id}`);
       } else if (item.kind === 'moderation' && item.moderation) {
         const mail = await moderationEmail(item.moderation, client);

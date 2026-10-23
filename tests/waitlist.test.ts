@@ -86,7 +86,11 @@ test('the public offer is verification-backed and the referral UI has no client-
   assert.doesNotMatch(page, /request_waitlist_verification/u);
   assert.match(page, /data-i18n="offerFree"/u);
   assert.match(refer, /request_referral_link/u);
-  assert.match(page, /localStorage\.setItem\(REFERRAL_STORAGE/u);
+  // The code belongs to the visit that came through the link: kept for this
+  // tab only, so a later plain visit to halalmo.de shows no referral.
+  assert.match(page, /sessionStorage\.setItem\(REFERRAL_STORAGE/u);
+  assert.doesNotMatch(page, /localStorage\.setItem\(REFERRAL_STORAGE/u);
+  assert.match(page, /localStorage\.removeItem\(REFERRAL_STORAGE\)/u);
   // Verification links from email land on the homepage and are forwarded,
   // query intact, to the referral page that shows the result.
   assert.match(page, /window\.location\.replace\('\/refer'\+window\.location\.search\)/u);

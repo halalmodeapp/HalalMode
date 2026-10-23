@@ -307,15 +307,19 @@ button:disabled{opacity:.55;cursor:wait}
   function sayText(text,ok){msg.dataset.messageKey='';msg.textContent=text;msg.className='msg '+(ok?'ok':'bad')}
   function restOptions(body){return {method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+KEY},body:JSON.stringify(body)}}
   function validReferral(code){return /^HM[A-Z0-9]{8}$/.test(String(code||'').trim().toUpperCase())}
-  function readReferral(){try{var code=localStorage.getItem(REFERRAL_STORAGE)||'';return validReferral(code)?code.toUpperCase():''}catch(_){return ''}}
+  // A referral code belongs to the visit that came through the link: it is kept
+  // for this tab only (so How it works and back keeps it), never across visits,
+  // and a plain visit to halalmo.de shows no code. Earlier versions kept it in
+  // localStorage for good, so clear that once.
+  try{localStorage.removeItem(REFERRAL_STORAGE)}catch(_){}
+  function readReferral(){try{var code=sessionStorage.getItem(REFERRAL_STORAGE)||'';return validReferral(code)?code.toUpperCase():''}catch(_){return ''}}
   function rememberReferral(){
-    var saved=readReferral();
-    if(saved)return Promise.resolve();
     var code=new URLSearchParams(window.location.search).get('ref');
     if(!validReferral(code))return Promise.resolve();
     code=code.trim().toUpperCase();
+    if(readReferral()===code)return Promise.resolve();
     return fetch(REFERRAL_EXISTS_URL,restOptions({p_code:code})).then(function(r){return r.ok?r.json():false}).then(function(exists){
-      if(exists===true){try{localStorage.setItem(REFERRAL_STORAGE,code)}catch(_){} }
+      if(exists===true){try{sessionStorage.setItem(REFERRAL_STORAGE,code)}catch(_){} }
     }).catch(function(){});
   }
   var source=window.HalalWaitlistSource?window.HalalWaitlistSource.current(window):'';
@@ -338,7 +342,7 @@ button:disabled{opacity:.55;cursor:wait}
     })
     .then(function(r){return r.json().catch(function(){return {}}).then(function(data){if(!r.ok){var err=new Error(r.status);err.status=r.status;err.code=data&&data.code;err.detail=String(data&&data.message||'');throw err}return data})})
     .then(function(data){
-      try{localStorage.removeItem(REFERRAL_STORAGE)}catch(_){}
+      try{sessionStorage.removeItem(REFERRAL_STORAGE)}catch(_){}
       say('');
       var body=document.getElementById('joined-body');
       body.dataset.i18n=data&&data.eligible===false?'joinedBodyLate':'joinedBody';

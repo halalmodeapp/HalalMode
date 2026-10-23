@@ -20,7 +20,7 @@
  * Members are asked to accept it on their next visit.
  */
 
-export const LEGAL_VERSION = '2026-10-22';
+export const LEGAL_VERSION = '2026-10-23';
 
 /** Where both documents live: halalmo.de/legal/terms and /legal/privacy. */
 export const LEGAL_SITE = 'https://halalmo.de';
@@ -179,6 +179,14 @@ export const PRIVACY: LegalDocument = {
         'People you are introduced to see your first name, age, city, occupation, what you have written, your photographs, and your voice introduction if you recorded one.',
         'They never see your email address, your date of birth, your exact location, or your preferences.',
         'They are never told that you were shown their profile and did not choose them.',
+      ],
+    },
+    {
+      heading: 'Your referral link',
+      body: [
+        'Your referral link carries a code that belongs to you. Anyone who opens it sees who invited them: your first name, or, if you have not added one yet (for example, while you are only on the waitlist), your email address.',
+        'Share your link only with people, and in places, where you are happy for that to be seen. Once you add your first name in the app, your name is shown instead of your email address.',
+        'When someone joins through your link, we record that you invited them, so the referral can be credited to you.',
       ],
     },
     {

@@ -63,3 +63,15 @@ test('every website page links the documents where they live', () => {
     for (const href of linked) assert.ok(paths.includes(href), `${page}: ${href} is where the documents live`);
   }
 });
+
+test('the privacy notice says what a referral link shows, as the database does', () => {
+  const text = LEGAL_DOCUMENTS.privacy.sections.flatMap((section) => section.body).join(' ');
+  // public.referral_inviter answers anyone holding a code with the inviter's
+  // first name, or their email address while they have no name.
+  const latest = [...migrations].reverse().map((name) => read(`supabase/migrations/${name}`))
+    .find((sql) => /create or replace function public\.referral_inviter\(/i.test(sql)) ?? '';
+  assert.match(latest, /'email', case when v_name is null then v_email end/);
+  assert.match(text, /referral link/i);
+  assert.match(text, /email address/i);
+  assert.match(text, /first name/i);
+});
