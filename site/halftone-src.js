@@ -75,6 +75,38 @@ export function startHalftone(scene, { settings = HALFTONE_DEFAULTS, still = fal
   const composite = document.createElement('canvas');
   const ctx = composite.getContext('2d');
   let mount = null, frame = 0, building = false, stopped = false, last = 0;
+  // The dots are re-rolled a few times a second, a little: spacing, how far each
+  // dot strays from its grid, how coarse the grain is and how much shows. The
+  // picture underneath is not touched. Still with reduced motion.
+  const VARY_EVERY = 1000 / 6;
+  let varied = 0;
+  // The shader scatters the dots, and breaks up the grain, with a noise picture.
+  // Reusing one picture made each frame a tweak of the last, so every re-roll
+  // writes a fresh random one: no frame leads to the next.
+  const NOISE = 256;
+  const noiseBytes = new Uint8Array(NOISE * NOISE * 4);
+  function rerollNoise() {
+    const gl = mount.gl, texture = mount.textures.get('u_noiseTexture'), unit = mount.textureUnitMap.get('u_noiseTexture');
+    if (!texture) return;
+    for (let i = 0; i < noiseBytes.length; i += 65536) crypto.getRandomValues(noiseBytes.subarray(i, Math.min(i + 65536, noiseBytes.length)));
+    for (let i = 3; i < noiseBytes.length; i += 4) noiseBytes[i] = 255;
+    gl.activeTexture(gl.TEXTURE0 + unit);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, NOISE, NOISE, 0, gl.RGBA, gl.UNSIGNED_BYTE, noiseBytes);
+  }
+  const vary = (now) => {
+    if (!mount || still || reduceMotion.matches || now - varied < VARY_EVERY) return;
+    varied = now;
+    rerollNoise();
+    const r = () => Math.random();
+    mount.setUniforms(uniforms({
+      ...current,
+      size: current.size * (0.72 + 0.56 * r()),
+      gridNoise: Math.min(1, Math.max(0, current.gridNoise + (r() - 0.2) * 1.3)),
+      grainSize: current.grainSize * (0.8 + 0.4 * r()),
+    }));
+    overlay.style.opacity = String(current.opacity * (0.82 + 0.36 * r()));
+  };
 
   // Every layer where it currently sits; a layer the breeze is bending is
   // taken from its warp canvas instead of the still picture.
@@ -128,6 +160,7 @@ export function startHalftone(scene, { settings = HALFTONE_DEFAULTS, still = fal
   function loop(now) {
     frame = requestAnimationFrame(loop);
     if (!mount || document.hidden) return;
+    try { vary(now); } catch { /* the variation is a nicety; the texture stays */ }
     const interval = still || reduceMotion.matches ? 400 : 33;
     if (now - last < interval) return;
     last = now;

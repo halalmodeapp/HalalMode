@@ -1,0 +1,282 @@
+/* A looping preview of the app (app-preview.js). The screen is laid out at the
+   app's own 390 x 844 phone size with its tokens, then scaled to fit. */
+@font-face{font-family:'HM Noto';src:url('/fonts/NotoSans_400Regular.woff') format('woff');font-weight:400;font-display:swap}
+@font-face{font-family:'HM Noto';src:url('/fonts/NotoSans_600SemiBold.woff') format('woff');font-weight:600;font-display:swap}
+@font-face{font-family:'HM Beiruti';src:url('/fonts/Beiruti_500Medium.woff') format('woff');font-weight:500;font-display:swap}
+
+.ap{--ink:#0A0A0A;--soft:#3B3934;--label:#A6A29A;--whisper:#B4B0A8;--faintest:#9A9790;--surface:#FCFCFB;--clay:#EDEBE6;--gold:#C5A054;--line:rgba(10,10,10,.09);--lineStrong:rgba(10,10,10,.14)}
+.ap-device{position:relative;width:100%;aspect-ratio:390/844;border-radius:13.5%/6.2%;background:var(--surface);overflow:hidden;
+  box-shadow:0 0 0 9px #111,0 0 0 10.5px #3a3936,0 40px 80px -30px rgba(10,10,10,.45),0 18px 36px -18px rgba(10,10,10,.3);isolation:isolate}
+.ap-screen{position:absolute;left:0;top:0;width:390px;height:844px;transform-origin:0 0;overflow:hidden;background:var(--surface);color:var(--ink);font-family:'HM Noto',system-ui,sans-serif;-webkit-font-smoothing:antialiased;user-select:none}
+.ap-screen *{box-sizing:border-box}
+.ap-status{position:absolute;left:0;right:0;top:0;height:47px;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:6px 34px 0 42px;font:600 15px/1 'HM Noto',system-ui,sans-serif}
+.ap-status-icons{display:flex;gap:6px;align-items:center}
+.ap-bars{width:17px;height:11px;background:linear-gradient(90deg,var(--ink) 0 3px,transparent 3px 4.6px,var(--ink) 4.6px 7.6px,transparent 7.6px 9.2px,var(--ink) 9.2px 12.2px,transparent 12.2px 13.8px,var(--ink) 13.8px);clip-path:polygon(0 70%,25% 70%,25% 45%,50% 45%,50% 20%,75% 20%,75% 0,100% 0,100% 100%,0 100%)}
+.ap-batt{width:24px;height:11.5px;border:1.6px solid var(--ink);border-radius:3.5px;position:relative}
+.ap-batt::after{content:'';position:absolute;inset:1.6px 5px 1.6px 1.6px;background:var(--ink);border-radius:1.5px}
+.ap-micro{font:600 9.5px/1 'HM Noto',system-ui,sans-serif;letter-spacing:1.4px;text-transform:uppercase;color:var(--label)}
+
+.ap-view{position:absolute;inset:0;background:var(--surface);will-change:transform}
+.ap-logo{position:absolute;left:50%;top:56px;height:19px;transform:translateX(-50%)}
+.ap-title{position:absolute;left:22px;top:94px;font:400 26px/30px 'Playfair Display',Georgia,serif;letter-spacing:-.3px}
+.ap-countdown{position:absolute;left:22px;top:131px}
+
+.ap-deck{position:absolute;left:30px;top:156px;width:330px;height:440px;transform-origin:50% 50%}
+.ap-card{position:absolute;inset:0;border-radius:30px;border:3px solid transparent;overflow:hidden;background:var(--clay);box-shadow:0 10px 22px rgba(0,0,0,.16);transform-origin:50% 50%;will-change:transform}
+.ap-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.ap-card-shade{position:absolute;inset:0;background:linear-gradient(180deg,transparent 32%,rgba(10,10,10,.12) 54%,rgba(10,10,10,.72) 100%)}
+.ap-card-cap{position:absolute;left:0;right:0;bottom:0;padding:0 22px 16px;text-align:center;color:var(--surface)}
+.ap-card-name{font:400 24px/28px 'Playfair Display',Georgia,serif}
+.ap-card-line{font:500 11.5px/1.3 'HM Beiruti','HM Noto',sans-serif;color:rgba(252,252,251,.78);margin-top:4px}
+.ap-card.chosen{border-color:var(--gold);box-shadow:0 0 26px rgba(197,160,84,.7)}
+.ap-tick{position:absolute;top:14px;left:14px;width:34px;height:34px;border-radius:50%;background:var(--gold);color:#fff;display:grid;place-items:center;font:700 18px/1 system-ui,sans-serif;transform:scale(0)}
+
+.ap-arc{position:absolute;left:50%;top:643px;width:0;height:0}
+.ap-face{position:absolute;left:-26px;top:-26px;width:52px;height:52px;will-change:transform}
+.ap-face-frame{position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;background:#F1EFEA;border:1px solid var(--lineStrong)}
+.ap-face-frame img{width:100%;height:100%;object-fit:cover;display:block}
+.ap-face-scrim{position:absolute;inset:0;background:rgba(239,238,235,.42)}
+.ap-face-frame.active{border:2px solid var(--ink);box-shadow:0 8px 14px rgba(10,10,10,.32)}
+.ap-face-frame.chosen{box-shadow:0 0 14px rgba(197,160,84,.8),0 0 0 2px var(--gold)}
+
+.ap-caption{position:absolute;left:22px;right:22px;top:690px;text-align:center;font:400 11px/17px 'HM Noto',system-ui,sans-serif;color:var(--whisper)}
+.ap-actions{position:absolute;left:22px;right:22px;top:716px;display:flex;gap:10px}
+.ap-btn{display:flex;align-items:center;justify-content:center;min-height:48px;padding:0 18px;border-radius:999px;font:600 11px/1 'HM Noto',system-ui,sans-serif;letter-spacing:1.1px;text-transform:uppercase;white-space:nowrap}
+.ap-btn-primary{background:var(--ink);color:var(--surface)}
+.ap-btn-secondary{border:1px solid rgba(10,10,10,.18);color:var(--soft)}
+.ap-btn-gold{background:var(--gold);border-color:var(--gold);color:#3A2C10}
+.ap-btn.disabled{opacity:.35}
+.ap-select{flex:1}.ap-send{flex:1.3}
+
+.ap-tabbar{position:absolute;left:0;right:0;bottom:0;height:78px;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding-top:10px;background:var(--surface)}
+.ap-tab{display:flex;flex-direction:column;align-items:center;gap:5px;font:600 10px/1 'HM Noto',system-ui,sans-serif;color:var(--label)}
+.ap-tab svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+.ap-tab.on{color:var(--ink)}
+
+.ap-detail{z-index:10;box-shadow:-18px 0 40px rgba(10,10,10,.12);visibility:hidden}
+.ap-header{position:absolute;left:0;right:0;top:0;height:97px;padding:47px 22px 0;z-index:5;display:flex;align-items:center;justify-content:space-between;background:var(--surface)}
+.ap-back{font:400 34px/1 Georgia,serif;margin-top:-4px}
+.ap-scroll{position:absolute;left:0;right:0;top:97px;will-change:transform}
+.ap-hero{position:relative;margin:12px 22px 0;aspect-ratio:1;border-radius:30px;overflow:hidden;background:var(--clay)}
+.ap-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.ap-badge{position:absolute;top:14px;right:14px;display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:999px;background:rgba(10,10,10,.5);color:#FCFCFB;font:500 12px/1 'HM Beiruti','HM Noto',sans-serif;letter-spacing:1.3px;text-transform:uppercase}
+.ap-badge i{width:11px;height:9px;border:1.5px solid #FCFCFB;border-radius:2px}
+.ap-hero-shade{position:absolute;left:0;right:0;bottom:0;padding:22px;background:linear-gradient(180deg,transparent,rgba(10,10,10,.72));color:#FCFCFB}
+.ap-hero-name{font:400 26px/1.2 'Playfair Display',Georgia,serif}
+.ap-hero-line{font:500 12px/1.3 'HM Beiruti','HM Noto',sans-serif;color:rgba(252,252,251,.85);margin-top:5px}
+.ap-chips{display:flex;flex-wrap:wrap;gap:7px;padding:16px 22px 0}
+.ap-chip{display:inline-flex;align-items:center;min-height:44px;padding:7px 13px;border:1px solid var(--lineStrong);border-radius:999px;font:400 11.5px/1 'HM Noto',system-ui,sans-serif;color:var(--soft)}
+.ap-bio{margin:18px 22px 0;font:500 15px/23px 'HM Beiruti','HM Noto',sans-serif;color:var(--soft)}
+.ap-agree{margin:20px 22px 0;padding-top:16px;border-top:1px solid var(--line)}
+.ap-row{display:flex;justify-content:space-between;gap:16px;margin-top:10px;font:400 13px/1.35 'HM Noto',system-ui,sans-serif;color:var(--soft)}
+.ap-agree .ap-micro+.ap-row{margin-top:12px}
+.ap-row b{font-weight:600;color:var(--ink);text-align:right}
+.ap-privacy{margin-top:14px;font:400 11px/17px 'HM Noto',system-ui,sans-serif;color:var(--faintest)}
+.ap-choose{margin:26px 22px 0}
+
+.ap-finger{position:absolute;left:-23px;top:-23px;width:46px;height:46px;z-index:60;border-radius:50%;background:rgba(10,10,10,.16);border:2px solid rgba(255,255,255,.95);box-shadow:0 6px 18px rgba(10,10,10,.25);opacity:0;pointer-events:none}
+.ap-dip{position:absolute;inset:0;z-index:70;background:var(--surface);opacity:0;pointer-events:none}
+
+/* The pillar pill, where the camera island sits */
+.ap-tag{position:absolute;left:50%;top:9px;z-index:80;display:flex;align-items:center;gap:8px;height:34px;padding:0 15px 0 12px;border-radius:999px;background:#0A0A0A;color:#FCFCFB;font:600 11.5px/1 'HM Noto',system-ui,sans-serif;white-space:nowrap;opacity:0;box-shadow:0 6px 16px rgba(10,10,10,.28)}
+.ap-tag i{width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px rgba(197,160,84,.9)}
+
+/* Verified seal on every profile */
+.ap-verified{position:absolute;top:14px;right:14px;z-index:2;display:flex;align-items:center;gap:5px;padding:5px 10px 5px 7px;border-radius:999px;background:rgba(252,252,251,.94);color:#3A2C10;font:600 10px/1 'HM Noto',system-ui,sans-serif;letter-spacing:.4px}
+.ap-verified svg{width:13px;height:13px;fill:rgba(197,160,84,.25);stroke:#A87F32;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ap-verified-hero{top:14px;right:auto;left:14px}
+.ap-card .ap-tick{top:14px;left:14px}
+.ap-agree.lit{margin-left:14px;margin-right:14px;padding:16px 8px 12px;border-radius:16px;border-top-color:transparent;background:rgba(197,160,84,.1);box-shadow:0 0 0 1px rgba(197,160,84,.5)}
+.ap-agree{transition:background .3s,box-shadow .3s,margin .3s,padding .3s}
+
+/* Scenes that fade in over the one before. Each screen follows the app's own. */
+.ap-fade{z-index:12;opacity:0;visibility:hidden}
+.ap-h1{font:400 26px/31px 'Playfair Display',Georgia,serif;letter-spacing:-.3px;margin-top:8px}
+.ap-h2{font:400 21px/26px 'Playfair Display',Georgia,serif;margin-top:6px}
+.ap-accent{font:700 9.5px/1 'HM Noto',system-ui,sans-serif;letter-spacing:1.4px;text-transform:uppercase;color:#B8914F}
+.ap-cap{font:400 11px/17px 'HM Noto',system-ui,sans-serif;color:var(--faintest)}
+.ap-sub2{margin:8px 0 0;font:400 11.5px/17px 'HM Noto',system-ui,sans-serif;color:var(--faintest)}
+.ap-note2{margin:6px 0 0;font:400 11px/17px 'HM Noto',system-ui,sans-serif;color:var(--faintest)}
+.ap-box{flex:none;display:grid;place-items:center;width:16px;height:16px;border-radius:5px;border:1px solid var(--lineStrong);transition:background .2s,border-color .2s}
+.ap-box svg{width:11px;height:11px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+.on>.ap-box{background:var(--ink);border-color:var(--ink)}.on>.ap-box svg{opacity:1}
+
+/* You > Preferences */
+.ap-yhead{position:absolute;left:0;right:0;top:0;height:204px;z-index:4;background:var(--surface)}
+.ap-ylogo{position:absolute;left:50%;top:56px;height:19px;transform:translateX(-50%)}
+.ap-seg{position:absolute;left:22px;right:22px;top:92px;height:42px;display:flex;padding:3px;border-radius:999px;background:var(--clay)}
+.ap-seg span{flex:1;display:grid;place-items:center;border-radius:999px;font:600 11.5px/1 'HM Noto',system-ui,sans-serif;color:var(--label)}
+.ap-seg span.on{background:var(--surface);color:var(--ink);box-shadow:0 2px 6px rgba(10,10,10,.12)}
+.ap-ident{position:absolute;left:22px;right:22px;top:148px;display:flex;gap:12px;align-items:center}
+.ap-yav{flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:#E6E2D8;font:400 20px/1 'Playfair Display',Georgia,serif}
+.ap-ident b{display:block;font:400 20px/25px 'Playfair Display',Georgia,serif}
+.ap-ident span{display:block;font:400 11px/16px 'HM Noto',system-ui,sans-serif;color:var(--faintest)}
+.ap-pclip{position:absolute;left:0;right:0;top:204px;bottom:78px;overflow:hidden}
+.ap-pscroll{padding:4px 22px 40px;will-change:transform}
+.ap-pcard{padding:20px 20px 12px;border-radius:25px;border:1px solid var(--line);background:var(--surface)}
+.ap-ptitle{margin-top:8px;font:400 20px/25px 'Playfair Display',Georgia,serif}
+.ap-pbody{margin:8px 0 0;font:400 11px/17px 'HM Noto',system-ui,sans-serif;color:var(--faintest)}
+.ap-psec{margin-top:22px}
+.ap-prow2{display:flex;justify-content:space-between;align-items:baseline}
+.ap-hval{font:600 12px/1 'HM Noto',system-ui,sans-serif}
+.ap-track{position:relative;height:4px;margin:26px 13px 14px;border-radius:2px;background:var(--lineStrong)}
+.ap-fill{position:absolute;top:0;height:4px;border-radius:2px;background:var(--ink)}
+.ap-thumb{position:absolute;top:-11px;width:26px;height:26px;margin-left:-13px;border-radius:50%;background:#fff;border:2px solid var(--ink);box-shadow:0 3px 8px rgba(10,10,10,.2)}
+.ap-must2{display:flex;align-items:center;gap:8px;padding:6px 0;font:500 11.5px/1 'HM Noto',system-ui,sans-serif;color:var(--soft)}
+.ap-checks{display:grid;gap:8px;margin-top:10px}
+.ap-check{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);font:400 13px/1 'HM Noto',system-ui,sans-serif;color:var(--soft);transition:background .2s,border-color .2s}
+.ap-check.on{border-color:var(--ink);background:#F2F0EC;color:var(--ink)}
+.ap-selbox{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding:13px 14px;border-radius:14px;border:1px solid var(--lineStrong);font:500 14px/1.2 'HM Beiruti','HM Noto',sans-serif;color:var(--ink);transition:border-color .25s,box-shadow .25s}
+.ap-selbox i{font-style:normal;color:var(--label);margin-left:10px}
+.ap-selbox.lit{border-color:#B8914F;box-shadow:0 0 0 3px rgba(184,145,79,.18)}
+.ap-pdark{margin:14px -8px 0;padding:22px 8px 8px;border-radius:32px;background:#0A0A0A;border:1px solid #D6B469;color:#FCFCFB}
+.ap-pdhead{padding:0 22px 16px;text-align:center}
+.ap-pdhead img{height:19px;filter:invert(1)}
+.ap-pdfilters{margin-top:8px;font:400 20px/26px 'HM Noto',system-ui,sans-serif;color:#fff}
+.ap-rule{display:block;width:44px;height:1px;margin:10px auto;background:#D6B469}
+.ap-pdhead p{margin:0;font:400 11px/17px 'HM Noto',system-ui,sans-serif;color:rgba(252,252,251,.72)}
+.ap-pdbody{display:grid;gap:16px;padding:6px 14px 18px}
+.ap-pdark .ap-micro{color:rgba(252,252,251,.55)}
+.ap-dchips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ap-dchip{padding:10px 15px;border-radius:999px;border:1px solid rgba(252,252,251,.22);font:400 11.5px/1 'HM Noto',system-ui,sans-serif;color:rgba(252,252,251,.85);transition:background .2s,color .2s}
+.ap-dchip.on{background:#D6B469;border-color:#D6B469;color:#0A0A0A;font-weight:600}
+.ap-dmust{color:rgba(252,252,251,.75)}.ap-dmust .ap-box{border-color:rgba(252,252,251,.3)}
+.ap-dmust.on .ap-box{background:#D6B469;border-color:#D6B469}.ap-dmust.on .ap-box svg{stroke:#0A0A0A}
+.ap-pdark .ap-selbox{border-color:rgba(252,252,251,.22);color:#fff}
+
+/* The mutual match */
+.ap-matchv{background:var(--surface)}
+.ap-close{position:absolute;left:22px;top:60px;font:400 22px/1 system-ui,sans-serif;color:var(--soft)}
+.ap-brand{position:absolute;left:0;right:0;top:128px;text-align:center}
+.ap-display{position:absolute;left:30px;right:30px;top:158px;text-align:center;font:400 36px/42px 'Playfair Display',Georgia,serif;letter-spacing:-.5px}
+.ap-pair{position:absolute;left:0;right:0;top:300px;display:flex;justify-content:center;align-items:center}
+.ap-plate{display:flex;flex-direction:column;align-items:center;gap:10px}
+.ap-plate b{font:600 13px/1 'HM Noto',system-ui,sans-serif}
+.ap-avatar{width:120px;height:120px;border-radius:50%;overflow:hidden;background:var(--clay);border:3px solid #fff;box-shadow:0 12px 26px rgba(10,10,10,.2)}
+.ap-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.ap-yous{display:grid;place-items:center;background:#E6E2D8}
+.ap-yous svg{width:58px;height:58px;fill:none;stroke:#8C877B;stroke-width:1.6;stroke-linecap:round}
+.ap-heart{width:46px;height:46px;margin:-26px -14px 0;z-index:2;border-radius:50%;background:var(--gold);color:#fff;display:grid;place-items:center;font:400 22px/1 system-ui,sans-serif;box-shadow:0 0 24px rgba(197,160,84,.8)}
+.ap-explain{position:absolute;left:34px;right:34px;top:490px;margin:0;text-align:center;font:400 13px/20px 'HM Noto',system-ui,sans-serif;color:var(--soft)}
+.ap-matchbtn{position:absolute;left:22px;right:22px;top:588px}
+.ap-matchv .ap-quiet{position:absolute;left:0;right:0;top:652px;text-align:center;font:600 11px/1 'HM Noto',system-ui,sans-serif;letter-spacing:1.1px;text-transform:uppercase;color:var(--label)}
+.ap-confetti{position:absolute;left:195px;top:350px;width:0;height:0;pointer-events:none}
+.ap-bit{position:absolute;left:0;top:0;border-radius:2px;opacity:0}
+
+/* Questions and answers */
+.ap-qhead{position:absolute;left:22px;right:22px;top:100px}
+.ap-qhead .ap-h1{font-size:24px;line-height:29px}
+.ap-qlist{position:absolute;left:22px;right:22px;top:262px;display:grid;gap:8px}
+.ap-qcard{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:20px;border:1px solid var(--line);background:var(--surface);transition:border-color .25s,background .25s}
+.ap-qcard.on{border-color:var(--ink);background:#F2F0EC}
+.ap-qtxt{flex:1;display:grid;gap:5px}
+.ap-qtext{font:500 14px/18px 'HM Beiruti','HM Noto',sans-serif;color:var(--ink)}
+.ap-dot{flex:none;width:16px;height:16px;border-radius:50%;border:1px solid var(--lineStrong);transition:background .2s,border-color .2s}
+.ap-qcard.on .ap-dot{background:var(--ink);border-color:var(--ink)}
+.ap-qfoot{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:14px;padding:14px 22px 26px;border-top:1px solid rgba(10,10,10,.05);background:var(--surface)}
+.ap-qcount{font:400 12.5px/1.3 'HM Noto',system-ui,sans-serif;color:var(--soft);white-space:nowrap}
+.ap-qfoot .ap-btn{flex:1}
+.ap-quiet2{font:600 11px/1 'HM Noto',system-ui,sans-serif;letter-spacing:1.1px;text-transform:uppercase;color:var(--label);padding:0 6px}
+.ap-ticks{display:flex;gap:6px;margin-top:10px}
+.ap-ticks i{flex:1;height:3px;border-radius:2px;background:var(--lineStrong)}.ap-ticks i.on{background:var(--ink)}
+.ap-origin{display:flex;align-items:center;gap:8px;margin-top:20px}
+.ap-origin i{width:20px;height:20px;border-radius:50%;background:#C5A054;color:#fff;display:grid;place-items:center;font:700 12px/1 system-ui,sans-serif;font-style:normal}
+.ap-answerv .ap-h1{margin-top:14px}
+.ap-answer{position:absolute;left:22px;right:22px;padding:15px 16px;border-radius:22px;border:1px solid var(--lineStrong);background:var(--surface)}
+.ap-answer p{margin:10px 0 0;font:500 15px/23px 'HM Beiruti','HM Noto',sans-serif;color:var(--soft)}
+.ap-mine2{top:318px;min-height:122px}
+.ap-theirs2{position:absolute;left:22px;right:22px;top:466px;padding:15px 16px;border-radius:22px;background:#F2F0EC;min-height:150px}
+.ap-theirs2 .ap-micro.gold{color:#B8914F;font-weight:700}
+.ap-sealed{margin-top:10px;filter:blur(3.4px)}
+.ap-sealtxt{margin:0;font:400 13px/19px 'HM Noto',system-ui,sans-serif;color:var(--soft)}
+.ap-hid{margin:10px 0 0;font:400 12px/18px 'HM Noto',system-ui,sans-serif;color:var(--soft)}
+.ap-theirtxt{display:none;margin:10px 0 0;font:500 15px/23px 'HM Beiruti','HM Noto',sans-serif;color:var(--ink)}
+
+/* Recap */
+.ap-rscroll{position:absolute;left:0;right:0;top:97px;bottom:0;overflow:hidden}
+.ap-rinner{padding:6px 22px 40px;will-change:transform}
+.ap-sum{margin-top:18px;padding:16px;border-radius:25px;background:#F2F0EC}
+.ap-prept{margin-top:12px;font:400 12px/17px 'HM Noto',system-ui,sans-serif;color:var(--soft)}
+.ap-bar{height:5px;margin-top:10px;border-radius:3px;background:rgba(184,145,79,.14);overflow:hidden}
+.ap-bar i{display:block;height:100%;width:0;border-radius:3px;background:var(--gold)}
+.ap-sumtext{margin:12px 0 0;min-height:92px;font:400 15px/23px 'HM Beiruti','HM Noto',sans-serif;color:var(--ink)}
+.ap-rsec{margin-top:26px}
+.ap-rsec>b{font:600 13px/1 'HM Noto',system-ui,sans-serif}
+.ap-pair2{margin-top:12px;padding:15px 16px;border-radius:25px;border:1px solid var(--line)}
+.ap-pairrow{margin-top:12px}
+.ap-pairrow p{margin:5px 0 0;font:400 14px/21px 'HM Beiruti','HM Noto',sans-serif;color:var(--soft)}
+.ap-ccard{margin-top:10px;padding:14px 16px;border-radius:25px;border:1px solid var(--line)}
+.ap-chead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ap-chead b{font:600 13px/1.2 'HM Noto',system-ui,sans-serif}
+.ap-chead em{font-style:normal;font:700 9.5px/1 'HM Noto',system-ui,sans-serif;letter-spacing:1.2px;text-transform:uppercase;padding:6px 10px;border-radius:999px;white-space:nowrap}
+.ap-chead em.ok{background:rgba(47,93,74,.09);color:#2F5D4A}.ap-chead em.warn{background:rgba(184,145,79,.1);color:#8A6A2A}
+.ap-ccard p{margin:8px 0 0;font:400 12px/18px 'HM Noto',system-ui,sans-serif;color:var(--soft)}
+.ap-open{margin-top:26px}
+.ap-quiet3{margin-top:18px;text-align:center;font:600 11px/1 'HM Noto',system-ui,sans-serif;letter-spacing:1.1px;text-transform:uppercase;color:var(--label)}
+
+/* Chat */
+.ap-chathead{justify-content:flex-start;gap:12px;border-bottom:1px solid var(--line)}
+.ap-chathead .ap-back{font:400 22px/1 system-ui,sans-serif;margin-top:0}
+.ap-chathead>div{display:flex;flex-direction:column;gap:5px}
+.ap-chathead b{font:600 14px/1 'HM Noto',system-ui,sans-serif}
+.ap-chathead span:not(.ap-back){font:400 11px/1 'HM Noto',system-ui,sans-serif;color:var(--faintest)}
+.ap-mini{width:38px;height:38px;border-radius:50%;object-fit:cover}
+.ap-botwrap{position:absolute;left:0;right:0;top:97px;bottom:96px;display:flex;align-items:center;justify-content:center;padding:0 36px;opacity:0}
+.ap-bot{max-width:300px;padding:14px 16px;border-radius:16px;border:1px dashed rgba(184,145,79,.45);background:rgba(197,160,84,.08)}
+.ap-botname{font:700 10px/1 'HM Noto',system-ui,sans-serif;letter-spacing:1.4px;text-transform:uppercase;color:#B8914F}
+.ap-bot p{margin:7px 0 0;font:400 13px/19px 'HM Noto',system-ui,sans-serif;color:#6B675F}
+.ap-opener{margin-top:7px;font:italic 400 16px/23px 'Playfair Display',Georgia,serif;color:var(--ink)}
+.ap-msgs{position:absolute;left:0;right:0;top:118px;bottom:96px;padding:0 22px;display:flex;flex-direction:column;gap:10px}
+.ap-bub{max-width:78%;padding:13px 15px;font:400 15px/21px 'HM Noto',system-ui,sans-serif}
+.ap-bub span{display:block;margin-top:5px;font-size:11px;line-height:1}
+.ap-in{align-self:flex-start;background:#F2F0EC;color:var(--soft);border-radius:20px 20px 20px 6px}
+.ap-in span{color:var(--faintest)}
+.ap-out{align-self:flex-end;background:var(--ink);color:#fff;border-radius:20px 20px 6px 20px;opacity:0}
+.ap-out span{text-align:right;color:rgba(252,252,251,.58)}
+.ap-m2{display:none;opacity:0}
+.ap-dots{display:none;gap:5px;padding:15px 16px;opacity:0}
+.ap-dots i{width:7px;height:7px;border-radius:50%;background:#9A9790}
+.ap-composer{position:absolute;left:22px;right:22px;bottom:20px;display:flex;gap:10px;align-items:center}
+.ap-input{flex:1;min-height:46px;padding:13px 17px;border-radius:999px;border:1px solid var(--lineStrong);font:400 15px/20px 'HM Noto',system-ui,sans-serif;color:var(--ink);overflow:hidden;white-space:nowrap;text-overflow:clip}
+.ap-input:empty::before{content:'Write a message';color:var(--whisper)}
+.ap-sendc{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:#fff;font:400 15px/1 system-ui,sans-serif;opacity:.3;transition:opacity .2s}
+.ap-sendc.on{opacity:1}
+
+/* Halal Cards: the hub, a quiz and an adventure */
+.ap-cscroll{position:absolute;left:0;right:0;top:0;will-change:transform}
+.ap-chero{position:relative;height:487px;overflow:hidden;background:var(--clay)}
+.ap-chero img{display:block;width:100%;height:100%;object-fit:cover}
+.ap-chero::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,10,10,0) 38%,rgba(10,10,10,.68) 100%)}
+.ap-chtext{position:absolute;left:22px;right:22px;bottom:24px;z-index:2;color:#FCFCFB}
+.ap-eyebrow{font:600 10px/1 'HM Noto',system-ui,sans-serif;letter-spacing:1.6px;text-transform:uppercase;color:rgba(252,252,251,.88)}
+.ap-ctitle{margin-top:8px;font:400 40px/44px 'Playfair Display',Georgia,serif}
+.ap-chtext p{margin:8px 0 0;font:400 13px/19px 'HM Noto',system-ui,sans-serif;color:rgba(252,252,251,.88)}
+.ap-ccol{display:grid;gap:28px;padding:26px 22px 80px}
+.ap-journal{display:flex;overflow:hidden;border-radius:25px;border:1px solid var(--line)}
+.ap-spine{flex:none;width:14px;background:var(--ink);border-right:3px solid rgba(214,180,105,.6)}
+.ap-journal>div{flex:1;padding:16px}
+.ap-jt{font:400 22px/27px 'Playfair Display',Georgia,serif;color:var(--ink)}
+.ap-journal p{margin:6px 0 8px;font:400 12px/18px 'HM Noto',system-ui,sans-serif;color:var(--soft)}
+.ap-jline{padding:6px 0;border-bottom:1px solid rgba(184,145,79,.22);font:italic 400 14px/20px 'Playfair Display',Georgia,serif;color:var(--soft)}
+.ap-ghead{display:flex;align-items:baseline;gap:12px}
+.ap-ghead span{font:400 44px/48px 'Playfair Display',Georgia,serif}
+.ap-ghead b{font:400 26px/31px 'Playfair Display',Georgia,serif;letter-spacing:-.3px}
+.ap-gate{margin-top:12px;overflow:hidden;border-radius:25px;border:1px solid var(--line);background:var(--surface);box-shadow:0 8px 22px rgba(10,10,10,.06)}
+.ap-gimg{position:relative;aspect-ratio:16/9;overflow:hidden;background:var(--clay)}
+.ap-gimg img{width:100%;height:100%;object-fit:cover;object-position:center 42%;transform:scale(1.3)}
+.ap-gimg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(10,10,10,.55))}
+.ap-gcount{position:absolute;left:16px;bottom:12px;z-index:2}
+.ap-gbody{display:grid;gap:10px;padding:16px}
+.ap-gbody p{margin:0;font:400 13px/19px 'HM Noto',system-ui,sans-serif;color:var(--soft)}
+.ap-explore{font:600 12px/1 'HM Noto',system-ui,sans-serif;letter-spacing:1px;text-transform:uppercase;color:#B8914F}
+.ap-play{position:absolute;left:14px;right:14px;top:72px;height:540px;z-index:3;padding:14px 16px 0;border-radius:32px;background:var(--surface);box-shadow:0 22px 50px rgba(10,10,10,.28),0 0 0 1px var(--line);opacity:0;visibility:hidden}
+.ap-play img{display:block;width:150px;height:187px;margin:0 auto 14px;object-fit:cover;border-radius:20px}
+.ap-play .ap-micro,.ap-play .ap-h2{text-align:center}
+.ap-opt{margin-top:11px;padding:15px 16px;border-radius:18px;border:1px solid var(--lineStrong);font:500 13.5px/1.3 'HM Noto',system-ui,sans-serif;text-align:center;transition:background .25s,border-color .25s}
+.ap-h2+.ap-opt{margin-top:16px}
+.ap-opt.on{background:var(--gold);border-color:var(--gold);color:#3A2C10;font-weight:600}
+.ap-match{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;padding:12px 14px;border-radius:16px;background:#F5EEDD;font:600 12px/1.3 'HM Noto',system-ui,sans-serif;color:#5A431A;opacity:0}
+.ap-match svg{flex:none;width:16px;height:16px;fill:rgba(197,160,84,.3);stroke:#8A6A2A;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ap-story .ap-h2{padding:0 4px}
+.ap-tag{max-width:236px;overflow:hidden}
+.ap-cstatus{position:absolute;left:0;right:0;top:0;height:47px;z-index:2;background:var(--surface);opacity:0;pointer-events:none}
