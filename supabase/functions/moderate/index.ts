@@ -106,10 +106,14 @@ async function judge(
   return { decision: 'allow', reason: 'Nothing flagged.' };
 }
 
+// The service client, typed loosely: the database types are not generated for these functions.
+// deno-lint-ignore no-explicit-any
+type AdminClient = any;
+
 const SELFIE_BUCKET = 'verification-selfies';
 const PHOTO_BUCKET = 'profile-photos';
 
-async function imageUrl(client: ReturnType<typeof createClient>, bucket: string, path: string): Promise<string> {
+async function imageUrl(client: AdminClient, bucket: string, path: string): Promise<string> {
   const file = await client.storage.from(bucket).download(path);
   if (file.error || !file.data) throw new Error(`download failed: ${file.error?.message}`);
   const type = ['image/jpeg', 'image/png', 'image/webp'].includes(file.data.type) ? file.data.type : 'image/jpeg';
@@ -144,7 +148,7 @@ async function askLuna(
 
 async function judgeSelfie(
   openai: OpenAI,
-  client: ReturnType<typeof createClient>,
+  client: AdminClient,
   path: string,
 ): Promise<LunaVerdict & { model: string }> {
   const image = await imageUrl(client, SELFIE_BUCKET, path);
@@ -163,7 +167,7 @@ async function judgeSelfie(
 
 async function judgePhoto(
   openai: OpenAI,
-  client: ReturnType<typeof createClient>,
+  client: AdminClient,
   userId: string,
   path: string,
 ): Promise<LunaVerdict & { model: string }> {

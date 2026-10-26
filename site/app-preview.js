@@ -617,7 +617,10 @@
   function start() { if (running || reduced) return; running = true; t0 = performance.now() - pausedAt * 1000; raf = requestAnimationFrame(tick); }
   function stop() { if (!running) return; pausedAt = now(); running = false; cancelAnimationFrame(raf); }
   let frozen = false;
-  const update = () => { if (!frozen) (visible && !document.hidden ? start() : stop()); };
+  const update = () => {
+    if (frozen) return;
+    if (visible && !document.hidden) start(); else stop();
+  };
   new IntersectionObserver((es) => { visible = es.some((e) => e.isIntersecting); update(); }, { threshold: 0.2 }).observe(host);
   document.addEventListener('visibilitychange', update);
   document.querySelectorAll('[data-preview-step]').forEach((s) => {
