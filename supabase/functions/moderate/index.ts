@@ -6,9 +6,14 @@
  * remove, a photo comes off the profile (bios are never removed automatically).
  * review, the operator is emailed to decide.
  *
+ * Every photo and selfie that passes it is then read by Luna (the rules are in
+ * _shared/photoVerdict.ts): a picture of a screen or a print, or an image that
+ * is not a camera photo, comes off; a face that does not match the member's
+ * selfie goes to the operator; a selfie must be one live face.
+ *
  * The endpoint scores harm categories (sexual, violence, hate, harassment,
  * self-harm, illicit). It cannot tell whether a photo shows the member's own
- * face, so that is left to reports. Contact details in bios are caught with a
+ * face; Luna does that. Contact details in bios are caught with a
  * plain pattern check, since the endpoint does not look for them.
  *
  * Needs the OPENAI_API_KEY secret. Without it, items stay queued and are
@@ -17,13 +22,22 @@
 import OpenAI from 'npm:openai';
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { withLuna } from '../_shared/luna.ts';
+import {
+  PHOTO_SCHEMA,
+  SELFIE_SCHEMA,
+  decidePhoto,
+  decideSelfie,
+  parsePhotoReading,
+  parseSelfieReading,
+  type Verdict as LunaVerdict,
+} from '../_shared/photoVerdict.ts';
 
 const MODEL = 'omni-moderation-latest';
 
 interface Item {
   id: number;
   user_id: string;
-  kind: 'photo' | 'bio';
+  kind: 'photo' | 'bio' | 'selfie';
   ref: string;
   current: boolean;
   gender: string | null;
@@ -92,6 +106,93 @@ async function judge(
   return { decision: 'allow', reason: 'Nothing flagged.' };
 }
 
+const SELFIE_BUCKET = 'verification-selfies';
+const PHOTO_BUCKET = 'profile-photos';
+
+async function imageUrl(client: ReturnType<typeof createClient>, bucket: string, path: string): Promise<string> {
+  const file = await client.storage.from(bucket).download(path);
+  if (file.error || !file.data) throw new Error(`download failed: ${file.error?.message}`);
+  const type = ['image/jpeg', 'image/png', 'image/webp'].includes(file.data.type) ? file.data.type : 'image/jpeg';
+  return `data:${type};base64,${toBase64(new Uint8Array(await file.data.arrayBuffer()))}`;
+}
+
+const AUTHENTICITY_RULES = [
+  'You check images for a private matrimonial service so that every profile shows a real person.',
+  'Report only what is visible. Never name anyone, and never judge attractiveness, age, ethnicity, religion, modesty or character.',
+  'shows_screen_or_print is true for a photograph of a monitor, phone, TV or laptop screen, or of a printed or held-up picture (look for moire, pixel grids, screen glare, bezels, paper edges, fingers holding a picture).',
+  'not_a_camera_photo is true for a screenshot, poster, cartoon, illustration, 3D render or AI-generated image.',
+  'confidence is how sure you are of the whole reading, from 0 to 1. If uncertain, say so with a lower confidence rather than guessing.',
+].join(' ');
+
+/** Luna's answer as text; the caller parses it and treats a refusal as no reading. */
+async function askLuna(
+  openai: OpenAI,
+  name: string,
+  schema: Record<string, unknown>,
+  instructions: string,
+  content: Array<Record<string, unknown>>,
+): Promise<{ text: string; model: string }> {
+  const { result, model } = await withLuna(openai, (selectedModel) => openai.responses.create({
+    model: selectedModel,
+    instructions,
+    input: [{ role: 'user', content }] as never,
+    max_output_tokens: 200,
+    text: { format: { type: 'json_schema', name, strict: true, schema } },
+  }));
+  return { text: result.output_text ?? '', model };
+}
+
+async function judgeSelfie(
+  openai: OpenAI,
+  client: ReturnType<typeof createClient>,
+  path: string,
+): Promise<LunaVerdict & { model: string }> {
+  const image = await imageUrl(client, SELFIE_BUCKET, path);
+  const { text, model } = await askLuna(
+    openai,
+    'selfie_reading',
+    SELFIE_SCHEMA as unknown as Record<string, unknown>,
+    `${AUTHENTICITY_RULES} This is a selfie the member just took with their phone camera to prove they are a real person. face_count is how many faces are visible; face_clearly_visible is true when one face is unobstructed, well lit and facing the camera.`,
+    [
+      { type: 'input_text', text: 'Read this selfie.' },
+      { type: 'input_image', image_url: image, detail: 'high' },
+    ],
+  );
+  return { ...decideSelfie(parseSelfieReading(text)), model };
+}
+
+async function judgePhoto(
+  openai: OpenAI,
+  client: ReturnType<typeof createClient>,
+  userId: string,
+  path: string,
+): Promise<LunaVerdict & { model: string }> {
+  const selfiePath = await client.rpc('verified_selfie_path_service', { p_user_id: userId });
+  if (selfiePath.error) throw new Error(`selfie lookup failed: ${selfiePath.error.message}`);
+  const selfie = typeof selfiePath.data === 'string' && selfiePath.data
+    ? await imageUrl(client, SELFIE_BUCKET, selfiePath.data)
+    : null;
+  const photo = await imageUrl(client, PHOTO_BUCKET, path);
+  const content: Array<Record<string, unknown>> = [
+    {
+      type: 'input_text',
+      text: selfie
+        ? 'First image: the member selfie. Second image: the profile photo to read.'
+        : 'Read this profile photo.',
+    },
+  ];
+  if (selfie) content.push({ type: 'input_image', image_url: selfie, detail: 'high' });
+  content.push({ type: 'input_image', image_url: photo, detail: 'high' });
+  const { text, model } = await askLuna(
+    openai,
+    'photo_reading',
+    PHOTO_SCHEMA as unknown as Record<string, unknown>,
+    `${AUTHENTICITY_RULES} Read the profile photo. face_visible is true when a face can be seen; a photo with no face is allowed. same_person_as_selfie is a visual similarity check against the selfie, not an identification: answer "yes" or "no" only when you can clearly tell, otherwise "unsure", and "not_compared" when there is no selfie or no face in the photo. Lighting, angle, glasses, hair and age differences are normal; do not answer "no" because of them.`,
+    content,
+  );
+  return { ...decidePhoto(parsePhotoReading(text)), model };
+}
+
 function parsePresentationFeatures(value: string): PresentationFeatures {
   const parsed: unknown = JSON.parse(value);
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
@@ -132,13 +233,22 @@ Deno.serve(async (request) => {
         continue;
       }
       let verdict: Verdict;
-      if (item.kind === 'photo') {
-        const file = await client.storage.from('profile-photos').download(item.ref);
-        if (file.error || !file.data) throw new Error(`download failed: ${file.error?.message}`);
-        const type = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.data.type) ? file.data.type : 'image/jpeg';
+      let checkedBy = MODEL;
+      if (item.kind === 'selfie' || item.kind === 'photo') {
+        const bucket = item.kind === 'selfie' ? SELFIE_BUCKET : PHOTO_BUCKET;
+        // The free harm check first: nothing explicit goes any further.
         verdict = await judge(openai, [
-          { type: 'image_url', image_url: { url: `data:${type};base64,${toBase64(new Uint8Array(await file.data.arrayBuffer()))}` } },
+          { type: 'image_url', image_url: { url: await imageUrl(client, bucket, item.ref) } },
         ], true);
+        if (verdict.decision === 'allow') {
+          // Then Luna reads every photo that comes through: is it a real
+          // camera photo, and is it the person in the selfie.
+          const luna = item.kind === 'selfie'
+            ? await judgeSelfie(openai, client, item.ref)
+            : await judgePhoto(openai, client, item.user_id, item.ref);
+          verdict = { decision: luna.decision, reason: luna.reason };
+          checkedBy = luna.model;
+        }
       } else if (CONTACT.some((pattern) => pattern.test(item.ref))) {
         verdict = { decision: 'review', reason: 'Looks like contact details.' };
       } else {
@@ -147,7 +257,7 @@ Deno.serve(async (request) => {
       await client.rpc('settle_moderation_service', {
         p_id: item.id,
         p_decision: verdict.decision,
-        p_reason: `${verdict.reason} (${MODEL})`,
+        p_reason: `${verdict.reason} (${checkedBy})`,
       });
       tally[verdict.decision] += 1;
     } catch (error) {

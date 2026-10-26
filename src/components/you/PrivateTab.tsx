@@ -366,7 +366,8 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
           <SurfaceToneProvider tone="dark">
           <View style={styles.premiumCard}>
           <View style={styles.premiumHead}>
-            <View accessible accessibilityRole="header" accessibilityLabel={t('filters.premiumTitle')} style={styles.premiumTitle}>
+            {/* PremiumLogo is already the heading; a second one nests h1 in h1 on web. */}
+            <View style={styles.premiumTitle}>
               <PremiumLogo width={142} />
               <Text style={styles.premiumFilters}>{t('filters.premiumFiltersWord')}</Text>
             </View>

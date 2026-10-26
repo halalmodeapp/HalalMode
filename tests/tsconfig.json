@@ -27,7 +27,8 @@
     "../src/matching/simulate.ts",
     "../supabase/functions/generate-round/matching.ts",
     "../supabase/functions/generate-round/candidateSnapshot.ts",
-    "../supabase/functions/generate-round/runContext.ts"
+    "../supabase/functions/generate-round/runContext.ts",
+    "../supabase/functions/_shared/photoVerdict.ts"
   ],
   "exclude": []
 }

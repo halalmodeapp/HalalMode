@@ -34,6 +34,7 @@ import {
 import { AudioGreeting } from '@/components/introductions/AudioGreeting';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { SelfieVerificationCard } from '@/components/verification/SelfieVerificationCard';
 import { Chip } from '@/components/ui/Chip';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Field } from '@/components/ui/Field';
@@ -763,6 +764,7 @@ export function ProfileTab({
   return (
     <View style={[styles.wrap, isRTL && styles.rtl]}>
       <View style={styles.stack}>
+      <SelfieVerificationCard />
       <Card tone="filled" style={styles.readinessCard}>
         {readyToShow ? (
           <>

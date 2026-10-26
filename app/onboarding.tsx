@@ -24,6 +24,8 @@ import { forgetReferralCode, normalizeReferralCode, pendingReferralCode } from '
 import { fetchMyLegalConsentStatus, recordSensitiveConsent } from '@/api/legalConsent';
 import { documentFromStatus, type LegalConsentStatus } from '@/lib/legalConsent';
 import { queryKeys } from '@/lib/queryClient';
+import { SelfieCapture } from '@/components/verification/SelfieCapture';
+import { submitSelfie } from '@/api/selfie';
 import { PermissionExplainer } from '@/components/ui/PermissionExplainer';
 import { browserDeviceCoordinates, nativeDevicePlace } from '@/lib/deviceLocation';
 import { placeFromBrowserCoordinates } from '@/lib/browserPlace';
@@ -63,7 +65,8 @@ interface OnboardingDraft {
 type DraftField = keyof OnboardingDraft;
 type ValidationErrors = Partial<Record<DraftField | 'birthDate' | 'legal', string>>;
 
-const LAST_STEP = 4;
+const LAST_STEP = 5;
+const SELFIE_STEP = 4;
 const EMPTY_DRAFT: OnboardingDraft = {
   fullName: '',
   firstName: '',
@@ -87,6 +90,8 @@ export default function OnboardingScreen() {
   const identity = useRef(user?.user_metadata);
   identity.current = user?.user_metadata;
   const [step, setStep] = useState(0);
+  // Where the selfie taken in this sitting was uploaded; sent for checking once the profile exists.
+  const [selfiePath, setSelfiePath] = useState<string | null>(null);
   const [draft, setDraft] = useState<OnboardingDraft>(EMPTY_DRAFT);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [restoring, setRestoring] = useState(true);
@@ -268,6 +273,12 @@ export default function OnboardingScreen() {
       setErrors({ city: t('onboarding.locationRequired') });
       return;
     }
+    // A browser camera can be a file picker, so only the apps insist on the
+    // selfie; the web sign-up is asked to add it later in the app.
+    if (step === SELFIE_STEP && !selfiePath && Platform.OS !== 'web') {
+      setErrors({ city: t('onboarding.selfieRequired') });
+      return;
+    }
     const nextErrors = validateStep(step, draft, t);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
@@ -331,6 +342,9 @@ export default function OnboardingScreen() {
         profileSavedForMember.current = draftMemberId;
       }
       await recordSensitiveConsent();
+      // Send the selfie to be checked. A failure never holds up sign-up: the
+      // You tab asks for the selfie again while none is on file.
+      if (selfiePath) await submitSelfie(selfiePath).catch(() => undefined);
       // Credit whoever invited them. It never holds up sign-up.
       const invitedBy = normalizeReferralCode(referralCode);
       if (invitedBy) await claimReferralCode(invitedBy).catch(() => undefined);
@@ -383,6 +397,7 @@ export default function OnboardingScreen() {
                     'onboarding.step.name',
                     'onboarding.step.details',
                     'onboarding.step.location',
+                    'onboarding.step.selfie',
                     'onboarding.step.review',
                   ][step] as Parameters<Translate>[0]
                 ),
@@ -429,7 +444,20 @@ export default function OnboardingScreen() {
               blocked={locationBlocked}
             />
           ) : null}
-          {step === 4 ? (
+          {step === SELFIE_STEP ? (
+            <View>
+              <StepHeading title={t('onboarding.selfieTitle')} body={t('onboarding.selfieBody')} />
+              <SelfieCapture
+                taken={selfiePath !== null}
+                onUploaded={(path) => {
+                  setSelfiePath(path);
+                  setErrors({});
+                }}
+              />
+              {errors.city ? <InlineError message={errors.city} /> : null}
+            </View>
+          ) : null}
+          {step === LAST_STEP ? (
             <ReviewStep
               draft={draft}
               birthDate={birthDate}
