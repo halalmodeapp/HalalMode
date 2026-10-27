@@ -921,4 +921,11 @@ export const so: TranslationCatalog = {
   'diet.vegetarian': "Khudradiye",
   'diet.pescatarian': "Kalluun-cune (pescatarian)",
   'diet.vegan': "Vegan",
+  'filters.mustHaveConfirmTitle': "Ma ka dhigtaa shuruud khasab ah?",
+  'filters.mustHaveConfirmBody': "Dadka si sax ah ula jaan qaadaya kaliya ayaa laguu soo bandhigi doonaa. Shuruud kasta oo khasab ah waxay si weyn u yaraynaysaa isbarashooyinkaaga, sidaas darteed u isticmaal sida ugu yar.",
+  'filters.mustHaveConfirmYes': "Haa, ka dhig khasab",
+  'filters.mustHaveConfirmNo': "Hadda maya",
+  'pool.line': "Ku dhawaad {{count}} qof ayaa hadda ku habboon doorashooyinkaaga.",
+  'pool.narrow': "Tani waa cidhiidhi. Ka demi shuruud khasab ah badanaa way furaysaa.",
+  'pool.none': "Weli cidna ma ku habboona. Ka demi shuruud khasab ah ama balaadhi xad ayaa caawinaya.",
 };

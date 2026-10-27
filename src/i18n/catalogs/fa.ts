@@ -921,4 +921,11 @@ export const fa: TranslationCatalog = {
   'diet.vegetarian': "گیاه‌خوار",
   'diet.pescatarian': "ماهی‌خوار (پسکاتارین)",
   'diet.vegan': "وگان",
+  'filters.mustHaveConfirmTitle': "این را اجباری کنیم؟",
+  'filters.mustHaveConfirmBody': "فقط کسانی به شما معرفی می‌شوند که دقیقاً با این مطابقت دارند. هر مورد اجباری می‌تواند معرفی‌های شما را خیلی کم کند، پس تا حد امکان کم استفاده کنید.",
+  'filters.mustHaveConfirmYes': "بله، اجباری شود",
+  'filters.mustHaveConfirmNo': "حالا نه",
+  'pool.line': "اکنون حدود {{count}} نفر با انتخاب‌های شما مطابقت دارند.",
+  'pool.narrow': "این تا حدی محدود است. خاموش کردن یک مورد اجباری معمولاً دامنه را بازتر می‌کند.",
+  'pool.none': "هنوز کسی مطابقت ندارد. خاموش کردن یک مورد اجباری یا گسترده‌تر کردن یک بازه کمک می‌کند.",
 };

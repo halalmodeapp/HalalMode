@@ -921,4 +921,11 @@ export const es: TranslationCatalog = {
   'diet.vegetarian': "Vegetariano/a",
   'diet.pescatarian': "Pescetariano/a",
   'diet.vegan': "Vegano/a",
+  'filters.mustHaveConfirmTitle': "¿Hacerlo obligatorio?",
+  'filters.mustHaveConfirmBody': "Solo se te presentará a quien coincida exactamente con esto. Cada requisito obligatorio puede reducir mucho tus presentaciones, así que usa los menos posibles.",
+  'filters.mustHaveConfirmYes': "Sí, hacerlo obligatorio",
+  'filters.mustHaveConfirmNo': "Ahora no",
+  'pool.line': "Unas {{count}} personas coinciden con tus elecciones ahora mismo.",
+  'pool.narrow': "Es bastante restringido. Desactivar un requisito obligatorio suele ampliarlo.",
+  'pool.none': "Aún nadie coincide. Desactivar un requisito obligatorio o ampliar un rango ayudará.",
 };

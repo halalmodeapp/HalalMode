@@ -921,4 +921,11 @@ export const ms: TranslationCatalog = {
   'diet.vegetarian': "Vegetarian",
   'diet.pescatarian': "Pescatarian",
   'diet.vegan': "Vegan",
+  'filters.mustHaveConfirmTitle': "Jadikan ini wajib?",
+  'filters.mustHaveConfirmBody': "Hanya orang yang tepat sepadan dengan ini akan diperkenalkan kepada anda. Setiap syarat wajib boleh mengurangkan perkenalan anda dengan banyak, jadi gunakan seperlunya.",
+  'filters.mustHaveConfirmYes': "Ya, jadikan wajib",
+  'filters.mustHaveConfirmNo': "Tidak sekarang",
+  'pool.line': "Kira-kira {{count}} orang sepadan dengan pilihan anda sekarang.",
+  'pool.narrow': "Ini agak sempit. Mematikan satu syarat wajib biasanya melapangkannya.",
+  'pool.none': "Belum ada yang sepadan. Mematikan syarat wajib atau melebarkan julat akan membantu.",
 };

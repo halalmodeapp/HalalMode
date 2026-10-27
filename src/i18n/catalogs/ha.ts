@@ -921,4 +921,11 @@ export const ha: TranslationCatalog = {
   'diet.vegetarian': "Mai cin kayan lambu kawai",
   'diet.pescatarian': "Mai cin kifi (ba nama)",
   'diet.vegan': "Vegan",
+  'filters.mustHaveConfirmTitle': "A mai da wannan dole?",
+  'filters.mustHaveConfirmBody': "Waɗanda suka dace da wannan daidai ne kawai za a gabatar muku. Kowane dole na iya rage gabatarwarku sosai, don haka yi amfani da kaɗan gwargwadon iko.",
+  'filters.mustHaveConfirmYes': "Eh, mai da shi dole",
+  'filters.mustHaveConfirmNo': "Ba yanzu ba",
+  'pool.line': "Kusan mutane {{count}} sun dace da zaɓinku yanzu.",
+  'pool.narrow': "Wannan ya yi ƙunci. Kashe wani dole yawanci yana buɗe shi.",
+  'pool.none': "Babu wanda ya dace tukuna. Kashe wani dole ko faɗaɗa iyaka zai taimaka.",
 };

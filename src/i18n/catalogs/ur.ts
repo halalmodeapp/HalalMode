@@ -921,4 +921,11 @@ export const ur: TranslationCatalog = {
   'diet.vegetarian': "سبزی خور",
   'diet.pescatarian': "مچھلی خور (پیسکیٹیرین)",
   'diet.vegan': "ویگن",
+  'filters.mustHaveConfirmTitle': "کیا اسے لازمی شرط بنائیں؟",
+  'filters.mustHaveConfirmBody': "صرف وہی لوگ آپ کو متعارف کرائے جائیں گے جو اس سے بالکل مطابقت رکھتے ہوں۔ ہر لازمی شرط آپ کے تعارف بہت کم کر سکتی ہے، اس لیے کم سے کم استعمال کریں۔",
+  'filters.mustHaveConfirmYes': "ہاں، لازمی شرط بنائیں",
+  'filters.mustHaveConfirmNo': "ابھی نہیں",
+  'pool.line': "اس وقت تقریباً {{count}} لوگ آپ کی پسند سے مطابقت رکھتے ہیں۔",
+  'pool.narrow': "یہ کافی محدود ہے۔ کوئی لازمی شرط بند کرنے سے عموماً گنجائش بڑھ جاتی ہے۔",
+  'pool.none': "ابھی کوئی مطابقت نہیں رکھتا۔ کوئی لازمی شرط بند کرنے یا حد بڑھانے سے مدد ملے گی۔",
 };

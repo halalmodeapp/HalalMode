@@ -98,6 +98,7 @@ export function SettingsTab({
     mutationFn: setMyMaritalStatus,
     onSuccess: (_, status) => {
       queryClient.setQueryData<MaritalSettings>(queryKeys.maritalSettings, (current) => (current ? { ...current, status } : current));
+      void queryClient.invalidateQueries({ queryKey: queryKeys.poolSize });
       toast.show(`✓ ${t('filters.saved')}`);
     },
     onError: () => showNotice(t('settings.activityErrorTitle'), t('settings.activityErrorBody')),
@@ -106,6 +107,7 @@ export function SettingsTab({
     mutationFn: setMyMaritalPreferences,
     onSuccess: (_, accepted) => {
       queryClient.setQueryData<MaritalSettings>(queryKeys.maritalSettings, (current) => (current ? { ...current, accepted } : current));
+      void queryClient.invalidateQueries({ queryKey: queryKeys.poolSize });
       toast.show(`✓ ${t('filters.saved')}`);
     },
     onError: () => showNotice(t('settings.activityErrorTitle'), t('settings.activityErrorBody')),

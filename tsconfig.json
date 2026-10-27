@@ -10,5 +10,5 @@
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
   "// exclude": "Edge Functions run on Deno, not React Native — they are typechecked by `supabase functions` with its own config.",
-  "exclude": ["node_modules", "supabase/functions", "tests", ".test-build"]
+  "exclude": ["node_modules", "supabase/functions", "scripts/luna-photo-eval.ts", "tests", ".test-build"]
 }

@@ -921,4 +921,11 @@ export const tr: TranslationCatalog = {
   'diet.vegetarian': "Vejetaryen",
   'diet.pescatarian': "Peskataryen",
   'diet.vegan': "Vegan",
+  'filters.mustHaveConfirmTitle': "Bunu zorunlu yapalım mı?",
+  'filters.mustHaveConfirmBody': "Yalnızca buna tam uyan kişiler sana tanıştırılır. Her zorunlu tercih tanışmalarını çok azaltabilir, bu yüzden mümkün olduğunca az kullan.",
+  'filters.mustHaveConfirmYes': "Evet, zorunlu yap",
+  'filters.mustHaveConfirmNo': "Şimdi değil",
+  'pool.line': "Şu anda yaklaşık {{count}} kişi tercihlerine uyuyor.",
+  'pool.narrow': "Bu oldukça dar. Bir zorunlu tercihi kapatmak genellikle seçeneği genişletir.",
+  'pool.none': "Henüz kimse uymuyor. Bir zorunlu tercihi kapatmak veya aralığı genişletmek yardımcı olur.",
 };

@@ -256,6 +256,14 @@ let mockMaritalSettings: MaritalSettings = { status: 'never_married', accepted: 
 const asStatuses = (value: unknown): MaritalStatus[] =>
   (Array.isArray(value) ? value : []).filter((item): item is MaritalStatus => MARITAL_STATUSES.includes(item as MaritalStatus));
 
+/** About how many people can be introduced to this member under their current choices. */
+export async function fetchMyPoolSize(): Promise<number> {
+  if (USE_MOCKS) return 42;
+  const { data, error } = await requireSupabase().rpc('get_my_pool_size');
+  if (error) throw error;
+  return typeof data === 'number' ? data : 0;
+}
+
 export async function fetchMyMaritalSettings(): Promise<MaritalSettings> {
   if (USE_MOCKS) return mockMaritalSettings;
   const { data, error } = await requireSupabase().rpc('get_my_marital_settings');

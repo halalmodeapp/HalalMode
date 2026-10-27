@@ -932,6 +932,13 @@ export const en = {
   'diet.vegetarian': "Vegetarian",
   'diet.pescatarian': "Pescatarian",
   'diet.vegan': "Vegan",
+  'filters.mustHaveConfirmTitle': "Make this a must-have?",
+  'filters.mustHaveConfirmBody': "Only people who match this exactly will be introduced to you. Each must-have can shrink your introductions a lot, so use as few as you can.",
+  'filters.mustHaveConfirmYes': "Yes, make it a must-have",
+  'filters.mustHaveConfirmNo': "Not now",
+  'pool.line': "About {{count}} people match your choices right now.",
+  'pool.narrow': "That is quite narrow. Turning off a Must have usually opens it up.",
+  'pool.none': "No one matches yet. Turning off a Must have, or widening a range, will help.",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -1858,4 +1865,11 @@ export const ar: TranslationCatalog = {
   'diet.vegetarian': "نباتي",
   'diet.pescatarian': "يأكل السمك دون اللحم (بيسكتاري)",
   'diet.vegan': "نباتي صرف (فيغان)",
+  'filters.mustHaveConfirmTitle': "هل تجعل هذا شرطًا أساسيًا؟",
+  'filters.mustHaveConfirmBody': "لن يُعرَّف بك إلا من يطابق هذا تمامًا. قد يقلّل كل شرط أساسي تعارفاتك كثيرًا، فاستخدم أقل عدد ممكن.",
+  'filters.mustHaveConfirmYes': "نعم، اجعله شرطًا أساسيًا",
+  'filters.mustHaveConfirmNo': "ليس الآن",
+  'pool.line': "يطابق اختياراتك الآن نحو {{count}} شخصًا.",
+  'pool.narrow': "هذا ضيق إلى حد ما. إيقاف شرط أساسي يفتح المجال عادةً.",
+  'pool.none': "لا أحد يطابق بعد. إيقاف شرط أساسي أو توسيع نطاق سيساعد.",
 };

@@ -921,4 +921,11 @@ export const zhHans: TranslationCatalog = {
   'diet.vegetarian': "素食（蛋奶素）",
   'diet.pescatarian': "鱼素",
   'diet.vegan': "纯素",
+  'filters.mustHaveConfirmTitle': "设为必选条件？",
+  'filters.mustHaveConfirmBody': "只会向你介绍完全符合此条件的人。每个必选条件都可能大幅减少你的介绍对象，所以请尽量少用。",
+  'filters.mustHaveConfirmYes': "是，设为必选",
+  'filters.mustHaveConfirmNo': "暂不",
+  'pool.line': "目前约有 {{count}} 人符合你的选择。",
+  'pool.narrow': "范围相当窄。关闭一个必选条件通常会放宽范围。",
+  'pool.none': "暂时没有人符合。关闭一个必选条件或放宽范围会有帮助。",
 };

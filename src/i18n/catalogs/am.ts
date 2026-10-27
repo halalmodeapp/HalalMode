@@ -921,4 +921,11 @@ export const am: TranslationCatalog = {
   'diet.vegetarian': "ቬጀቴሪያን",
   'diet.pescatarian': "ዓሣ የሚበላ (ፔስኬተሪያን)",
   'diet.vegan': "ቪጋን",
+  'filters.mustHaveConfirmTitle': "ይህን አስገዳጅ እናድርገው?",
+  'filters.mustHaveConfirmBody': "ከዚህ ጋር በትክክል የሚመሳሰሉ ሰዎች ብቻ ይተዋወቃሉ። እያንዳንዱ አስገዳጅ ምርጫ መተዋወቆችዎን በጣም ሊቀንስ ይችላል፤ ስለዚህ በተቻለ መጠን ጥቂት ይጠቀሙ።",
+  'filters.mustHaveConfirmYes': "አዎ፣ አስገዳጅ አድርገው",
+  'filters.mustHaveConfirmNo': "አሁን አይደለም",
+  'pool.line': "አሁን ወደ {{count}} ሰዎች ከምርጫዎችዎ ጋር ይስማማሉ።",
+  'pool.narrow': "ይህ በጣም ጠባብ ነው። አንድ አስገዳጅ ምርጫን ማጥፋት ብዙውን ጊዜ ያሰፋዋል።",
+  'pool.none': "እስካሁን ማንም አይስማማም። አስገዳጅ ምርጫን ማጥፋት ወይም ክልልን ማስፋት ይረዳል።",
 };

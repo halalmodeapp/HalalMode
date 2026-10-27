@@ -921,4 +921,11 @@ export const hi: TranslationCatalog = {
   'diet.vegetarian': "शाकाहारी",
   'diet.pescatarian': "पेस्केटेरियन (मछली खाने वाले)",
   'diet.vegan': "वीगन",
+  'filters.mustHaveConfirmTitle': "क्या इसे ज़रूरी शर्त बनाएँ?",
+  'filters.mustHaveConfirmBody': "सिर्फ़ वही लोग आपसे मिलवाए जाएँगे जो इससे ठीक मेल खाते हों। हर ज़रूरी शर्त आपके परिचय बहुत घटा सकती है, इसलिए कम से कम रखें।",
+  'filters.mustHaveConfirmYes': "हाँ, ज़रूरी शर्त बनाएँ",
+  'filters.mustHaveConfirmNo': "अभी नहीं",
+  'pool.line': "अभी लगभग {{count}} लोग आपकी पसंद से मेल खाते हैं।",
+  'pool.narrow': "यह काफ़ी सीमित है। किसी ज़रूरी शर्त को बंद करने से आमतौर पर दायरा बढ़ता है।",
+  'pool.none': "अभी कोई मेल नहीं खाता। कोई ज़रूरी शर्त बंद करने या दायरा बढ़ाने से मदद मिलेगी।",
 };

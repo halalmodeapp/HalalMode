@@ -921,4 +921,11 @@ export const fr: TranslationCatalog = {
   'diet.vegetarian': "Végétarien",
   'diet.pescatarian': "Pescétarien",
   'diet.vegan': "Végan",
+  'filters.mustHaveConfirmTitle': "En faire un critère obligatoire ?",
+  'filters.mustHaveConfirmBody': "Seules les personnes qui correspondent exactement à ce critère vous seront présentées. Chaque critère obligatoire peut beaucoup réduire vos présentations, utilisez-en le moins possible.",
+  'filters.mustHaveConfirmYes': "Oui, le rendre obligatoire",
+  'filters.mustHaveConfirmNo': "Pas maintenant",
+  'pool.line': "Environ {{count}} personnes correspondent à vos choix en ce moment.",
+  'pool.narrow': "C’est assez restreint. Désactiver un critère obligatoire élargit généralement le choix.",
+  'pool.none': "Personne ne correspond pour l’instant. Désactiver un critère obligatoire ou élargir une plage aidera.",
 };

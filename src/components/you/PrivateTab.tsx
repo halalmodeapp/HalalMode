@@ -38,6 +38,7 @@ import { HAS_CHILDREN_OPTIONS, asGroups, dressOptions } from '@/data/matchingOpt
 import { ETHNICITY_GROUPS } from '@/data/ethnicities';
 import { heritageGroups } from '@/data/heritage';
 import { DIETS, DIET_KEYS, toggleDiet } from '@/data/diet';
+import { PoolSizeNote } from '@/components/you/PoolSizeNote';
 import { showNotice } from '@/lib/notice';
 import { useSession } from '@/state/session';
 import { alpha, color, font, radius } from '@/theme/tokens';
@@ -88,6 +89,7 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
       void queryClient.invalidateQueries({ queryKey: queryKeys.preferences });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.poolSize });
       toast.show(`✓ ${t('filters.saved')}`);
     },
   });
@@ -208,6 +210,7 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
             <Text variant="caption" style={styles.sectionBody}>
               {t('filters.partnerBody')}
             </Text>
+            <PoolSizeNote />
           </View>
 
           <View style={styles.section}>
