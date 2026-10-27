@@ -150,10 +150,10 @@ declare
   v_name text;
   v_def text;
 begin
-  foreach v_name in array array['public.report_connection_member', 'public.report_introduction_member'] loop
+  foreach v_name in array array['halal_mode_private.report_connection_member_after_legal_consent', 'public.report_introduction_member'] loop
     select pg_get_functiondef(p.oid) into v_def
     from pg_proc p
-    where p.pronamespace = 'public'::regnamespace and p.proname = split_part(v_name, '.', 2)
+    where p.pronamespace = split_part(v_name, '.', 1)::regnamespace and p.proname = split_part(v_name, '.', 2)
     limit 1;
     if position('''misrepresentation'',' in v_def) = 0 then
       raise exception '% does not list the misrepresentation reason', v_name;

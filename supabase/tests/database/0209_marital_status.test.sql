@@ -60,7 +60,7 @@ select ok(
     in pg_get_functiondef('halal_mode_private.matching_shortlist_batch_edges(uuid,uuid[],uuid[],timestamptz,integer)'::regprocedure)) > 0,
   'matching requires each status to be one the other is open to');
 select ok(
-  position('marital_status_mismatch' in pg_get_functiondef('public.report_connection_member(uuid,text)'::regprocedure)) > 0
+  position('marital_status_mismatch' in pg_get_functiondef('halal_mode_private.report_connection_member_after_legal_consent(uuid,text)'::regprocedure)) > 0
   and position('marital_status_mismatch' in pg_get_functiondef('public.report_introduction_member(uuid,text)'::regprocedure)) > 0,
   'both report paths accept the marital-status reason');
 
