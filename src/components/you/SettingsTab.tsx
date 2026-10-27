@@ -6,7 +6,8 @@ import * as WebBrowser from 'expo-web-browser';
 
 import { ADMIN_PANEL_URL, fetchIsAdmin } from '@/api/admin';
 import { fetchMyReadReceipts, fetchMySampleMembers, requestAccountDeletion, setMyReadReceipts, setMySampleMembers, setMyTestPremium, setProfilePaused } from '@/api/account';
-import { fetchMyHighLatitudeFajrSettings, setMyHighLatitudeFajrMethod, type HighLatitudeFajrSettings } from '@/api/profile';
+import { fetchMyHighLatitudeFajrSettings, fetchMyMaritalSettings, setMyHighLatitudeFajrMethod, setMyMaritalPreferences, setMyMaritalStatus, type HighLatitudeFajrSettings, type MaritalSettings } from '@/api/profile';
+import { ACCEPTED_KEYS, acceptableStatuses, declarableStatuses, MARITAL_STATUS_KEYS } from '@/data/marital';
 import { disableMyNotifications, enableMyNotifications, fetchMyNotificationConsent } from '@/api/notifications';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -30,7 +31,7 @@ import { USE_MOCKS } from '@/lib/supabase';
 import { testIds } from '@/lib/testIds';
 import { queryKeys } from '@/lib/queryClient';
 import { alpha, color, font, radius, space } from '@/theme/tokens';
-import { TIER_LIMITS, type Profile } from '@/types';
+import { TIER_LIMITS, type Gender, type MaritalStatus, type Profile } from '@/types';
 import { RTL_LAYOUT } from '@/lib/rtl';
 import { showNotice } from '@/lib/notice';
 import { useToast } from '@/state/toast';
@@ -40,10 +41,12 @@ export function SettingsTab({
   liveCount,
   openConnections,
   profilePaused,
+  gender,
 }: {
   liveCount: number;
   openConnections: number;
   profilePaused: boolean;
+  gender: Gender;
 }) {
   const { t, isRTL, localeTag, nativeRestartRequired } = useI18n();
   const cardsCopy = useCardsCopy();
@@ -90,6 +93,29 @@ export function SettingsTab({
     },
     onError: () => showNotice(t('settings.activityErrorTitle'), t('settings.activityErrorBody')),
   });
+  const maritalQuery = useQuery({ queryKey: queryKeys.maritalSettings, queryFn: fetchMyMaritalSettings });
+  const maritalStatus = useMutation({
+    mutationFn: setMyMaritalStatus,
+    onSuccess: (_, status) => {
+      queryClient.setQueryData<MaritalSettings>(queryKeys.maritalSettings, (current) => (current ? { ...current, status } : current));
+      toast.show(`✓ ${t('filters.saved')}`);
+    },
+    onError: () => showNotice(t('settings.activityErrorTitle'), t('settings.activityErrorBody')),
+  });
+  const maritalPreferences = useMutation({
+    mutationFn: setMyMaritalPreferences,
+    onSuccess: (_, accepted) => {
+      queryClient.setQueryData<MaritalSettings>(queryKeys.maritalSettings, (current) => (current ? { ...current, accepted } : current));
+      toast.show(`✓ ${t('filters.saved')}`);
+    },
+    onError: () => showNotice(t('settings.activityErrorTitle'), t('settings.activityErrorBody')),
+  });
+  const toggleAccepted = (status: MaritalStatus) => {
+    const current = maritalQuery.data?.accepted ?? [];
+    const next = current.includes(status) ? current.filter((item) => item !== status) : [...current, status];
+    // At least one choice stays on, or nobody could be introduced.
+    if (next.length > 0) maritalPreferences.mutate(next);
+  };
   const sampleMembers = useMutation({
     mutationFn: setMySampleMembers,
     onSuccess: () => {
@@ -271,6 +297,40 @@ export function SettingsTab({
           />
         ) : null}
       </Section>
+
+      {maritalQuery.data ? (
+        <>
+          <Section eyebrow={t('settings.preferences')} title={t('marital.statusTitle')}>
+            <Text variant="caption" style={styles.fajrMethodIntro}>{t('marital.statusBody')}</Text>
+            {declarableStatuses(gender).map((status) => (
+              <MaritalOption
+                key={status}
+                title={t(MARITAL_STATUS_KEYS[status])}
+                selected={maritalQuery.data?.status === status}
+                kind="radio"
+                disabled={maritalStatus.isPending}
+                testID={`settings.marital.status.${status}`}
+                onPress={() => maritalStatus.mutate(status)}
+              />
+            ))}
+          </Section>
+          <Section eyebrow={t('settings.preferences')} title={t('marital.prefTitle')}>
+            <Text variant="caption" style={styles.fajrMethodIntro}>{t('marital.prefQuestion')}</Text>
+            {acceptableStatuses(gender).map((status) => (
+              <MaritalOption
+                key={status}
+                title={t(ACCEPTED_KEYS[status])}
+                selected={maritalQuery.data?.accepted.includes(status) ?? false}
+                kind="checkbox"
+                disabled={maritalPreferences.isPending}
+                testID={`settings.marital.accepts.${status}`}
+                onPress={() => toggleAccepted(status)}
+              />
+            ))}
+            <Text variant="caption" style={styles.fajrMethodIntro}>{t('marital.prefNote')}</Text>
+          </Section>
+        </>
+      ) : null}
 
       {fajrSettingsQuery.data?.isHighLatitude ? (
         <Section eyebrow={t('settings.preferences')} title={t('settings.highLatitudeFajrTitle')}>
@@ -704,6 +764,47 @@ function SettingRow({
   return <View style={[styles.row, isRTL && styles.rowReverse]}>{content}</View>;
 }
 
+function MaritalOption({
+  title,
+  selected,
+  kind,
+  disabled,
+  testID,
+  onPress,
+}: {
+  title: string;
+  selected: boolean;
+  kind: 'radio' | 'checkbox';
+  disabled: boolean;
+  testID: string;
+  onPress: () => void;
+}) {
+  const { isRTL } = useI18n();
+  return (
+    <Pressable
+      accessibilityRole={kind}
+      accessibilityLabel={title}
+      accessibilityState={{ checked: selected, disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      testID={testID}
+      style={({ pressed }) => [
+        styles.fajrMethodOption,
+        isRTL && styles.rowReverse,
+        selected && styles.fajrMethodOptionSelected,
+        pressed && !disabled && styles.openRowPressed,
+      ]}
+    >
+      <View style={styles.fajrMethodCopy}>
+        <Text style={styles.rowTitle}>{title}</Text>
+      </View>
+      <View style={[kind === 'radio' ? styles.fajrRadio : styles.maritalBox, selected && styles.fajrRadioSelected, selected && kind === 'checkbox' && styles.maritalBoxOn]}>
+        {selected ? (kind === 'radio' ? <View style={styles.fajrRadioDot} /> : <Text style={styles.maritalTick}>✓</Text>) : null}
+      </View>
+    </Pressable>
+  );
+}
+
 function HighLatitudeMethodOption({
   title,
   subtitle,
@@ -785,6 +886,9 @@ const styles = StyleSheet.create({
   rowTitleLine: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 7 },
   rowTitle: { fontFamily: font.bodyBold, fontSize: 13.5, color: color.ink },
   rowSubtitle: { lineHeight: 19, color: color.muted },
+  maritalBox: { width: 22, height: 22, borderRadius: 7, borderWidth: 1.5, borderColor: alpha.lineStrong, alignItems: 'center', justifyContent: 'center' },
+  maritalBoxOn: { backgroundColor: color.ink },
+  maritalTick: { color: color.white, fontSize: 13, lineHeight: 16, fontFamily: font.bodyBold },
   fajrMethodIntro: { lineHeight: 19, color: color.muted, paddingTop: 14 },
   fajrMethodOption: {
     minHeight: 68,

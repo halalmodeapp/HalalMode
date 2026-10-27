@@ -42,6 +42,7 @@ import { useI18n } from '@/i18n';
 import { deckDirectionForAccessibilityAction } from '@/lib/roundInvariants';
 import { RTL_LAYOUT } from '@/lib/rtl';
 import { occupationLabel } from '@/data/occupations';
+import { MaritalStatusBadge } from './MaritalStatusBadge';
 import { testIds } from '@/lib/testIds';
 import { color, radius } from '@/theme/tokens';
 import type { Profile } from '@/types';
@@ -1283,6 +1284,9 @@ function DeckCard({
           {profile.city} ·{' '}
           {occupationLabel(profile.occupation, language)}
         </Text>
+        <View style={styles.maritalOnCard}>
+          <MaritalStatusBadge status={profile.maritalStatus} onPhoto center />
+        </View>
       </View>
 
       {isActive &&
@@ -1387,6 +1391,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
+  maritalOnCard: { marginTop: 10 },
   line: {
     fontFamily:
       'Beiruti_400Regular',

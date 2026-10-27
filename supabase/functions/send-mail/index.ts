@@ -30,7 +30,7 @@ interface Report {
 interface Moderation {
   id: number;
   user_id: string;
-  kind: 'photo' | 'bio';
+  kind: 'photo' | 'bio' | 'selfie' | 'marital';
   ref: string;
   decision: 'remove' | 'review';
   reason: string | null;
@@ -95,8 +95,11 @@ async function moderationEmail(item: Moderation, client: any) {
       ? `<p><a href="${signed.data.signedUrl}">Open the photo</a> (private link, 1 hour)</p>`
       : '<p>The photo could not be linked.</p>';
   }
+  if (item.kind === 'marital') shown = '<p>Their marital status changed. Look at the member in the admin panel.</p>';
   const what = item.kind === 'photo'
     ? (item.decision === 'remove' ? 'Photo removed automatically' : 'Photo needs a look')
+    : item.kind === 'marital' ? 'Marital status changed'
+    : item.kind === 'selfie' ? 'Selfie needs a look'
     : 'Bio needs a look';
   return {
     subject: `${what}: ${item.first_name ?? 'member'}`,

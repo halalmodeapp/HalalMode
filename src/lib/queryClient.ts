@@ -30,6 +30,7 @@ export const queryKeys = {
   messages: (connectionId: string) => ['messages', connectionId] as const,
   notices: ['notices'] as const,
   selfie: ['selfie'] as const,
+  maritalSettings: ['marital-settings'] as const,
   cardsAccess: (connectionId: string) => ['halal-cards', 'access', connectionId] as const,
   cardsSessions: (connectionId: string) => ['halal-cards', 'sessions', connectionId] as const,
   cardsSession: (sessionId: string) => ['halal-cards', 'session', sessionId] as const,

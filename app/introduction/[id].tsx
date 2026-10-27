@@ -19,6 +19,7 @@ import { useRound } from '@/state/round';
 import { alpha, color, radius, space } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
 import { occupationLabel } from '@/data/occupations';
+import { MaritalStatusBadge } from '@/components/introductions/MaritalStatusBadge';
 import { profileDetailLines } from '@/lib/profileDetails';
 
 export default function IntroductionDetailScreen() {
@@ -162,6 +163,10 @@ export default function IntroductionDetailScreen() {
             </Text>
           </LinearGradient>
         </Pressable>
+
+        <View style={styles.maritalBlock}>
+          <MaritalStatusBadge status={profile.maritalStatus} />
+        </View>
 
         <View style={[styles.chips, isRTL && styles.rowRTL]}>
           {profile.chips.map((chip) => (
@@ -337,6 +342,7 @@ const styles = StyleSheet.create({
     color: color.white,
   },
 
+  maritalBlock: { paddingHorizontal: space.gutter, marginTop: 16 },
   chips: {
     flexDirection: 'row',
     flexWrap: 'wrap',

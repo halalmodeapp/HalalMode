@@ -46,6 +46,7 @@ insert into profiles (
   ('00000000-0000-0000-0000-000000000211', 'Lebanon Member', 'Lebanon', '1990-01-01', 'male', 'Beirut', 'Lebanon', 'open', 33.8938, 35.5018, repeat('a', 40), array['211/photo.jpg'], true),
   ('00000000-0000-0000-0000-000000000212', 'Peru Member', 'Peru', '1991-01-01', 'female', 'Lima', 'Peru', 'open', -12.0464, -77.0428, repeat('b', 40), array['212/photo.jpg'], true),
   ('00000000-0000-0000-0000-000000000213', 'Local Member', 'Local', '1991-01-01', 'female', 'Tripoli', 'Lebanon', 'open', 34.4367, 35.8497, repeat('c', 40), array['213/photo.jpg'], true);
+update profiles set marital_status = 'never_married' where marital_status is null; -- matching needs a declared status
 insert into private_preferences (
   user_id, preferred_countries, max_distance_km, matching_preferences_completed_at
 ) values

@@ -29,6 +29,7 @@ select
   case when n in (6001, 6004, 6006, 6008) then 'premium'::membership_tier else 'free'::membership_tier end,
   true
 from generate_series(6001, 6008) n;
+update profiles set marital_status = 'never_married' where marital_status is null; -- matching needs a declared status
 
 insert into private_preferences (
   user_id, min_age, max_age, preferred_countries, max_distance_km,

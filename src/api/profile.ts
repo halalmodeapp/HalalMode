@@ -1,7 +1,8 @@
 import { MOCK_PREFERENCES, MOCK_SELF } from '@/data/mock';
 import { requireSupabase, USE_MOCKS } from '@/lib/supabase';
 import { hydrateProfileMedia } from '@/api/profileMedia';
-import type { PrivatePreferences, Profile } from '@/types';
+import type { MaritalStatus, PrivatePreferences, Profile } from '@/types';
+import { DEFAULT_ACCEPTED, MARITAL_STATUSES } from '@/data/marital';
 import { isReadinessIssue, type ProfileReadinessIssue } from '@/lib/profileReadiness';
 import type { DeviceLocationUpdate } from '@/lib/deviceLocation';
 import { profilePatchToRow } from '@/lib/profilePatch';
@@ -229,6 +230,46 @@ export async function updateMyPreferences(
   if (error) throw error;
 }
 
+export interface MaritalSettings {
+  status: MaritalStatus | null;
+  /** Private: which statuses this member is open to. Never shown to anyone else. */
+  accepted: MaritalStatus[];
+}
+
+let mockMaritalSettings: MaritalSettings = { status: 'never_married', accepted: [...DEFAULT_ACCEPTED] };
+
+const asStatuses = (value: unknown): MaritalStatus[] =>
+  (Array.isArray(value) ? value : []).filter((item): item is MaritalStatus => MARITAL_STATUSES.includes(item as MaritalStatus));
+
+export async function fetchMyMaritalSettings(): Promise<MaritalSettings> {
+  if (USE_MOCKS) return mockMaritalSettings;
+  const { data, error } = await requireSupabase().rpc('get_my_marital_settings');
+  if (error) throw error;
+  const row = (data ?? {}) as { status?: string | null; accepted?: unknown };
+  return {
+    status: MARITAL_STATUSES.includes(row.status as MaritalStatus) ? (row.status as MaritalStatus) : null,
+    accepted: asStatuses(row.accepted),
+  };
+}
+
+export async function setMyMaritalStatus(status: MaritalStatus): Promise<void> {
+  if (USE_MOCKS) {
+    mockMaritalSettings = { ...mockMaritalSettings, status };
+    return;
+  }
+  const { error } = await requireSupabase().rpc('set_my_marital_status', { p_status: status });
+  if (error) throw error;
+}
+
+export async function setMyMaritalPreferences(accepted: MaritalStatus[]): Promise<void> {
+  if (USE_MOCKS) {
+    mockMaritalSettings = { ...mockMaritalSettings, accepted };
+    return;
+  }
+  const { error } = await requireSupabase().rpc('set_my_marital_preferences', { p_statuses: accepted });
+  if (error) throw error;
+}
+
 function profileFromRow(raw: Record<string, unknown>): Profile {
   // get_my_profile answers in camelCase (it shares safe_member_profile with
   // what other members see), while older reads were snake_case. Reading only
@@ -257,6 +298,7 @@ function profileFromRow(raw: Record<string, unknown>): Profile {
     firstName: String(row.first_name ?? ''),
     age: typeof row.age === 'number' ? row.age : ageFromDate(String(row.birth_date)),
     gender: row.gender as Profile['gender'],
+    maritalStatus: ((row.maritalStatus ?? row.marital_status) as MaritalStatus | null) ?? undefined,
     occupation: String(row.occupation ?? ''),
     education: row.education as string | undefined,
     city: String(row.city ?? ''),

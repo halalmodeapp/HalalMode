@@ -20,7 +20,7 @@
  * Members are asked to accept it on their next visit.
  */
 
-export const LEGAL_VERSION = '2026-10-23';
+export const LEGAL_VERSION = '2026-10-27';
 
 /** Where both documents live: halalmo.de/legal/terms and /legal/privacy. */
 export const LEGAL_SITE = 'https://halalmo.de';
@@ -80,6 +80,14 @@ export const TERMS: LegalDocument = {
         'Do not harass, threaten, deceive, or pressure anyone.',
         'Do not share anyone else’s photographs, messages, or details outside the app.',
         'Do not use Halal Mode to advertise, recruit, or sell.',
+      ],
+    },
+    {
+      heading: 'Your marital status',
+      body: [
+        'Tell us honestly whether you are single, divorced, widowed, or currently married, and keep it up to date.',
+        'It is shown on your profile from the first introduction, so the people you meet know from the start.',
+        'If someone reports that a profile does not match a person’s real situation, we look into it. If a false marital status is proven, the account is closed permanently. This protects every honest member.',
       ],
     },
     {
@@ -149,7 +157,8 @@ export const PRIVACY: LegalDocument = {
       body: [
         'Your email address, so you can sign in.',
         'Your profile: name, date of birth, city and country, what you do, what you have written about yourself, your photographs, and an optional voice introduction.',
-        'Your preferences: the age, distance, and other qualities you are looking for, and which of them are must-haves.',
+        'Your preferences: the age, distance, and other qualities you are looking for, which of them are must-haves, and which marital statuses you are open to.',
+        'Your marital status, and when you change it.',
         'Your activity: which introductions you were shown, which you kept, your answers to the questions, and your messages.',
         'While an introduction is open, approximate time spent on the profile, its written bio, and each full-size photograph. These times are rounded to five-second steps and capped at two minutes per item.',
         'Your location, rounded to about one kilometre, with the nearest city and country. It comes from your device, is used only to work out how far apart two people are, and is never shown to anyone.',
@@ -176,7 +185,7 @@ export const PRIVACY: LegalDocument = {
     {
       heading: 'What other members see',
       body: [
-        'People you are introduced to see your first name, age, city, occupation, what you have written, your photographs, and your voice introduction if you recorded one.',
+        'People you are introduced to see your first name, age, city, occupation, marital status, what you have written, your photographs, and your voice introduction if you recorded one.',
         'They never see your email address, your date of birth, your exact location, or your preferences.',
         'They are never told that you were shown their profile and did not choose them.',
       ],

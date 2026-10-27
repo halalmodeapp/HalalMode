@@ -37,6 +37,7 @@ select
   'Madinah', 'Saudi Arabia', 24.4670 + ((n - 5800)::numeric / 10000),
   39.6024, repeat('a', 50), array['atomic.jpg'], true
 from generate_series(5801, 5806) n;
+update profiles set marital_status = 'never_married' where marital_status is null; -- matching needs a declared status
 
 insert into private_preferences (
   user_id, min_age, max_age, preferred_countries, max_distance_km,
@@ -333,6 +334,7 @@ insert into profiles (
   '1991-01-01', 'female', 'Madinah', 'Saudi Arabia', 24.4688, 39.6033,
   repeat('l', 50), array['late.jpg'], true
 );
+update profiles set marital_status = 'never_married' where marital_status is null; -- matching needs a declared status
 insert into private_preferences (
   user_id, min_age, max_age, preferred_countries, max_distance_km,
   matching_preferences_completed_at

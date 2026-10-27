@@ -164,6 +164,7 @@ insert into profiles (
 ) values
   ('00000000-0000-0000-0000-000000005401', 'Shadow A', 'Shadow', '1990-01-01', 'male', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, repeat('a', 50), array['a.jpg'], true),
   ('00000000-0000-0000-0000-000000005402', 'Shadow B', 'Shadow', '1991-01-01', 'female', 'Madinah', 'Saudi Arabia', 24.4680, 39.6030, repeat('b', 50), array['b.jpg'], true);
+update profiles set marital_status = 'never_married' where marital_status is null; -- matching needs a declared status
 
 insert into private_preferences (
   user_id, min_age, max_age, preferred_countries, max_distance_km,

@@ -1,6 +1,6 @@
 import { requireSupabase, USE_MOCKS } from '@/lib/supabase';
 
-export type ReportReason = 'harassment' | 'misrepresentation' | 'safety_concern' | 'other';
+export type ReportReason = 'harassment' | 'misrepresentation' | 'marital_status_mismatch' | 'safety_concern' | 'other';
 
 export interface BlockedMember {
   id: string;

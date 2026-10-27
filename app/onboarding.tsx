@@ -26,6 +26,8 @@ import { documentFromStatus, type LegalConsentStatus } from '@/lib/legalConsent'
 import { queryKeys } from '@/lib/queryClient';
 import { SelfieCapture } from '@/components/verification/SelfieCapture';
 import { submitSelfie } from '@/api/selfie';
+import { setMyMaritalStatus } from '@/api/profile';
+import { declarableStatuses, isDeclarable, MARITAL_STATUS_KEYS } from '@/data/marital';
 import { PermissionExplainer } from '@/components/ui/PermissionExplainer';
 import { browserDeviceCoordinates, nativeDevicePlace } from '@/lib/deviceLocation';
 import { placeFromBrowserCoordinates } from '@/lib/browserPlace';
@@ -48,6 +50,7 @@ import { testIds } from '@/lib/testIds';
 import { RTL_LAYOUT } from '@/lib/rtl';
 
 type Gender = 'male' | 'female';
+type MaritalStatus = 'never_married' | 'divorced' | 'widowed' | 'married';
 
 interface OnboardingDraft {
   fullName: string;
@@ -56,6 +59,7 @@ interface OnboardingDraft {
   birthMonth: string;
   birthYear: string;
   gender: Gender | null;
+  maritalStatus: MaritalStatus | null;
   city: string;
   country: string;
   latitude?: number;
@@ -74,6 +78,7 @@ const EMPTY_DRAFT: OnboardingDraft = {
   birthMonth: '',
   birthYear: '',
   gender: null,
+  maritalStatus: null,
   city: '',
   country: '',
 };
@@ -341,6 +346,8 @@ export default function OnboardingScreen() {
         }
         profileSavedForMember.current = draftMemberId;
       }
+      // The marital status is saved once the profile exists; a retry saves it again.
+      if (draft.maritalStatus) await setMyMaritalStatus(draft.maritalStatus);
       await recordSensitiveConsent();
       // Send the selfie to be checked. A failure never holds up sign-up: the
       // You tab asks for the selfie again while none is on file.
@@ -701,6 +708,32 @@ function BasicDetailsStep({ draft, errors, patch }: StepProps) {
           </View>
           {errors.gender ? <InlineError message={errors.gender} /> : null}
         </View>
+
+        {draft.gender ? (
+          <View style={styles.genderBlock}>
+            <Text variant="label">{t('onboarding.marital')}</Text>
+            <Text variant="caption">{t('onboarding.maritalBody')}</Text>
+            <View style={styles.maritalGrid}>
+              {declarableStatuses(draft.gender).map((option) => {
+                const selected = draft.maritalStatus === option;
+                return (
+                  <Pressable
+                    key={option}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected }}
+                    onPress={() => patch('maritalStatus', option)}
+                    style={[styles.genderOption, styles.maritalOption, selected && styles.genderOptionSelected]}
+                  >
+                    <Text style={[styles.genderLabel, selected && styles.genderLabelSelected]}>
+                      {t(MARITAL_STATUS_KEYS[option])}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            {errors.maritalStatus ? <InlineError message={errors.maritalStatus} /> : null}
+          </View>
+        ) : null}
       </View>
     </View>
   );
@@ -960,6 +993,7 @@ function validateStep(step: number, draft: OnboardingDraft, t: Translate): Valid
     const dateError = validateBirthDate(draft, t);
     if (dateError) errors.birthDate = dateError;
     if (!draft.gender) errors.gender = t('onboarding.error.gender');
+    else if (!isDeclarable(draft.gender, draft.maritalStatus)) errors.maritalStatus = t('onboarding.maritalRequired');
     return errors;
   }
 
@@ -1081,6 +1115,8 @@ const styles = StyleSheet.create({
   genderOptionSelected: { backgroundColor: color.ink, borderColor: color.ink },
   genderLabel: { fontFamily: font.bodyBold, fontSize: 14, lineHeight: 20, color: color.ink },
   genderLabelSelected: { color: color.white },
+  maritalGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 3 },
+  maritalOption: { flexGrow: 1, flexBasis: '45%', paddingHorizontal: 12 },
   infoCard: {
     marginTop: 28,
     padding: 18,

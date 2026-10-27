@@ -183,6 +183,7 @@ export default function YouScreen() {
             liveCount={live.length}
             openConnections={connections.length}
             profilePaused={profile.isPaused ?? false}
+            gender={profile.gender}
           />
         ) : null}
       </StretchScrollView>
