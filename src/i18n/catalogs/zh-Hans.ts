@@ -928,4 +928,9 @@ export const zhHans: TranslationCatalog = {
   'pool.line': "目前约有 {{count}} 人符合你的选择。",
   'pool.narrow': "范围相当窄。关闭一个必选条件通常会放宽范围。",
   'pool.none': "暂时没有人符合。关闭一个必选条件或放宽范围会有帮助。",
+  'readiness.optionalTitle': "更多关于你",
+  'readiness.optionalLead': "选填。想回答时再回答，这能帮助你遇到的人更了解你。",
+  'readiness.nudgeTitle': "向你的匹配对象多介绍自己",
+  'readiness.nudgeBody': "几个选填的回答能帮助对方更了解你。随时都可以补充。",
+  'readiness.nudgeCta': "补充资料",
 };

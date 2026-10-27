@@ -928,4 +928,9 @@ export const es: TranslationCatalog = {
   'pool.line': "Unas {{count}} personas coinciden con tus elecciones ahora mismo.",
   'pool.narrow': "Es bastante restringido. Desactivar un requisito obligatorio suele ampliarlo.",
   'pool.none': "Aún nadie coincide. Desactivar un requisito obligatorio o ampliar un rango ayudará.",
+  'readiness.optionalTitle': "Más sobre ti",
+  'readiness.optionalLead': "Opcional. Responde cuando quieras: ayuda a las personas que conoces a conocerte.",
+  'readiness.nudgeTitle': "Cuéntale más sobre ti a tu match",
+  'readiness.nudgeBody': "Unas pocas respuestas opcionales le ayudan a conocerte. Añádelas cuando quieras.",
+  'readiness.nudgeCta': "Añadir detalles",
 };

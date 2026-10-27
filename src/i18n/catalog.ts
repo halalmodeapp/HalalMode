@@ -939,6 +939,11 @@ export const en = {
   'pool.line': "About {{count}} people match your choices right now.",
   'pool.narrow': "That is quite narrow. Turning off a Must have usually opens it up.",
   'pool.none': "No one matches yet. Turning off a Must have, or widening a range, will help.",
+  'readiness.optionalTitle': "More about you",
+  'readiness.optionalLead': "Optional. Answer whenever you like: it helps the people you meet get to know you.",
+  'readiness.nudgeTitle': "Tell your match more about you",
+  'readiness.nudgeBody': "A few optional answers help them get to know you. Add them whenever you like.",
+  'readiness.nudgeCta': "Add details",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -1872,4 +1877,9 @@ export const ar: TranslationCatalog = {
   'pool.line': "يطابق اختياراتك الآن نحو {{count}} شخصًا.",
   'pool.narrow': "هذا ضيق إلى حد ما. إيقاف شرط أساسي يفتح المجال عادةً.",
   'pool.none': "لا أحد يطابق بعد. إيقاف شرط أساسي أو توسيع نطاق سيساعد.",
+  'readiness.optionalTitle': "المزيد عنك",
+  'readiness.optionalLead': "اختياري. أجب متى شئت: فهو يساعد من تتعرف عليهم على معرفتك أكثر.",
+  'readiness.nudgeTitle': "عرّف تعارفك بنفسك أكثر",
+  'readiness.nudgeBody': "بضع إجابات اختيارية تساعده على معرفتك. أضفها متى شئت.",
+  'readiness.nudgeCta': "أضف تفاصيل",
 };

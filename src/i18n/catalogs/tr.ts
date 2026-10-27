@@ -928,4 +928,9 @@ export const tr: TranslationCatalog = {
   'pool.line': "Şu anda yaklaşık {{count}} kişi tercihlerine uyuyor.",
   'pool.narrow': "Bu oldukça dar. Bir zorunlu tercihi kapatmak genellikle seçeneği genişletir.",
   'pool.none': "Henüz kimse uymuyor. Bir zorunlu tercihi kapatmak veya aralığı genişletmek yardımcı olur.",
+  'readiness.optionalTitle': "Hakkında daha fazlası",
+  'readiness.optionalLead': "İsteğe bağlı. İstediğin zaman yanıtla: tanıştığın kişilerin seni tanımasına yardım eder.",
+  'readiness.nudgeTitle': "Eşleşmene kendinden daha fazla bahset",
+  'readiness.nudgeBody': "Birkaç isteğe bağlı yanıt onların seni tanımasına yardım eder. İstediğin zaman ekle.",
+  'readiness.nudgeCta': "Ayrıntı ekle",
 };

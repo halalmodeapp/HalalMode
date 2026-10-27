@@ -928,4 +928,9 @@ export const am: TranslationCatalog = {
   'pool.line': "አሁን ወደ {{count}} ሰዎች ከምርጫዎችዎ ጋር ይስማማሉ።",
   'pool.narrow': "ይህ በጣም ጠባብ ነው። አንድ አስገዳጅ ምርጫን ማጥፋት ብዙውን ጊዜ ያሰፋዋል።",
   'pool.none': "እስካሁን ማንም አይስማማም። አስገዳጅ ምርጫን ማጥፋት ወይም ክልልን ማስፋት ይረዳል።",
+  'readiness.optionalTitle': "ስለ እርስዎ ተጨማሪ",
+  'readiness.optionalLead': "አማራጭ። በፈለጉት ጊዜ ይመልሱ፤ የሚተዋወቋቸው ሰዎች እንዲያውቁዎት ይረዳል።",
+  'readiness.nudgeTitle': "ለተዛማጅዎ ስለራስዎ ተጨማሪ ይንገሩ",
+  'readiness.nudgeBody': "ጥቂት አማራጭ መልሶች እርስዎን እንዲያውቁ ይረዷቸዋል። በፈለጉት ጊዜ ያክሉ።",
+  'readiness.nudgeCta': "ዝርዝር ያክሉ",
 };

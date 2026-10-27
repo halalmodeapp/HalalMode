@@ -928,4 +928,9 @@ export const ha: TranslationCatalog = {
   'pool.line': "Kusan mutane {{count}} sun dace da zaɓinku yanzu.",
   'pool.narrow': "Wannan ya yi ƙunci. Kashe wani dole yawanci yana buɗe shi.",
   'pool.none': "Babu wanda ya dace tukuna. Kashe wani dole ko faɗaɗa iyaka zai taimaka.",
+  'readiness.optionalTitle': "Ƙarin bayani game da ku",
+  'readiness.optionalLead': "Na zaɓi. Ku amsa duk lokacin da kuke so: yana taimaka wa waɗanda kuka haɗu da su su san ku.",
+  'readiness.nudgeTitle': "Gaya wa wanda kuka dace da shi ƙarin bayani game da ku",
+  'readiness.nudgeBody': "Wasu amsoshi na zaɓi suna taimaka masa ya san ku. Ƙara su duk lokacin da kuke so.",
+  'readiness.nudgeCta': "Ƙara bayani",
 };

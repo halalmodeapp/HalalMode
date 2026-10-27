@@ -928,4 +928,9 @@ export const fr: TranslationCatalog = {
   'pool.line': "Environ {{count}} personnes correspondent à vos choix en ce moment.",
   'pool.narrow': "C’est assez restreint. Désactiver un critère obligatoire élargit généralement le choix.",
   'pool.none': "Personne ne correspond pour l’instant. Désactiver un critère obligatoire ou élargir une plage aidera.",
+  'readiness.optionalTitle': "Plus sur vous",
+  'readiness.optionalLead': "Facultatif. Répondez quand vous voulez : cela aide les personnes que vous rencontrez à mieux vous connaître.",
+  'readiness.nudgeTitle': "Parlez-en plus à votre match",
+  'readiness.nudgeBody': "Quelques réponses facultatives l’aident à mieux vous connaître. Ajoutez-les quand vous voulez.",
+  'readiness.nudgeCta': "Ajouter des détails",
 };

@@ -60,7 +60,10 @@ export async function setMyHighLatitudeFajrMethod(method: HighLatitudeFajrMethod
 
 export interface ProfileReadinessStatus {
   ready: boolean;
+  /** Required before introductions start. */
   missing: ProfileReadinessIssue[];
+  /** Optional, asked for once there is a match. */
+  recommended?: ProfileReadinessIssue[];
 }
 
 export async function fetchMyProfileReadiness(): Promise<ProfileReadinessStatus> {
@@ -83,7 +86,10 @@ export async function fetchMyProfileReadiness(): Promise<ProfileReadinessStatus>
   const missing = Array.isArray(payload.missing)
     ? payload.missing.filter(isReadinessIssue)
     : [];
-  return { ready: payload.ready === true, missing };
+  const recommended = Array.isArray(payload.recommended)
+    ? payload.recommended.filter(isReadinessIssue)
+    : [];
+  return { ready: payload.ready === true, missing, recommended };
 }
 
 export async function fetchMyProfile(): Promise<Profile> {

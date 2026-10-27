@@ -928,4 +928,9 @@ export const id: TranslationCatalog = {
   'pool.line': "Sekitar {{count}} orang cocok dengan pilihanmu saat ini.",
   'pool.narrow': "Ini cukup sempit. Mematikan satu syarat wajib biasanya melonggarkannya.",
   'pool.none': "Belum ada yang cocok. Mematikan syarat wajib atau memperlebar rentang akan membantu.",
+  'readiness.optionalTitle': "Lebih banyak tentangmu",
+  'readiness.optionalLead': "Opsional. Jawab kapan saja: ini membantu orang yang kamu temui mengenalmu.",
+  'readiness.nudgeTitle': "Ceritakan lebih banyak tentangmu kepada kecocokanmu",
+  'readiness.nudgeBody': "Beberapa jawaban opsional membantu mereka mengenalmu. Tambahkan kapan saja.",
+  'readiness.nudgeCta': "Tambah detail",
 };

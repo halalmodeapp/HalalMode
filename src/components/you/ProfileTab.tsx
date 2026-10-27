@@ -43,7 +43,7 @@ import { Text } from '@/components/ui/Text';
 import { queryKeys } from '@/lib/queryClient';
 import { testIds } from '@/lib/testIds';
 
-import { BIO_MIN_LENGTH, getProfileReadiness, readinessSteps } from '@/lib/profileReadiness';
+import { BIO_MIN_LENGTH, getProfileReadiness, readinessSteps, recommendedSteps } from '@/lib/profileReadiness';
 import { ReadinessChecklist } from '@/components/readiness/ReadinessChecklist';
 import { browserDeviceCoordinates, nativeDevicePlace } from '@/lib/deviceLocation';
 import { placeFromBrowserCoordinates } from '@/lib/browserPlace';
@@ -170,9 +170,7 @@ export function ProfileTab({
   const [familyGoals, setFamilyGoals] = useState<Profile['familyGoals'] | undefined>(
     profile.familyGoalsAnswered ? profile.familyGoals : undefined
   );
-  const [ownChecked, setOwnChecked] = useState(false);
   const heightMissing = !(Number(ownHeight) >= 140 && Number(ownHeight) <= 210);
-  const buildMissing = !ownBuild;
   const [updatingLocation, setUpdatingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locationExplainer, setLocationExplainer] = useState(false);
@@ -205,18 +203,6 @@ export function ProfileTab({
     },
   });
   const draft = useWatch({ control });
-  // Everything Save asks for about you, named one by one beside Save.
-  const ownMissingLabels = [
-    heightMissing ? t('profile.todo.height') : null,
-    buildMissing ? t('profile.todo.bodyType') : null,
-    !hasChildren ? t('profile.todo.hasChildren') : null,
-    !familyGoals ? t('profile.todo.childrenWhen') : null,
-    profile.gender === 'female' && !religiousDress ? t('profile.dress') : null,
-    ethnicities.length === 0 ? t('profile.ethnicity') : null,
-    heritage.length === 0 ? t('profile.heritage') : null,
-    !(draft.education ?? '').trim() ? t('filters.education') : null,
-    (draft.languages ?? []).length === 0 ? t('profile.languages') : null,
-  ].filter((label): label is string => label !== null);
   const serverReadinessQuery = useQuery({
     queryKey: queryKeys.profileReadiness,
     queryFn: fetchMyProfileReadiness,
@@ -251,6 +237,8 @@ export function ProfileTab({
   const readyToShow = !unsaved && liveReadiness.ready
     && (USE_MOCKS || serverReadinessQuery.data?.ready === true);
   const steps = readinessSteps(liveReadiness.missing, profile.gender);
+  // Optional, and shown only once the required steps are done.
+  const optionalSteps = recommendedSteps(liveReadiness.recommended, profile.gender);
   const checklistTargets = useRef<Partial<Record<ChecklistTarget, View | null>>>({});
   const setChecklistTarget = (targetName: ChecklistTarget, target: View | null) => {
     checklistTargets.current[targetName] = target;
@@ -452,20 +440,14 @@ export function ProfileTab({
    */
   const submit = useMemo(() => handleSubmit(
     (values) => {
-      setOwnChecked(true);
-      if (ownMissingLabels.length > 0) {
-        setMissing(ownMissingLabels);
-        return;
-      }
       setMissing([]);
       save.mutate(values);
     },
     (invalid) => {
-      setOwnChecked(true);
-      setMissing([
-        ...(Object.keys(invalid) as (keyof FormValues)[]).map((key) => t(FIELD_LABELS[key])),
-        ...ownMissingLabels,
-      ].filter((label, index, all) => all.indexOf(label) === index));
+      setMissing(
+        (Object.keys(invalid) as (keyof FormValues)[]).map((key) => t(FIELD_LABELS[key]))
+          .filter((label, index, all) => all.indexOf(label) === index),
+      );
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ), [handleSubmit, save, t, ownHeight, ownBuild, hasChildren, familyGoals, religiousDress, ethnicities, heritage, grewUp, diet, draft.education, draft.languages]);
@@ -791,6 +773,17 @@ export function ProfileTab({
           <Text variant="caption" style={styles.readinessBody}>{t('common.saving')}</Text>
         ) : null}
       </Card>
+      {liveReadiness.ready && optionalSteps.length > 0 ? (
+        <Card tone="filled" style={styles.readinessCard}>
+          <ReadinessChecklist
+            title={t('readiness.optionalTitle')}
+            steps={optionalSteps}
+            lead={t('readiness.optionalLead')}
+            isPressable={(step) => step !== 'preferences' || Boolean(onOpenPreferences)}
+            onPressStep={pressChecklistStep}
+          />
+        </Card>
+      ) : null}
       <View ref={(target) => setChecklistTarget('photo', target)} collapsable={false}>
       {photos.length === 0 ? (
         <Card testID={testIds.you.photoGuide} tone="filled" style={styles.photoGuide}>
@@ -1052,7 +1045,7 @@ export function ProfileTab({
           render={({ field }) => (
             <>
               <SelectField
-                label={required(t('profile.profession'))}
+                label={t('profile.profession')}
                 value={storedLabel(OCCUPATION_GROUPS, field.value, language)}
                 placeholder={t('profile.professionPlaceholder')}
                 onPress={() => setPicking('occupation')}
@@ -1081,7 +1074,7 @@ export function ProfileTab({
           render={({ field }) => (
             <>
               <SelectField
-                label={required(t('filters.education'))}
+                label={t('filters.education')}
                 value={storedLabel(EDUCATION_GROUPS, field.value, language)}
                 placeholder={t('profile.educationPlaceholder')}
                 onPress={() => setPicking('education')}
@@ -1145,7 +1138,7 @@ export function ProfileTab({
           render={({ field }) => (
             <>
               <SelectField
-                label={required(t('profile.languages'))}
+                label={t('profile.languages')}
                 value={field.value.map((code) => languageName(code, language)).join(', ')}
                 placeholder={t('profile.languagesPlaceholder')}
                 onPress={() => setLanguagePicker(true)}
@@ -1169,7 +1162,7 @@ export function ProfileTab({
         </View>
 
         <View style={styles.profileChoice}>
-          <Text variant="micro">{required(t('profile.practice'))}</Text>
+          <Text variant="micro">{t('profile.practice')}</Text>
           <Controller
             control={control}
             name="religiousPractice"
@@ -1206,7 +1199,7 @@ export function ProfileTab({
                   return (
                     <>
                       <SelectField
-                        label={required(t('profile.sect'))}
+                        label={t('profile.sect')}
                         value={chosen ? sectChoiceLabel(chosen, language, t) : ''}
                         placeholder={t('profile.sectPlaceholder')}
                         onPress={() => setSectPicker(true)}
@@ -1246,7 +1239,7 @@ export function ProfileTab({
         </View>
 
         <View style={styles.profileChoice}>
-          <Text variant="micro">{required(t('profile.timing'))}</Text>
+          <Text variant="micro">{t('profile.timing')}</Text>
           <Controller
             control={control}
             name="timeline"
@@ -1271,8 +1264,8 @@ export function ProfileTab({
         </View>
 
         <View ref={(target) => setChecklistTarget('children', target)} collapsable={false} style={styles.profileChoice}>
-          <Text variant="micro">{required(t('profile.hasChildren'))}</Text>
-          <View style={[styles.choiceChips, ownChecked && !hasChildren && styles.choiceMissing]}>
+          <Text variant="micro">{t('profile.hasChildren')}</Text>
+          <View style={[styles.choiceChips]}>
             {HAS_CHILDREN_PROFILE.map((option) => (
               <Chip
                 key={option.id}
@@ -1285,8 +1278,8 @@ export function ProfileTab({
         </View>
 
         <View ref={(target) => setChecklistTarget('childrenWhen', target)} collapsable={false} style={styles.profileChoice}>
-          <Text variant="micro">{required(t('profile.childrenWhen'))}</Text>
-          <View style={[styles.choiceChips, ownChecked && !familyGoals && styles.choiceMissing]}>
+          <Text variant="micro">{t('profile.childrenWhen')}</Text>
+          <View style={[styles.choiceChips]}>
             {FAMILY_CHOICES.map(([value, key]) => (
               <Chip
                 key={value}
@@ -1306,8 +1299,7 @@ export function ProfileTab({
           style={styles.profileChoice}
         >
           <SelectField
-            label={required(t('profile.dress'))}
-            error={ownChecked && !religiousDress ? ' ' : undefined}
+            label={t('profile.dress')}
             value={religiousDress
               ? optionLabel(dressOptions(profile.gender).find((o) => o.id === religiousDress) ?? { id: religiousDress, en: religiousDress, ar: religiousDress }, language)
               : ''}
@@ -1338,8 +1330,7 @@ export function ProfileTab({
           {/* Two questions cover everyone: a broad ethnicity (two for mixed
               heritage) and the countries you or your family are from. */}
           <SelectField
-            label={required(t('profile.ethnicity'))}
-            error={ownChecked && ethnicities.length === 0 ? ' ' : undefined}
+            label={t('profile.ethnicity')}
             value={ethnicities
               .map((id) => { const option = findEthnicity(id); return option ? optionLabel(option, language) : id; })
               .join(', ')}
@@ -1362,8 +1353,7 @@ export function ProfileTab({
 
         <View ref={(target) => setChecklistTarget('heritage', target)} collapsable={false} style={styles.profileChoice}>
           <SelectField
-            label={required(t('profile.heritage'))}
-            error={ownChecked && heritage.length === 0 ? ' ' : undefined}
+            label={t('profile.heritage')}
             value={heritage.map((code) => heritageName(code, language)).join(', ')}
             placeholder={t('profile.heritageHint')}
             onPress={() => setDetailPicker('heritage')}
@@ -1424,11 +1414,10 @@ export function ProfileTab({
           <Text variant="caption" style={styles.choiceNote}>{t('filters.yourBody')}</Text>
           <View ref={(target) => setChecklistTarget('height', target)} collapsable={false} style={[styles.formRow, isRTL && styles.rowRTL]}>
             <Field
-              label={required(t('filters.yourHeight'))}
+              label={t('filters.yourHeight')}
               keyboardType="number-pad"
               value={ownHeight}
               onChangeText={(text) => { setOwnHeight(text.replace(/\D/g, '')); setOwnDirty(true); }}
-              error={ownChecked && heightMissing ? ' ' : undefined}
             />
             <Field
               label={t('filters.yourWeight')}
@@ -1439,11 +1428,10 @@ export function ProfileTab({
           </View>
           <View ref={(target) => setChecklistTarget('bodyType', target)} collapsable={false}>
             <SelectField
-              label={required(t('filters.yourBodyType'))}
+              label={t('filters.yourBodyType')}
               value={ownBuilds.map((build) => buildLabel(build as (typeof BUILD_OPTIONS)[number], t)).join(', ')}
               placeholder={t('filters.yourBodyType')}
               onPress={() => setBuildPicker(true)}
-              error={ownChecked && buildMissing ? ' ' : undefined}
             />
           </View>
           <PickerSheet

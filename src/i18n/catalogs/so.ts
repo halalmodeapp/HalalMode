@@ -928,4 +928,9 @@ export const so: TranslationCatalog = {
   'pool.line': "Ku dhawaad {{count}} qof ayaa hadda ku habboon doorashooyinkaaga.",
   'pool.narrow': "Tani waa cidhiidhi. Ka demi shuruud khasab ah badanaa way furaysaa.",
   'pool.none': "Weli cidna ma ku habboona. Ka demi shuruud khasab ah ama balaadhi xad ayaa caawinaya.",
+  'readiness.optionalTitle': "Wax badan oo kuu gaar ah",
+  'readiness.optionalLead': "Ikhtiyaari. Ka jawaab mar kasta oo aad rabto: waxay ka caawisaa dadka aad la kulanto inay ku baraan.",
+  'readiness.nudgeTitle': "U sheeg ciddii kuu habboonayd wax dheeraad ah oo ku saabsan",
+  'readiness.nudgeBody': "Jawaabo ikhtiyaari ah oo yar ayaa ka caawiya inuu ku barto. Ku dar mar kasta oo aad rabto.",
+  'readiness.nudgeCta': "Ku dar faahfaahin",
 };

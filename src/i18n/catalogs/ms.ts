@@ -928,4 +928,9 @@ export const ms: TranslationCatalog = {
   'pool.line': "Kira-kira {{count}} orang sepadan dengan pilihan anda sekarang.",
   'pool.narrow': "Ini agak sempit. Mematikan satu syarat wajib biasanya melapangkannya.",
   'pool.none': "Belum ada yang sepadan. Mematikan syarat wajib atau melebarkan julat akan membantu.",
+  'readiness.optionalTitle': "Lebih lanjut tentang anda",
+  'readiness.optionalLead': "Pilihan. Jawab bila-bila masa: ia membantu orang yang anda temui mengenali anda.",
+  'readiness.nudgeTitle': "Ceritakan lebih lanjut tentang anda kepada padanan anda",
+  'readiness.nudgeBody': "Beberapa jawapan pilihan membantu mereka mengenali anda. Tambah bila-bila masa.",
+  'readiness.nudgeCta': "Tambah butiran",
 };

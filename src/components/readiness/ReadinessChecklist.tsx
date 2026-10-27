@@ -25,6 +25,8 @@ interface ReadinessChecklistProps {
   steps: { id: ReadinessStep; done: boolean }[];
   /** The line under the title: what happens once everything is ticked. */
   lead: string;
+  /** Replaces the default title, e.g. for the optional steps. */
+  title?: string;
   /** Steps still to do become buttons when this is given. */
   onPressStep?: (step: ReadinessStep) => void;
   /** Which steps can be pressed; all of them when omitted. */
@@ -36,7 +38,7 @@ interface ReadinessChecklistProps {
  * large tick for each one done. Done steps stay in the list, so progress is
  * visible rather than a list that only ever shrinks.
  */
-export function ReadinessChecklist({ steps, lead, onPressStep, isPressable }: ReadinessChecklistProps) {
+export function ReadinessChecklist({ steps, lead, title, onPressStep, isPressable }: ReadinessChecklistProps) {
   const { t, isRTL } = useI18n();
   const reducedMotion = useReducedMotion();
   const done = steps.filter((step) => step.done).length;
@@ -44,7 +46,7 @@ export function ReadinessChecklist({ steps, lead, onPressStep, isPressable }: Re
   return (
     <View style={[styles.wrap, isRTL && styles.rtl]}>
       <View style={[styles.head, isRTL && styles.rowReverse]}>
-        <Text variant="label" style={styles.title}>{t('profile.readinessTitle')}</Text>
+        <Text variant="label" style={styles.title}>{title ?? t('profile.readinessTitle')}</Text>
         <Text variant="microAccent">{t('readiness.progress', { done, total: steps.length })}</Text>
       </View>
       <View
