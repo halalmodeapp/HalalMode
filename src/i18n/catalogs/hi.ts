@@ -912,4 +912,13 @@ export const hi: TranslationCatalog = {
   'onboarding.maritalBody': "आपकी प्रोफ़ाइल पर दिखती है, ताकि मिलने वालों को शुरू से पता हो।",
   'onboarding.maritalRequired': "आगे बढ़ने के लिए अपनी वैवाहिक स्थिति चुनें।",
   'safety.reason.marital_status_mismatch': "इस व्यक्ति की वैवाहिक स्थिति उनकी प्रोफ़ाइल से मेल नहीं खाती",
+  'profile.grewUp': "वह देश जहाँ आप पले-बढ़े",
+  'profile.grewUpHint': "अधिकतम दो चुनें",
+  'profile.diet': "आहार",
+  'profile.dietHint': "जो लागू हों सब चुनें। «केवल हलाल» और «कभी-कभी गैर-हलाल» दोनों नहीं चुने जा सकते।",
+  'diet.halal_only': "केवल हलाल",
+  'diet.sometimes_non_halal': "कभी-कभी गैर-हलाल",
+  'diet.vegetarian': "शाकाहारी",
+  'diet.pescatarian': "पेस्केटेरियन (मछली खाने वाले)",
+  'diet.vegan': "वीगन",
 };

@@ -912,4 +912,13 @@ export const ur: TranslationCatalog = {
   'onboarding.maritalBody': "آپ کی پروفائل پر دکھائی جاتی ہے تاکہ ملنے والوں کو شروع سے معلوم ہو۔",
   'onboarding.maritalRequired': "آگے بڑھنے کے لیے اپنی ازدواجی حیثیت چنیں۔",
   'safety.reason.marital_status_mismatch': "اس شخص کی ازدواجی حیثیت اس کی پروفائل سے مطابقت نہیں رکھتی",
+  'profile.grewUp': "وہ ملک جہاں آپ پلے بڑھے",
+  'profile.grewUpHint': "زیادہ سے زیادہ دو چنیں",
+  'profile.diet': "خوراک",
+  'profile.dietHint': "جو لاگو ہوں سب چنیں۔ «صرف حلال» اور «کبھی غیر حلال» دونوں نہیں چنے جا سکتے۔",
+  'diet.halal_only': "صرف حلال",
+  'diet.sometimes_non_halal': "کبھی غیر حلال",
+  'diet.vegetarian': "سبزی خور",
+  'diet.pescatarian': "مچھلی خور (پیسکیٹیرین)",
+  'diet.vegan': "ویگن",
 };

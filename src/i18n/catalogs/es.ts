@@ -912,4 +912,13 @@ export const es: TranslationCatalog = {
   'onboarding.maritalBody': "Se muestra en tu perfil, para que las personas que conoces lo sepan desde el principio.",
   'onboarding.maritalRequired': "Elige tu estado civil para continuar.",
   'safety.reason.marital_status_mismatch': "El estado civil de esta persona no coincide con su perfil",
+  'profile.grewUp': "País en el que creciste",
+  'profile.grewUpHint': "Elige hasta dos",
+  'profile.diet': "Dieta",
+  'profile.dietHint': "Elige todo lo que corresponda. «Solo halal» y «A veces no halal» no se pueden elegir a la vez.",
+  'diet.halal_only': "Solo halal",
+  'diet.sometimes_non_halal': "A veces no halal",
+  'diet.vegetarian': "Vegetariano/a",
+  'diet.pescatarian': "Pescetariano/a",
+  'diet.vegan': "Vegano/a",
 };

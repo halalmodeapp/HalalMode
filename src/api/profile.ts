@@ -163,6 +163,19 @@ export async function setMyProfileDetails(
   if (error) throw error;
 }
 
+/** Where you grew up and your diet: shown on your profile. */
+export async function setMyLifestyle(answers: Pick<Profile, 'grewUpCountries' | 'diet'>): Promise<void> {
+  if (USE_MOCKS) {
+    Object.assign(MOCK_SELF, { grewUpCountries: answers.grewUpCountries ?? [], diet: answers.diet ?? [] });
+    return;
+  }
+  const { error } = await requireSupabase().rpc('set_my_lifestyle', {
+    p_grew_up: answers.grewUpCountries ?? [],
+    p_diet: answers.diet ?? [],
+  });
+  if (error) throw error;
+}
+
 /** Premium filters. The server refuses this for anyone not on Premium. */
 export async function setMyPremiumPreferences(preferences: PrivatePreferences): Promise<void> {
   if (USE_MOCKS) {
@@ -178,6 +191,8 @@ export async function setMyPremiumPreferences(preferences: PrivatePreferences): 
       dress: preferences.preferredDress ?? [],
       ethnicities: preferences.preferredEthnicities ?? [],
       heritage: preferences.preferredHeritageCountries ?? [],
+      grew_up: preferences.preferredGrewUpCountries ?? [],
+      diet: preferences.preferredDiet ?? [],
       must_have: preferences.premiumMustHave ?? {},
     },
   });
@@ -320,6 +335,8 @@ function profileFromRow(raw: Record<string, unknown>): Profile {
     religiousDress: (row.religious_dress as string | null) ?? undefined,
     ethnicities: (row.ethnicities as string[] | null) ?? [],
     heritageCountries: ((row.heritage_countries ?? row.heritageCountries) as string[] | null) ?? [],
+    grewUpCountries: ((row.grew_up_countries ?? row.grewUpCountries) as string[] | null) ?? [],
+    diet: ((row.diet) as string[] | null) ?? [],
     languagesSpoken: (row.languages_spoken as string[] | null) ?? [],
     isVerified: Boolean(row.is_verified),
     isPaused: Boolean(row.is_paused),
@@ -350,6 +367,8 @@ function preferencesFromRow(row: Record<string, unknown>): PrivatePreferences {
     preferredDress: (row.preferred_dress as string[] | null) ?? [],
     preferredEthnicities: (row.preferred_ethnicities as string[] | null) ?? [],
     preferredHeritageCountries: (row.preferred_heritage_countries as string[] | null) ?? [],
+    preferredGrewUpCountries: (row.preferred_grew_up_countries as string[] | null) ?? [],
+    preferredDiet: (row.preferred_diet as string[] | null) ?? [],
     premiumMustHave: (row.premium_must_have as PrivatePreferences['premiumMustHave'] | null) ?? {},
     // Absent means nothing is absolute, which is the safe default: an unreadable
     // or missing map must never silently narrow somebody's pool.

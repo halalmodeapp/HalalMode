@@ -912,4 +912,13 @@ export const zhHans: TranslationCatalog = {
   'onboarding.maritalBody': "显示在你的个人资料上，让你遇到的人从一开始就知道。",
   'onboarding.maritalRequired': "请选择你的婚姻状况以继续。",
   'safety.reason.marital_status_mismatch': "此人的婚姻状况与其资料不符",
+  'profile.grewUp': "你成长的国家",
+  'profile.grewUpHint': "最多选两个",
+  'profile.diet': "饮食",
+  'profile.dietHint': "可多选。“仅清真”和“有时非清真”不能同时选择。",
+  'diet.halal_only': "仅清真",
+  'diet.sometimes_non_halal': "有时非清真",
+  'diet.vegetarian': "素食（蛋奶素）",
+  'diet.pescatarian': "鱼素",
+  'diet.vegan': "纯素",
 };

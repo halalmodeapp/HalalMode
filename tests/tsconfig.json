@@ -29,7 +29,8 @@
     "../supabase/functions/generate-round/candidateSnapshot.ts",
     "../supabase/functions/generate-round/runContext.ts",
     "../supabase/functions/_shared/photoVerdict.ts",
-    "../src/data/marital.ts"
+    "../src/data/marital.ts",
+    "../src/data/diet.ts"
   ],
   "exclude": []
 }

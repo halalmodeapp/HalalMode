@@ -37,6 +37,7 @@ import { LANGUAGE_GROUPS } from '@/data/spokenLanguages';
 import { HAS_CHILDREN_OPTIONS, asGroups, dressOptions } from '@/data/matchingOptions';
 import { ETHNICITY_GROUPS } from '@/data/ethnicities';
 import { heritageGroups } from '@/data/heritage';
+import { DIETS, DIET_KEYS, toggleDiet } from '@/data/diet';
 import { showNotice } from '@/lib/notice';
 import { useSession } from '@/state/session';
 import { alpha, color, font, radius } from '@/theme/tokens';
@@ -111,7 +112,7 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
   ) => setDraft((current) => ({ ...current, [key]: value }));
 
 
-  type PremiumList = 'preferredHasChildren' | 'preferredOccupations' | 'preferredLanguages'
+  type PremiumList = 'preferredHasChildren' | 'preferredOccupations' | 'preferredLanguages' | 'preferredGrewUpCountries'
     | 'preferredEducation' | 'preferredDress' | 'preferredEthnicities' | 'preferredHeritageCountries';
 
   const toggleIn = (key: PremiumList, id: string) =>
@@ -481,6 +482,22 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
             : null}
           {premiumPicker('ethnicities', t('filters.ethnicity'), ETHNICITY_GROUPS, 'preferredEthnicities')}
           {premiumPicker('heritage', t('profile.heritage'), heritageGroups(language, false), 'preferredHeritageCountries')}
+          {premiumPicker('grew_up', t('profile.grewUp'), heritageGroups(language, false), 'preferredGrewUpCountries')}
+          <View style={styles.section}>
+            <Text variant="micro">{t('profile.diet')}</Text>
+            <View style={styles.chips}>
+              {DIETS.map((option) => (
+                <Chip
+                  key={option}
+                  label={t(DIET_KEYS[option])}
+                  selected={(draft.preferredDiet ?? []).includes(option)}
+                  onPress={() => setDraft((current) => ({ ...current, preferredDiet: toggleDiet(current.preferredDiet ?? [], option) }))}
+                  showMark
+                />
+              ))}
+            </View>
+            {premiumMustHaveFor('diet')}
+          </View>
             </View>
             {!isPremium ? (
               <Pressable

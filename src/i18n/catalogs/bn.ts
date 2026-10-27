@@ -912,4 +912,13 @@ export const bn: TranslationCatalog = {
   'onboarding.maritalBody': "আপনার প্রোফাইলে দেখানো হয়, যাতে যাদের সঙ্গে দেখা হয় তারা শুরু থেকেই জানে।",
   'onboarding.maritalRequired': "এগিয়ে যেতে আপনার বৈবাহিক অবস্থা বেছে নিন।",
   'safety.reason.marital_status_mismatch': "এই ব্যক্তির বৈবাহিক অবস্থা তাঁর প্রোফাইলের সঙ্গে মেলে না",
+  'profile.grewUp': "যে দেশে বড় হয়েছেন",
+  'profile.grewUpHint': "সর্বোচ্চ দুটি বেছে নিন",
+  'profile.diet': "খাদ্যাভ্যাস",
+  'profile.dietHint': "প্রযোজ্য সবগুলো বেছে নিন। «শুধু হালাল» ও «মাঝেমধ্যে অ-হালাল» একসঙ্গে বাছা যায় না।",
+  'diet.halal_only': "শুধু হালাল",
+  'diet.sometimes_non_halal': "মাঝেমধ্যে অ-হালাল",
+  'diet.vegetarian': "নিরামিষাশী",
+  'diet.pescatarian': "পেসকেটারিয়ান (মাছ খান, মাংস নয়)",
+  'diet.vegan': "ভিগান",
 };

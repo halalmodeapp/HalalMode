@@ -923,6 +923,15 @@ export const en = {
   'onboarding.maritalBody': "Shown on your profile, so the people you meet know from the start.",
   'onboarding.maritalRequired': "Choose your marital status to continue.",
   'safety.reason.marital_status_mismatch': "This person’s marital status doesn’t match their profile",
+  'profile.grewUp': "Country you grew up in",
+  'profile.grewUpHint': "Choose up to two",
+  'profile.diet': "Diet",
+  'profile.dietHint': "Choose all that apply. Halal only and sometimes non-halal can’t both be chosen.",
+  'diet.halal_only': "Halal only",
+  'diet.sometimes_non_halal': "Sometimes non-halal",
+  'diet.vegetarian': "Vegetarian",
+  'diet.pescatarian': "Pescatarian",
+  'diet.vegan': "Vegan",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -1840,4 +1849,13 @@ export const ar: TranslationCatalog = {
   'onboarding.maritalBody': "تظهر في ملفك ليعرف من تتعرف عليهم منذ البداية.",
   'onboarding.maritalRequired': "اختر حالتك الاجتماعية للمتابعة.",
   'safety.reason.marital_status_mismatch': "الحالة الاجتماعية لهذا الشخص لا تطابق ملفه",
+  'profile.grewUp': "البلد الذي نشأت فيه",
+  'profile.grewUpHint': "اختر حتى بلدين",
+  'profile.diet': "النظام الغذائي",
+  'profile.dietHint': "اختر كل ما ينطبق. لا يمكن اختيار «حلال فقط» و«أحيانًا غير حلال» معًا.",
+  'diet.halal_only': "حلال فقط",
+  'diet.sometimes_non_halal': "أحيانًا غير حلال",
+  'diet.vegetarian': "نباتي",
+  'diet.pescatarian': "يأكل السمك دون اللحم (بيسكتاري)",
+  'diet.vegan': "نباتي صرف (فيغان)",
 };

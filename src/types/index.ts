@@ -14,7 +14,7 @@ export type Gender = 'male' | 'female';
 export type MaritalStatus = 'never_married' | 'divorced' | 'widowed' | 'married';
 
 /** Filters only Premium members can set (server: set_my_premium_preferences). */
-export type PremiumCriterion = 'has_children' | 'occupations' | 'languages' | 'education' | 'dress' | 'ethnicities' | 'heritage';
+export type PremiumCriterion = 'has_children' | 'occupations' | 'languages' | 'education' | 'dress' | 'ethnicities' | 'heritage' | 'grew_up' | 'diet';
 
 export type ReligiousPractice =
   | 'very_practicing'
@@ -122,6 +122,10 @@ export interface Profile {
   ethnicities?: string[];
   /** Up to three ISO country codes the member or their family are from. */
   heritageCountries?: string[];
+  /** Up to two ISO country codes the member grew up in. */
+  grewUpCountries?: string[];
+  /** Any of halal_only, sometimes_non_halal, vegetarian, pescatarian, vegan. */
+  diet?: string[];
   languagesSpoken: string[];
   isVerified: boolean;
   /** Present for the owner profile only; matching eligibility stays server-authoritative. */
@@ -159,6 +163,8 @@ export interface PrivatePreferences {
   preferredDress?: string[];
   preferredEthnicities?: string[];
   preferredHeritageCountries?: string[];
+  preferredGrewUpCountries?: string[];
+  preferredDiet?: string[];
   premiumMustHave?: Partial<Record<PremiumCriterion, boolean>>;
   /**
    * Criteria this member treats as absolute. Absent or false means the

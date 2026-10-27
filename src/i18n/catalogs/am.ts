@@ -912,4 +912,13 @@ export const am: TranslationCatalog = {
   'onboarding.maritalBody': "በመገለጫዎ ላይ ይታያል፤ የሚተዋወቋቸው ሰዎች ከመጀመሪያው እንዲያውቁ።",
   'onboarding.maritalRequired': "ለመቀጠል የጋብቻ ሁኔታዎን ይምረጡ።",
   'safety.reason.marital_status_mismatch': "የዚህ ሰው የጋብቻ ሁኔታ ከመገለጫው ጋር አይዛመድም",
+  'profile.grewUp': "ያደጉበት ሀገር",
+  'profile.grewUpHint': "እስከ ሁለት ይምረጡ",
+  'profile.diet': "የአመጋገብ ዘይቤ",
+  'profile.dietHint': "የሚመለከቱትን ሁሉ ይምረጡ። «ሐላል ብቻ» እና «አንዳንድ ጊዜ ሐላል ያልሆነ» አብረው ሊመረጡ አይችሉም።",
+  'diet.halal_only': "ሐላል ብቻ",
+  'diet.sometimes_non_halal': "አንዳንድ ጊዜ ሐላል ያልሆነ",
+  'diet.vegetarian': "ቬጀቴሪያን",
+  'diet.pescatarian': "ዓሣ የሚበላ (ፔስኬተሪያን)",
+  'diet.vegan': "ቪጋን",
 };

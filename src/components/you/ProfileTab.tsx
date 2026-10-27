@@ -16,10 +16,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 
-import { fetchMyProfileReadiness, setMyProfileDetails, setMySect, updateMyLocation, updateMyPreferences, updateMyProfile } from '@/api/profile';
+import { fetchMyProfileReadiness, setMyLifestyle, setMyProfileDetails, setMySect, updateMyLocation, updateMyPreferences, updateMyProfile } from '@/api/profile';
 import { HAS_CHILDREN_PROFILE, asGroups, dressOptions } from '@/data/matchingOptions';
 import { ETHNICITY_MAX, ETHNICITY_PROFILE_GROUPS, findEthnicity, withUnstatedAlone } from '@/data/ethnicities';
 import { HERITAGE_MAX, heritageGroups, heritageName } from '@/data/heritage';
+import { DIETS, DIET_KEYS, GREW_UP_MAX, toggleDiet } from '@/data/diet';
 import { buildGroups, buildLabel } from '@/components/you/PrivateTab';
 import { BUILD_OPTIONS, OWN_BUILD_MAX, PRACTICE_LABELS, TIMELINE_LABELS } from '@/data/preferences';
 import {
@@ -162,7 +163,9 @@ export function ProfileTab({
   const [religiousDress, setReligiousDress] = useState<string | undefined>(profile.religiousDress);
   const [ethnicities, setEthnicities] = useState<string[]>(profile.ethnicities ?? []);
   const [heritage, setHeritage] = useState<string[]>(profile.heritageCountries ?? []);
-  const [detailPicker, setDetailPicker] = useState<'dress' | 'ethnicity' | 'heritage' | null>(null);
+  const [grewUp, setGrewUp] = useState<string[]>(profile.grewUpCountries ?? []);
+  const [diet, setDiet] = useState<string[]>(profile.diet ?? []);
+  const [detailPicker, setDetailPicker] = useState<'dress' | 'ethnicity' | 'heritage' | 'grewUp' | null>(null);
   // The column has a default, so only an answer the member chose counts.
   const [familyGoals, setFamilyGoals] = useState<Profile['familyGoals'] | undefined>(
     profile.familyGoalsAnswered ? profile.familyGoals : undefined
@@ -396,6 +399,7 @@ export function ProfileTab({
         ethnicities,
         heritageCountries: heritage,
       });
+      await setMyLifestyle({ grewUpCountries: grewUp, diet });
       await updateMyPreferences({
         ownHeightCm: Number(ownHeight) || 0,
         ownWeightKg: Number(ownWeight) || 0,
@@ -423,6 +427,8 @@ export function ProfileTab({
         religiousDress,
         ethnicities,
         heritageCountries: heritage,
+        grewUpCountries: grewUp,
+        diet,
         familyGoals: familyGoals ?? profile.familyGoals,
         familyGoalsAnswered: Boolean(familyGoals) || profile.familyGoalsAnswered,
       };
@@ -462,7 +468,7 @@ export function ProfileTab({
       ].filter((label, index, all) => all.indexOf(label) === index));
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  ), [handleSubmit, save, t, ownHeight, ownBuild, hasChildren, familyGoals, religiousDress, ethnicities, heritage, draft.education, draft.languages]);
+  ), [handleSubmit, save, t, ownHeight, ownBuild, hasChildren, familyGoals, religiousDress, ethnicities, heritage, grewUp, diet, draft.education, draft.languages]);
 
 
   const refreshDeviceLocation = useCallback(async () => {
@@ -1374,6 +1380,43 @@ export function ProfileTab({
             eyebrow={t('profile.heritageHint')}
             searchLabel={t('profile.heritageSearch')}
           />
+        </View>
+
+        <View style={styles.profileChoice}>
+          <SelectField
+            label={t('profile.grewUp')}
+            value={grewUp.map((code) => heritageName(code, language)).join(', ')}
+            placeholder={t('profile.grewUpHint')}
+            onPress={() => setDetailPicker('grewUp')}
+          />
+          <PickerSheet
+            visible={detailPicker === 'grewUp'}
+            groups={heritageGroups(language, false)}
+            selected={grewUp}
+            selectionMode="multiple"
+            maxSelected={GREW_UP_MAX}
+            onChange={(next) => { setGrewUp(next); setOwnDirty(true); }}
+            onClose={() => setDetailPicker(null)}
+            title={t('profile.grewUp')}
+            eyebrow={t('profile.grewUpHint')}
+            searchLabel={t('profile.heritageSearch')}
+          />
+        </View>
+
+        <View style={styles.profileChoice}>
+          <Text variant="micro">{t('profile.diet')}</Text>
+          <Text variant="caption" style={styles.choiceNote}>{t('profile.dietHint')}</Text>
+          <View style={[styles.formRow, isRTL && styles.rowRTL, { flexWrap: 'wrap', gap: 8 }]}>
+            {DIETS.map((option) => (
+              <Chip
+                key={option}
+                label={t(DIET_KEYS[option])}
+                selected={diet.includes(option)}
+                showMark
+                onPress={() => { setDiet(toggleDiet(diet, option)); setOwnDirty(true); }}
+              />
+            ))}
+          </View>
         </View>
 
         <View ref={(target) => setChecklistTarget('body', target)} collapsable={false} style={styles.profileChoice}>

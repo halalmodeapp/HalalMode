@@ -912,4 +912,13 @@ export const ha: TranslationCatalog = {
   'onboarding.maritalBody': "Ana nuna shi a bayananku, don waɗanda kuka haɗu da su su sani tun farko.",
   'onboarding.maritalRequired': "Zaɓi matsayin auren ku don ci gaba.",
   'safety.reason.marital_status_mismatch': "Matsayin auren wannan mutum bai dace da bayanansa ba",
+  'profile.grewUp': "Ƙasar da kuka girma a ciki",
+  'profile.grewUpHint': "Zaɓi har guda biyu",
+  'profile.diet': "Abinci",
+  'profile.dietHint': "Zaɓi duk abin da ya dace. Ba za a iya zaɓar «Halal kawai» da «Wani lokaci ba halal» tare ba.",
+  'diet.halal_only': "Halal kawai",
+  'diet.sometimes_non_halal': "Wani lokaci ba halal",
+  'diet.vegetarian': "Mai cin kayan lambu kawai",
+  'diet.pescatarian': "Mai cin kifi (ba nama)",
+  'diet.vegan': "Vegan",
 };

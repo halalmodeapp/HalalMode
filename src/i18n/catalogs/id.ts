@@ -912,4 +912,13 @@ export const id: TranslationCatalog = {
   'onboarding.maritalBody': "Ditampilkan di profilmu, agar orang yang kamu temui tahu sejak awal.",
   'onboarding.maritalRequired': "Pilih status pernikahanmu untuk lanjut.",
   'safety.reason.marital_status_mismatch': "Status pernikahan orang ini tidak sesuai dengan profilnya",
+  'profile.grewUp': "Negara tempat kamu dibesarkan",
+  'profile.grewUpHint': "Pilih hingga dua",
+  'profile.diet': "Pola makan",
+  'profile.dietHint': "Pilih semua yang sesuai. «Hanya halal» dan «Kadang non-halal» tidak bisa dipilih bersamaan.",
+  'diet.halal_only': "Hanya halal",
+  'diet.sometimes_non_halal': "Kadang non-halal",
+  'diet.vegetarian': "Vegetarian",
+  'diet.pescatarian': "Pescatarian",
+  'diet.vegan': "Vegan",
 };

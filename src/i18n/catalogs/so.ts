@@ -912,4 +912,13 @@ export const so: TranslationCatalog = {
   'onboarding.maritalBody': "Waxaa lagu muujiyaa astaantaada, si kuwa aad la kulanto ay ugu ogaadaan bilowga.",
   'onboarding.maritalRequired': "Dooro xaaladdaada guurka si aad u sii wadato.",
   'safety.reason.marital_status_mismatch': "Xaaladda guurka qofkan kuma habboona astaantiisa",
+  'profile.grewUp': "Dalka aad ku koreen",
+  'profile.grewUpHint': "Dooro ilaa laba",
+  'profile.diet': "Cunto",
+  'profile.dietHint': "Dooro wax kasta oo khuseeya. «Xalaal oo keliya» iyo «Mararka qaarkood aan xalaal ahayn» looma dooran karo si wadajir ah.",
+  'diet.halal_only': "Xalaal oo keliya",
+  'diet.sometimes_non_halal': "Mararka qaarkood aan xalaal ahayn",
+  'diet.vegetarian': "Khudradiye",
+  'diet.pescatarian': "Kalluun-cune (pescatarian)",
+  'diet.vegan': "Vegan",
 };

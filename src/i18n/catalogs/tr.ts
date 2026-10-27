@@ -912,4 +912,13 @@ export const tr: TranslationCatalog = {
   'onboarding.maritalBody': "Profilinde gösterilir; böylece tanıştığın kişiler baştan bilir.",
   'onboarding.maritalRequired': "Devam etmek için medeni durumunu seç.",
   'safety.reason.marital_status_mismatch': "Bu kişinin medeni durumu profiliyle uyuşmuyor",
+  'profile.grewUp': "Büyüdüğün ülke",
+  'profile.grewUpHint': "En fazla iki seç",
+  'profile.diet': "Beslenme",
+  'profile.dietHint': "Uygun olanların hepsini seç. «Yalnızca helal» ile «Bazen helal olmayan» birlikte seçilemez.",
+  'diet.halal_only': "Yalnızca helal",
+  'diet.sometimes_non_halal': "Bazen helal olmayan",
+  'diet.vegetarian': "Vejetaryen",
+  'diet.pescatarian': "Peskataryen",
+  'diet.vegan': "Vegan",
 };

@@ -912,4 +912,13 @@ export const ru: TranslationCatalog = {
   'onboarding.maritalBody': "Показывается в вашем профиле, чтобы знакомые люди знали это с самого начала.",
   'onboarding.maritalRequired': "Выберите семейное положение, чтобы продолжить.",
   'safety.reason.marital_status_mismatch': "Семейное положение этого человека не совпадает с его профилем",
+  'profile.grewUp': "Страна, в которой вы выросли",
+  'profile.grewUpHint': "Выберите до двух",
+  'profile.diet': "Питание",
+  'profile.dietHint': "Выберите всё подходящее. «Только халяль» и «Иногда не халяль» нельзя выбрать вместе.",
+  'diet.halal_only': "Только халяль",
+  'diet.sometimes_non_halal': "Иногда не халяль",
+  'diet.vegetarian': "Вегетарианство",
+  'diet.pescatarian': "Пескетарианство",
+  'diet.vegan': "Веганство",
 };

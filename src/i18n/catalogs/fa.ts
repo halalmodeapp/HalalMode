@@ -912,4 +912,13 @@ export const fa: TranslationCatalog = {
   'onboarding.maritalBody': "در نمایه شما نمایش داده می‌شود تا افرادی که با آن‌ها آشنا می‌شوید از ابتدا بدانند.",
   'onboarding.maritalRequired': "برای ادامه وضعیت تأهل خود را انتخاب کنید.",
   'safety.reason.marital_status_mismatch': "وضعیت تأهل این فرد با نمایه‌اش مطابقت ندارد",
+  'profile.grewUp': "کشوری که در آن بزرگ شده‌اید",
+  'profile.grewUpHint': "حداکثر دو مورد را انتخاب کنید",
+  'profile.diet': "رژیم غذایی",
+  'profile.dietHint': "همه موارد مرتبط را انتخاب کنید. «فقط حلال» و «گاهی غیرحلال» را نمی‌توان با هم انتخاب کرد.",
+  'diet.halal_only': "فقط حلال",
+  'diet.sometimes_non_halal': "گاهی غیرحلال",
+  'diet.vegetarian': "گیاه‌خوار",
+  'diet.pescatarian': "ماهی‌خوار (پسکاتارین)",
+  'diet.vegan': "وگان",
 };
