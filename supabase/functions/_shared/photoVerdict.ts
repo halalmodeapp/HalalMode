@@ -157,3 +157,17 @@ export function decidePhoto(reading: PhotoReading | null): Verdict {
   const compared = reading.same_person_as_selfie === 'yes' ? 'matches the selfie' : 'no mismatch found';
   return { decision: 'allow', reason: `Real photo; ${compared}.` };
 }
+
+export const AUTHENTICITY_RULES = [
+  'You check images for a private matrimonial service so that every profile shows a real person.',
+  'Report only what is visible. Never name anyone, and never judge attractiveness, age, ethnicity, religion, modesty or character.',
+  'shows_screen_or_print is true for a photograph of a monitor, phone, TV or laptop screen, or of a printed or held-up picture (look for moire, pixel grids, screen glare, bezels, paper edges, fingers holding a picture).',
+  'not_a_camera_photo is true for a screenshot, poster, cartoon, illustration, 3D render or AI-generated image.',
+  'confidence is how sure you are of the whole reading, from 0 to 1. If uncertain, say so with a lower confidence rather than guessing.',
+].join(' ');
+
+/** What Luna is told about a selfie. Shared with scripts/luna-photo-eval.ts. */
+export const SELFIE_INSTRUCTIONS = `${AUTHENTICITY_RULES} This is a selfie the member just took with their phone camera to prove they are a real person. face_count is how many faces are visible; face_clearly_visible is true when one face is unobstructed, well lit and facing the camera.`;
+
+/** What Luna is told about a profile photo, with or without the selfie beside it. */
+export const PHOTO_INSTRUCTIONS = `${AUTHENTICITY_RULES} Read the profile photo. face_visible is true when a face can be seen; a photo with no face is allowed. same_person_as_selfie is a visual similarity check against the selfie, not an identification: answer "yes" or "no" only when you can clearly tell, otherwise "unsure", and "not_compared" when there is no selfie or no face in the photo. Lighting, angle, glasses, hair and age differences are normal; do not answer "no" because of them.`;

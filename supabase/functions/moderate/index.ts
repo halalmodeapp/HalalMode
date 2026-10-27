@@ -23,7 +23,9 @@ import OpenAI from 'npm:openai';
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { withLuna } from '../_shared/luna.ts';
 import {
+  PHOTO_INSTRUCTIONS,
   PHOTO_SCHEMA,
+  SELFIE_INSTRUCTIONS,
   SELFIE_SCHEMA,
   decidePhoto,
   decideSelfie,
@@ -120,13 +122,7 @@ async function imageUrl(client: AdminClient, bucket: string, path: string): Prom
   return `data:${type};base64,${toBase64(new Uint8Array(await file.data.arrayBuffer()))}`;
 }
 
-const AUTHENTICITY_RULES = [
-  'You check images for a private matrimonial service so that every profile shows a real person.',
-  'Report only what is visible. Never name anyone, and never judge attractiveness, age, ethnicity, religion, modesty or character.',
-  'shows_screen_or_print is true for a photograph of a monitor, phone, TV or laptop screen, or of a printed or held-up picture (look for moire, pixel grids, screen glare, bezels, paper edges, fingers holding a picture).',
-  'not_a_camera_photo is true for a screenshot, poster, cartoon, illustration, 3D render or AI-generated image.',
-  'confidence is how sure you are of the whole reading, from 0 to 1. If uncertain, say so with a lower confidence rather than guessing.',
-].join(' ');
+
 
 /** Luna's answer as text; the caller parses it and treats a refusal as no reading. */
 async function askLuna(
@@ -156,7 +152,7 @@ async function judgeSelfie(
     openai,
     'selfie_reading',
     SELFIE_SCHEMA as unknown as Record<string, unknown>,
-    `${AUTHENTICITY_RULES} This is a selfie the member just took with their phone camera to prove they are a real person. face_count is how many faces are visible; face_clearly_visible is true when one face is unobstructed, well lit and facing the camera.`,
+    SELFIE_INSTRUCTIONS,
     [
       { type: 'input_text', text: 'Read this selfie.' },
       { type: 'input_image', image_url: image, detail: 'high' },
@@ -191,7 +187,7 @@ async function judgePhoto(
     openai,
     'photo_reading',
     PHOTO_SCHEMA as unknown as Record<string, unknown>,
-    `${AUTHENTICITY_RULES} Read the profile photo. face_visible is true when a face can be seen; a photo with no face is allowed. same_person_as_selfie is a visual similarity check against the selfie, not an identification: answer "yes" or "no" only when you can clearly tell, otherwise "unsure", and "not_compared" when there is no selfie or no face in the photo. Lighting, angle, glasses, hair and age differences are normal; do not answer "no" because of them.`,
+    PHOTO_INSTRUCTIONS,
     content,
   );
   return { ...decidePhoto(parsePhotoReading(text)), model };
@@ -219,7 +215,19 @@ Deno.serve(async (request) => {
     p_secret: request.headers.get('x-mail-worker-secret') ?? '',
   });
   if (verified.error || verified.data !== true) return new Response('forbidden', { status: 403 });
-  if (!Deno.env.get('OPENAI_API_KEY')) return new Response('OPENAI_API_KEY is not set', { status: 503 });
+
+  // Selfies are deleted once checked (migration 20261027110000), whether or not
+  // anything is waiting to be moderated.
+  let purged = 0;
+  const due = await client.rpc('selfies_to_purge_service', { p_limit: 50 });
+  for (const path of (Array.isArray(due.data) ? due.data : []) as string[]) {
+    const removed = await client.storage.from(SELFIE_BUCKET).remove([path]);
+    if (removed.error) continue;
+    await client.rpc('mark_selfie_purged_service', { p_path: path });
+    purged += 1;
+  }
+
+  if (!Deno.env.get('OPENAI_API_KEY')) return Response.json({ purged, error: 'OPENAI_API_KEY is not set' }, { status: 503 });
 
   const openai = new OpenAI();
   const claimed = await client.rpc('claim_moderation_service', { p_limit: 10 });
@@ -342,5 +350,5 @@ Deno.serve(async (request) => {
       photosFailed += 1;
     }
   }
-  return Response.json({ model: MODEL, ...tally, photosAnalyzed, photosFailed, firstError });
+  return Response.json({ model: MODEL, ...tally, photosAnalyzed, photosFailed, purged, firstError });
 });
