@@ -1,21 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  RecordingPresets,
-  requestRecordingPermissionsAsync,
-  setAudioModeAsync,
-  useAudioRecorder,
-  useAudioRecorderState,
-} from 'expo-audio';
+import { RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder, useAudioRecorderState } from 'expo-audio';
 import * as ImagePicker from 'expo-image-picker';
-
 import { PhotoCropSheet } from '@/components/you/PhotoCropSheet';
 import * as Location from 'expo-location';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Linking, Platform, Pressable, View } from 'react-native';
 import { z } from 'zod';
-
 import { fetchMyProfileReadiness, setMyLifestyle, setMyProfileDetails, setMySect, updateMyLocation, updateMyPreferences, updateMyProfile } from '@/api/profile';
 import { HAS_CHILDREN_PROFILE, asGroups, dressOptions } from '@/data/matchingOptions';
 import { ETHNICITY_MAX, ETHNICITY_PROFILE_GROUPS, findEthnicity, withUnstatedAlone } from '@/data/ethnicities';
@@ -23,15 +15,7 @@ import { HERITAGE_MAX, heritageGroups, heritageName } from '@/data/heritage';
 import { DIETS, DIET_KEYS, GREW_UP_MAX, toggleDiet } from '@/data/diet';
 import { buildGroups, buildLabel } from '@/components/you/PrivateTab';
 import { BUILD_OPTIONS, OWN_BUILD_MAX, PRACTICE_LABELS, TIMELINE_LABELS } from '@/data/preferences';
-import {
-  createProfileMediaSignedUrl,
-  deleteProfilePhoto,
-  PROFILE_PHOTO_BUCKET,
-  VOICE_INTRODUCTION_BUCKET,
-  reorderProfilePhotos,
-  uploadProfilePhoto,
-  uploadVoiceIntroduction,
-} from '@/api/profileMedia';
+import { createProfileMediaSignedUrl, deleteProfilePhoto, PROFILE_PHOTO_BUCKET, VOICE_INTRODUCTION_BUCKET, reorderProfilePhotos, uploadProfilePhoto, uploadVoiceIntroduction } from '@/api/profileMedia';
 import { AudioGreeting } from '@/components/introductions/AudioGreeting';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -42,7 +26,6 @@ import { Field } from '@/components/ui/Field';
 import { Text } from '@/components/ui/Text';
 import { queryKeys } from '@/lib/queryClient';
 import { testIds } from '@/lib/testIds';
-
 import { BIO_MIN_LENGTH, getProfileReadiness, readinessSteps, recommendedSteps } from '@/lib/profileReadiness';
 import { ReadinessChecklist } from '@/components/readiness/ReadinessChecklist';
 import { browserDeviceCoordinates, nativeDevicePlace } from '@/lib/deviceLocation';
@@ -63,11 +46,10 @@ import { useToast } from '@/state/toast';
 import { EDUCATION_GROUPS } from '@/data/educationLevels';
 import { OCCUPATION_GROUPS } from '@/data/occupations';
 import { USE_MOCKS } from '@/lib/supabase';
-import { alpha, color, font, radius } from '@/theme/tokens';
 import type { MarriageTimeline, PrivatePreferences, Profile, ReligiousPractice } from '@/types';
-import { RTL_LAYOUT } from '@/lib/rtl';
 import { errorMessage } from '@/lib/errorMessage';
 import type { ReadinessStep } from '@/lib/profileReadiness';
+import { styles } from './profileTabStyles';
 
 function profileSchema(t: Translate) {
   return z.object({
@@ -1582,158 +1564,3 @@ function showPermissionRecovery(
     },
   ]);
 }
-
-const styles = StyleSheet.create({
-  rtl: RTL_LAYOUT,
-  rowRTL: { flexDirection: 'row-reverse' },
-  wrap: { gap: 12, paddingBottom: 24 },
-  readinessCard: { gap: 5 },
-  readinessBody: { color: color.inkSoft },
-  photoGuide: { gap: 10 },
-  photoGuideBody: { color: color.inkSoft },
-  photoGuideRules: { gap: 8, marginTop: 2 },
-  photoGuideRule: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  photoGuideMark: { width: 7, height: 7, borderRadius: 4, backgroundColor: color.gold },
-  photoGuideRuleText: { flex: 1, color: color.ink },
-  photoGuideAction: { flex: 1, paddingHorizontal: 8 },
-
-  cardHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 10,
-  },
-  tagPill: {
-    borderWidth: 1,
-    borderColor: 'rgba(10,10,10,0.12)',
-    borderRadius: radius.pill,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-  },
-  tagPillLabel: {
-    fontFamily: font.bodySemi,
-    fontSize: 11,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: color.inkSoft,
-  },
-
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 },
-  gridCell: {
-    width: '31%',
-    aspectRatio: 3 / 4,
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-    backgroundColor: color.clay,
-  },
-  mainBadge: {
-    position: 'absolute',
-    top: 7,
-    left: 7,
-    backgroundColor: color.ink,
-    borderRadius: radius.pill,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
-  mainBadgeLabel: {
-    fontFamily: font.bodyBold,
-    fontSize: 8,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: color.white,
-  },
-  removePhoto: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(10,10,10,0.72)',
-  },
-  removePhotoLabel: {
-    color: color.white,
-    fontFamily: font.body,
-    fontSize: 20,
-    lineHeight: 22,
-  },
-  photoNote: { marginTop: 12 },
-  photoActions: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  unavailableNote: { marginTop: 12, color: color.inkSoft },
-  photoButton: {
-    flex: 1,
-    minHeight: 44,
-    borderWidth: 1,
-    borderColor: alpha.lineStrong,
-    borderRadius: radius.md,
-    paddingVertical: 13,
-    alignItems: 'center',
-  },
-  photoButtonLabel: {
-    fontFamily: font.bodySemi,
-    fontSize: 13,
-    color: color.ink,
-  },
-
-  recordZone: {
-    minHeight: 56,
-    marginTop: 12,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: 'rgba(10,10,10,0.2)',
-    borderRadius: radius.lg,
-    backgroundColor: color.sandLight,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 11,
-  },
-  recordZoneActive: { borderColor: color.gold, backgroundColor: color.sand },
-  recordDot: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: color.ink,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  recordGlyph: { color: color.white, fontSize: 11, fontFamily: font.body },
-  recordLabel: { fontSize: 14 },
-  voicePlayer: { marginTop: 12 },
-  recordAgain: {
-    minHeight: 44,
-    marginTop: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  recordAgainLabel: {
-    fontFamily: font.bodySemi,
-    fontSize: 12,
-    color: color.inkSoft,
-  },
-  choiceNote: { marginTop: -2 },
-  voiceNote: { marginTop: 10 },
-
-  formCard: { gap: 14 },
-  locationBlock: { gap: 8 },
-  locationPrivacy: { color: color.inkSoft },
-  locationError: { color: color.inkSoft },
-  profileChoice: { gap: 9 },
-  choiceChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
-  formRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
-  saveError: { color: color.inkSoft, textAlign: 'center' },
-  split: { flexDirection: 'row', alignItems: 'flex-start' },
-  splitRTL: { flexDirection: 'row-reverse', alignItems: 'flex-start' },
-  column: { flex: 1, gap: 14 },
-  stack: { gap: 14 },
-  checklist: { gap: 8, marginTop: 10 },
-  checkItem: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  checkBox: { width: 16, height: 16, borderRadius: 4, borderWidth: 1.5, borderColor: color.gold },
-  checkLabel: { flex: 1 },
-  choiceMissing: { borderWidth: 1.5, borderColor: '#B3261E', borderRadius: radius.md, padding: 6 },
-  fieldError: { color: '#B3261E', fontFamily: font.bodyBold, marginTop: 6 },
-  requiredNote: { color: color.inkSoft, marginBottom: 4 },
-});

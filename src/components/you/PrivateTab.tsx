@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-
 import { fetchMyProfile, setMyPreferredSects, setMyPremiumPreferences, updateMyPreferences } from '@/api/profile';
 import { Button } from '@/components/ui/Button';
 import { InlineNotice } from '@/components/ui/AsyncState';
@@ -17,17 +16,7 @@ import { MustHaveToggle } from '@/components/you/MustHaveToggle';
 import { CountrySheet } from '@/components/you/CountrySheet';
 import { useI18n, type Translate } from '@/i18n';
 import type { TranslationKey } from '@/i18n/catalog';
-import {
-  BUILD_OPTIONS,
-  DISTANCE_RANGE,
-  HEIGHT_RANGE,
-  AGE_RANGE,
-  FAMILY_GOAL_LABELS,
-  PRACTICE_LABELS,
-  RADIUS_PRESETS,
-  TIMELINE_LABELS,
-  formatHeightImperial,
-} from '@/data/preferences';
+import { BUILD_OPTIONS, DISTANCE_RANGE, HEIGHT_RANGE, AGE_RANGE, FAMILY_GOAL_LABELS, PRACTICE_LABELS, RADIUS_PRESETS, TIMELINE_LABELS, formatHeightImperial } from '@/data/preferences';
 import type { CatalogGroup } from '@/data/catalogOption';
 import { optionLabel } from '@/data/catalogOption';
 import { SECT_GROUPS, isSectDetail, sectOf } from '@/data/sects';
@@ -41,23 +30,14 @@ import { DIETS, DIET_KEYS, toggleDiet } from '@/data/diet';
 import { PoolSizeNote } from '@/components/you/PoolSizeNote';
 import { showNotice } from '@/lib/notice';
 import { useSession } from '@/state/session';
-import { alpha, color, font, radius } from '@/theme/tokens';
+import { color } from '@/theme/tokens';
 import { queryKeys } from '@/lib/queryClient';
-import type {
-  FamilyGoals,
-  MarriageTimeline,
-  MustHaveCriterion,
-  PremiumCriterion,
-  PrivatePreferences,
-  ReligiousPractice,
-  Sect,
-} from '@/types';
-import { RTL_LAYOUT } from '@/lib/rtl';
+import type { FamilyGoals, MarriageTimeline, MustHaveCriterion, PremiumCriterion, PrivatePreferences, ReligiousPractice, Sect } from '@/types';
 import { errorMessage } from '@/lib/errorMessage';
 import { useToast } from '@/state/toast';
 import { PremiumLogo } from '@/components/brand/PremiumLogo';
 import { onDark, SurfaceToneProvider, useSurfaceTone } from '@/theme/tone';
-
+import { styles } from './privateTabStyles';
 
 /**
  * The private preference editor.
@@ -665,138 +645,3 @@ function familyGoalLabel(value: FamilyGoals, t: Translate): string {
 function timelineLabel(value: MarriageTimeline, t: Translate): string {
   return t(TIMELINE_KEYS[value]);
 }
-
-const styles = StyleSheet.create({
-  rtl: RTL_LAYOUT,
-  rowReverse: { flexDirection: 'row-reverse' },
-  wrap: { gap: 12, paddingBottom: 24 },
-  card: { gap: 18 },
-
-  sectionTitle: { marginTop: 8 },
-  sectionBody: { marginTop: 6 },
-
-  section: {
-    borderTopWidth: 1,
-    borderTopColor: alpha.lineFaint,
-    paddingTop: 16,
-    gap: 12,
-  },
-  sectionHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-    gap: 10,
-  },
-  sectionValue: { fontSize: 11 },
-
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
-  filterNote: { marginTop: -5 },
-  checkList: { gap: 8 },
-  checkRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 11,
-    minHeight: 46,
-    paddingHorizontal: 13,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: alpha.lineStrong,
-    backgroundColor: color.surface,
-  },
-  checkRowDark: { borderColor: onDark.line, backgroundColor: 'transparent' },
-  checkRowSelectedDark: { borderColor: color.goldOnDark, backgroundColor: onDark.fill },
-  checkBoxDark: { borderColor: onDark.lineStrong },
-  checkBoxSelectedDark: { backgroundColor: color.goldOnDark, borderColor: color.goldOnDark },
-  checkRowSelected: { borderColor: color.ink, backgroundColor: color.sandLight },
-  checkBox: {
-    width: 19,
-    height: 19,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: alpha.lineButton,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkBoxSelected: { backgroundColor: color.ink, borderColor: color.ink },
-  checkMark: { fontFamily: font.bodyBold, fontSize: 12, color: color.white },
-  checkLabel: { flex: 1, fontFamily: font.bodyMedium, fontSize: 12.5, color: color.ink },
-
-  radiusPanel: {
-    backgroundColor: color.sandLight,
-    borderRadius: radius.xl,
-    padding: 16,
-    gap: 10,
-  },
-  radiusHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 12,
-  },
-  radiusText: { gap: 3, flex: 1 },
-  radiusTitle: { fontSize: 12 },
-  radiusPill: {
-    backgroundColor: color.ink,
-    borderRadius: radius.pill,
-    paddingVertical: 7,
-    paddingHorizontal: 12,
-  },
-  radiusPillLabel: { fontFamily: font.bodyBold, fontSize: 10, color: color.white },
-
-  sheetTrigger: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: alpha.lineStrong,
-    borderRadius: radius.lg,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  sheetTriggerLabel: { fontSize: 12 },
-  sheetTriggerArrow: { fontFamily: font.body, color: color.faint },
-
-  confidentialTitle: {
-    fontFamily: font.bodyBold,
-    fontSize: 11.5,
-    color: color.gold,
-  },
-  confidentialBody: { marginTop: 6, color: color.muted },
-
-  metricRow: { flexDirection: 'row', gap: 10 },
-  metric: { flex: 1, gap: 6 },
-  premiumCard: {
-    marginTop: 8,
-    marginHorizontal: -8,
-    padding: 8,
-    paddingTop: 22,
-    borderRadius: radius.xl,
-    backgroundColor: color.ink,
-    borderWidth: 1,
-    borderColor: color.goldOnDark,
-  },
-  premiumHead: { alignItems: 'center', gap: 6, paddingHorizontal: 32, paddingBottom: 18 },
-  premiumTitle: { alignItems: 'center', gap: 8 },
-  premiumFilters: { fontFamily: font.body, fontSize: 20, lineHeight: 26, color: color.white, textAlign: 'center' },
-  premiumRule: { width: 44, height: 1, backgroundColor: color.goldOnDark, marginVertical: 4 },
-  premiumBody: { color: 'rgba(252,252,251,0.72)', textAlign: 'center' },
-  premiumBlock: { position: 'relative', paddingHorizontal: 14, paddingBottom: 14 },
-  premiumInner: { gap: 22 },
-  locked: { opacity: 0.45 },
-  subHeading: { marginTop: 12 },
-  missing: { borderColor: '#B3261E', borderWidth: 1.5 },
-  missingGroup: { borderWidth: 1.5, borderColor: '#B3261E', borderRadius: radius.md, padding: 6 },
-  missingText: { color: '#B3261E', fontFamily: font.bodyBold },
-  metricInput: {
-    borderWidth: 1,
-    borderColor: alpha.lineStrong,
-    borderRadius: radius.md,
-    paddingVertical: 13,
-    paddingHorizontal: 14,
-    fontFamily: font.body,
-    fontSize: 12.5,
-    color: color.ink,
-    backgroundColor: color.surface,
-  },
-  inputRTL: { textAlign: 'right', writingDirection: 'rtl' },
-});

@@ -1,9 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { router } from 'expo-router';
-import { Linking, Pressable, StyleSheet, Switch, View } from 'react-native';
+import { Linking, Pressable, Switch, View } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
-
 import { ADMIN_PANEL_URL, fetchIsAdmin } from '@/api/admin';
 import { fetchMyReadReceipts, fetchMySampleMembers, requestAccountDeletion, setMyReadReceipts, setMySampleMembers, setMyTestPremium, setProfilePaused } from '@/api/account';
 import { fetchMyHighLatitudeFajrSettings, fetchMyMaritalSettings, setMyHighLatitudeFajrMethod, setMyMaritalPreferences, setMyMaritalStatus, type HighLatitudeFajrSettings, type MaritalSettings } from '@/api/profile';
@@ -30,12 +29,12 @@ import { useFeatureFlags } from '@/state/featureFlags';
 import { USE_MOCKS } from '@/lib/supabase';
 import { testIds } from '@/lib/testIds';
 import { queryKeys } from '@/lib/queryClient';
-import { alpha, color, font, radius, space } from '@/theme/tokens';
+import { color } from '@/theme/tokens';
 import { TIER_LIMITS, type Gender, type MaritalStatus, type Profile } from '@/types';
-import { RTL_LAYOUT } from '@/lib/rtl';
 import { showNotice } from '@/lib/notice';
 import { useToast } from '@/state/toast';
 import { useRound } from '@/state/round';
+import { styles } from './settingsTabStyles';
 
 export function SettingsTab({
   liveCount,
@@ -849,171 +848,3 @@ function HighLatitudeMethodOption({
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  rtl: RTL_LAYOUT,
-  rowReverse: { flexDirection: 'row-reverse' },
-  wrap: { gap: 22, paddingBottom: 30 },
-  split: { flexDirection: 'row', alignItems: 'flex-start', gap: 22 },
-  splitRTL: { flexDirection: 'row-reverse', alignItems: 'flex-start', gap: 22 },
-  column: { flex: 1, gap: 22 },
-  stack: { gap: 22 },
-  section: { gap: 10 },
-  sectionHead: { gap: 5, paddingHorizontal: 2 },
-  sectionTitle: { fontSize: 21, lineHeight: 27 },
-  group: { paddingVertical: 0, paddingHorizontal: space.lg + 2 },
-
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 17,
-    borderBottomWidth: 1,
-    borderBottomColor: alpha.lineFaint,
-  },
-  // Same box as the Preferences fields: the whole outline is the button.
-  openRow: {
-    borderWidth: 1,
-    borderColor: alpha.lineStrong,
-    borderBottomColor: alpha.lineStrong,
-    borderRadius: radius.md,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginVertical: 6,
-    backgroundColor: color.surface,
-  },
-  openRowPressed: { backgroundColor: color.sandLight },
-  chevron: { fontFamily: font.body, fontSize: 20, lineHeight: 20, color: color.faintest },
-  rowText: { flex: 1, gap: 5 },
-  rowTitleLine: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 7 },
-  rowTitle: { fontFamily: font.bodyBold, fontSize: 13.5, color: color.ink },
-  rowSubtitle: { lineHeight: 19, color: color.muted },
-  maritalBox: { width: 22, height: 22, borderRadius: 7, borderWidth: 1.5, borderColor: alpha.lineStrong, alignItems: 'center', justifyContent: 'center' },
-  maritalBoxOn: { backgroundColor: color.ink },
-  maritalTick: { color: color.white, fontSize: 13, lineHeight: 16, fontFamily: font.bodyBold },
-  fajrMethodIntro: { lineHeight: 19, color: color.muted, paddingTop: 14 },
-  fajrMethodOption: {
-    minHeight: 68,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 13,
-    borderTopWidth: 1,
-    borderTopColor: alpha.lineFaint,
-  },
-  fajrMethodOptionSelected: { backgroundColor: color.sandLight },
-  fajrMethodCopy: { flex: 1, gap: 4 },
-  fajrRadio: {
-    width: 21,
-    height: 21,
-    borderWidth: 1.5,
-    borderColor: color.faint,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  fajrRadioSelected: { borderColor: color.ink },
-  fajrRadioDot: { width: 11, height: 11, borderRadius: 6, backgroundColor: color.ink },
-  rowControl: { alignItems: 'flex-end', justifyContent: 'center' },
-  badge: {
-    borderRadius: radius.pill,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    backgroundColor: 'rgba(184,145,79,0.12)',
-    color: color.gold,
-    fontFamily: font.bodyBold,
-    fontSize: 8.5,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-  },
-  arrow: { fontFamily: font.body, fontSize: 16, color: color.faint },
-  disclosure: { minWidth: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center' },
-  lockGlyph: { fontFamily: font.body, fontSize: 20, color: color.green },
-  languagePill: {
-    borderWidth: 1,
-    borderColor: alpha.lineStrong,
-    borderRadius: radius.pill,
-    paddingVertical: 7,
-    paddingHorizontal: 12,
-    minHeight: 44,
-    justifyContent: 'center',
-  },
-  languagePillLabel: { fontFamily: font.bodyBold, fontSize: 10, letterSpacing: 1, color: color.ink },
-  restartNotice: { color: color.gold, marginTop: 8 },
-  backRow: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
-  backLabel: { fontFamily: font.bodyBold, fontSize: 12, letterSpacing: 0.6, color: color.ink },
-  signOutWrap: { paddingVertical: 16 },
-
-  premiumCard: { gap: 14, borderRadius: radius.panel },
-  premiumLabel: {
-    fontFamily: font.bodyBold,
-    fontSize: 9,
-    letterSpacing: 2.4,
-    textTransform: 'uppercase',
-    color: color.goldOnDark,
-  },
-  premiumTitle: { marginTop: 12 },
-  premiumUnavailable: { color: 'rgba(252,252,251,0.72)', lineHeight: 18 },
-  featureList: { gap: 9 },
-  featureRow: { flexDirection: 'row', gap: 9, alignItems: 'flex-start' },
-  featureMark: { color: color.goldOnDark, fontSize: 11, marginTop: 3 },
-  featureText: {
-    flex: 1,
-    fontFamily: font.body,
-    fontSize: 12.5,
-    lineHeight: 19,
-    color: 'rgba(252,252,251,0.88)',
-  },
-  premiumDetails: { gap: 16, borderRadius: radius.panel, padding: 18 },
-  premiumDetailsHead: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
-  premiumDetailsTitle: { marginTop: 6, fontSize: 20, lineHeight: 26, flexShrink: 1 },
-  planBadge: {
-    borderWidth: 1,
-    borderColor: 'rgba(214,180,110,0.4)',
-    borderRadius: radius.pill,
-    paddingVertical: 6,
-    paddingHorizontal: 9,
-  },
-  // The badge now sits on the dark Premium card.
-  planBadgeActive: { borderColor: color.goldOnDark },
-  planBadgeLabel: {
-    color: color.goldOnDark,
-    fontFamily: font.bodyBold,
-    fontSize: 8.5,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  planBadgeLabelActive: { color: color.goldOnDark },
-  benefitGrid: { gap: 9 },
-  benefit: {
-    flexDirection: 'row',
-    gap: 11,
-    alignItems: 'flex-start',
-    padding: 13,
-    borderRadius: radius.lg,
-    backgroundColor: color.surface,
-  },
-  benefitMark: {
-    width: 31,
-    height: 31,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(184,145,79,0.12)',
-  },
-  benefitMarkLabel: { fontFamily: font.bodyBold, fontSize: 10, color: color.gold },
-  benefitText: { flex: 1, gap: 3 },
-  benefitTitle: { fontFamily: font.bodyBold, fontSize: 12.5, color: color.ink },
-  benefitDetail: { lineHeight: 18, color: color.muted },
-  premiumRule: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    paddingTop: 2,
-  },
-  premiumRuleMark: { color: color.gold, fontFamily: font.bodyBold, fontSize: 14 },
-  premiumRuleText: { flex: 1, lineHeight: 18, color: color.muted },
-  paceCard: { backgroundColor: color.sand, borderRadius: radius.lg, padding: 14, gap: 7 },
-  paceBody: { fontSize: 11.5, lineHeight: 19 },
-  version: { color: color.faint, marginTop: -4 },
-});
