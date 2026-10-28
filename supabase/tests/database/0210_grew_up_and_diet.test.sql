@@ -40,6 +40,7 @@ select is(
   '["vegan"]'::jsonb, 'their diet is on the profile others see');
 
 -- ---------------------------------------------------------------- the Premium filters
+update profiles set diet = array['halal_only'] where id = '00000000-0000-0000-0000-000000021002';
 update private_preferences
 set preferred_diet = array['vegan'], preferred_grew_up_countries = array['EG'],
     premium_must_have = '{"diet": true, "grew_up": true}'::jsonb

@@ -53,7 +53,7 @@ insert into public.profiles (
   religious_dress, ethnicities, heritage_countries, onboarding_complete
 ) values (
   '00000000-0000-0000-0000-000000019506', 'Friend Member', 'Friend', '1994-01-01', 'female',
-  'Leeds', 'United Kingdom', 'A thoughtful person who values family, faith and kindness.',
+  'Leeds', 'United Kingdom', 'A thoughtful person who values family, faith and kindness, and who enjoys long walks, good food and quiet evenings.',
   array['profile/friend.jpg'], array['English'], 'University', 'no', now(),
   'hijab', array['arab'], array['GB'], true
 );

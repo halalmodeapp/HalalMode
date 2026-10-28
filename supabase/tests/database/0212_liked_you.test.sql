@@ -6,11 +6,11 @@ insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-000000021201', 'liker@example.test'),
   ('00000000-0000-0000-0000-000000021202', 'liked@example.test'),
   ('00000000-0000-0000-0000-000000021203', 'blocked-liker@example.test');
-insert into profiles (id, name, first_name, birth_date, gender, city, country, latitude, longitude, bio, photos, onboarding_complete, marital_status)
+insert into profiles (id, name, first_name, birth_date, gender, city, country, latitude, longitude, bio, photos, onboarding_complete, marital_status, sensitive_consent_at)
 values
-  ('00000000-0000-0000-0000-000000021201', 'Liker Person', 'Liker', '1990-01-01', 'male', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, repeat('a', 90), array['21201/a.jpg'], true, 'never_married'),
-  ('00000000-0000-0000-0000-000000021202', 'Liked Person', 'Liked', '1992-01-01', 'female', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, repeat('b', 90), array['21202/a.jpg'], true, 'never_married'),
-  ('00000000-0000-0000-0000-000000021203', 'Blocked Person', 'Blocked', '1991-01-01', 'male', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, repeat('c', 90), array['21203/a.jpg'], true, 'never_married');
+  ('00000000-0000-0000-0000-000000021201', 'Liker Person', 'Liker', '1990-01-01', 'male', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, repeat('a', 90), array['21201/a.jpg'], true, 'never_married', now()),
+  ('00000000-0000-0000-0000-000000021202', 'Liked Person', 'Liked', '1992-01-01', 'female', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, repeat('b', 90), array['21202/a.jpg'], true, 'never_married', now()),
+  ('00000000-0000-0000-0000-000000021203', 'Blocked Person', 'Blocked', '1991-01-01', 'male', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, repeat('c', 90), array['21203/a.jpg'], true, 'never_married', now());
 insert into private_preferences (user_id) select id from profiles where id::text like '00000000-0000-0000-0000-0000000212%';
 insert into halal_mode_private.member_legal_consent_history (user_id, document_type, version, acceptance_context)
 select p.id, d.document_type, d.version, 'onboarding'
