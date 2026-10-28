@@ -958,4 +958,5 @@ export const fr: TranslationCatalog = {
   "notifKinds.photo_decision": "Décisions sur photos et selfie",
   "notifKinds.recap_ready": "Votre récapitulatif est prêt",
   "notifKinds.round_expiring": "Présentations bientôt closes",
+  "chat.profileA11y": "Voir le profil et les photos de {{name}}",
 };

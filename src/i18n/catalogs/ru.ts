@@ -958,4 +958,5 @@ export const ru: TranslationCatalog = {
   "notifKinds.photo_decision": "Решения по фото и селфи",
   "notifKinds.recap_ready": "Ваш итог готов",
   "notifKinds.round_expiring": "Знакомства скоро закроются",
+  "chat.profileA11y": "Открыть профиль и фото: {{name}}",
 };

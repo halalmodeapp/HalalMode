@@ -969,6 +969,7 @@ export const en = {
   "notifKinds.photo_decision": "Photo and selfie decisions",
   "notifKinds.recap_ready": "Your recap is ready",
   "notifKinds.round_expiring": "Introductions about to close",
+  "chat.profileA11y": "See {{name}}’s profile and photos",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -1932,4 +1933,5 @@ export const ar: TranslationCatalog = {
   "notifKinds.photo_decision": "قرارات الصور والصورة الشخصية",
   "notifKinds.recap_ready": "ملخصكما جاهز",
   "notifKinds.round_expiring": "التعارفات توشك على الانتهاء",
+  "chat.profileA11y": "عرض ملف {{name}} وصوره",
 };

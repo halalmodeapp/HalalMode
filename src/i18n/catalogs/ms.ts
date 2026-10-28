@@ -958,4 +958,5 @@ export const ms: TranslationCatalog = {
   "notifKinds.photo_decision": "Keputusan foto dan swafoto",
   "notifKinds.recap_ready": "Rumusan anda sedia",
   "notifKinds.round_expiring": "Perkenalan akan ditutup",
+  "chat.profileA11y": "Lihat profil dan foto {{name}}",
 };

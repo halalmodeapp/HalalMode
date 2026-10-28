@@ -348,20 +348,28 @@ export default function ChatScreen() {
             <Text style={styles.backGlyph}>{isRTL ? '→' : '←'}</Text>
           </Pressable>
 
-          <Image
-            source={getProfilePhotoSource(connection.profile.id, connection.profile.photos, 0)}
-            storagePath={connection.profile.photoMedia?.[0]?.storagePath}
-            style={styles.avatar}
-            contentFit="cover"
-            accessibilityIgnoresInvertColors
-          />
+          {/* Their photo and name open their profile and photos, any time after matching. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('chat.profileA11y', { name: connection.profile.firstName })}
+            onPress={() => router.push(`/connection/${id}/profile`)}
+            style={[styles.headerWho, isRTL && styles.rowRTL]}
+          >
+            <Image
+              source={getProfilePhotoSource(connection.profile.id, connection.profile.photos, 0)}
+              storagePath={connection.profile.photoMedia?.[0]?.storagePath}
+              style={styles.avatar}
+              contentFit="cover"
+              accessibilityIgnoresInvertColors
+            />
 
-          <View style={styles.headerText}>
-            <Text variant="label" numberOfLines={1}>{connection.profile.firstName}</Text>
-            <Text variant="caption" numberOfLines={1}>
-              {t('chat.headerMeta', { days, count: answered })}
-            </Text>
-          </View>
+            <View style={styles.headerText}>
+              <Text variant="label" numberOfLines={1}>{connection.profile.firstName}</Text>
+              <Text variant="caption" numberOfLines={1}>
+                {t('chat.headerMeta', { days, count: answered })}
+              </Text>
+            </View>
+          </Pressable>
 
           {liveCalling ? (
           <Pressable
@@ -788,6 +796,7 @@ const styles = StyleSheet.create({
   },
   backGlyph: { fontFamily: font.body, fontSize: 15, color: color.inkSoft },
   avatar: { width: 34, height: 34, borderRadius: 17 },
+  headerWho: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 10 },
   headerText: { flex: 1, minWidth: 0, gap: 2 },
   // Compact so the name always has room, even on a 360 pt phone.
   pauseButton: {

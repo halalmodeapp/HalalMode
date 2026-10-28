@@ -958,4 +958,5 @@ export const so: TranslationCatalog = {
   "notifKinds.photo_decision": "Go'aamada sawirrada iyo is-qaadka",
   "notifKinds.recap_ready": "Soo koobiddaadu waa diyaar",
   "notifKinds.round_expiring": "Isbarashooyinku way xirmayaan",
+  "chat.profileA11y": "Eeg astaanta iyo sawirrada {{name}}",
 };

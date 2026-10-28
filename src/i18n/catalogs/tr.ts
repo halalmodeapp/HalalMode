@@ -958,4 +958,5 @@ export const tr: TranslationCatalog = {
   "notifKinds.photo_decision": "Fotoğraf ve selfie kararları",
   "notifKinds.recap_ready": "Özetiniz hazır",
   "notifKinds.round_expiring": "Tanışmalar kapanmak üzere",
+  "chat.profileA11y": "{{name}} adlı kişinin profilini ve fotoğraflarını gör",
 };

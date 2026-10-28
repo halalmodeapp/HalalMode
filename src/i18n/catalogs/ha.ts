@@ -958,4 +958,5 @@ export const ha: TranslationCatalog = {
   "notifKinds.photo_decision": "Shawarar hotuna da selfie",
   "notifKinds.recap_ready": "Takaitaccen bayaninku ya shirya",
   "notifKinds.round_expiring": "Gabatarwa na gab da rufewa",
+  "chat.profileA11y": "Duba bayanin {{name}} da hotunansa",
 };

@@ -958,4 +958,5 @@ export const ur: TranslationCatalog = {
   "notifKinds.photo_decision": "تصویر اور سیلفی کے فیصلے",
   "notifKinds.recap_ready": "آپ کا خلاصہ تیار ہے",
   "notifKinds.round_expiring": "تعارف بند ہونے والے ہیں",
+  "chat.profileA11y": "{{name}} کی پروفائل اور تصاویر دیکھیں",
 };

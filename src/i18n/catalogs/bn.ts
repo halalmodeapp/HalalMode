@@ -958,4 +958,5 @@ export const bn: TranslationCatalog = {
   "notifKinds.photo_decision": "ছবি ও সেলফির সিদ্ধান্ত",
   "notifKinds.recap_ready": "আপনাদের সারসংক্ষেপ প্রস্তুত",
   "notifKinds.round_expiring": "পরিচয় শীঘ্রই বন্ধ হবে",
+  "chat.profileA11y": "{{name}}-এর প্রোফাইল ও ছবি দেখুন",
 };

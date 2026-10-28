@@ -958,4 +958,5 @@ export const am: TranslationCatalog = {
   "notifKinds.photo_decision": "የፎቶና የሰልፊ ውሳኔዎች",
   "notifKinds.recap_ready": "ማጠቃለያዎ ዝግጁ ነው",
   "notifKinds.round_expiring": "መግቢያዎች ሊዘጉ ነው",
+  "chat.profileA11y": "የ{{name}}ን መገለጫና ፎቶዎች ይመልከቱ",
 };

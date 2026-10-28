@@ -958,4 +958,5 @@ export const fa: TranslationCatalog = {
   "notifKinds.photo_decision": "نتیجه بررسی عکس و سلفی",
   "notifKinds.recap_ready": "خلاصه شما آماده است",
   "notifKinds.round_expiring": "معرفی‌ها در آستانه بسته شدن",
+  "chat.profileA11y": "دیدن نمایه و عکس‌های {{name}}",
 };
