@@ -955,4 +955,6 @@ export const ha: TranslationCatalog = {
   "notifKinds.liked_you": "Wani ya so ku",
   "notifKinds.waiting_on_you": "Wani yana jiran ku",
   "notifKinds.quiet_match": "Shawarwari idan tattaunawa ta yi shiru",
+  "notifKinds.photo_decision": "Shawarar hotuna da selfie",
+  "notifKinds.recap_ready": "Takaitaccen bayaninku ya shirya",
 };

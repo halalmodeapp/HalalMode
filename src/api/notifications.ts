@@ -98,6 +98,8 @@ export const SWITCHABLE_NOTIFICATIONS = [
   'liked_you',
   'waiting_on_you',
   'quiet_match',
+  'photo_decision',
+  'recap_ready',
 ] as const;
 export type SwitchableNotification = (typeof SWITCHABLE_NOTIFICATIONS)[number];
 

@@ -955,4 +955,6 @@ export const fa: TranslationCatalog = {
   "notifKinds.liked_you": "کسی شما را پسندید",
   "notifKinds.waiting_on_you": "کسی منتظر شماست",
   "notifKinds.quiet_match": "پیشنهاد وقتی گفتگو ساکت می‌شود",
+  "notifKinds.photo_decision": "نتیجه بررسی عکس و سلفی",
+  "notifKinds.recap_ready": "خلاصه شما آماده است",
 };

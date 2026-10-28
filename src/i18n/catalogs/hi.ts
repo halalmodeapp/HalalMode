@@ -955,4 +955,6 @@ export const hi: TranslationCatalog = {
   "notifKinds.liked_you": "किसी ने आपको पसंद किया",
   "notifKinds.waiting_on_you": "कोई आपका इंतज़ार कर रहा है",
   "notifKinds.quiet_match": "बातचीत शांत होने पर सुझाव",
+  "notifKinds.photo_decision": "फ़ोटो और सेल्फ़ी के फ़ैसले",
+  "notifKinds.recap_ready": "आपका सार तैयार है",
 };

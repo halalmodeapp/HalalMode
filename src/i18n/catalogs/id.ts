@@ -955,4 +955,6 @@ export const id: TranslationCatalog = {
   "notifKinds.liked_you": "Seseorang menyukaimu",
   "notifKinds.waiting_on_you": "Seseorang menunggumu",
   "notifKinds.quiet_match": "Saran saat obrolan sepi",
+  "notifKinds.photo_decision": "Keputusan foto dan selfie",
+  "notifKinds.recap_ready": "Rangkumanmu siap",
 };

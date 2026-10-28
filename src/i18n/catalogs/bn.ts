@@ -955,4 +955,6 @@ export const bn: TranslationCatalog = {
   "notifKinds.liked_you": "কেউ আপনাকে পছন্দ করেছেন",
   "notifKinds.waiting_on_you": "কেউ আপনার অপেক্ষায়",
   "notifKinds.quiet_match": "কথোপকথন নীরব হলে পরামর্শ",
+  "notifKinds.photo_decision": "ছবি ও সেলফির সিদ্ধান্ত",
+  "notifKinds.recap_ready": "আপনাদের সারসংক্ষেপ প্রস্তুত",
 };

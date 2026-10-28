@@ -966,6 +966,8 @@ export const en = {
   "notifKinds.liked_you": "Someone liked you",
   "notifKinds.waiting_on_you": "Someone is waiting on you",
   "notifKinds.quiet_match": "Suggestions when a chat goes quiet",
+  "notifKinds.photo_decision": "Photo and selfie decisions",
+  "notifKinds.recap_ready": "Your recap is ready",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -1926,4 +1928,6 @@ export const ar: TranslationCatalog = {
   "notifKinds.liked_you": "أُعجب بك أحدهم",
   "notifKinds.waiting_on_you": "أحدهم ينتظر ردّك",
   "notifKinds.quiet_match": "اقتراحات حين يهدأ الحديث",
+  "notifKinds.photo_decision": "قرارات الصور والصورة الشخصية",
+  "notifKinds.recap_ready": "ملخصكما جاهز",
 };

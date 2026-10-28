@@ -16,14 +16,15 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 interface Claimed {
   id: number;
   user_id: string;
-  kind: 'round_ready' | 'mutual_match' | 'new_message' | 'notice' | 'halal_cards' | 'liked_you' | 'waiting_on_you' | 'quiet_match';
+  kind: 'round_ready' | 'mutual_match' | 'new_message' | 'notice' | 'halal_cards' | 'liked_you' | 'waiting_on_you' | 'quiet_match' | 'photo_decision' | 'recap_ready';
   payload: Record<string, unknown>;
   push_token: string;
   platform: string;
   locale: string;
 }
 
-type Wording = Record<Claimed['kind'], { title: string; body: string }>;
+type WordingKey = Exclude<Claimed['kind'], 'photo_decision'> | 'photo_approved' | 'photo_redo';
+type Wording = Record<WordingKey, { title: string; body: string }>;
 
 const WORDING: Record<string, Wording> = {
   en: {
@@ -35,6 +36,9 @@ const WORDING: Record<string, Wording> = {
     liked_you: { title: "Someone liked you", body: "Open Connections to read their bio." },
     waiting_on_you: { title: "Someone is waiting on you", body: "A match has answered. It’s your turn." },
     quiet_match: { title: "It’s been quiet", body: "Say salaam. We have a friendly opener for you." },
+    photo_approved: { title: "You’re verified", body: "Your selfie matches your photos. Thank you." },
+    photo_redo: { title: "A photo needs redoing", body: "Open the app to see what to change." },
+    recap_ready: { title: "Your recap is ready", body: "You’ve both answered. Read it and say salaam." },
   },
   ar: {
     round_ready: { title: "مجموعتك المكوّنة من {{count}} جاهزة", body: "دخل وقت الفجر. تعارفات اليوم بانتظارك." },
@@ -45,6 +49,9 @@ const WORDING: Record<string, Wording> = {
     liked_you: { title: "أُعجب بك أحدهم", body: "افتح «التعارفات» لقراءة نبذته." },
     waiting_on_you: { title: "أحدهم ينتظرك", body: "أجاب تعارفك. جاء دورك." },
     quiet_match: { title: "الهدوء يسود المحادثة", body: "ابدأ بالسلام. لدينا افتتاحية لطيفة لك." },
+    photo_approved: { title: "تم التحقق منك", body: "صورتك الشخصية تطابق صورك. شكرًا لك." },
+    photo_redo: { title: "صورة تحتاج إلى إعادة", body: "افتح التطبيق لترى ما يجب تغييره." },
+    recap_ready: { title: "ملخصكما جاهز", body: "أجبتما كلاكما. اقرأه وابدأ بالسلام." },
   },
   ur: {
     round_ready: { title: "آپ کے {{count}} تیار ہیں", body: "فجر ہو گئی۔ آج کے تعارف آپ کے منتظر ہیں۔" },
@@ -55,6 +62,9 @@ const WORDING: Record<string, Wording> = {
     liked_you: { title: "کسی نے آپ کو پسند کیا", body: "ان کا تعارف پڑھنے کے لیے کنیکشنز کھولیں۔" },
     waiting_on_you: { title: "کوئی آپ کا منتظر ہے", body: "آپ کے میچ نے جواب دے دیا ہے۔ اب آپ کی باری ہے۔" },
     quiet_match: { title: "گفتگو خاموش ہے", body: "سلام کہیں۔ ہمارے پاس آپ کے لیے ایک خوشگوار آغاز ہے۔" },
+    photo_approved: { title: "آپ کی تصدیق ہو گئی", body: "آپ کی سیلفی آپ کی تصاویر سے ملتی ہے۔ شکریہ۔" },
+    photo_redo: { title: "ایک تصویر دوبارہ چاہیے", body: "کیا بدلنا ہے، دیکھنے کے لیے ایپ کھولیں۔" },
+    recap_ready: { title: "آپ کا خلاصہ تیار ہے", body: "آپ دونوں جواب دے چکے ہیں۔ پڑھیں اور سلام کہیں۔" },
   },
   fa: {
     round_ready: { title: "{{count}} معرفی شما آماده است", body: "اذان صبح شد. معرفی‌های امروز منتظر شماست." },
@@ -65,6 +75,9 @@ const WORDING: Record<string, Wording> = {
     liked_you: { title: "کسی شما را پسندید", body: "برای خواندن معرفی‌نامه‌اش «ارتباط‌ها» را باز کنید." },
     waiting_on_you: { title: "کسی منتظر شماست", body: "تطابق شما پاسخ داده است. نوبت شماست." },
     quiet_match: { title: "گفتگو ساکت است", body: "سلام کنید. یک شروع دوستانه برایتان داریم." },
+    photo_approved: { title: "هویت شما تأیید شد", body: "سلفی شما با عکس‌هایتان مطابقت دارد. سپاسگزاریم." },
+    photo_redo: { title: "یک عکس باید دوباره گرفته شود", body: "برای دیدن آنچه باید تغییر کند، برنامه را باز کنید." },
+    recap_ready: { title: "خلاصه شما آماده است", body: "هر دوی شما پاسخ داده‌اید. بخوانید و سلام کنید." },
   },
   hi: {
     round_ready: { title: "आपके {{count}} तैयार हैं", body: "फ़ज्र हो गई। आज के परिचय आपका इंतज़ार कर रहे हैं।" },
@@ -75,6 +88,9 @@ const WORDING: Record<string, Wording> = {
     liked_you: { title: "किसी ने आपको पसंद किया", body: "उनका परिचय पढ़ने के लिए कनेक्शन खोलें।" },
     waiting_on_you: { title: "कोई आपका इंतज़ार कर रहा है", body: "आपके मैच ने जवाब दे दिया है। अब आपकी बारी है।" },
     quiet_match: { title: "बातचीत शांत है", body: "सलाम कहें। हमारे पास आपके लिए एक दोस्ताना शुरुआत है।" },
+    photo_approved: { title: "आप सत्यापित हो गए", body: "आपकी सेल्फ़ी आपकी तस्वीरों से मेल खाती है। धन्यवाद।" },
+    photo_redo: { title: "एक तस्वीर दोबारा चाहिए", body: "क्या बदलना है, यह देखने के लिए ऐप खोलें।" },
+    recap_ready: { title: "आपका सार तैयार है", body: "आप दोनों जवाब दे चुके हैं। पढ़ें और सलाम कहें।" },
   },
   id: {
     round_ready: { title: "{{count}} perkenalanmu siap", body: "Subuh telah tiba. Perkenalan hari ini menunggumu." },
@@ -85,6 +101,9 @@ const WORDING: Record<string, Wording> = {
     liked_you: { title: "Seseorang menyukaimu", body: "Buka Koneksi untuk membaca bionya." },
     waiting_on_you: { title: "Seseorang menunggumu", body: "Kecocokanmu sudah menjawab. Giliranmu." },
     quiet_match: { title: "Percakapan sepi", body: "Ucapkan salam. Kami punya pembuka yang ramah untukmu." },
+    photo_approved: { title: "Kamu terverifikasi", body: "Selfie-mu cocok dengan fotomu. Terima kasih." },
+    photo_redo: { title: "Satu foto perlu diulang", body: "Buka aplikasi untuk melihat apa yang perlu diubah." },
+    recap_ready: { title: "Rangkumanmu siap", body: "Kalian berdua sudah menjawab. Bacalah dan ucapkan salam." },
   },
   ms: {
     round_ready: { title: "{{count}} perkenalan anda sedia", body: "Subuh telah masuk. Perkenalan hari ini menanti anda." },
@@ -95,6 +114,9 @@ const WORDING: Record<string, Wording> = {
     liked_you: { title: "Seseorang menyukai anda", body: "Buka Sambungan untuk membaca biodatanya." },
     waiting_on_you: { title: "Seseorang menunggu anda", body: "Padanan anda telah menjawab. Giliran anda." },
     quiet_match: { title: "Perbualan sunyi", body: "Ucapkan salam. Kami ada pembuka yang mesra untuk anda." },
+    photo_approved: { title: "Anda telah disahkan", body: "Swafoto anda sepadan dengan foto anda. Terima kasih." },
+    photo_redo: { title: "Satu foto perlu diambil semula", body: "Buka aplikasi untuk melihat apa yang perlu diubah." },
+    recap_ready: { title: "Rumusan anda sedia", body: "Kamu berdua telah menjawab. Bacalah dan ucapkan salam." },
   },
   bn: {
     round_ready: { title: "আপনার {{count}}টি পরিচয় প্রস্তুত", body: "ফজর হয়েছে। আজকের পরিচয়গুলো আপনার অপেক্ষায়।" },
@@ -105,6 +127,9 @@ const WORDING: Record<string, Wording> = {
     liked_you: { title: "কেউ আপনাকে পছন্দ করেছেন", body: "তাঁর পরিচিতি পড়তে সংযোগ খুলুন।" },
     waiting_on_you: { title: "কেউ আপনার অপেক্ষায়", body: "আপনার ম্যাচ উত্তর দিয়েছেন। এবার আপনার পালা।" },
     quiet_match: { title: "কথোপকথন নীরব", body: "সালাম দিন। আপনার জন্য আমাদের কাছে একটি বন্ধুত্বপূর্ণ শুরু আছে।" },
+    photo_approved: { title: "আপনি যাচাইকৃত", body: "আপনার সেলফি আপনার ছবির সাথে মিলেছে। ধন্যবাদ।" },
+    photo_redo: { title: "একটি ছবি আবার তুলতে হবে", body: "কী বদলাতে হবে দেখতে অ্যাপ খুলুন।" },
+    recap_ready: { title: "আপনাদের সারসংক্ষেপ প্রস্তুত", body: "আপনারা দুজনেই উত্তর দিয়েছেন। পড়ুন এবং সালাম দিন।" },
   },
   fr: {
     round_ready: { title: "Vos {{count}} sont prêtes", body: "Fajr est entré. Les présentations du jour vous attendent." },
@@ -115,6 +140,9 @@ const WORDING: Record<string, Wording> = {
     liked_you: { title: "Quelqu’un vous a aimé", body: "Ouvrez Connexions pour lire sa présentation." },
     waiting_on_you: { title: "Quelqu’un vous attend", body: "Votre match a répondu. C’est à vous." },
     quiet_match: { title: "C’est calme", body: "Dites salaam. Nous avons une amorce sympathique pour vous." },
+    photo_approved: { title: "Vous êtes vérifié", body: "Votre selfie correspond à vos photos. Merci." },
+    photo_redo: { title: "Une photo est à refaire", body: "Ouvrez l’app pour voir ce qu’il faut changer." },
+    recap_ready: { title: "Votre récapitulatif est prêt", body: "Vous avez tous deux répondu. Lisez-le et dites salaam." },
   },
   tr: {
     round_ready: { title: "{{count}} tanışmanız hazır", body: "Sabah namazı girdi. Bugünkü tanışmalar sizi bekliyor." },
@@ -125,6 +153,9 @@ const WORDING: Record<string, Wording> = {
     liked_you: { title: "Biri seni beğendi", body: "Biyografisini okumak için Bağlantılar’ı aç." },
     waiting_on_you: { title: "Biri seni bekliyor", body: "Eşleşmen yanıtladı. Sıra sende." },
     quiet_match: { title: "Sohbet sessiz", body: "Selam ver. Senin için nazik bir giriş cümlemiz var." },
+    photo_approved: { title: "Doğrulandınız", body: "Selfie’niz fotoğraflarınızla eşleşiyor. Teşekkürler." },
+    photo_redo: { title: "Bir fotoğrafın yenilenmesi gerekiyor", body: "Neyin değişeceğini görmek için uygulamayı açın." },
+    recap_ready: { title: "Özetiniz hazır", body: "İkiniz de yanıtladınız. Okuyun ve selam verin." },
   },
   ha: {
     round_ready: { title: "Gabatarwarku {{count}} a shirye take", body: "Asuba ta yi. Gabatarwar yau tana jiran ku." },
@@ -135,6 +166,9 @@ const WORDING: Record<string, Wording> = {
     liked_you: { title: "Wani ya so ku", body: "Buɗe Haɗin kai don karanta bayaninsa." },
     waiting_on_you: { title: "Wani yana jiran ku", body: "Wanda kuka dace da shi ya amsa. Lokacinku ne." },
     quiet_match: { title: "Tattaunawa ta yi shiru", body: "Yi sallama. Muna da farawa mai kyau a gare ku." },
+    photo_approved: { title: "An tabbatar da ku", body: "Hoton selfie ɗinku ya dace da hotunanku. Na gode." },
+    photo_redo: { title: "Ana buƙatar sake ɗaukar hoto", body: "Buɗe manhajar don ganin abin da za a canza." },
+    recap_ready: { title: "Takaitaccen bayaninku ya shirya", body: "Ku biyu kun amsa. Karanta ku yi sallama." },
   },
   am: {
     round_ready: { title: "{{count}} መግቢያዎችዎ ዝግጁ ናቸው", body: "ፈጅር ገብቷል። የዛሬ መግቢያዎች ይጠብቆታል።" },
@@ -145,6 +179,9 @@ const WORDING: Record<string, Wording> = {
     liked_you: { title: "አንድ ሰው ወደዳችሁ", body: "ባዮውን ለማንበብ ግንኙነቶችን ይክፈቱ።" },
     waiting_on_you: { title: "አንድ ሰው ይጠብቆታል", body: "ተዛማጅዎ መልሷል። አሁን የእርስዎ ተራ ነው።" },
     quiet_match: { title: "ውይይቱ ጸጥ ብሏል", body: "ሰላም ይበሉ። ለእርስዎ ወዳጃዊ መግቢያ አለን።" },
+    photo_approved: { title: "ተረጋግጠዋል", body: "ሰልፊዎ ከፎቶዎችዎ ጋር ይመሳሰላል። እናመሰግናለን።" },
+    photo_redo: { title: "አንድ ፎቶ እንደገና መነሳት አለበት", body: "ምን መቀየር እንዳለበት ለማየት መተግበሪያውን ይክፈቱ።" },
+    recap_ready: { title: "ማጠቃለያዎ ዝግጁ ነው", body: "ሁለታችሁም መልሳችኋል። አንብበው ሰላም ይበሉ።" },
   },
   so: {
     round_ready: { title: "{{count}} isbarasho oo kuu diyaar ah", body: "Fajarku wuu soo galay. Isbarashooyinka maanta way ku sugayaan." },
@@ -155,6 +192,9 @@ const WORDING: Record<string, Wording> = {
     liked_you: { title: "Qof ayaa ku jeclaaday", body: "Fur Xiriirada si aad u akhrido faahfaahintiisa." },
     waiting_on_you: { title: "Qof ayaa ku sugaya", body: "Ciddii kuu habboonayd way jawaabtay. Waa idinka." },
     quiet_match: { title: "Wada-hadalku waa aamusan yahay", body: "Salaan. Waxaan kuu haynaa bilow wanaagsan." },
+    photo_approved: { title: "Waa laguu xaqiijiyey", body: "Sawirkaaga is-qaadka ah wuxuu la mid yahay sawiradaada. Mahadsanid." },
+    photo_redo: { title: "Sawir ayaa dib loo qaadayaa", body: "Fur app-ka si aad u aragto wixii la beddelayo." },
+    recap_ready: { title: "Soo koobiddaadu waa diyaar", body: "Labadiinuba waad jawaabteen. Akhri oo salaan." },
   },
   es: {
     round_ready: { title: "Tus {{count}} están listas", body: "Ha entrado el Fajr. Las presentaciones de hoy te esperan." },
@@ -165,6 +205,9 @@ const WORDING: Record<string, Wording> = {
     liked_you: { title: "Alguien te ha dado me gusta", body: "Abre Conexiones para leer su biografía." },
     waiting_on_you: { title: "Alguien te está esperando", body: "Tu match ha respondido. Es tu turno." },
     quiet_match: { title: "Está todo muy tranquilo", body: "Saluda. Tenemos un comienzo amable para ti." },
+    photo_approved: { title: "Estás verificado", body: "Tu selfi coincide con tus fotos. Gracias." },
+    photo_redo: { title: "Hay que rehacer una foto", body: "Abre la app para ver qué cambiar." },
+    recap_ready: { title: "Tu resumen está listo", body: "Los dos habéis respondido. Léelo y saluda." },
   },
   ru: {
     round_ready: { title: "Ваши {{count}} готовы", body: "Наступил фаджр. Сегодняшние знакомства ждут вас." },
@@ -175,6 +218,9 @@ const WORDING: Record<string, Wording> = {
     liked_you: { title: "Вы кому-то понравились", body: "Откройте «Связи», чтобы прочитать о нём или о ней." },
     waiting_on_you: { title: "Кто-то ждёт вас", body: "Ваше совпадение ответило. Теперь ваша очередь." },
     quiet_match: { title: "Стало тихо", body: "Скажите салам. У нас есть дружелюбное начало для вас." },
+    photo_approved: { title: "Вы подтверждены", body: "Ваше селфи совпадает с фотографиями. Спасибо." },
+    photo_redo: { title: "Фото нужно переделать", body: "Откройте приложение, чтобы увидеть, что изменить." },
+    recap_ready: { title: "Ваш итог готов", body: "Вы оба ответили. Прочитайте и скажите салам." },
   },
   zh: {
     round_ready: { title: "你的 {{count}} 位介绍已就绪", body: "晨礼时间到了。今天的介绍在等你。" },
@@ -185,6 +231,9 @@ const WORDING: Record<string, Wording> = {
     liked_you: { title: "有人喜欢了你", body: "打开“联系”阅读对方的简介。" },
     waiting_on_you: { title: "有人在等你", body: "你的匹配对象已回答，轮到你了。" },
     quiet_match: { title: "聊天安静了", body: "先说声 salaam 吧。我们为你准备了友好的开场白。" },
+    photo_approved: { title: "你已通过验证", body: "你的自拍与照片相符，谢谢。" },
+    photo_redo: { title: "有照片需要重拍", body: "打开应用查看需要修改的地方。" },
+    recap_ready: { title: "你们的总结已就绪", body: "你们都已回答。读一读，然后说声 salaam 吧。" },
   },
 };
 
@@ -197,7 +246,10 @@ const WORDING: Record<string, Wording> = {
  */
 function wording(kind: Claimed['kind'], locale: string, payload: Record<string, unknown> = {}): { title: string; body: string } {
   const language = locale.toLowerCase().split('-')[0];
-  const text = (WORDING[language] ?? WORDING.en)[kind];
+  const key: WordingKey = kind === 'photo_decision'
+    ? (payload.outcome === 'approved' ? 'photo_approved' : 'photo_redo')
+    : kind;
+  const text = (WORDING[language] ?? WORDING.en)[key];
   // "Your five are ready": the number is the member's set size. English says it
   // in words, every other language in digits.
   const count = typeof payload.count === 'number' ? payload.count : 5;

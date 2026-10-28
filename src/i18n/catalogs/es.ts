@@ -955,4 +955,6 @@ export const es: TranslationCatalog = {
   "notifKinds.liked_you": "Alguien te dio me gusta",
   "notifKinds.waiting_on_you": "Alguien te está esperando",
   "notifKinds.quiet_match": "Sugerencias cuando una charla se enfría",
+  "notifKinds.photo_decision": "Decisiones sobre fotos y selfi",
+  "notifKinds.recap_ready": "Tu resumen está listo",
 };

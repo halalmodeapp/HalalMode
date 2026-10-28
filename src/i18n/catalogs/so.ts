@@ -955,4 +955,6 @@ export const so: TranslationCatalog = {
   "notifKinds.liked_you": "Qof ayaa ku jeclaaday",
   "notifKinds.waiting_on_you": "Qof ayaa ku sugaya",
   "notifKinds.quiet_match": "Talooyin marka wada-hadalku aamuso",
+  "notifKinds.photo_decision": "Go'aamada sawirrada iyo is-qaadka",
+  "notifKinds.recap_ready": "Soo koobiddaadu waa diyaar",
 };

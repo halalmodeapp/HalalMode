@@ -955,4 +955,6 @@ export const ur: TranslationCatalog = {
   "notifKinds.liked_you": "کسی نے آپ کو پسند کیا",
   "notifKinds.waiting_on_you": "کوئی آپ کا منتظر ہے",
   "notifKinds.quiet_match": "گفتگو خاموش ہونے پر تجاویز",
+  "notifKinds.photo_decision": "تصویر اور سیلفی کے فیصلے",
+  "notifKinds.recap_ready": "آپ کا خلاصہ تیار ہے",
 };

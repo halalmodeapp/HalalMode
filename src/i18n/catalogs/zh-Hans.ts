@@ -955,4 +955,6 @@ export const zhHans: TranslationCatalog = {
   "notifKinds.liked_you": "有人喜欢了你",
   "notifKinds.waiting_on_you": "有人在等你",
   "notifKinds.quiet_match": "聊天冷场时的建议",
+  "notifKinds.photo_decision": "照片与自拍审核结果",
+  "notifKinds.recap_ready": "你们的总结已就绪",
 };

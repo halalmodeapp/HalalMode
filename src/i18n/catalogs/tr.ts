@@ -955,4 +955,6 @@ export const tr: TranslationCatalog = {
   "notifKinds.liked_you": "Biri sizi beğendi",
   "notifKinds.waiting_on_you": "Biri sizi bekliyor",
   "notifKinds.quiet_match": "Sohbet sessizleşince öneriler",
+  "notifKinds.photo_decision": "Fotoğraf ve selfie kararları",
+  "notifKinds.recap_ready": "Özetiniz hazır",
 };

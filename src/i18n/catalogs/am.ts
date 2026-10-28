@@ -955,4 +955,6 @@ export const am: TranslationCatalog = {
   "notifKinds.liked_you": "አንድ ሰው ወደዳችሁ",
   "notifKinds.waiting_on_you": "አንድ ሰው ይጠብቆታል",
   "notifKinds.quiet_match": "ውይይት ጸጥ ሲል የሚሰጡ ሐሳቦች",
+  "notifKinds.photo_decision": "የፎቶና የሰልፊ ውሳኔዎች",
+  "notifKinds.recap_ready": "ማጠቃለያዎ ዝግጁ ነው",
 };
