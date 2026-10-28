@@ -1,6 +1,6 @@
 begin;
 set local search_path = public, extensions, halal_mode_private;
-select plan(8);
+select plan(9);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-000000021601', 'owner-216@example.test'),
@@ -24,11 +24,20 @@ select ok(exists (select 1 from halal_mode_private.release_flag_members where ke
 select ok((select (e ->> 'demo')::boolean from jsonb_array_elements(admin_list_test_accounts()) e where e ->> 'email' = 'tester-216@example.test'),
   'and demo mode, which the list shows');
 select throws_ok($$select admin_set_test_account('nobody-216@example.test', true)$$, 'P0002', null, 'an unknown email is refused');
-select throws_ok($$select admin_set_test_account('owner-216@example.test', false)$$, '22023', null, 'an owner cannot lose demo mode');
+select throws_ok($$select admin_remove_test_account('owner-216@example.test')$$, '22023', null, 'an admin cannot lose the permission');
 
+-- Switching it off is the same for an admin and a tester: the samples go, the permission stays.
 select admin_set_test_account('tester-216@example.test', false);
+select admin_set_test_account('owner-216@example.test', false);
+select ok(not exists (select 1 from halal_mode_private.release_flag_members where key = 'demo_introductions' and user_id in
+  ('00000000-0000-0000-0000-000000021602', '00000000-0000-0000-0000-000000021601'))
+  and (select count(*) from halal_mode_private.release_flag_members where key = 'tester_tools' and user_id in
+  ('00000000-0000-0000-0000-000000021602', '00000000-0000-0000-0000-000000021601')) = 2,
+  'switching it off treats an admin and a tester alike');
+
+select admin_remove_test_account('tester-216@example.test');
 select ok(not exists (select 1 from halal_mode_private.release_flag_members where user_id = '00000000-0000-0000-0000-000000021602'),
-  'switching it off takes both flags away');
+  'removing a granted tester takes the permission away');
 
 select * from finish();
 rollback;

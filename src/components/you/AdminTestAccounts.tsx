@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { StyleSheet, Switch, TextInput, View } from 'react-native';
 
-import { fetchTestAccounts, setTestAccount } from '@/api/admin';
+import { fetchTestAccounts, removeTestAccount, setTestAccount } from '@/api/admin';
 import { Button } from '@/components/ui/Button';
 import { Text } from '@/components/ui/Text';
 import { alpha, color, radius } from '@/theme/tokens';
@@ -26,6 +26,11 @@ export function AdminTestAccounts() {
     },
   });
 
+  const remove = useMutation({
+    mutationFn: (address: string) => removeTestAccount(address),
+    onSuccess: () => void client.invalidateQueries({ queryKey: KEY }),
+  });
+
   // Not an owner (a viewer, say): the server refuses, so show nothing.
   if (accounts.isError) return null;
 
@@ -33,21 +38,24 @@ export function AdminTestAccounts() {
     <View style={styles.wrap}>
       <Text variant="micro">Test mode accounts</Text>
       <Text variant="caption">
-        These accounts get sample members, free test Premium and the reset. Nobody else does. Add the account an AI assistant signs in with, after it has signed up.
+        Admins and the accounts listed here get sample members, free test Premium and the reset, and switch them on and off the same way. Nobody else does. Add the account an AI assistant signs in with, after it has signed up.
       </Text>
       {(accounts.data ?? []).map((account) => (
         <View key={account.email} style={styles.row}>
           <Text variant="bodySmall" style={styles.email} numberOfLines={1}>
-            {account.email}{account.owner ? '  (owner)' : ''}
+            {account.email}{account.admin ? '  (admin)' : ''}
           </Text>
           <Switch
             accessibilityLabel={`Test mode for ${account.email}`}
-            value
-            disabled={account.owner || change.isPending}
+            value={account.demo}
+            disabled={change.isPending}
             onValueChange={(enabled) => change.mutate({ address: account.email, enabled })}
             trackColor={{ false: color.sandDeep, true: color.ink }}
             thumbColor={color.white}
           />
+          {account.admin ? null : (
+            <Button label="Remove" variant="quiet" disabled={remove.isPending} onPress={() => remove.mutate(account.email)} />
+          )}
         </View>
       ))}
       <TextInput

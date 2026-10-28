@@ -5,13 +5,30 @@
 -- the one an AI assistant signs in with. Nobody else has it, and nobody else
 -- ever meets a sample member.
 
--- 1. Every owner is a tester, so demo mode is there for them from the start.
+-- 1. Every admin is a tester, exactly like an account an owner has granted:
+--    the same permission and the same switch. New admins get it as they are added.
 insert into halal_mode_private.release_flag_members (key, user_id)
 select f.key, a.user_id
 from halal_mode_private.admin_members a
 cross join (values ('tester_tools'), ('demo_introductions')) as f(key)
-where a.role = 'owner'
 on conflict do nothing;
+
+create or replace function halal_mode_private.new_admin_is_tester()
+returns trigger
+language plpgsql
+security definer
+set search_path = halal_mode_private, pg_catalog
+as $function$
+begin
+  insert into halal_mode_private.release_flag_members (key, user_id)
+  values ('tester_tools', new.user_id), ('demo_introductions', new.user_id)
+  on conflict do nothing;
+  return new;
+end;
+$function$;
+drop trigger if exists new_admin_is_tester on halal_mode_private.admin_members;
+create trigger new_admin_is_tester after insert on halal_mode_private.admin_members
+  for each row execute function halal_mode_private.new_admin_is_tester();
 
 -- 2. Anyone who is neither a tester nor an owner loses demo mode, and any
 --    sample rounds, sample connections and pair history they were given.
@@ -67,7 +84,7 @@ begin
   return coalesce((
     select jsonb_agg(jsonb_build_object(
       'email', u.email,
-      'owner', exists (select 1 from halal_mode_private.admin_members a where a.user_id = u.id),
+      'admin', exists (select 1 from halal_mode_private.admin_members a where a.user_id = u.id),
       'demo', exists (select 1 from halal_mode_private.release_flag_members d where d.key = 'demo_introductions' and d.user_id = u.id),
       'premium', exists (select 1 from halal_mode_private.member_entitlements e where e.user_id = u.id and e.provider = 'tester')
     ) order by u.email)
@@ -78,6 +95,8 @@ begin
 end;
 $function$;
 
+-- Test mode on or off for an account: the same for an admin and a granted
+-- tester. Off also takes back a free tester Premium, never a real purchase.
 create or replace function public.admin_set_test_account(p_email text, p_enabled boolean)
 returns void
 language plpgsql
@@ -97,11 +116,7 @@ begin
     values ('tester_tools', v_user), ('demo_introductions', v_user)
     on conflict do nothing;
   else
-    if exists (select 1 from halal_mode_private.admin_members a where a.user_id = v_user) then
-      raise exception 'An owner always has test mode' using errcode = '22023';
-    end if;
-    delete from halal_mode_private.release_flag_members where user_id = v_user and key in ('tester_tools', 'demo_introductions');
-    -- A tester grant of Premium goes with it; a real purchase never does.
+    delete from halal_mode_private.release_flag_members where user_id = v_user and key = 'demo_introductions';
     perform set_config('app.account_control_rpc', 'true', true);
     delete from halal_mode_private.member_entitlements where user_id = v_user and provider = 'tester';
     update public.profiles set tier = 'free'
@@ -114,7 +129,36 @@ begin
 end;
 $function$;
 
+-- Taking the tester permission away altogether. An admin always has it.
+create or replace function public.admin_remove_test_account(p_email text)
+returns void
+language plpgsql
+security definer
+set search_path = public, halal_mode_private
+as $function$
+declare
+  v_user uuid;
+begin
+  perform halal_mode_private.require_owner();
+  select u.id into v_user from auth.users u where lower(u.email) = lower(trim(p_email));
+  if v_user is null then
+    raise exception 'No account with that email.' using errcode = 'P0002';
+  end if;
+  if exists (select 1 from halal_mode_private.admin_members a where a.user_id = v_user) then
+    raise exception 'An admin always has test mode' using errcode = '22023';
+  end if;
+  delete from halal_mode_private.release_flag_members where user_id = v_user and key in ('tester_tools', 'demo_introductions');
+  perform set_config('app.account_control_rpc', 'true', true);
+  delete from halal_mode_private.member_entitlements where user_id = v_user and provider = 'tester';
+  update public.profiles set tier = 'free'
+  where id = v_user and not exists (select 1 from halal_mode_private.member_entitlements e where e.user_id = v_user);
+  perform halal_mode_private.admin_audit('test_account.removed', jsonb_build_object('email', lower(trim(p_email))));
+end;
+$function$;
+
 revoke all on function public.admin_list_test_accounts() from public, anon;
 revoke all on function public.admin_set_test_account(text, boolean) from public, anon;
+revoke all on function public.admin_remove_test_account(text) from public, anon;
 grant execute on function public.admin_list_test_accounts() to authenticated;
 grant execute on function public.admin_set_test_account(text, boolean) to authenticated;
+grant execute on function public.admin_remove_test_account(text) to authenticated;
