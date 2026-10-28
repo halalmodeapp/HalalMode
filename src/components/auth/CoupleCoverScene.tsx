@@ -16,6 +16,7 @@ import Reanimated, {
 import Svg, { Defs, Path, RadialGradient, Stop } from 'react-native-svg';
 
 import { BOIL, boilNoise, boilPoints } from './boilSettings';
+import { CoupleHalftone } from './CoupleHalftone';
 import { COUPLE_SCENE_ASSETS } from './coupleLayerAssets';
 import { COUPLE_SCENE_LAYERS, COUPLE_SUN, COUPLE_WORLD, type CoupleSceneLayer } from './coupleSceneLayers';
 import { COUPLE_TILT, coupleCamera, coupleParallax, type CoupleCamera } from './coupleSceneLayout';
@@ -135,15 +136,75 @@ export function CoupleCoverScene({ width, height, active }: CoupleCoverSceneProp
               >
                 <Image source={COUPLE_SCENE_ASSETS.heart} fadeDuration={0} resizeMode="stretch" style={styles.image} />
               </Reanimated.View>
-            ) : (
+            ) : layer.key === 'sky' ? (
               <Image source={COUPLE_SCENE_ASSETS[layer.key]} fadeDuration={0} resizeMode="stretch" style={styles.image} />
+            ) : (
+              <BoilStrips source={COUPLE_SCENE_ASSETS[layer.key]} layer={layer} index={index} unit={unit} boil={boil} />
             )}
             {layer.key === 'sky' ? <SceneLight camera={camera} active={active} /> : null}
           </SceneLayer>
         ))}
       </View>
+      <CoupleHalftone width={width} height={height} camera={camera} active={active} />
       {active ? <NativeCoverTiltSensor tiltX={tiltX} tiltY={tiltY} /> : null}
     </View>
+  );
+}
+
+/** How many horizontal bands a layer is cut into, so its outlines can wobble line by line. */
+const BOIL_STRIPS = 8;
+/** A band's sideways wobble, as a multiple of the boil amount. */
+const BOIL_WOBBLE = 1.5;
+
+/**
+ * A layer drawn as horizontal bands, each nudged sideways by its own amount in
+ * every drawing. The whole picture no longer just shifts: its outlines wobble
+ * from one drawing to the next, as a hand-redrawn line does.
+ */
+function BoilStrips({ source, layer, index, unit, boil }: {
+  source: number;
+  layer: CoupleSceneLayer;
+  index: number;
+  unit: number;
+  boil: Boil;
+}) {
+  const fullHeight = layer.height * unit;
+  const band = fullHeight / BOIL_STRIPS;
+  return (
+    <>
+      {Array.from({ length: BOIL_STRIPS }, (_, strip) => (
+        <BoilStrip key={strip} source={source} index={index} strip={strip} band={band} fullHeight={fullHeight} boil={boil} />
+      ))}
+    </>
+  );
+}
+
+function BoilStrip({ source, index, strip, band, fullHeight, boil }: {
+  source: number;
+  index: number;
+  strip: number;
+  band: number;
+  fullHeight: number;
+  boil: Boil;
+}) {
+  const style = useAnimatedStyle(() => {
+    const amount = boil.amount.value;
+    if (amount <= 0) return { transform: [{ translateX: 0 }] };
+    return { transform: [{ translateX: boilNoise(boil.step.value, index * 31 + strip + 5, 4) * amount * BOIL_WOBBLE }] };
+  }, [index, strip]);
+  return (
+    <Reanimated.View
+      pointerEvents="none"
+      // One point of overlap hides the seam between neighbouring bands.
+      style={[styles.strip, { top: strip * band, height: band + 1 }, style]}
+    >
+      <Image
+        source={source}
+        fadeDuration={0}
+        resizeMode="stretch"
+        style={[styles.stripImage, { top: -strip * band, height: fullHeight }]}
+      />
+    </Reanimated.View>
   );
 }
 
@@ -171,8 +232,9 @@ function SceneLayer({ layer, index, camera, tilt, boil, children }: {
     const stretch = 1 + (boilNoise(step, index, 3) * amount) / size;
     return {
       transform: [
-        { translateX: offset.x + boilNoise(step, index, 0) * amount },
-        { translateY: offset.y + boilNoise(step, index, 1) * amount },
+        // Smaller than the bands' wobble: the layer as a whole barely moves.
+        { translateX: offset.x + boilNoise(step, index, 0) * amount * 0.4 },
+        { translateY: offset.y + boilNoise(step, index, 1) * amount * 0.4 },
         { rotate: `${turn}deg` },
         { scaleX: stretch },
         { scaleY: 2 - stretch },
@@ -297,6 +359,8 @@ const styles = StyleSheet.create({
   world: { position: 'absolute', overflow: 'visible' },
   layer: { position: 'absolute', overflow: 'visible' },
   image: { ...StyleSheet.absoluteFill, width: '100%', height: '100%' },
+  strip: { position: 'absolute', left: 0, width: '100%', overflow: 'hidden' },
+  stripImage: { position: 'absolute', left: 0, width: '100%' },
   heart: { ...StyleSheet.absoluteFill, overflow: 'visible' },
   mote: { position: 'absolute', backgroundColor: 'rgba(255,248,226,0.9)' },
 });
