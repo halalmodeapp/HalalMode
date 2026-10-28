@@ -10,6 +10,7 @@
 insert into halal_mode_private.release_flag_members (key, user_id)
 select f.key, a.user_id
 from halal_mode_private.admin_members a
+join public.profiles p on p.id = a.user_id
 cross join (values ('tester_tools'), ('demo_introductions')) as f(key)
 on conflict do nothing;
 
@@ -17,11 +18,14 @@ create or replace function halal_mode_private.new_admin_is_tester()
 returns trigger
 language plpgsql
 security definer
-set search_path = halal_mode_private, pg_catalog
+set search_path = public, halal_mode_private, pg_catalog
 as $function$
 begin
+  -- Only an admin who has a profile can be a tester (the flag list needs one).
   insert into halal_mode_private.release_flag_members (key, user_id)
-  values ('tester_tools', new.user_id), ('demo_introductions', new.user_id)
+  select f.key, p.id from public.profiles p
+  cross join (values ('tester_tools'), ('demo_introductions')) as f(key)
+  where p.id = new.user_id
   on conflict do nothing;
   return new;
 end;
