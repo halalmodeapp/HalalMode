@@ -1,16 +1,31 @@
--- Test accounts, controlled by an admin from the app.
+-- Test accounts, controlled by an admin in the web panel.
 --
 -- Demo mode (sample members, free test Premium, resetting the sample flow) is
 -- for the owners and for test accounts an owner has switched on, for example
 -- the one an AI assistant signs in with. Nobody else has it, and nobody else
 -- ever meets a sample member.
 
+-- Tester permission belongs to an account, so it can be given before anyone has
+-- made a profile.
+do $$
+declare c record;
+begin
+  for c in
+    select con.conname from pg_constraint con
+    where con.conrelid = 'halal_mode_private.release_flag_members'::regclass and con.contype = 'f' and con.confrelid = 'public.profiles'::regclass
+  loop
+    execute format('alter table halal_mode_private.release_flag_members drop constraint %I', c.conname);
+  end loop;
+end;
+$$;
+alter table halal_mode_private.release_flag_members drop constraint if exists release_flag_members_account_fkey;
+alter table halal_mode_private.release_flag_members add constraint release_flag_members_account_fkey foreign key (user_id) references auth.users(id) on delete cascade;
+
 -- 1. Every admin is a tester, exactly like an account an owner has granted:
 --    the same permission and the same switch. New admins get it as they are added.
 insert into halal_mode_private.release_flag_members (key, user_id)
 select f.key, a.user_id
 from halal_mode_private.admin_members a
-join public.profiles p on p.id = a.user_id
 cross join (values ('tester_tools'), ('demo_introductions')) as f(key)
 on conflict do nothing;
 
@@ -18,14 +33,11 @@ create or replace function halal_mode_private.new_admin_is_tester()
 returns trigger
 language plpgsql
 security definer
-set search_path = public, halal_mode_private, pg_catalog
+set search_path = halal_mode_private, pg_catalog
 as $function$
 begin
-  -- Only an admin who has a profile can be a tester (the flag list needs one).
   insert into halal_mode_private.release_flag_members (key, user_id)
-  select f.key, p.id from public.profiles p
-  cross join (values ('tester_tools'), ('demo_introductions')) as f(key)
-  where p.id = new.user_id
+  values ('tester_tools', new.user_id), ('demo_introductions', new.user_id)
   on conflict do nothing;
   return new;
 end;

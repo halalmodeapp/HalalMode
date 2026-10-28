@@ -1,14 +1,16 @@
 begin;
 set local search_path = public, extensions, halal_mode_private;
-select plan(9);
+select plan(10);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-000000021601', 'owner-216@example.test'),
   ('00000000-0000-0000-0000-000000021602', 'tester-216@example.test'),
-  ('00000000-0000-0000-0000-000000021603', 'member-216@example.test');
+  ('00000000-0000-0000-0000-000000021603', 'member-216@example.test'),
+  ('00000000-0000-0000-0000-000000021604', 'noprofile-216@example.test');
+-- The last account has no profile; the others do.
 insert into profiles (id, name, first_name, birth_date, gender, city, country, onboarding_complete)
 select id, 'P', 'P', '1990-01-01', 'male', 'Madinah', 'Saudi Arabia', true
-from auth.users where email like '%-216@example.test';
+from auth.users where email like '%-216@example.test' and email <> 'noprofile-216@example.test';
 insert into halal_mode_private.admin_members (user_id, role) values ('00000000-0000-0000-0000-000000021601', 'owner');
 
 create function pg_temp.as_owner() returns void language sql as $$
@@ -46,6 +48,9 @@ select ok(not exists (select 1 from halal_mode_private.release_flag_members wher
 select admin_remove_test_account('tester-216@example.test', 'no longer needed');
 select ok(not exists (select 1 from halal_mode_private.release_flag_members where user_id = '00000000-0000-0000-0000-000000021602'),
   'removing a granted tester takes the permission away');
+
+select lives_ok($$select admin_set_test_account('noprofile-216@example.test', true, 'before they make a profile')$$,
+  'an account with no profile yet can be made a test account');
 
 select * from finish();
 rollback;

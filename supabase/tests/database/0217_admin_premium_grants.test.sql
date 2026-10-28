@@ -1,14 +1,16 @@
 begin;
 set local search_path = public, extensions, halal_mode_private;
-select plan(10);
+select plan(12);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-000000021701', 'owner-217@example.test'),
   ('00000000-0000-0000-0000-000000021702', 'member-217@example.test'),
-  ('00000000-0000-0000-0000-000000021703', 'buyer-217@example.test');
+  ('00000000-0000-0000-0000-000000021703', 'buyer-217@example.test'),
+  ('00000000-0000-0000-0000-000000021704', 'early-217@example.test');
+-- The fourth account has not made a profile yet.
 insert into profiles (id, name, first_name, birth_date, gender, city, country, onboarding_complete)
 select id, 'P', 'P', '1990-01-01', 'male', 'Madinah', 'Saudi Arabia', true
-from auth.users where email like '%-217@example.test';
+from auth.users where email like '%-217@example.test' and email <> 'early-217@example.test';
 insert into halal_mode_private.admin_members (user_id, role) values ('00000000-0000-0000-0000-000000021701', 'owner');
 -- Someone who bought Premium.
 insert into halal_mode_private.member_entitlements (user_id, tier, state, provider, expires_at)
@@ -44,6 +46,14 @@ select ok((select tier from profiles where id = '00000000-0000-0000-0000-0000000
   and not exists (select 1 from halal_mode_private.member_entitlements where user_id = '00000000-0000-0000-0000-000000021702'),
   'removing it takes Premium away');
 select throws_ok($$select admin_revoke_premium_grant('buyer-217@example.test', 'try it')$$, '22023', null, 'a purchase cannot be removed here');
+
+-- An account with no profile yet can be given Premium, and the profile has it when it appears.
+select lives_ok($$select admin_grant_premium('early-217@example.test', 14, 'press, before they sign up fully')$$,
+  'Premium can be given to an account that has no profile yet');
+insert into profiles (id, name, first_name, birth_date, gender, city, country, onboarding_complete)
+values ('00000000-0000-0000-0000-000000021704', 'E', 'E', '1990-01-01', 'male', 'Madinah', 'Saudi Arabia', true);
+select is((select tier::text from profiles where id = '00000000-0000-0000-0000-000000021704'), 'premium',
+  'and the profile starts out with it');
 
 select * from finish();
 rollback;

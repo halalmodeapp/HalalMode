@@ -6,9 +6,25 @@
 -- tester grant or a launch reward. Everything here needs the owner role, the
 -- authenticator code, and a fresh step-up, like every other change in the panel.
 
+-- Premium belongs to an account, so a grant can be given before anyone has made
+-- a profile. When the profile appears it picks the Premium up (trigger below).
+do $$
+declare c record;
+begin
+  for c in
+    select con.conname from pg_constraint con
+    where con.conrelid = 'halal_mode_private.member_entitlements'::regclass and con.contype = 'f' and con.confrelid = 'public.profiles'::regclass
+  loop
+    execute format('alter table halal_mode_private.member_entitlements drop constraint %I', c.conname);
+  end loop;
+end;
+$$;
+alter table halal_mode_private.member_entitlements drop constraint if exists member_entitlements_account_fkey;
+alter table halal_mode_private.member_entitlements add constraint member_entitlements_account_fkey foreign key (user_id) references auth.users(id) on delete cascade;
+
 create table if not exists halal_mode_private.premium_grants (
   id bigint generated always as identity primary key,
-  user_id uuid not null references public.profiles(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
   kind text not null default 'comp' check (kind = 'comp'),
   reason text not null,
   granted_by uuid references auth.users(id) on delete set null,
@@ -40,10 +56,9 @@ begin
   if p_days is null or p_days not between 1 and 365 then
     raise exception 'Choose between 1 and 365 days' using errcode = '22023';
   end if;
-  select p.id into v_user from public.profiles p join auth.users u on u.id = p.id
-  where lower(u.email) = lower(btrim(p_email));
+  select u.id into v_user from auth.users u where lower(u.email) = lower(btrim(p_email));
   if v_user is null then
-    raise exception 'No member with that email. They need to have signed up to the app.' using errcode = 'P0002';
+    raise exception 'No account with that email. They need to have signed up first.' using errcode = 'P0002';
   end if;
 
   select * into v_current from halal_mode_private.member_entitlements where user_id = v_user for update;
@@ -87,10 +102,9 @@ declare
 begin
   perform halal_mode_private.require_admin(true);
   v_reason := halal_mode_private.admin_reason(p_reason);
-  select p.id into v_user from public.profiles p join auth.users u on u.id = p.id
-  where lower(u.email) = lower(btrim(p_email));
+  select u.id into v_user from auth.users u where lower(u.email) = lower(btrim(p_email));
   if v_user is null then
-    raise exception 'No member with that email.' using errcode = 'P0002';
+    raise exception 'No account with that email.' using errcode = 'P0002';
   end if;
   if not exists (select 1 from halal_mode_private.member_entitlements e where e.user_id = v_user and e.provider = 'comp') then
     raise exception 'They have no complimentary Premium to remove. A purchase is never removed here.' using errcode = '22023';
@@ -169,6 +183,28 @@ begin
   perform cron.schedule('halal-mode-comp-expiry', '5 * * * *', 'select halal_mode_private.expire_comp_premium()');
 end;
 $$;
+
+-- A profile made after a grant starts out with the Premium it was given.
+create or replace function halal_mode_private.profile_takes_entitlement()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, halal_mode_private, pg_catalog
+as $function$
+begin
+  if exists (
+    select 1 from halal_mode_private.member_entitlements e
+    where e.user_id = new.id and e.state in ('active', 'grace') and (e.expires_at is null or e.expires_at > now())
+  ) then
+    perform set_config('app.account_control_rpc', 'true', true);
+    update public.profiles set tier = 'premium' where id = new.id;
+  end if;
+  return null;
+end;
+$function$;
+drop trigger if exists profile_takes_entitlement on public.profiles;
+create trigger profile_takes_entitlement after insert on public.profiles
+  for each row execute function halal_mode_private.profile_takes_entitlement();
 
 revoke all on function public.admin_grant_premium(text, integer, text) from public, anon;
 revoke all on function public.admin_revoke_premium_grant(text, text) from public, anon;

@@ -1441,7 +1441,7 @@
     if (DEMO) return h('div', { class: 'stack' }, empty('Grants are not available in the demo.'));
     const QUICK = [3, 7, 30, 90];
     let days = 7;
-    const email = h('input', { type: 'email', placeholder: 'Their email, as they signed up', 'aria-label': 'Member email', autocomplete: 'off', spellcheck: 'false' });
+    const email = h('input', { type: 'email', placeholder: 'Their email (they only need an account)', 'aria-label': 'Member email', autocomplete: 'off', spellcheck: 'false' });
     const custom = h('input', { type: 'date', 'aria-label': 'Or pick an end date' });
     const minDate = new Date(Date.now() + 86400000), maxDate = new Date(Date.now() + 365 * 86400000);
     custom.min = minDate.toISOString().slice(0, 10);
