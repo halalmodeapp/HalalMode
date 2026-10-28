@@ -6,7 +6,7 @@ import { Gyroscope } from 'expo-sensors';
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { baselineStep } from '@/lib/tiltBaseline';
+import { TILT_STILL, baselineStep, turnRate } from '@/lib/tiltBaseline';
 import Animated, { cancelAnimation, Easing, runOnJS, SensorType, useAnimatedReaction, useAnimatedSensor, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 import { Text } from '@/components/ui/Text';
@@ -809,6 +809,9 @@ function NativeTiltSensor({
   const sensorBasePitch = useSharedValue<number | null>(null);
   const sensorBaseRoll = useSharedValue<number | null>(null);
   const sensorLastAt = useSharedValue(0);
+  const sensorLastPitch = useSharedValue(0);
+  const sensorLastRoll = useSharedValue(0);
+  const sensorMovedAt = useSharedValue(0);
 
   useEffect(() => {
     tiltX.value = 0;
@@ -834,8 +837,20 @@ function NativeTiltSensor({
       if (sensorBasePitch.value === null || sensorBaseRoll.value === null) {
         sensorBasePitch.value = rotation.pitch;
         sensorBaseRoll.value = rotation.roll;
+        sensorLastPitch.value = rotation.pitch;
+        sensorLastRoll.value = rotation.roll;
+        sensorMovedAt.value = now;
         return;
       }
+      // Real movement keeps the baseline where it is; holding still lets it go.
+      const turned = turnRate(
+        Math.atan2(Math.sin(rotation.pitch - sensorLastPitch.value), Math.cos(rotation.pitch - sensorLastPitch.value)),
+        Math.atan2(Math.sin(rotation.roll - sensorLastRoll.value), Math.cos(rotation.roll - sensorLastRoll.value)),
+        elapsed,
+      );
+      sensorLastPitch.value = rotation.pitch;
+      sensorLastRoll.value = rotation.roll;
+      if (turned > TILT_STILL.rate) sensorMovedAt.value = now;
 
       const pitchDelta = Math.atan2(
         Math.sin(rotation.pitch - sensorBasePitch.value),
@@ -859,9 +874,9 @@ function NativeTiltSensor({
       tiltX.value += (targetX - tiltX.value) * ORIENTATION_SMOOTHING;
       tiltY.value += (targetY - tiltY.value) * ORIENTATION_SMOOTHING;
 
-      // The baseline slowly follows the phone, so the card settles back to flat
-      // at whatever angle it is held.
-      const settle = baselineStep(elapsed);
+      // Held nearly still, the baseline moves to meet the phone and the card
+      // settles back to flat in about a second, at whatever angle it is held.
+      const settle = baselineStep(elapsed, now - sensorMovedAt.value);
       sensorBasePitch.value += pitchDelta * settle;
       sensorBaseRoll.value += rollDelta * settle;
     },

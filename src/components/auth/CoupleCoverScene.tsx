@@ -15,7 +15,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import Svg, { Defs, Path, RadialGradient, Stop } from 'react-native-svg';
 
-import { baselineStep } from '@/lib/tiltBaseline';
+import { TILT_STILL, baselineStep, turnRate } from '@/lib/tiltBaseline';
 import { BOIL, boilNoise, boilPoints } from './boilSettings';
 import { CoupleHalftone } from './CoupleHalftone';
 import { COUPLE_SCENE_ASSETS } from './coupleLayerAssets';
@@ -317,6 +317,9 @@ function NativeCoverTiltSensor({ tiltX, tiltY }: { tiltX: SharedValue<number>; t
   const basePitch = useSharedValue<number | null>(null);
   const baseRoll = useSharedValue<number | null>(null);
   const lastAt = useSharedValue(0);
+  const lastPitch = useSharedValue(0);
+  const lastRoll = useSharedValue(0);
+  const movedAt = useSharedValue(0);
 
   useEffect(() => {
     basePitch.value = null;
@@ -326,7 +329,7 @@ function NativeCoverTiltSensor({ tiltX, tiltY }: { tiltX: SharedValue<number>; t
       tiltX.value = withTiming(0, { duration: 260, easing: Easing.out(Easing.cubic) });
       tiltY.value = withTiming(0, { duration: 260, easing: Easing.out(Easing.cubic) });
     };
-  }, [basePitch, baseRoll, lastAt, tiltX, tiltY]);
+  }, [basePitch, baseRoll, lastAt, lastPitch, lastRoll, movedAt, tiltX, tiltY]);
 
   useAnimatedReaction(
     () => ({ pitch: rotation.sensor.value.pitch, roll: rotation.sensor.value.roll }),
@@ -339,8 +342,20 @@ function NativeCoverTiltSensor({ tiltX, tiltY }: { tiltX: SharedValue<number>; t
       if (basePitch.value === null || baseRoll.value === null) {
         basePitch.value = pitch;
         baseRoll.value = roll;
+        lastPitch.value = pitch;
+        lastRoll.value = roll;
+        movedAt.value = now;
         return;
       }
+      // Real movement keeps the baseline where it is; holding still lets it go.
+      const turned = turnRate(
+        Math.atan2(Math.sin(pitch - lastPitch.value), Math.cos(pitch - lastPitch.value)),
+        Math.atan2(Math.sin(roll - lastRoll.value), Math.cos(roll - lastRoll.value)),
+        elapsed,
+      );
+      lastPitch.value = pitch;
+      lastRoll.value = roll;
+      if (turned > TILT_STILL.rate) movedAt.value = now;
       const pitchDelta = Math.atan2(Math.sin(pitch - basePitch.value), Math.cos(pitch - basePitch.value));
       const rollDelta = Math.atan2(Math.sin(roll - baseRoll.value), Math.cos(roll - baseRoll.value));
       const degrees = 180 / Math.PI;
@@ -349,9 +364,9 @@ function NativeCoverTiltSensor({ tiltX, tiltY }: { tiltX: SharedValue<number>; t
       const { degrees: full, gain, ease } = COUPLE_TILT;
       tiltX.value += (clampNumber((rollDelta * degrees) / full, -gain, gain) - tiltX.value) * ease;
       tiltY.value += (clampNumber((-pitchDelta * degrees) / full, -gain, gain) - tiltY.value) * ease;
-      // The baseline slowly follows the phone, so the scene settles back to
-      // centre at whatever angle it is held.
-      const settle = baselineStep(elapsed);
+      // Held nearly still, the baseline moves to meet the phone and the scene
+      // settles back to centre in about a second.
+      const settle = baselineStep(elapsed, now - movedAt.value);
       basePitch.value += pitchDelta * settle;
       baseRoll.value += rollDelta * settle;
     },
