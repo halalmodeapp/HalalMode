@@ -50,6 +50,7 @@
     referrals: 'M4 4h16v16H4zM22 6l-10 7L2 6',
     stats: 'M3 3v18h18M7 15l4-4 3 3 5-6',
     subscriptions: 'M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6',
+    grants: 'M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 110-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 100-5C13 2 12 7 12 7z',
     review: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 100-6 3 3 0 000 6z',
     suspicious: 'M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0zM12 9v4M12 17h.01',
     lookup: 'M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.3-4.3',
@@ -85,6 +86,7 @@
     { id: 'reports', label: 'Reports', key: 'P', tip: 'Reports from members. Read each one and decide.', badge: function (d) { return d && d.safety.open_reports; } },
     { id: 'review', label: 'Review queue', key: 'Q', tip: 'Photos and bios the automatic check wasn’t sure about, waiting for a person.', badge: function (d) { return d && d.safety.moderation_review; } },
     { id: 'suspicious', label: 'Suspicious accounts', key: 'K', tip: 'Accounts with warning signs of being fake, spam or a bot. Signs for you to check, never automatic decisions.' },
+    { id: 'grants', label: 'Grants', key: 'G', tip: 'Give a member free Premium for a set time, or give an account test mode. Every grant has a reason and an end date.' },
     { id: 'lookup', label: 'Find a member', key: 'N', tip: 'Look up one member by exact email or member reference, then suspend, ban or unban.' },
     { group: 'Admin' },
     { id: 'health', label: 'System health', key: 'Y', tip: 'Scheduled jobs, background workers, push notifications, email and matching runs.' },
@@ -569,7 +571,7 @@
   }
   function render() {
     hideTip();
-    const fn = { home: pageHome, waitlist: pageWaitlist, members: pageMembers, referrals: pageReferrals, stats: pageStats, scoring: pageScoring, subscriptions: pageSubscriptions, review: pageReview, suspicious: pageSuspicious, lookup: pageLookup, health: pageHealth, reports: pageReports, email: pageEmail, features: pageFeatures, team: pageTeam, log: pageLog }[state.page];
+    const fn = { home: pageHome, waitlist: pageWaitlist, members: pageMembers, referrals: pageReferrals, stats: pageStats, scoring: pageScoring, subscriptions: pageSubscriptions, grants: pageGrants, review: pageReview, suspicious: pageSuspicious, lookup: pageLookup, health: pageHealth, reports: pageReports, email: pageEmail, features: pageFeatures, team: pageTeam, log: pageLog }[state.page];
     renderShell(fn());
   }
   // An owner can preview the panel as a viewer sees it (Team page).
@@ -1411,7 +1413,7 @@
     return h('div', { class: 'stack' },
       loading(DEMO ? Promise.resolve(state.demoSubs) : rpc('admin_subscriptions'), function (sb) {
         const src = sb.by_source || {};
-        const SRC = { launch_reward: 'Free month (launch reward)', tester: 'Tester', app_store: 'App Store', play_store: 'Google Play', revenuecat: 'In-app purchase', unknown: 'Other' };
+        const SRC = { launch_reward: 'Free month (launch reward)', comp: 'Complimentary (given by an admin)', tester: 'Tester', app_store: 'App Store', play_store: 'Google Play', revenuecat: 'In-app purchase', unknown: 'Other' };
         return [
           h('div', { class: 'kpis' },
             kpi('Premium now', n(sb.active), null, 'Members with Premium right now.'),
@@ -1422,6 +1424,126 @@
           card('Where Premium comes from', 'How current Premium members got it.', null, rows(Object.keys(src).length ? Object.keys(src).map(function (k) { return [SRC[k] || k, n(src[k]), null, 1]; }) : [['No Premium members yet', '–']])),
           h('p', { class: 'note', text: 'Revenue and refund amounts appear here once in-app purchases are switched on and connected. Today there is no payment data to show.' })];
       }));
+  }
+
+  // Days left or, under a day, hours left.
+  function untilText(iso) {
+    const ms = new Date(iso).getTime() - Date.now();
+    if (ms <= 0) return 'ended';
+    const d = Math.floor(ms / 86400000);
+    if (d >= 1) return 'in ' + d + (d === 1 ? ' day' : ' days');
+    return 'in ' + Math.max(1, Math.floor(ms / 3600000)) + ' h';
+  }
+  function dayLabel(days) { return days + (days === 1 ? ' day' : ' days'); }
+  function endDate(days) { return new Date(Date.now() + days * 86400000).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }); }
+
+  function pageGrants() {
+    if (DEMO) return h('div', { class: 'stack' }, empty('Grants are not available in the demo.'));
+    const QUICK = [3, 7, 30, 90];
+    let days = 7;
+    const email = h('input', { type: 'email', placeholder: 'Their email, as they signed up', 'aria-label': 'Member email', autocomplete: 'off', spellcheck: 'false' });
+    const custom = h('input', { type: 'date', 'aria-label': 'Or pick an end date' });
+    const minDate = new Date(Date.now() + 86400000), maxDate = new Date(Date.now() + 365 * 86400000);
+    custom.min = minDate.toISOString().slice(0, 10);
+    custom.max = maxDate.toISOString().slice(0, 10);
+    const summary = h('p', { class: 'muted small' });
+    const chips = h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' });
+    function paint() {
+      chips.replaceChildren.apply(chips, QUICK.map(function (d) {
+        const b = h('button', { type: 'button', class: 'btn sm' + (d === days ? '' : ' ghost'), text: dayLabel(d), 'aria-pressed': String(d === days) });
+        b.addEventListener('click', function () { days = d; custom.value = ''; paint(); });
+        return b;
+      }));
+      summary.textContent = 'Premium for ' + dayLabel(days) + ', ending ' + endDate(days) + '.';
+    }
+    custom.addEventListener('change', function () {
+      if (!custom.value) return;
+      const picked = Math.ceil((new Date(custom.value + 'T23:59:59').getTime() - Date.now()) / 86400000);
+      days = Math.min(365, Math.max(1, picked));
+      paint();
+    });
+    paint();
+    const give = h('button', { type: 'button', class: 'btn', text: 'Give Premium', disabled: !canEdit() });
+    give.addEventListener('click', function () {
+      const address = email.value.trim();
+      if (address.indexOf('@') < 1) { toast('Type their email first.', true); email.focus(); return; }
+      dialog({
+        title: 'Give Premium', body: 'This is free Premium that ends by itself. It is never mistaken for a purchase, and a real subscription is never overwritten.',
+        diff: [['Member', address], ['For', dayLabel(days)], ['Ends', endDate(days)]], confirm: 'Give Premium',
+        run: function (why) { return rpc('admin_grant_premium', { p_email: address, p_days: days, p_reason: why }); }
+      }).then(function (done) { if (done) { toast('Premium given.'); email.value = ''; reload(); } });
+    });
+
+    const testEmail = h('input', { type: 'email', placeholder: 'Email of an account that has signed up', 'aria-label': 'Test account email', autocomplete: 'off', spellcheck: 'false' });
+    const addTest = h('button', { type: 'button', class: 'btn', text: 'Add test account', disabled: !canEdit() });
+    addTest.addEventListener('click', function () {
+      const address = testEmail.value.trim();
+      if (address.indexOf('@') < 1) { toast('Type the account email first.', true); testEmail.focus(); return; }
+      dialog({
+        title: 'Add test account', body: 'This account gets sample members, free test Premium and the reset in the app. Use it for people and tools that test Halal Mode, never for real members.',
+        diff: [['Account', address]], confirm: 'Add',
+        run: function (why) { return rpc('admin_set_test_account', { p_email: address, p_enabled: true, p_reason: why }); }
+      }).then(function (done) { if (done) { toast('Added.'); testEmail.value = ''; reload(); } });
+    });
+
+    return h('div', { class: 'stack' },
+      card('Give a member Premium', 'Pick how long. It ends by itself, and every grant is written to the activity log with your reason.', null,
+        h('div', { style: 'display:grid;gap:12px' },
+          h('label', { class: 'field' }, 'Member', email),
+          h('div', { class: 'field' }, h('span', { text: 'How long' }), chips),
+          h('label', { class: 'field' }, 'Or choose an end date', h('span', { class: 'hint', text: 'Up to a year from today.' }), custom),
+          summary, h('div', null, give))),
+      loading(rpc('admin_premium_grants'), function (list) {
+        const active = list.filter(function (g) { return g.active; });
+        const past = list.filter(function (g) { return !g.active; }).slice(0, 10);
+        function row(g) {
+          return h('tr', null,
+            h('td', null, h('div', { style: 'font-weight:600', text: g.email }), h('div', { class: 'muted small', text: g.reason })),
+            h('td', { class: 'nowrap' }, g.active ? [h('div', { text: when(g.ends_at) }), h('div', { class: 'muted small', text: untilText(g.ends_at) })]
+              : [h('div', { class: 'muted', text: g.revoked_at ? 'Removed ' + ago(g.revoked_at) : 'Ended ' + ago(g.ends_at) })]),
+            h('td', { class: 'muted small', text: g.granted_by || '' }),
+            h('td', { style: 'text-align:right' }, g.active ? editBtn('Remove', function () {
+              dialog({
+                title: 'Remove Premium', body: 'Takes the free Premium away now. A purchase is never removed here.', danger: true,
+                diff: [['Member', g.email], ['Was due to end', when(g.ends_at)]], confirm: 'Remove',
+                run: function (why) { return rpc('admin_revoke_premium_grant', { p_email: g.email, p_reason: why }); }
+              }).then(function (done) { if (done) { toast('Removed.'); reload(); } });
+            }) : null));
+        }
+        const head = h('thead', null, h('tr', null, [h('th', { text: 'Member and reason' }), h('th', { text: 'Ends' }), h('th', { text: 'Given by' }), h('th')]));
+        return [
+          card('Premium given by admins', 'Running now.', null, active.length
+            ? h('div', { class: 'table-wrap' }, h('table', null, head, h('tbody', null, active.map(row))))
+            : h('p', { class: 'muted', text: 'None running.' })),
+          past.length ? card('Recently ended or removed', null, null, h('div', { class: 'table-wrap' }, h('table', null, head, h('tbody', null, past.map(row))))) : null
+        ].filter(Boolean);
+      }),
+      card('Test mode accounts', 'Admins always have it. Add the accounts that test Halal Mode for you; they get sample members, free test Premium and the reset in the app, and switch them on or off themselves. Nobody else does.', null,
+        h('div', { style: 'display:grid;gap:12px' },
+          loading(rpc('admin_list_test_accounts'), function (accounts) {
+            if (!accounts.length) return h('p', { class: 'muted', text: 'No test accounts yet.' });
+            return h('div', { class: 'table-wrap' }, h('table', null,
+              h('thead', null, h('tr', null, [h('th', { text: 'Account' }), h('th', { text: 'Test mode' }), h('th')])),
+              h('tbody', null, accounts.map(function (a) {
+                return h('tr', null,
+                  h('td', null, h('span', { text: a.email }), ' ', a.admin ? h('span', { class: 'tag', text: 'Admin' }) : null),
+                  h('td', null, a.demo ? pill('good', 'On') : pill('off', 'Off')),
+                  h('td', { style: 'text-align:right;white-space:nowrap' },
+                    editBtn(a.demo ? 'Turn off' : 'Turn on', function () {
+                      dialog({
+                        title: a.demo ? 'Turn test mode off' : 'Turn test mode on', body: a.email, confirm: 'Save',
+                        run: function (why) { return rpc('admin_set_test_account', { p_email: a.email, p_enabled: !a.demo, p_reason: why }); }
+                      }).then(function (done) { if (done) { toast('Saved.'); reload(); } });
+                    }), ' ',
+                    a.admin ? null : editBtn('Remove', function () {
+                      dialog({
+                        title: 'Remove test account', body: a.email + ' loses the tester tools and any free test Premium.', danger: true, confirm: 'Remove',
+                        run: function (why) { return rpc('admin_remove_test_account', { p_email: a.email, p_reason: why }); }
+                      }).then(function (done) { if (done) { toast('Removed.'); reload(); } });
+                    })));
+              }))));
+          }),
+          h('label', { class: 'field' }, 'Add an account', testEmail), h('div', null, addTest))));
   }
 
   function pageHealth() {

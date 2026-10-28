@@ -7,7 +7,6 @@ import { ADMIN_PANEL_URL, fetchIsAdmin } from '@/api/admin';
 import { fetchMyReadReceipts, fetchMySampleMembers, requestAccountDeletion, setMyReadReceipts, setMySampleMembers, setMyTestPremium, setProfilePaused } from '@/api/account';
 import { fetchMyHighLatitudeFajrSettings, fetchMyMaritalSettings, setMyHighLatitudeFajrMethod, setMyMaritalPreferences, setMyMaritalStatus, type HighLatitudeFajrSettings, type MaritalSettings } from '@/api/profile';
 import { ACCEPTED_KEYS, acceptableStatuses, declarableStatuses, MARITAL_STATUS_KEYS } from '@/data/marital';
-import { AdminTestAccounts } from '@/components/you/AdminTestAccounts';
 import { NotificationKindSwitches } from '@/components/you/NotificationKindSwitches';
 import { disableMyNotifications, enableMyNotifications, fetchMyNotificationConsent } from '@/api/notifications';
 import { Button } from '@/components/ui/Button';
@@ -591,7 +590,6 @@ export function SettingsTab({
             testID={testIds.settings.adminPanel}
             onPress={() => void WebBrowser.openBrowserAsync(ADMIN_PANEL_URL)}
           />
-          <AdminTestAccounts />
         </Section>
       ) : null}
 

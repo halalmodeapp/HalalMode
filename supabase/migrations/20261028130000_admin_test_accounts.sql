@@ -57,25 +57,9 @@ where (halal_mode_private.is_demo_member(e.user_low) or halal_mode_private.is_de
   and not exists (select 1 from halal_mode_private.release_flag_members t
                   where t.key = 'tester_tools' and t.user_id in (e.user_low, e.user_high));
 
--- 3. Owners manage test accounts from the app. Only an owner, and every change
---    is written to the audit log. This does not need the two-factor step the
---    web panel asks for, because it cannot reach any real member's data.
-create or replace function halal_mode_private.require_owner()
-returns void
-language plpgsql
-stable
-security definer
-set search_path = halal_mode_private, pg_catalog
-as $function$
-begin
-  if auth.uid() is null
-     or not exists (select 1 from halal_mode_private.admin_members a where a.user_id = auth.uid() and a.role = 'owner') then
-    raise exception 'Owners only' using errcode = '42501';
-  end if;
-end;
-$function$;
-revoke all on function halal_mode_private.require_owner() from public, anon, authenticated, service_role;
-
+-- 3. Admins manage test accounts in the web panel, with the same checks as
+--    every other change there: owner role, authenticator code, fresh step-up,
+--    a reason, and an audit row.
 create or replace function public.admin_list_test_accounts()
 returns jsonb
 language plpgsql
@@ -84,7 +68,7 @@ security definer
 set search_path = public, halal_mode_private
 as $function$
 begin
-  perform halal_mode_private.require_owner();
+  perform halal_mode_private.require_admin();
   return coalesce((
     select jsonb_agg(jsonb_build_object(
       'email', u.email,
@@ -101,7 +85,7 @@ $function$;
 
 -- Test mode on or off for an account: the same for an admin and a granted
 -- tester. Off also takes back a free tester Premium, never a real purchase.
-create or replace function public.admin_set_test_account(p_email text, p_enabled boolean)
+create or replace function public.admin_set_test_account(p_email text, p_enabled boolean, p_reason text)
 returns void
 language plpgsql
 security definer
@@ -109,8 +93,10 @@ set search_path = public, halal_mode_private
 as $function$
 declare
   v_user uuid;
+  v_reason text;
 begin
-  perform halal_mode_private.require_owner();
+  perform halal_mode_private.require_admin(true);
+  v_reason := halal_mode_private.admin_reason(p_reason);
   select u.id into v_user from auth.users u where lower(u.email) = lower(trim(p_email));
   if v_user is null then
     raise exception 'No account with that email. It has to sign up first.' using errcode = 'P0002';
@@ -129,12 +115,12 @@ begin
   end if;
   perform halal_mode_private.admin_audit(
     case when coalesce(p_enabled, true) then 'test_account.enabled' else 'test_account.disabled' end,
-    jsonb_build_object('email', lower(trim(p_email))));
+    jsonb_build_object('email', lower(trim(p_email)), 'reason', v_reason));
 end;
 $function$;
 
 -- Taking the tester permission away altogether. An admin always has it.
-create or replace function public.admin_remove_test_account(p_email text)
+create or replace function public.admin_remove_test_account(p_email text, p_reason text)
 returns void
 language plpgsql
 security definer
@@ -142,8 +128,10 @@ set search_path = public, halal_mode_private
 as $function$
 declare
   v_user uuid;
+  v_reason text;
 begin
-  perform halal_mode_private.require_owner();
+  perform halal_mode_private.require_admin(true);
+  v_reason := halal_mode_private.admin_reason(p_reason);
   select u.id into v_user from auth.users u where lower(u.email) = lower(trim(p_email));
   if v_user is null then
     raise exception 'No account with that email.' using errcode = 'P0002';
@@ -156,13 +144,13 @@ begin
   delete from halal_mode_private.member_entitlements where user_id = v_user and provider = 'tester';
   update public.profiles set tier = 'free'
   where id = v_user and not exists (select 1 from halal_mode_private.member_entitlements e where e.user_id = v_user);
-  perform halal_mode_private.admin_audit('test_account.removed', jsonb_build_object('email', lower(trim(p_email))));
+  perform halal_mode_private.admin_audit('test_account.removed', jsonb_build_object('email', lower(trim(p_email)), 'reason', v_reason));
 end;
 $function$;
 
 revoke all on function public.admin_list_test_accounts() from public, anon;
-revoke all on function public.admin_set_test_account(text, boolean) from public, anon;
-revoke all on function public.admin_remove_test_account(text) from public, anon;
+revoke all on function public.admin_set_test_account(text, boolean, text) from public, anon;
+revoke all on function public.admin_remove_test_account(text, text) from public, anon;
 grant execute on function public.admin_list_test_accounts() to authenticated;
-grant execute on function public.admin_set_test_account(text, boolean) to authenticated;
-grant execute on function public.admin_remove_test_account(text) to authenticated;
+grant execute on function public.admin_set_test_account(text, boolean, text) to authenticated;
+grant execute on function public.admin_remove_test_account(text, text) to authenticated;

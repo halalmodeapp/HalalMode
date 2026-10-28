@@ -14,34 +14,3 @@ export async function fetchIsAdmin(): Promise<boolean> {
   if (error) return false;
   return (data as { admin?: boolean } | null)?.admin === true;
 }
-
-/** An account that has demo mode: sample members, free test Premium, reset. */
-export interface TestAccount {
-  email: string;
-  /** An admin always has the permission; a granted tester can be removed. */
-  admin: boolean;
-  demo: boolean;
-  premium: boolean;
-}
-
-/** Owners only: the accounts that have demo mode. */
-export async function fetchTestAccounts(): Promise<TestAccount[]> {
-  if (USE_MOCKS) return [];
-  const { data, error } = await requireSupabase().rpc('admin_list_test_accounts');
-  if (error) throw error;
-  return (data ?? []) as TestAccount[];
-}
-
-/** Owners only: give or take demo mode for an account that has signed up. */
-export async function setTestAccount(email: string, enabled: boolean): Promise<void> {
-  if (USE_MOCKS) return;
-  const { error } = await requireSupabase().rpc('admin_set_test_account', { p_email: email, p_enabled: enabled });
-  if (error) throw error;
-}
-
-/** Owners only: take the tester permission away from a granted account. */
-export async function removeTestAccount(email: string): Promise<void> {
-  if (USE_MOCKS) return;
-  const { error } = await requireSupabase().rpc('admin_remove_test_account', { p_email: email });
-  if (error) throw error;
-}
