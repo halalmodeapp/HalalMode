@@ -20,7 +20,7 @@
  * Members are asked to accept it on their next visit.
  */
 
-export const LEGAL_VERSION = '2026-10-27';
+export const LEGAL_VERSION = '2026-10-28';
 
 /** Where both documents live: halalmo.de/legal/terms and /legal/privacy. */
 export const LEGAL_SITE = 'https://halalmo.de';
@@ -68,7 +68,7 @@ export const TERMS: LegalDocument = {
       body: [
         'Each day you are shown a small set of people. Free members may show interest in up to three of them; Premium members see up to ten and may show interest in up to ten.',
         'Introductions are mutual. If someone appears in your set, you appear in theirs. Nobody is browsed without appearing themselves.',
-        'Interest is private. If you choose someone and they do not choose you, they are never told. You will never be told that someone chose you unless you chose them back.',
+        'Interest is private until it is returned. If you choose someone and they do not choose you back, they may see that you liked them, with your photo hidden: they can read your bio and see your age, city and occupation, but not your name or photos. Premium members can see who liked them, with photos, and like them back. You are never told that they saw it, or that you were not chosen.',
         'We do not guarantee that you will be matched, or how many introductions you will receive on any given day. That depends on how many suitable people are available.',
       ],
     },
@@ -188,6 +188,7 @@ export const PRIVACY: LegalDocument = {
         'People you are introduced to see your first name, age, city, occupation, marital status, what you have written, your photographs, and your voice introduction if you recorded one.',
         'They never see your email address, your date of birth, your exact location, or your preferences.',
         'They are never told that you were shown their profile and did not choose them.',
+        'If you chose someone and they did not choose you back, they may see that you liked them: your age, city, occupation, marital status and bio, with a blurred photo and no name. A Premium member sees your name and photographs and can like you back.',
       ],
     },
     {
@@ -221,6 +222,7 @@ export const PRIVACY: LegalDocument = {
       heading: 'Your photographs',
       body: [
         'Photographs and voice recordings are stored privately. They are never publicly accessible, and are served only to people you are currently introduced to or connected with, through links that expire within minutes.',
+        'If you choose someone who does not choose you back, a small, heavily blurred copy of your main photograph may be shown to them. It is made on our servers and is too blurred to recognise anyone.',
         'Once someone has seen a photograph, no app can stop them taking a screenshot. Share only photographs you are comfortable with someone keeping.',
       ],
     },

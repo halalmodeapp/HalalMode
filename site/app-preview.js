@@ -437,7 +437,7 @@
     const labels = chosen ? 'c' : 'n';
     if (labels !== lastLabels) {
       lastLabels = labels;
-      captionEl.textContent = chosen ? '1 of 3 chosen' : 'Choose up to 3. Nobody is told unless it is mutual.';
+      captionEl.textContent = chosen ? '1 of 3 chosen' : 'Choose up to 3. A match starts only when it is mutual.';
       selectEl.textContent = chosen ? '✓ Interested 1/3' : 'Select';
       selectEl.classList.toggle('ap-btn-gold', chosen);
       sendEl.textContent = chosen ? 'Send interest (1)' : 'Send interest';

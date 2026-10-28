@@ -21,6 +21,7 @@
  */
 import OpenAI from 'npm:openai';
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { Image } from 'https://deno.land/x/imagescript@1.3.0/mod.ts';
 import { withLuna } from '../_shared/luna.ts';
 import {
   PHOTO_INSTRUCTIONS,
@@ -35,6 +36,7 @@ import {
 } from '../_shared/photoVerdict.ts';
 
 const MODEL = 'omni-moderation-latest';
+const BLURRED_BUCKET = 'profile-photos-blurred';
 
 interface Item {
   id: number;
@@ -209,6 +211,39 @@ function parsePresentationFeatures(value: string): PresentationFeatures {
   return item as unknown as PresentationFeatures;
 }
 
+// "They liked you": a member who has not paid sees the people who chose them
+// through a tiny copy of the photo, made here, so the real file is never sent.
+async function refreshBlurredCopies(client: AdminClient): Promise<{ made: number; removed: number }> {
+  let made = 0;
+  let removed = 0;
+  const gone = await client.rpc('blurs_to_remove_service', { p_limit: 50 });
+  for (const path of (Array.isArray(gone.data) ? gone.data : []) as string[]) {
+    const result = await client.storage.from(BLURRED_BUCKET).remove([path]);
+    if (result.error) continue;
+    await client.rpc('forget_photo_blur_service', { p_path: path });
+    removed += 1;
+  }
+  const due = await client.rpc('photos_to_blur_service', { p_limit: 10 });
+  for (const item of (Array.isArray(due.data) ? due.data : []) as { user_id: string; path: string }[]) {
+    try {
+      const file = await client.storage.from(PHOTO_BUCKET).download(item.path);
+      if (file.error || !file.data) continue;
+      const image = await Image.decode(new Uint8Array(await file.data.arrayBuffer()));
+      // 12 pixels wide is a colour wash, not a face; the app blurs it again.
+      const small = image.resize(12, Image.RESIZE_AUTO);
+      const jpeg = await small.encodeJPEG(60);
+      const stored = await client.storage.from(BLURRED_BUCKET).upload(item.path, jpeg, { contentType: 'image/jpeg', upsert: true });
+      if (stored.error) continue;
+      await client.rpc('mark_photo_blurred_service', { p_user_id: item.user_id, p_path: item.path });
+      made += 1;
+    } catch (error) {
+      // A format the decoder cannot read (WebP) just has no copy; the app shows a plain tile.
+      console.error('blur failed', item.path, String(error));
+    }
+  }
+  return { made, removed };
+}
+
 Deno.serve(async (request) => {
   const client = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
   const verified = await client.rpc('verify_mail_worker_secret', {
@@ -227,7 +262,9 @@ Deno.serve(async (request) => {
     purged += 1;
   }
 
-  if (!Deno.env.get('OPENAI_API_KEY')) return Response.json({ purged, error: 'OPENAI_API_KEY is not set' }, { status: 503 });
+  const blurred = await refreshBlurredCopies(client);
+
+  if (!Deno.env.get('OPENAI_API_KEY')) return Response.json({ purged, blurred, error: 'OPENAI_API_KEY is not set' }, { status: 503 });
 
   const openai = new OpenAI();
   const claimed = await client.rpc('claim_moderation_service', { p_limit: 10 });

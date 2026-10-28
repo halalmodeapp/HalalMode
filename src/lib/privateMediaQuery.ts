@@ -1,6 +1,6 @@
 import { withDeadline } from './withDeadline';
 
-export type PrivateMediaBucket = 'profile-photos' | 'voice-introductions';
+export type PrivateMediaBucket = 'profile-photos' | 'voice-introductions' | 'profile-photos-blurred';
 // Signed URLs are bearer capabilities. Keep the provider-side window short so
 // a copied URL expires soon after a block or relationship closure.
 export const PRIVATE_MEDIA_TTL_SECONDS = 60;

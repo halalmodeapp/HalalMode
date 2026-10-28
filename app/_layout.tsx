@@ -173,6 +173,7 @@ export default function RootLayout() {
                             name="match/[id]"
                             options={{ animation: 'fade', gestureEnabled: false }}
                           />
+                          <Stack.Screen name="liked-you/[id]" options={{ animation: 'slide_from_right' }} />
                           <Stack.Screen name="connection/[id]" />
                           <Stack.Screen name="halal-cards/[id]" />
                           <Stack.Screen

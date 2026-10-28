@@ -25,6 +25,7 @@ export const queryKeys = {
   preferences: ['preferences'] as const,
   round: ['round'] as const,
   connections: ['connections'] as const,
+  likedYou: ['liked-you'] as const,
   connection: (id: string) => ['connection', id] as const,
   savedAnswers: ['saved-answers'] as const,
   messages: (connectionId: string) => ['messages', connectionId] as const,

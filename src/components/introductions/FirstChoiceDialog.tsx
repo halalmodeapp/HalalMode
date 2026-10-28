@@ -66,6 +66,9 @@ export function FirstChoiceDialog({
           <Text variant="bodySmall" center style={styles.body}>
             {body ?? t('daily.firstChoiceBody')}
           </Text>
+          <Text variant="caption" center style={styles.body}>
+            {t('daily.firstChoiceNote')}
+          </Text>
 
           <View style={styles.options}>
             {introductions.map((introduction) => {
