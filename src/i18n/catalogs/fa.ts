@@ -947,4 +947,12 @@ export const fa: TranslationCatalog = {
   "likedYou.missing": "این پسندیدن دیگر در دسترس نیست.",
   "chat.quietTitle": "مدتی است ساکت است. اگر کمک می‌کند، یک شروع:",
   "chat.useOpener": "استفاده",
+  "notifKinds.title": "انتخاب کنید درباره چه چیزی خبرتان کنیم",
+  "notifKinds.round_ready": "معرفی‌های روزانه شما آماده است",
+  "notifKinds.mutual_match": "تطابق دوطرفه",
+  "notifKinds.new_message": "پیام‌های تازه",
+  "notifKinds.halal_cards": "دعوت‌های کارت‌های حلال",
+  "notifKinds.liked_you": "کسی شما را پسندید",
+  "notifKinds.waiting_on_you": "کسی منتظر شماست",
+  "notifKinds.quiet_match": "پیشنهاد وقتی گفتگو ساکت می‌شود",
 };

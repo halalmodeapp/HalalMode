@@ -947,4 +947,12 @@ export const hi: TranslationCatalog = {
   "likedYou.missing": "वह पसंद अब उपलब्ध नहीं है।",
   "chat.quietTitle": "कुछ समय से शांति है। अगर मदद मिले तो एक शुरुआत:",
   "chat.useOpener": "इस्तेमाल करें",
+  "notifKinds.title": "चुनें कि हम आपको क्या बताएँ",
+  "notifKinds.round_ready": "आपके रोज़ के परिचय तैयार हैं",
+  "notifKinds.mutual_match": "आपसी मैच",
+  "notifKinds.new_message": "नए संदेश",
+  "notifKinds.halal_cards": "हलाल कार्ड के निमंत्रण",
+  "notifKinds.liked_you": "किसी ने आपको पसंद किया",
+  "notifKinds.waiting_on_you": "कोई आपका इंतज़ार कर रहा है",
+  "notifKinds.quiet_match": "बातचीत शांत होने पर सुझाव",
 };

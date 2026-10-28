@@ -947,4 +947,12 @@ export const fr: TranslationCatalog = {
   "likedYou.missing": "Ce choix n’est plus disponible.",
   "chat.quietTitle": "C’est calme depuis un moment. Une amorce, si cela aide :",
   "chat.useOpener": "Utiliser",
+  "notifKinds.title": "Choisissez ce dont nous vous parlons",
+  "notifKinds.round_ready": "Vos présentations du jour sont prêtes",
+  "notifKinds.mutual_match": "Un choix réciproque",
+  "notifKinds.new_message": "Nouveaux messages",
+  "notifKinds.halal_cards": "Invitations Cartes Halal",
+  "notifKinds.liked_you": "Quelqu’un vous a aimé",
+  "notifKinds.waiting_on_you": "Quelqu’un vous attend",
+  "notifKinds.quiet_match": "Suggestions quand la conversation s’éteint",
 };

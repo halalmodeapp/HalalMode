@@ -947,4 +947,12 @@ export const so: TranslationCatalog = {
   "likedYou.missing": "Jeclaanshahaas ma jiro mar dambe.",
   "chat.quietTitle": "Waa aamusnaa muddo. Bilow, haddii ay caawiso:",
   "chat.useOpener": "Isticmaal",
+  "notifKinds.title": "Dooro waxa aan kuu sheegno",
+  "notifKinds.round_ready": "Isbarashooyinkaaga maalinlaha ah way diyaar yihiin",
+  "notifKinds.mutual_match": "Isku-aad labada dhinac ah",
+  "notifKinds.new_message": "Fariimo cusub",
+  "notifKinds.halal_cards": "Martiqaadyada Kaararka Xalaasha ah",
+  "notifKinds.liked_you": "Qof ayaa ku jeclaaday",
+  "notifKinds.waiting_on_you": "Qof ayaa ku sugaya",
+  "notifKinds.quiet_match": "Talooyin marka wada-hadalku aamuso",
 };

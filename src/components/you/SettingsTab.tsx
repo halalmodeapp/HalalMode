@@ -7,6 +7,7 @@ import { ADMIN_PANEL_URL, fetchIsAdmin } from '@/api/admin';
 import { fetchMyReadReceipts, fetchMySampleMembers, requestAccountDeletion, setMyReadReceipts, setMySampleMembers, setMyTestPremium, setProfilePaused } from '@/api/account';
 import { fetchMyHighLatitudeFajrSettings, fetchMyMaritalSettings, setMyHighLatitudeFajrMethod, setMyMaritalPreferences, setMyMaritalStatus, type HighLatitudeFajrSettings, type MaritalSettings } from '@/api/profile';
 import { ACCEPTED_KEYS, acceptableStatuses, declarableStatuses, MARITAL_STATUS_KEYS } from '@/data/marital';
+import { NotificationKindSwitches } from '@/components/you/NotificationKindSwitches';
 import { disableMyNotifications, enableMyNotifications, fetchMyNotificationConsent } from '@/api/notifications';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -270,6 +271,7 @@ export function SettingsTab({
           }}
           badge={!pushNotifications ? t('settings.comingLater') : undefined}
         />
+        {pushNotifications && notificationsQuery.data ? <NotificationKindSwitches /> : null}
         <PermissionExplainer
           visible={notificationsExplainer}
           eyebrow={t('permission.notifications.eyebrow')}

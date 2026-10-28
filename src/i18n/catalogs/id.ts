@@ -947,4 +947,12 @@ export const id: TranslationCatalog = {
   "likedYou.missing": "Suka itu sudah tidak tersedia.",
   "chat.quietTitle": "Sudah lama sepi. Pembuka, kalau membantu:",
   "chat.useOpener": "Pakai ini",
+  "notifKinds.title": "Pilih hal yang kami kabarkan",
+  "notifKinds.round_ready": "Perkenalan harianmu siap",
+  "notifKinds.mutual_match": "Saling memilih",
+  "notifKinds.new_message": "Pesan baru",
+  "notifKinds.halal_cards": "Undangan Kartu Halal",
+  "notifKinds.liked_you": "Seseorang menyukaimu",
+  "notifKinds.waiting_on_you": "Seseorang menunggumu",
+  "notifKinds.quiet_match": "Saran saat obrolan sepi",
 };

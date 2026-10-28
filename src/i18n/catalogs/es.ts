@@ -947,4 +947,12 @@ export const es: TranslationCatalog = {
   "likedYou.missing": "Ese me gusta ya no está disponible.",
   "chat.quietTitle": "Hace tiempo que no hablan. Una frase para empezar, por si ayuda:",
   "chat.useOpener": "Usar esta",
+  "notifKinds.title": "Elige de qué te avisamos",
+  "notifKinds.round_ready": "Tus presentaciones de hoy están listas",
+  "notifKinds.mutual_match": "Una elección mutua",
+  "notifKinds.new_message": "Mensajes nuevos",
+  "notifKinds.halal_cards": "Invitaciones de Cartas Halal",
+  "notifKinds.liked_you": "Alguien te dio me gusta",
+  "notifKinds.waiting_on_you": "Alguien te está esperando",
+  "notifKinds.quiet_match": "Sugerencias cuando una charla se enfría",
 };

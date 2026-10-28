@@ -947,4 +947,12 @@ export const ru: TranslationCatalog = {
   "likedYou.missing": "Эта симпатия больше недоступна.",
   "chat.quietTitle": "Давно тихо. Начало разговора, если поможет:",
   "chat.useOpener": "Использовать",
+  "notifKinds.title": "Выберите, о чём мы сообщаем",
+  "notifKinds.round_ready": "Ваши ежедневные знакомства готовы",
+  "notifKinds.mutual_match": "Взаимный выбор",
+  "notifKinds.new_message": "Новые сообщения",
+  "notifKinds.halal_cards": "Приглашения в карточки Halal",
+  "notifKinds.liked_you": "Вы кому-то понравились",
+  "notifKinds.waiting_on_you": "Кто-то ждёт вас",
+  "notifKinds.quiet_match": "Подсказки, когда разговор затих",
 };

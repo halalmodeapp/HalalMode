@@ -947,4 +947,12 @@ export const am: TranslationCatalog = {
   "likedYou.missing": "ያ ምርጫ ከአሁን በኋላ አይገኝም።",
   "chat.quietTitle": "ለተወሰነ ጊዜ ጸጥ ብሏል። ቢጠቅም መነሻ፦",
   "chat.useOpener": "ይህን ተጠቀም",
+  "notifKinds.title": "ምን እንደምናሳውቅዎ ይምረጡ",
+  "notifKinds.round_ready": "የዕለቱ መግቢያዎችዎ ዝግጁ ናቸው",
+  "notifKinds.mutual_match": "የጋራ ተዛማጅ",
+  "notifKinds.new_message": "አዳዲስ መልእክቶች",
+  "notifKinds.halal_cards": "የሐላል ካርዶች ግብዣ",
+  "notifKinds.liked_you": "አንድ ሰው ወደዳችሁ",
+  "notifKinds.waiting_on_you": "አንድ ሰው ይጠብቆታል",
+  "notifKinds.quiet_match": "ውይይት ጸጥ ሲል የሚሰጡ ሐሳቦች",
 };

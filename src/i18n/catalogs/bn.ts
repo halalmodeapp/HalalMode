@@ -947,4 +947,12 @@ export const bn: TranslationCatalog = {
   "likedYou.missing": "সেই পছন্দ আর পাওয়া যাচ্ছে না।",
   "chat.quietTitle": "কিছুদিন ধরে নীরব। কাজে লাগলে একটি শুরু:",
   "chat.useOpener": "এটি ব্যবহার করুন",
+  "notifKinds.title": "কী নিয়ে জানাব তা বেছে নিন",
+  "notifKinds.round_ready": "আপনার দৈনিক পরিচয় প্রস্তুত",
+  "notifKinds.mutual_match": "পারস্পরিক ম্যাচ",
+  "notifKinds.new_message": "নতুন বার্তা",
+  "notifKinds.halal_cards": "হালাল কার্ডের আমন্ত্রণ",
+  "notifKinds.liked_you": "কেউ আপনাকে পছন্দ করেছেন",
+  "notifKinds.waiting_on_you": "কেউ আপনার অপেক্ষায়",
+  "notifKinds.quiet_match": "কথোপকথন নীরব হলে পরামর্শ",
 };

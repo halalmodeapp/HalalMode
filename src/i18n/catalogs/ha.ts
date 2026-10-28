@@ -947,4 +947,12 @@ export const ha: TranslationCatalog = {
   "likedYou.missing": "Wannan so ba ya nan kuma.",
   "chat.quietTitle": "Shiru ya yi tsawon lokaci. Farawa, idan zai taimaka:",
   "chat.useOpener": "Yi amfani da wannan",
+  "notifKinds.title": "Zaɓi abin da za mu gaya muku",
+  "notifKinds.round_ready": "Gabatarwar yau da kullum ta shirya",
+  "notifKinds.mutual_match": "Haɗi daga ɓangarorin biyu",
+  "notifKinds.new_message": "Sababbin saƙonni",
+  "notifKinds.halal_cards": "Gayyatar Katunan Halal",
+  "notifKinds.liked_you": "Wani ya so ku",
+  "notifKinds.waiting_on_you": "Wani yana jiran ku",
+  "notifKinds.quiet_match": "Shawarwari idan tattaunawa ta yi shiru",
 };

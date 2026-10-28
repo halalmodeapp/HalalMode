@@ -947,4 +947,12 @@ export const zhHans: TranslationCatalog = {
   "likedYou.missing": "这份喜欢已不可用。",
   "chat.quietTitle": "聊天安静了一阵。需要的话，可以用这句开场白：",
   "chat.useOpener": "使用",
+  "notifKinds.title": "选择我们通知你的内容",
+  "notifKinds.round_ready": "你的每日介绍已就绪",
+  "notifKinds.mutual_match": "双向匹配",
+  "notifKinds.new_message": "新消息",
+  "notifKinds.halal_cards": "清真卡片邀请",
+  "notifKinds.liked_you": "有人喜欢了你",
+  "notifKinds.waiting_on_you": "有人在等你",
+  "notifKinds.quiet_match": "聊天冷场时的建议",
 };

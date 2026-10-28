@@ -958,6 +958,14 @@ export const en = {
   "likedYou.missing": "That like is no longer available.",
   "chat.quietTitle": "It’s been quiet. An opener, if it helps:",
   "chat.useOpener": "Use this",
+  "notifKinds.title": "Choose what we tell you about",
+  "notifKinds.round_ready": "Your daily introductions are ready",
+  "notifKinds.mutual_match": "A mutual match",
+  "notifKinds.new_message": "New messages",
+  "notifKinds.halal_cards": "Halal Cards invitations",
+  "notifKinds.liked_you": "Someone liked you",
+  "notifKinds.waiting_on_you": "Someone is waiting on you",
+  "notifKinds.quiet_match": "Suggestions when a chat goes quiet",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -1910,4 +1918,12 @@ export const ar: TranslationCatalog = {
   "likedYou.missing": "لم يعد هذا الإعجاب متاحًا.",
   "chat.quietTitle": "الحديث هادئ منذ مدة. إليك افتتاحية إن أردت:",
   "chat.useOpener": "استخدمها",
+  "notifKinds.title": "اختر ما نُخبرك به",
+  "notifKinds.round_ready": "تعارفات اليوم جاهزة",
+  "notifKinds.mutual_match": "تعارف متبادل",
+  "notifKinds.new_message": "رسائل جديدة",
+  "notifKinds.halal_cards": "دعوات بطاقات حلال",
+  "notifKinds.liked_you": "أُعجب بك أحدهم",
+  "notifKinds.waiting_on_you": "أحدهم ينتظر ردّك",
+  "notifKinds.quiet_match": "اقتراحات حين يهدأ الحديث",
 };

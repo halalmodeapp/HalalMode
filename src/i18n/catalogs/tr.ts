@@ -947,4 +947,12 @@ export const tr: TranslationCatalog = {
   "likedYou.missing": "Bu beğeni artık mevcut değil.",
   "chat.quietTitle": "Bir süredir sessiz. İşe yararsa bir giriş:",
   "chat.useOpener": "Bunu kullan",
+  "notifKinds.title": "Size neyi bildireceğimizi seçin",
+  "notifKinds.round_ready": "Günlük tanışmalarınız hazır",
+  "notifKinds.mutual_match": "Karşılıklı eşleşme",
+  "notifKinds.new_message": "Yeni mesajlar",
+  "notifKinds.halal_cards": "Helal Kartlar davetleri",
+  "notifKinds.liked_you": "Biri sizi beğendi",
+  "notifKinds.waiting_on_you": "Biri sizi bekliyor",
+  "notifKinds.quiet_match": "Sohbet sessizleşince öneriler",
 };
