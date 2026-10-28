@@ -957,4 +957,5 @@ export const ru: TranslationCatalog = {
   "notifKinds.quiet_match": "Подсказки, когда разговор затих",
   "notifKinds.photo_decision": "Решения по фото и селфи",
   "notifKinds.recap_ready": "Ваш итог готов",
+  "notifKinds.round_expiring": "Знакомства скоро закроются",
 };

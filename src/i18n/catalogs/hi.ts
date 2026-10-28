@@ -957,4 +957,5 @@ export const hi: TranslationCatalog = {
   "notifKinds.quiet_match": "बातचीत शांत होने पर सुझाव",
   "notifKinds.photo_decision": "फ़ोटो और सेल्फ़ी के फ़ैसले",
   "notifKinds.recap_ready": "आपका सार तैयार है",
+  "notifKinds.round_expiring": "परिचय जल्द बंद होंगे",
 };

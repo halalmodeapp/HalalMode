@@ -100,6 +100,7 @@ export const SWITCHABLE_NOTIFICATIONS = [
   'quiet_match',
   'photo_decision',
   'recap_ready',
+  'round_expiring',
 ] as const;
 export type SwitchableNotification = (typeof SWITCHABLE_NOTIFICATIONS)[number];
 

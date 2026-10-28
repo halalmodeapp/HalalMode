@@ -12,6 +12,7 @@ const DESTINATIONS: Record<string, AppNotificationDestination> = {
   liked_you: '/(tabs)/connections',
   waiting_on_you: '/(tabs)/connections',
   quiet_match: '/(tabs)/connections',
+  round_expiring: '/(tabs)/daily',
   recap_ready: '/(tabs)/connections',
   photo_decision: '/(tabs)/you',
 };

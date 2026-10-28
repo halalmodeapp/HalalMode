@@ -957,4 +957,5 @@ export const id: TranslationCatalog = {
   "notifKinds.quiet_match": "Saran saat obrolan sepi",
   "notifKinds.photo_decision": "Keputusan foto dan selfie",
   "notifKinds.recap_ready": "Rangkumanmu siap",
+  "notifKinds.round_expiring": "Perkenalan segera ditutup",
 };

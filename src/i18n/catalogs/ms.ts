@@ -957,4 +957,5 @@ export const ms: TranslationCatalog = {
   "notifKinds.quiet_match": "Cadangan apabila perbualan sunyi",
   "notifKinds.photo_decision": "Keputusan foto dan swafoto",
   "notifKinds.recap_ready": "Rumusan anda sedia",
+  "notifKinds.round_expiring": "Perkenalan akan ditutup",
 };

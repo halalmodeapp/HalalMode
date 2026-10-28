@@ -957,4 +957,5 @@ export const tr: TranslationCatalog = {
   "notifKinds.quiet_match": "Sohbet sessizleşince öneriler",
   "notifKinds.photo_decision": "Fotoğraf ve selfie kararları",
   "notifKinds.recap_ready": "Özetiniz hazır",
+  "notifKinds.round_expiring": "Tanışmalar kapanmak üzere",
 };

@@ -957,4 +957,5 @@ export const bn: TranslationCatalog = {
   "notifKinds.quiet_match": "কথোপকথন নীরব হলে পরামর্শ",
   "notifKinds.photo_decision": "ছবি ও সেলফির সিদ্ধান্ত",
   "notifKinds.recap_ready": "আপনাদের সারসংক্ষেপ প্রস্তুত",
+  "notifKinds.round_expiring": "পরিচয় শীঘ্রই বন্ধ হবে",
 };

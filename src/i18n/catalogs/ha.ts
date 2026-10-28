@@ -957,4 +957,5 @@ export const ha: TranslationCatalog = {
   "notifKinds.quiet_match": "Shawarwari idan tattaunawa ta yi shiru",
   "notifKinds.photo_decision": "Shawarar hotuna da selfie",
   "notifKinds.recap_ready": "Takaitaccen bayaninku ya shirya",
+  "notifKinds.round_expiring": "Gabatarwa na gab da rufewa",
 };

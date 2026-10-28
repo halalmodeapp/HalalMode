@@ -16,7 +16,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 interface Claimed {
   id: number;
   user_id: string;
-  kind: 'round_ready' | 'mutual_match' | 'new_message' | 'notice' | 'halal_cards' | 'liked_you' | 'waiting_on_you' | 'quiet_match' | 'photo_decision' | 'recap_ready';
+  kind: 'round_ready' | 'mutual_match' | 'new_message' | 'notice' | 'halal_cards' | 'liked_you' | 'waiting_on_you' | 'quiet_match' | 'photo_decision' | 'recap_ready' | 'round_expiring';
   payload: Record<string, unknown>;
   push_token: string;
   platform: string;
@@ -39,6 +39,7 @@ const WORDING: Record<string, Wording> = {
     photo_approved: { title: "You’re verified", body: "Your selfie matches your photos. Thank you." },
     photo_redo: { title: "A photo needs redoing", body: "Open the app to see what to change." },
     recap_ready: { title: "Your recap is ready", body: "You’ve both answered. Read it and say salaam." },
+    round_expiring: { title: "Your set closes soon", body: "A few hours left to choose from today’s introductions." },
   },
   ar: {
     round_ready: { title: "مجموعتك المكوّنة من {{count}} جاهزة", body: "دخل وقت الفجر. تعارفات اليوم بانتظارك." },
@@ -52,6 +53,7 @@ const WORDING: Record<string, Wording> = {
     photo_approved: { title: "تم التحقق منك", body: "صورتك الشخصية تطابق صورك. شكرًا لك." },
     photo_redo: { title: "صورة تحتاج إلى إعادة", body: "افتح التطبيق لترى ما يجب تغييره." },
     recap_ready: { title: "ملخصكما جاهز", body: "أجبتما كلاكما. اقرأه وابدأ بالسلام." },
+    round_expiring: { title: "مجموعتك توشك على الانتهاء", body: "بقيت ساعات قليلة للاختيار من تعارفات اليوم." },
   },
   ur: {
     round_ready: { title: "آپ کے {{count}} تیار ہیں", body: "فجر ہو گئی۔ آج کے تعارف آپ کے منتظر ہیں۔" },
@@ -65,6 +67,7 @@ const WORDING: Record<string, Wording> = {
     photo_approved: { title: "آپ کی تصدیق ہو گئی", body: "آپ کی سیلفی آپ کی تصاویر سے ملتی ہے۔ شکریہ۔" },
     photo_redo: { title: "ایک تصویر دوبارہ چاہیے", body: "کیا بدلنا ہے، دیکھنے کے لیے ایپ کھولیں۔" },
     recap_ready: { title: "آپ کا خلاصہ تیار ہے", body: "آپ دونوں جواب دے چکے ہیں۔ پڑھیں اور سلام کہیں۔" },
+    round_expiring: { title: "آپ کا سیٹ جلد بند ہو رہا ہے", body: "آج کے تعارف میں سے چننے کے لیے چند گھنٹے باقی ہیں۔" },
   },
   fa: {
     round_ready: { title: "{{count}} معرفی شما آماده است", body: "اذان صبح شد. معرفی‌های امروز منتظر شماست." },
@@ -78,6 +81,7 @@ const WORDING: Record<string, Wording> = {
     photo_approved: { title: "هویت شما تأیید شد", body: "سلفی شما با عکس‌هایتان مطابقت دارد. سپاسگزاریم." },
     photo_redo: { title: "یک عکس باید دوباره گرفته شود", body: "برای دیدن آنچه باید تغییر کند، برنامه را باز کنید." },
     recap_ready: { title: "خلاصه شما آماده است", body: "هر دوی شما پاسخ داده‌اید. بخوانید و سلام کنید." },
+    round_expiring: { title: "مجموعه شما به‌زودی بسته می‌شود", body: "چند ساعت برای انتخاب از معرفی‌های امروز باقی مانده است." },
   },
   hi: {
     round_ready: { title: "आपके {{count}} तैयार हैं", body: "फ़ज्र हो गई। आज के परिचय आपका इंतज़ार कर रहे हैं।" },
@@ -91,6 +95,7 @@ const WORDING: Record<string, Wording> = {
     photo_approved: { title: "आप सत्यापित हो गए", body: "आपकी सेल्फ़ी आपकी तस्वीरों से मेल खाती है। धन्यवाद।" },
     photo_redo: { title: "एक तस्वीर दोबारा चाहिए", body: "क्या बदलना है, यह देखने के लिए ऐप खोलें।" },
     recap_ready: { title: "आपका सार तैयार है", body: "आप दोनों जवाब दे चुके हैं। पढ़ें और सलाम कहें।" },
+    round_expiring: { title: "आपका सेट जल्द बंद होगा", body: "आज के परिचयों में से चुनने के लिए कुछ ही घंटे बचे हैं।" },
   },
   id: {
     round_ready: { title: "{{count}} perkenalanmu siap", body: "Subuh telah tiba. Perkenalan hari ini menunggumu." },
@@ -104,6 +109,7 @@ const WORDING: Record<string, Wording> = {
     photo_approved: { title: "Kamu terverifikasi", body: "Selfie-mu cocok dengan fotomu. Terima kasih." },
     photo_redo: { title: "Satu foto perlu diulang", body: "Buka aplikasi untuk melihat apa yang perlu diubah." },
     recap_ready: { title: "Rangkumanmu siap", body: "Kalian berdua sudah menjawab. Bacalah dan ucapkan salam." },
+    round_expiring: { title: "Set-mu segera ditutup", body: "Tinggal beberapa jam untuk memilih dari perkenalan hari ini." },
   },
   ms: {
     round_ready: { title: "{{count}} perkenalan anda sedia", body: "Subuh telah masuk. Perkenalan hari ini menanti anda." },
@@ -117,6 +123,7 @@ const WORDING: Record<string, Wording> = {
     photo_approved: { title: "Anda telah disahkan", body: "Swafoto anda sepadan dengan foto anda. Terima kasih." },
     photo_redo: { title: "Satu foto perlu diambil semula", body: "Buka aplikasi untuk melihat apa yang perlu diubah." },
     recap_ready: { title: "Rumusan anda sedia", body: "Kamu berdua telah menjawab. Bacalah dan ucapkan salam." },
+    round_expiring: { title: "Set anda akan ditutup tidak lama lagi", body: "Tinggal beberapa jam untuk memilih daripada perkenalan hari ini." },
   },
   bn: {
     round_ready: { title: "আপনার {{count}}টি পরিচয় প্রস্তুত", body: "ফজর হয়েছে। আজকের পরিচয়গুলো আপনার অপেক্ষায়।" },
@@ -130,6 +137,7 @@ const WORDING: Record<string, Wording> = {
     photo_approved: { title: "আপনি যাচাইকৃত", body: "আপনার সেলফি আপনার ছবির সাথে মিলেছে। ধন্যবাদ।" },
     photo_redo: { title: "একটি ছবি আবার তুলতে হবে", body: "কী বদলাতে হবে দেখতে অ্যাপ খুলুন।" },
     recap_ready: { title: "আপনাদের সারসংক্ষেপ প্রস্তুত", body: "আপনারা দুজনেই উত্তর দিয়েছেন। পড়ুন এবং সালাম দিন।" },
+    round_expiring: { title: "আপনার সেট শীঘ্রই বন্ধ হবে", body: "আজকের পরিচয় থেকে বেছে নিতে আর কয়েক ঘণ্টা বাকি।" },
   },
   fr: {
     round_ready: { title: "Vos {{count}} sont prêtes", body: "Fajr est entré. Les présentations du jour vous attendent." },
@@ -143,6 +151,7 @@ const WORDING: Record<string, Wording> = {
     photo_approved: { title: "Vous êtes vérifié", body: "Votre selfie correspond à vos photos. Merci." },
     photo_redo: { title: "Une photo est à refaire", body: "Ouvrez l’app pour voir ce qu’il faut changer." },
     recap_ready: { title: "Votre récapitulatif est prêt", body: "Vous avez tous deux répondu. Lisez-le et dites salaam." },
+    round_expiring: { title: "Votre sélection se termine bientôt", body: "Il reste quelques heures pour choisir parmi les présentations du jour." },
   },
   tr: {
     round_ready: { title: "{{count}} tanışmanız hazır", body: "Sabah namazı girdi. Bugünkü tanışmalar sizi bekliyor." },
@@ -156,6 +165,7 @@ const WORDING: Record<string, Wording> = {
     photo_approved: { title: "Doğrulandınız", body: "Selfie’niz fotoğraflarınızla eşleşiyor. Teşekkürler." },
     photo_redo: { title: "Bir fotoğrafın yenilenmesi gerekiyor", body: "Neyin değişeceğini görmek için uygulamayı açın." },
     recap_ready: { title: "Özetiniz hazır", body: "İkiniz de yanıtladınız. Okuyun ve selam verin." },
+    round_expiring: { title: "Setiniz yakında kapanıyor", body: "Bugünkü tanışmalar arasından seçmek için birkaç saat kaldı." },
   },
   ha: {
     round_ready: { title: "Gabatarwarku {{count}} a shirye take", body: "Asuba ta yi. Gabatarwar yau tana jiran ku." },
@@ -169,6 +179,7 @@ const WORDING: Record<string, Wording> = {
     photo_approved: { title: "An tabbatar da ku", body: "Hoton selfie ɗinku ya dace da hotunanku. Na gode." },
     photo_redo: { title: "Ana buƙatar sake ɗaukar hoto", body: "Buɗe manhajar don ganin abin da za a canza." },
     recap_ready: { title: "Takaitaccen bayaninku ya shirya", body: "Ku biyu kun amsa. Karanta ku yi sallama." },
+    round_expiring: { title: "Rukunin ku zai rufe nan ba da daɗewa ba", body: "Saura awanni kaɗan don zaɓa daga gabatarwar yau." },
   },
   am: {
     round_ready: { title: "{{count}} መግቢያዎችዎ ዝግጁ ናቸው", body: "ፈጅር ገብቷል። የዛሬ መግቢያዎች ይጠብቆታል።" },
@@ -182,6 +193,7 @@ const WORDING: Record<string, Wording> = {
     photo_approved: { title: "ተረጋግጠዋል", body: "ሰልፊዎ ከፎቶዎችዎ ጋር ይመሳሰላል። እናመሰግናለን።" },
     photo_redo: { title: "አንድ ፎቶ እንደገና መነሳት አለበት", body: "ምን መቀየር እንዳለበት ለማየት መተግበሪያውን ይክፈቱ።" },
     recap_ready: { title: "ማጠቃለያዎ ዝግጁ ነው", body: "ሁለታችሁም መልሳችኋል። አንብበው ሰላም ይበሉ።" },
+    round_expiring: { title: "ስብስብዎ በቅርቡ ይዘጋል", body: "ከዛሬ መግቢያዎች ለመምረጥ ጥቂት ሰዓታት ብቻ ቀርተዋል።" },
   },
   so: {
     round_ready: { title: "{{count}} isbarasho oo kuu diyaar ah", body: "Fajarku wuu soo galay. Isbarashooyinka maanta way ku sugayaan." },
@@ -195,6 +207,7 @@ const WORDING: Record<string, Wording> = {
     photo_approved: { title: "Waa laguu xaqiijiyey", body: "Sawirkaaga is-qaadka ah wuxuu la mid yahay sawiradaada. Mahadsanid." },
     photo_redo: { title: "Sawir ayaa dib loo qaadayaa", body: "Fur app-ka si aad u aragto wixii la beddelayo." },
     recap_ready: { title: "Soo koobiddaadu waa diyaar", body: "Labadiinuba waad jawaabteen. Akhri oo salaan." },
+    round_expiring: { title: "Xirmadaadu dhawaan way xirmaysaa", body: "Waxaa harsan dhawr saacadood oo aad ka dooran karto isbarashooyinka maanta." },
   },
   es: {
     round_ready: { title: "Tus {{count}} están listas", body: "Ha entrado el Fajr. Las presentaciones de hoy te esperan." },
@@ -208,6 +221,7 @@ const WORDING: Record<string, Wording> = {
     photo_approved: { title: "Estás verificado", body: "Tu selfi coincide con tus fotos. Gracias." },
     photo_redo: { title: "Hay que rehacer una foto", body: "Abre la app para ver qué cambiar." },
     recap_ready: { title: "Tu resumen está listo", body: "Los dos habéis respondido. Léelo y saluda." },
+    round_expiring: { title: "Tu selección se cierra pronto", body: "Quedan unas horas para elegir entre las presentaciones de hoy." },
   },
   ru: {
     round_ready: { title: "Ваши {{count}} готовы", body: "Наступил фаджр. Сегодняшние знакомства ждут вас." },
@@ -221,6 +235,7 @@ const WORDING: Record<string, Wording> = {
     photo_approved: { title: "Вы подтверждены", body: "Ваше селфи совпадает с фотографиями. Спасибо." },
     photo_redo: { title: "Фото нужно переделать", body: "Откройте приложение, чтобы увидеть, что изменить." },
     recap_ready: { title: "Ваш итог готов", body: "Вы оба ответили. Прочитайте и скажите салам." },
+    round_expiring: { title: "Ваш набор скоро закроется", body: "Осталось несколько часов, чтобы выбрать из сегодняшних знакомств." },
   },
   zh: {
     round_ready: { title: "你的 {{count}} 位介绍已就绪", body: "晨礼时间到了。今天的介绍在等你。" },
@@ -234,6 +249,7 @@ const WORDING: Record<string, Wording> = {
     photo_approved: { title: "你已通过验证", body: "你的自拍与照片相符，谢谢。" },
     photo_redo: { title: "有照片需要重拍", body: "打开应用查看需要修改的地方。" },
     recap_ready: { title: "你们的总结已就绪", body: "你们都已回答。读一读，然后说声 salaam 吧。" },
+    round_expiring: { title: "你的名单即将截止", body: "还有几个小时可以从今天的介绍中选择。" },
   },
 };
 

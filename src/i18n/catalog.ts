@@ -968,6 +968,7 @@ export const en = {
   "notifKinds.quiet_match": "Suggestions when a chat goes quiet",
   "notifKinds.photo_decision": "Photo and selfie decisions",
   "notifKinds.recap_ready": "Your recap is ready",
+  "notifKinds.round_expiring": "Introductions about to close",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -1930,4 +1931,5 @@ export const ar: TranslationCatalog = {
   "notifKinds.quiet_match": "اقتراحات حين يهدأ الحديث",
   "notifKinds.photo_decision": "قرارات الصور والصورة الشخصية",
   "notifKinds.recap_ready": "ملخصكما جاهز",
+  "notifKinds.round_expiring": "التعارفات توشك على الانتهاء",
 };

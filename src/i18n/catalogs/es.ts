@@ -957,4 +957,5 @@ export const es: TranslationCatalog = {
   "notifKinds.quiet_match": "Sugerencias cuando una charla se enfría",
   "notifKinds.photo_decision": "Decisiones sobre fotos y selfi",
   "notifKinds.recap_ready": "Tu resumen está listo",
+  "notifKinds.round_expiring": "Presentaciones a punto de cerrar",
 };
