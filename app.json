@@ -10,7 +10,7 @@
     "scheme": "halalmode",
     "userInterfaceStyle": "light",
     "backgroundColor": "#FCFCFB",
-    "icon": "./assets/icons/chrome-heart-icon.png",
+    "icon": "./assets/icons/icon.png",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.halalmode.app",
@@ -26,8 +26,8 @@
     "android": {
       "package": "com.halalmode.app",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icons/chrome-heart-icon.png",
-        "backgroundColor": "#A82149"
+        "foregroundImage": "./assets/icons/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
       },
       "permissions": [
         "android.permission.RECORD_AUDIO",
@@ -52,9 +52,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#A82149",
-          "image": "./assets/icons/chrome-heart-icon.png",
-          "imageWidth": 320,
+          "backgroundColor": "#FFFFFF",
+          "image": "./assets/icons/adaptive-icon.png",
+          "imageWidth": 260,
           "resizeMode": "contain"
         }
       ],
