@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 
 import { Text } from '@/components/ui/Text';
+import { requestCentering } from '@/lib/keyboardCentering';
 import { alpha, color, font, radius } from '@/theme/tokens';
 
 export interface FieldProps extends TextInputProps {
@@ -22,6 +23,7 @@ export function Field({
   containerStyle,
   style,
   multiline,
+  onFocus,
   ...rest
 }: FieldProps) {
   return (
@@ -36,6 +38,10 @@ export function Field({
         placeholderTextColor={color.whisper}
         multiline={multiline}
         style={[styles.input, multiline && styles.multiline, error && styles.inputError, style]}
+        onFocus={(event) => {
+          onFocus?.(event);
+          requestCentering();
+        }}
         {...rest}
       />
       {error ? (

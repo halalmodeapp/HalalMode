@@ -1,6 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { ShiningWordmark } from '@/components/brand/ShiningWordmark';
+import { SettingsGear } from '@/components/navigation/SettingsGear';
 import { PremiumWord } from '@/components/brand/PremiumLogo';
 import { useI18n } from '@/i18n';
 import { useSession } from '@/state/session';
@@ -19,6 +20,8 @@ export function BrandHeader() {
           <PremiumWord logoWidth={110} />
         </View>
       ) : null}
+      <View style={styles.spacer} />
+      <SettingsGear />
     </View>
   );
 }
@@ -32,4 +35,5 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     paddingBottom: 4,
   },
+  spacer: { flex: 1 },
 });

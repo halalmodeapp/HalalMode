@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { fetchMyProfile, setMyPreferredSects, setMyPremiumPreferences, updateMyPreferences } from '@/api/profile';
 import { Button } from '@/components/ui/Button';
@@ -35,6 +35,8 @@ import { queryKeys } from '@/lib/queryClient';
 import type { FamilyGoals, MarriageTimeline, MustHaveCriterion, PremiumCriterion, PrivatePreferences, ReligiousPractice, Sect } from '@/types';
 import { errorMessage } from '@/lib/errorMessage';
 import { useToast } from '@/state/toast';
+import { useRegisterUnsaved } from '@/state/unsavedChanges';
+import { MaritalPreferencesCard } from '@/components/you/MaritalSections';
 import { PremiumLogo } from '@/components/brand/PremiumLogo';
 import { onDark, SurfaceToneProvider, useSurfaceTone } from '@/theme/tone';
 import { styles } from './privateTabStyles';
@@ -67,11 +69,25 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
       if (isPremium) await setMyPremiumPreferences(draft);
     },
     onSuccess: () => {
+      savedRef.current = JSON.stringify(draft);
       void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
       void queryClient.invalidateQueries({ queryKey: queryKeys.preferences });
       void queryClient.invalidateQueries({ queryKey: queryKeys.poolSize });
       toast.show(`✓ ${t('filters.saved')}`);
     },
+  });
+
+  // What was last saved: the baseline the draft is compared with.
+  const savedRef = useRef(JSON.stringify(preferences));
+  const draftDirty = JSON.stringify(draft) !== savedRef.current;
+  useRegisterUnsaved(draftDirty, async () => {
+    try {
+      await save.mutateAsync();
+      savedRef.current = JSON.stringify(draft);
+      return true;
+    } catch {
+      return false;
+    }
   });
 
   const setMustHave = (criterion: MustHaveCriterion, next: boolean) =>
@@ -510,6 +526,8 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
           {save.isError ? <InlineNotice message={errorMessage(save.error, t, 'filters.saveError')} /> : null}
         </Card>
       )}
+
+      {meQuery.data ? <MaritalPreferencesCard gender={meQuery.data.gender} /> : null}
 
       <CountrySheet
         visible={countrySheet}

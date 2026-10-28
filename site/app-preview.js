@@ -201,7 +201,7 @@
       <div class="ap-heart">♥</div>
       <div class="ap-plate ap-pr"><div class="ap-avatar"><img src="${IMG + P.img}" alt=""></div><b>${P.first}</b></div>
     </div>
-    <p class="ap-explain">Messaging opens after you each choose three important questions, answer privately, and read each other’s answers.</p>
+    <p class="ap-explain">Messaging opens after you each choose two important questions, answer privately, and read each other’s answers.</p>
     <div class="ap-btn ap-btn-primary ap-matchbtn">Choose questions</div>
     <div class="ap-quiet">Maybe later</div>
     <div class="ap-confetti"></div>`;
@@ -229,7 +229,7 @@
   questionsV.innerHTML = `
     ${header('')}
     <div class="ap-qhead"><div class="ap-micro">Step 1 of 3 · with ${P.first}</div>
-      <div class="ap-h1">Choose the three questions that matter most.</div>
+      <div class="ap-h1">Choose the two questions that matter most.</div>
       <p class="ap-sub2">${P.first} chooses three separately. Shared choices are marked when both sets are ready.</p></div>
     <div class="ap-qlist">${QUESTIONS.map(([cat, text]) => `<div class="ap-qcard"><div class="ap-qtxt"><div class="ap-micro">${cat}</div><div class="ap-qtext">${text}</div></div><i class="ap-dot"></i></div>`).join('')}</div>
     <div class="ap-qfoot"><span class="ap-qcount"></span><div class="ap-btn ap-btn-primary ap-qbtn">Answer them</div></div>`;
@@ -500,7 +500,7 @@
       b.e.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${(b.rot + b.spin * tau).toFixed(0)}deg)`;
     });
 
-    // ---- the three questions: each of you chooses three
+    // ---- the two questions: each of you chooses two
     fade(questionsV, W.questions, t);
     const chooseAt = [18.95, 19.5, 20.05];
     qcards.forEach((c, i) => { const k = MINE.indexOf(i); c.classList.toggle('on', k >= 0 && t >= chooseAt[k] + 0.05); });

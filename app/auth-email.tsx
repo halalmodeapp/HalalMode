@@ -5,12 +5,12 @@ import {
   Linking,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { StretchScrollView } from '@/components/ui/StretchScrollView';
 import { useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -126,7 +126,7 @@ export default function AuthEmailScreen() {
       ) : null}
       <View style={[styles.page, isRTL && styles.rtl]}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
+        <StretchScrollView
           contentContainerStyle={[
             styles.scroll,
             { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 24 },
@@ -226,7 +226,7 @@ export default function AuthEmailScreen() {
 
             <Text style={[styles.fine, { fontFamily: font }, textAlign]}>{t('auth.privacyNote')}</Text>
           </View>
-        </ScrollView>
+        </StretchScrollView>
       </KeyboardAvoidingView>
       </View>
     </>

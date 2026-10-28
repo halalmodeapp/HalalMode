@@ -59,7 +59,7 @@ export function PremiumGate({
             variant="onDark"
             // Demo builds can switch Premium on locally; a real build opens the
             // membership card in Settings, where purchases live.
-            onPress={() => (USE_MOCKS ? setTier('premium') : router.push('/(tabs)/you?tab=settings' as never))}
+            onPress={() => (USE_MOCKS ? setTier('premium') : router.push('/settings' as never))}
           />
         ) : null}
         {onTrySolo ? <Button label={copy('trySolo')} variant={canBuy ? 'quiet' : 'onDark'} onPress={onTrySolo} /> : null}

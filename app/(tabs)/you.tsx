@@ -2,8 +2,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeInLeft, FadeInRight, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 
-import { fetchConnections } from '@/api/connections';
 import { fetchMyPreferences, fetchMyProfile, fetchMyProfileReadiness } from '@/api/profile';
 import { ReadyMoment } from '@/components/readiness/ReadyMoment';
 import { BrandHeader } from '@/components/navigation/BrandHeader';
@@ -16,21 +17,33 @@ import { PreferencesIcon, ProfileIcon } from '@/components/ui/TabIcons';
 import { PrivateTab } from '@/components/you/PrivateTab';
 import { ProfileAvatar } from '@/components/you/ProfileAvatar';
 import { ProfileTab } from '@/components/you/ProfileTab';
-import { SettingsTab } from '@/components/you/SettingsTab';
+import { UnsavedChangesDialog } from '@/components/you/UnsavedChangesDialog';
+import { guardNavigation } from '@/state/unsavedChanges';
 import { useI18n } from '@/i18n';
 import { trackProductEvent } from '@/lib/analytics';
 import { queryKeys } from '@/lib/queryClient';
-import { useRound } from '@/state/round';
 import { color, radius, space } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
 
-type Tab = 'profile' | 'private' | 'settings';
+type Tab = 'profile' | 'private';
 
 export default function YouScreen() {
   const { t, isRTL } = useI18n();
   const { tab: requestedTab } = useLocalSearchParams<{ tab?: string }>();
   const [tab, setTab] = useState<Tab>('profile');
-  const { live } = useRound();
+  // Bumped when someone says no to "save your changes?": the tabs start again from what was last saved.
+  const [resetKey, setResetKey] = useState(0);
+  // The avatar gives a little pop whenever the tab changes.
+  const pop = useSharedValue(1);
+  const popStyle = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }] }));
+  const changeTab = (next: Tab) => {
+    if (next === tab) return;
+    guardNavigation(() => {
+      void Haptics.selectionAsync();
+      pop.value = withSequence(withTiming(0.9, { duration: 90 }), withSpring(1, { damping: 6, stiffness: 240 }));
+      setTab(next);
+    });
+  };
 
   const profileQuery = useQuery({
     queryKey: queryKeys.profile('me'),
@@ -40,11 +53,6 @@ export default function YouScreen() {
   const preferencesQuery = useQuery({
     queryKey: queryKeys.preferences,
     queryFn: fetchMyPreferences,
-  });
-
-  const connectionsQuery = useQuery({
-    queryKey: queryKeys.connections,
-    queryFn: fetchConnections,
   });
 
   // The moment everything is complete, the last save of the profile or of the
@@ -90,10 +98,10 @@ export default function YouScreen() {
   };
 
   useEffect(() => {
-    if (requestedTab === 'profile' || requestedTab === 'private' || requestedTab === 'settings') {
-      setTab(requestedTab);
-    }
-  }, [requestedTab]);
+    if (requestedTab === 'profile' || requestedTab === 'private') setTab(requestedTab);
+    // Settings has its own screen now, opened from the gear.
+    if (requestedTab === 'settings') router.replace('/settings' as never);
+  }, [requestedTab, router]);
 
   if (profileQuery.isPending || preferencesQuery.isPending) {
     return (
@@ -122,7 +130,6 @@ export default function YouScreen() {
 
   const profile = profileQuery.data;
   const preferences = preferencesQuery.data;
-  const connections = connectionsQuery.data ?? [];
 
   return (
     <Screen withTabBar style={isRTL ? styles.rtl : undefined}>
@@ -131,12 +138,11 @@ export default function YouScreen() {
       <View style={styles.tabsRow}>
         <Segmented
           value={tab}
-          onChange={setTab}
+          onChange={changeTab}
           testIDPrefix="you-tab"
           options={[
             { value: 'profile', label: t('you.tab.profile'), icon: (tint: string) => <ProfileIcon color={tint} /> },
             { value: 'private', label: t('you.tab.matching'), icon: (tint: string) => <PreferencesIcon color={tint} /> },
-            { value: 'settings', label: t('you.tab.settings'), icon: '⚙︎' },
           ]}
         />
       </View>
@@ -149,44 +155,40 @@ export default function YouScreen() {
       >
         <View style={[styles.identity, isRTL && styles.rowReverse]}>
           {/* Tap to move or zoom the circle on the main photo. */}
-          <ProfileAvatar profile={profile} />
+          <Animated.View style={popStyle}>
+            <ProfileAvatar profile={profile} />
+          </Animated.View>
           <View style={styles.identityText}>
             <Text variant="displaySmall" style={styles.name}>
               {profile.name}
             </Text>
             <Text variant="caption">
-              {t(
-                tab === 'profile'
-                  ? 'you.subtitle.profile'
-                  : tab === 'private'
-                    ? 'you.subtitle.matching'
-                    : 'you.subtitle.settings'
-              )}
+              {t(tab === 'profile' ? 'you.subtitle.profile' : 'you.subtitle.matching')}
             </Text>
           </View>
         </View>
 
-        {tab === 'profile' ? (
-          <ProfileTab
-            profile={profile}
-            preferences={preferences}
-            onOpenPreferences={() => {
-              profileScrollRef.current?.scrollTo({ y: 0, animated: false });
-              setTab('private');
-            }}
-            onScrollToTarget={scrollToChecklistTarget}
-          />
-        ) : null}
-        {tab === 'private' ? <PrivateTab preferences={preferences} /> : null}
-        {tab === 'settings' ? (
-          <SettingsTab
-            liveCount={live.length}
-            openConnections={connections.length}
-            profilePaused={profile.isPaused ?? false}
-            gender={profile.gender}
-          />
-        ) : null}
+        {/* Each tab slides in from the side it sits on. */}
+        <Animated.View
+          key={`${tab}-${resetKey}`}
+          entering={(tab === 'private' ? FadeInRight : FadeInLeft).duration(260)}
+        >
+          {tab === 'profile' ? (
+            <ProfileTab
+              profile={profile}
+              preferences={preferences}
+              onOpenPreferences={() => {
+                profileScrollRef.current?.scrollTo({ y: 0, animated: false });
+                changeTab('private');
+              }}
+              onScrollToTarget={scrollToChecklistTarget}
+            />
+          ) : (
+            <PrivateTab preferences={preferences} />
+          )}
+        </Animated.View>
       </StretchScrollView>
+      <UnsavedChangesDialog onDiscard={() => setResetKey((key) => key + 1)} />
       <ReadyMoment
         visible={celebrating}
         name={profile.firstName || profile.name}

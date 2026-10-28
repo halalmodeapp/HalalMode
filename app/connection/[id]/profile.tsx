@@ -79,11 +79,11 @@ export default function ConnectionProfileScreen() {
 
   return (
     <Screen style={isRTL ? styles.rtl : undefined}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader
           action="back"
           trailing={<SafetyControl scope={{ kind: 'connection', id }} memberName={profile.firstName} />}
         />
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
         <View style={[styles.hero, { width, height: heroHeight }]}>
           <FlatList

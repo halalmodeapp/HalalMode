@@ -4,6 +4,8 @@ import { RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, 
 import * as ImagePicker from 'expo-image-picker';
 import { PhotoCropSheet } from '@/components/you/PhotoCropSheet';
 import * as Location from 'expo-location';
+import { useRegisterUnsaved } from '@/state/unsavedChanges';
+import { MaritalStatusCard } from '@/components/you/MaritalSections';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Linking, Platform, Pressable, View } from 'react-native';
@@ -420,6 +422,27 @@ export function ProfileTab({
    * filled), and the list beside the button names them, rather than refusing
    * silently as the old button did.
    */
+  // The same save, for "do you want to save?" when leaving with changes:
+  // resolves true only when it was valid and went through.
+  const saveForLeaving = async (): Promise<boolean> => {
+    let saved = false;
+    await handleSubmit(
+      async (values) => {
+        setMissing([]);
+        await save.mutateAsync(values);
+        saved = true;
+      },
+      (invalid) => {
+        setMissing(
+          (Object.keys(invalid) as (keyof FormValues)[]).map((key) => t(FIELD_LABELS[key]))
+            .filter((label, index, all) => all.indexOf(label) === index),
+        );
+      },
+    )().catch(() => undefined);
+    return saved;
+  };
+  useRegisterUnsaved(isDirty || photosDirty || ownDirty, saveForLeaving);
+
   const submit = useMemo(() => handleSubmit(
     (values) => {
       setMissing([]);
@@ -868,6 +891,8 @@ export function ProfileTab({
         </View>
       </Card>
       </View>
+
+      <MaritalStatusCard gender={profile.gender} />
 
       <Card>
         <Text variant="micro">{t('profile.voice')}</Text>

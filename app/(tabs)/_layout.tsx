@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 
 import { TabBar } from '@/components/navigation/TabBar';
 import { NoticeDialog } from '@/components/notices/NoticeDialog';
+import { guardNavigation, hasUnsavedChanges } from '@/state/unsavedChanges';
 
 export default function TabsLayout() {
   return (
@@ -9,6 +10,14 @@ export default function TabsLayout() {
     <Tabs
       tabBar={(props) => <TabBar {...props} />}
       screenOptions={{ headerShown: false }}
+      screenListeners={({ navigation, route }) => ({
+        // Leaving You with unsaved changes asks first; the question is on the You screen.
+        tabPress: (event) => {
+          if (route.name === 'you' || !hasUnsavedChanges()) return;
+          event.preventDefault();
+          guardNavigation(() => navigation.navigate(route.name));
+        },
+      })}
     >
       <Tabs.Screen
         name="daily"

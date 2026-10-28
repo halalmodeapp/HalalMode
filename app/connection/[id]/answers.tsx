@@ -6,11 +6,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   TextInput,
   View,
 } from 'react-native';
+import { StretchScrollView } from '@/components/ui/StretchScrollView';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
 import { fetchConnection, fetchSavedAnswers, saveAnswer, submitAnswer } from '@/api/connections';
@@ -173,7 +173,7 @@ export default function AnswersScreen() {
           </View>
         </View>
 
-        <ScrollView
+        <StretchScrollView
           contentContainerStyle={styles.body}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -254,7 +254,7 @@ export default function AnswersScreen() {
               <Text variant="bodySmall">{t('answers.hidden')}</Text>
             </View>
           )}
-        </ScrollView>
+        </StretchScrollView>
 
         {mutation.isError ? (
           <InlineNotice

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, View } from 'react-native';
+import { StretchScrollView } from '@/components/ui/StretchScrollView';
 import * as Location from 'expo-location';
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
@@ -380,7 +381,7 @@ export default function OnboardingScreen() {
           </View>
         </View>
 
-        <ScrollView
+        <StretchScrollView
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -468,7 +469,7 @@ export default function OnboardingScreen() {
               <Text variant="bodySmall">{submitError}</Text>
             </View>
           ) : null}
-        </ScrollView>
+        </StretchScrollView>
 
         <View style={[styles.footer, isRTL && styles.rowReverse]}>
           {step > 0 ? (

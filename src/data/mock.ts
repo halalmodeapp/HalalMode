@@ -394,7 +394,7 @@ export const MOCK_CONNECTIONS: Connection[] = [
     createdAt: new Date(Date.now() - 9 * 86400_000).toISOString(),
     stage: 'choosing_questions',
     questions: [],
-    lastMessage: 'Choose your three questions',
+    lastMessage: 'Choose your two questions',
     lastMessageAt: new Date(Date.now() - 4 * 86400_000).toISOString(),
     unread: false,
   },

@@ -101,6 +101,17 @@ export default function IntroductionDetailScreen() {
 
   return (
     <Screen style={isRTL ? styles.rtl : undefined}>
+        <ScreenHeader
+          action="back"
+          trailingLabel={t('intro.position', { current: number(position), total: number(total) })}
+          trailing={(
+            <SafetyControl
+              scope={{ kind: 'introduction', id: introduction.id }}
+              memberName={profile.firstName}
+              onBlocked={() => void refresh()}
+            />
+          )}
+        />
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -114,18 +125,6 @@ export default function IntroductionDetailScreen() {
           updateVisibleTiming();
         }}
       >
-        <ScreenHeader
-          action="back"
-          trailingLabel={t('intro.position', { current: number(position), total: number(total) })}
-          trailing={(
-            <SafetyControl
-              scope={{ kind: 'introduction', id: introduction.id }}
-              memberName={profile.firstName}
-              onBlocked={() => void refresh()}
-            />
-          )}
-        />
-
         <Pressable
           accessibilityRole="imagebutton"
           accessibilityLabel={t('intro.photosA11y', { name: profile.firstName })}
