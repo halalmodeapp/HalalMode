@@ -947,5 +947,4 @@ export const am: TranslationCatalog = {
   "likedYou.missing": "ያ ምርጫ ከአሁን በኋላ አይገኝም።",
   "chat.quietTitle": "ለተወሰነ ጊዜ ጸጥ ብሏል። ቢጠቅም መነሻ፦",
   "chat.useOpener": "ይህን ተጠቀም",
-  "daily.firstChoiceNote": "መልሰው ካልመረጡዎት፣ እንደወደዷቸው ሊያዩ ይችላሉ፤ ፎቶዎ ተደብቆ ይቆያል።",
 };

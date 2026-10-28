@@ -947,5 +947,4 @@ export const ms: TranslationCatalog = {
   "likedYou.missing": "Suka itu tidak lagi tersedia.",
   "chat.quietTitle": "Sudah lama senyap. Pembuka, jika membantu:",
   "chat.useOpener": "Guna ini",
-  "daily.firstChoiceNote": "Jika mereka tidak memilih anda semula, mereka mungkin melihat bahawa anda menyukai mereka, dengan foto anda disembunyikan.",
 };

@@ -53,18 +53,18 @@ insert into public.profiles (
   religious_dress, ethnicities, heritage_countries, onboarding_complete
 ) values (
   '00000000-0000-0000-0000-000000019506', 'Friend Member', 'Friend', '1994-01-01', 'female',
-  'Leeds', 'United Kingdom', 'A thoughtful person who values family, faith and kindness, and who enjoys long walks, good food and quiet evenings.',
+  'Leeds', 'United Kingdom', 'Still writing my bio.',
   array['profile/friend.jpg'], array['English'], 'University', 'no', now(),
   'hijab', array['arab'], array['GB'], true
 );
 insert into public.private_preferences (user_id, matching_preferences_completed_at)
 values ('00000000-0000-0000-0000-000000019506', now());
 select is(public.my_referral_progress()->>'referral_count', '0',
-  'a profile still missing height and build does not count yet');
--- Height and build are the last step, so the referral must be noticed then.
-update public.private_preferences
-set own_height_cm = 165, own_build = 'Average'
-where user_id = '00000000-0000-0000-0000-000000019506';
+  'a profile whose bio is not written yet does not count');
+-- The bio is the last step, so the referral must be noticed then.
+update public.profiles
+set bio = 'A thoughtful person who values family, faith and kindness, and who enjoys long walks, good food and quiet evenings.'
+where id = '00000000-0000-0000-0000-000000019506';
 
 select set_config('request.jwt.claims',
   '{"sub":"00000000-0000-0000-0000-000000019502","role":"authenticated"}', true);

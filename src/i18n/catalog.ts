@@ -958,7 +958,6 @@ export const en = {
   "likedYou.missing": "That like is no longer available.",
   "chat.quietTitle": "It’s been quiet. An opener, if it helps:",
   "chat.useOpener": "Use this",
-  "daily.firstChoiceNote": "If they don’t choose you back, they may see that you liked them, with your photo hidden.",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -1911,5 +1910,4 @@ export const ar: TranslationCatalog = {
   "likedYou.missing": "لم يعد هذا الإعجاب متاحًا.",
   "chat.quietTitle": "الحديث هادئ منذ مدة. إليك افتتاحية إن أردت:",
   "chat.useOpener": "استخدمها",
-  "daily.firstChoiceNote": "إن لم يختاروك بالمقابل، فقد يرون أنك أُعجبت بهم، مع إخفاء صورتك.",
 };

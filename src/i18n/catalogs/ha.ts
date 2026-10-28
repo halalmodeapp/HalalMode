@@ -947,5 +947,4 @@ export const ha: TranslationCatalog = {
   "likedYou.missing": "Wannan so ba ya nan kuma.",
   "chat.quietTitle": "Shiru ya yi tsawon lokaci. Farawa, idan zai taimaka:",
   "chat.useOpener": "Yi amfani da wannan",
-  "daily.firstChoiceNote": "Idan ba su zaɓe ku ba, za su iya ganin cewa kun so su, ba tare da hotonku ba.",
 };

@@ -947,5 +947,4 @@ export const es: TranslationCatalog = {
   "likedYou.missing": "Ese me gusta ya no está disponible.",
   "chat.quietTitle": "Hace tiempo que no hablan. Una frase para empezar, por si ayuda:",
   "chat.useOpener": "Usar esta",
-  "daily.firstChoiceNote": "Si no te eligen a ti también, es posible que vean que les diste me gusta, con tu foto oculta.",
 };

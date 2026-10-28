@@ -947,5 +947,4 @@ export const zhHans: TranslationCatalog = {
   "likedYou.missing": "这份喜欢已不可用。",
   "chat.quietTitle": "聊天安静了一阵。需要的话，可以用这句开场白：",
   "chat.useOpener": "使用",
-  "daily.firstChoiceNote": "如果对方没有回选你，他们可能会看到你喜欢过他们，但你的照片会被隐藏。",
 };

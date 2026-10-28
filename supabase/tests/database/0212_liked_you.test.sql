@@ -57,7 +57,9 @@ select throws_ok($$select like_back('00000000-0000-0000-0000-000000021201')$$, '
   'liking back needs Premium');
 
 -- ---------------------------------------------------------------- what a Premium member sees and does
+select set_config('request.jwt.claims', '', true);
 update profiles set tier = 'premium' where id = '00000000-0000-0000-0000-000000021202';
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000021202","role":"authenticated"}', true);
 select ok((get_my_liked_you() -> 0 ->> 'unlocked') = 'true' and ((get_my_liked_you() -> 0) ? 'photos'),
   'a Premium member sees them in full');
 select ok(halal_mode_private.premium_sees_liker('00000000-0000-0000-0000-000000021202', '00000000-0000-0000-0000-000000021201'),

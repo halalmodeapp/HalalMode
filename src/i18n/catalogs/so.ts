@@ -947,5 +947,4 @@ export const so: TranslationCatalog = {
   "likedYou.missing": "Jeclaanshahaas ma jiro mar dambe.",
   "chat.quietTitle": "Waa aamusnaa muddo. Bilow, haddii ay caawiso:",
   "chat.useOpener": "Isticmaal",
-  "daily.firstChoiceNote": "Haddii aysan ku dooran, way arki karaan inaad jeclaatay, sawirkaaguna waa qarsoon yahay.",
 };

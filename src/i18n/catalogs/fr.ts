@@ -947,5 +947,4 @@ export const fr: TranslationCatalog = {
   "likedYou.missing": "Ce choix n’est plus disponible.",
   "chat.quietTitle": "C’est calme depuis un moment. Une amorce, si cela aide :",
   "chat.useOpener": "Utiliser",
-  "daily.firstChoiceNote": "Si la personne ne vous choisit pas en retour, elle peut voir que vous l’avez aimée, sans votre photo.",
 };

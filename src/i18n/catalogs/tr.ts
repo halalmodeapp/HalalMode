@@ -947,5 +947,4 @@ export const tr: TranslationCatalog = {
   "likedYou.missing": "Bu beğeni artık mevcut değil.",
   "chat.quietTitle": "Bir süredir sessiz. İşe yararsa bir giriş:",
   "chat.useOpener": "Bunu kullan",
-  "daily.firstChoiceNote": "Seni karşılıklı seçmezlerse, onları beğendiğini görebilirler; fotoğrafın gizli kalır.",
 };

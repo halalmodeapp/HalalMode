@@ -947,5 +947,4 @@ export const bn: TranslationCatalog = {
   "likedYou.missing": "সেই পছন্দ আর পাওয়া যাচ্ছে না।",
   "chat.quietTitle": "কিছুদিন ধরে নীরব। কাজে লাগলে একটি শুরু:",
   "chat.useOpener": "এটি ব্যবহার করুন",
-  "daily.firstChoiceNote": "তারা আপনাকে ফিরে না বাছলে, তারা দেখতে পারেন যে আপনি তাদের পছন্দ করেছিলেন, আপনার ছবি লুকানো থাকবে।",
 };

@@ -947,5 +947,4 @@ export const ur: TranslationCatalog = {
   "likedYou.missing": "یہ پسندیدگی اب دستیاب نہیں۔",
   "chat.quietTitle": "کچھ عرصے سے خاموشی ہے۔ اگر مدد ملے تو ایک آغاز:",
   "chat.useOpener": "استعمال کریں",
-  "daily.firstChoiceNote": "اگر وہ آپ کو جواباً نہ چنیں تو وہ دیکھ سکتے ہیں کہ آپ نے انہیں پسند کیا تھا، آپ کی تصویر چھپی ہوئی ہوگی۔",
 };

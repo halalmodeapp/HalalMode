@@ -947,5 +947,4 @@ export const ru: TranslationCatalog = {
   "likedYou.missing": "Эта симпатия больше недоступна.",
   "chat.quietTitle": "Давно тихо. Начало разговора, если поможет:",
   "chat.useOpener": "Использовать",
-  "daily.firstChoiceNote": "Если вы не выберете их в ответ, они могут увидеть, что понравились вам, но ваше фото будет скрыто.",
 };

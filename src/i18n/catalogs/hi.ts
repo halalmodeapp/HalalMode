@@ -947,5 +947,4 @@ export const hi: TranslationCatalog = {
   "likedYou.missing": "वह पसंद अब उपलब्ध नहीं है।",
   "chat.quietTitle": "कुछ समय से शांति है। अगर मदद मिले तो एक शुरुआत:",
   "chat.useOpener": "इस्तेमाल करें",
-  "daily.firstChoiceNote": "अगर वे आपको वापस नहीं चुनते, तो वे देख सकते हैं कि आपने उन्हें पसंद किया था, आपकी फ़ोटो छिपी रहेगी।",
 };

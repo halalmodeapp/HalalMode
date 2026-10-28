@@ -947,5 +947,4 @@ export const fa: TranslationCatalog = {
   "likedYou.missing": "این پسندیدن دیگر در دسترس نیست.",
   "chat.quietTitle": "مدتی است ساکت است. اگر کمک می‌کند، یک شروع:",
   "chat.useOpener": "استفاده",
-  "daily.firstChoiceNote": "اگر شما را متقابلاً انتخاب نکنند، ممکن است ببینند که آنها را پسندیده‌اید، با عکس پنهان.",
 };
