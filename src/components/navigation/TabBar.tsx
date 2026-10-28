@@ -5,8 +5,6 @@ import { useBreakpoint } from '@/theme/breakpoints';
 import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
 
 import * as Haptics from 'expo-haptics';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Platform,
@@ -16,6 +14,7 @@ import {
 } from 'react-native';
 import Animated, {
   cancelAnimation,
+  interpolateColor,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -24,13 +23,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, {
-  Defs,
-  LinearGradient as SvgLinearGradient,
-  Path,
-  Rect,
-  Stop,
-} from 'react-native-svg';
 
 import { useCardsAttention } from '@/halalCards/hooks';
 import { useI18n } from '@/i18n';
@@ -42,13 +34,10 @@ const PILL_HEIGHT = 60;
 const PILL_RADIUS = PILL_HEIGHT / 2;
 const PILL_TOP = 8;
 
-/**
- * Roughly 50% transparent glass body.
- *
- * This does not reduce the opacity of the text, symbols,
- * borders or highlights.
- */
-const GLASS_BODY_ALPHA = 0.5;
+/** The chosen tab's pill: plain black. Text on it is white; off it, grey. */
+const PILL_COLOR = '#0A0A0A';
+const TEXT_OFF = '#929292';
+const TEXT_ON = '#FFFFFF';
 
 type TabRouteName = 'daily' | 'connections' | 'you';
 
@@ -75,12 +64,6 @@ const MARKS: Record<string, string> = {
   daily: '✦',
   connections: '♥',
   you: '✿',
-};
-
-const MARK_COLORS: Record<string, string> = {
-  daily: '#737373',
-  connections: '#F47E97',
-  you: '#9D9D9D',
 };
 
 const POSITION_SPRING = {
@@ -158,13 +141,17 @@ function ElasticTitle({
   const scale = useSharedValue(focused ? 1.13 : 1);
   const translateY = useSharedValue(focused ? -0.5 : 0);
   const opacity = useSharedValue(focused ? 1 : 0.6);
+  // 0 = grey, 1 = white: it turns white as the black pill arrives under it.
+  const tone = useSharedValue(focused ? 1 : 0);
 
   useEffect(() => {
     cancelAnimation(scale);
     cancelAnimation(translateY);
     cancelAnimation(opacity);
+    cancelAnimation(tone);
 
     if (focused) {
+      tone.value = withDelay(40, withTiming(1, { duration: 200 }));
       scale.value = withDelay(
         52,
         withSequence(
@@ -196,6 +183,8 @@ function ElasticTitle({
       return;
     }
 
+    tone.value = withTiming(0, { duration: 160 });
+
     scale.value = withSpring(
       1,
       TITLE_RETURN_SPRING,
@@ -213,11 +202,13 @@ function ElasticTitle({
     focused,
     opacity,
     scale,
+    tone,
     translateY,
   ]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
+    color: interpolateColor(tone.value, [0, 1], [TEXT_OFF, TEXT_ON]),
     transform: [
       {
         translateY: translateY.value,
@@ -233,7 +224,6 @@ function ElasticTitle({
       numberOfLines={1}
       style={[
         styles.label,
-        focused && styles.labelFocused,
         animatedStyle,
       ]}
     >
@@ -245,14 +235,13 @@ function ElasticTitle({
 interface ElasticMarkProps {
   focused: boolean;
   mark: string;
-  color: string;
 }
 
 function ElasticMark({
   focused,
   mark,
-  color,
 }: ElasticMarkProps) {
+  const tone = useSharedValue(focused ? 1 : 0);
   const scale = useSharedValue(focused ? 1.22 : 1);
   const translateY = useSharedValue(focused ? -0.5 : 0);
   const rotation = useSharedValue(0);
@@ -263,8 +252,10 @@ function ElasticMark({
     cancelAnimation(translateY);
     cancelAnimation(rotation);
     cancelAnimation(opacity);
+    cancelAnimation(tone);
 
     if (focused) {
+      tone.value = withDelay(62, withTiming(1, { duration: 200 }));
       /**
        * The mark animates 34ms after the title.
        */
@@ -312,6 +303,8 @@ function ElasticMark({
       return;
     }
 
+    tone.value = withTiming(0, { duration: 160 });
+
     scale.value = withSpring(
       1,
       MARK_RETURN_SPRING,
@@ -335,11 +328,13 @@ function ElasticMark({
     opacity,
     rotation,
     scale,
+    tone,
     translateY,
   ]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
+    color: interpolateColor(tone.value, [0, 1], [TEXT_OFF, TEXT_ON]),
     transform: [
       {
         translateY: translateY.value,
@@ -357,267 +352,11 @@ function ElasticMark({
     <Animated.Text
       style={[
         styles.mark,
-        {
-          color,
-        },
         animatedStyle,
       ]}
     >
       {mark}
     </Animated.Text>
-  );
-}
-
-/**
- * Resolution-independent optical detailing.
- *
- * These SVG shapes imitate edge refraction and curved
- * glass highlights without raster-image softness.
- */
-function GlassRefraction() {
-  return (
-    <View
-      pointerEvents="none"
-      style={StyleSheet.absoluteFill}
-    >
-      <Svg
-        width="100%"
-        height="100%"
-        viewBox="0 0 1000 300"
-        preserveAspectRatio="none"
-      >
-        <Defs>
-          <SvgLinearGradient
-            id="outerRim"
-            x1="0"
-            y1="0"
-            x2="1"
-            y2="1"
-          >
-            <Stop
-              offset="0"
-              stopColor="#FFFFFF"
-              stopOpacity="0.95"
-            />
-
-            <Stop
-              offset="0.18"
-              stopColor="#FFFFFF"
-              stopOpacity="0.58"
-            />
-
-            <Stop
-              offset="0.48"
-              stopColor="#FFFFFF"
-              stopOpacity="0.08"
-            />
-
-            <Stop
-              offset="0.74"
-              stopColor="#6E7884"
-              stopOpacity="0.16"
-            />
-
-            <Stop
-              offset="1"
-              stopColor="#FFFFFF"
-              stopOpacity="0.72"
-            />
-          </SvgLinearGradient>
-
-          <SvgLinearGradient
-            id="innerRefraction"
-            x1="0"
-            y1="0"
-            x2="0"
-            y2="1"
-          >
-            <Stop
-              offset="0"
-              stopColor="#7D8793"
-              stopOpacity="0.22"
-            />
-
-            <Stop
-              offset="0.32"
-              stopColor="#FFFFFF"
-              stopOpacity="0.04"
-            />
-
-            <Stop
-              offset="0.72"
-              stopColor="#FFFFFF"
-              stopOpacity="0.06"
-            />
-
-            <Stop
-              offset="1"
-              stopColor="#FFFFFF"
-              stopOpacity="0.7"
-            />
-          </SvgLinearGradient>
-
-          <SvgLinearGradient
-            id="upperSweep"
-            x1="0"
-            y1="0"
-            x2="1"
-            y2="0.6"
-          >
-            <Stop
-              offset="0"
-              stopColor="#FFFFFF"
-              stopOpacity="0"
-            />
-
-            <Stop
-              offset="0.14"
-              stopColor="#FFFFFF"
-              stopOpacity="0.46"
-            />
-
-            <Stop
-              offset="0.42"
-              stopColor="#FFFFFF"
-              stopOpacity="0.14"
-            />
-
-            <Stop
-              offset="0.72"
-              stopColor="#FFFFFF"
-              stopOpacity="0.34"
-            />
-
-            <Stop
-              offset="1"
-              stopColor="#FFFFFF"
-              stopOpacity="0"
-            />
-          </SvgLinearGradient>
-
-          <SvgLinearGradient
-            id="bottomSweep"
-            x1="0"
-            y1="0"
-            x2="1"
-            y2="0"
-          >
-            <Stop
-              offset="0"
-              stopColor="#FFFFFF"
-              stopOpacity="0"
-            />
-
-            <Stop
-              offset="0.18"
-              stopColor="#FFFFFF"
-              stopOpacity="0.45"
-            />
-
-            <Stop
-              offset="0.52"
-              stopColor="#FFFFFF"
-              stopOpacity="0.12"
-            />
-
-            <Stop
-              offset="0.84"
-              stopColor="#FFFFFF"
-              stopOpacity="0.54"
-            />
-
-            <Stop
-              offset="1"
-              stopColor="#FFFFFF"
-              stopOpacity="0"
-            />
-          </SvgLinearGradient>
-        </Defs>
-
-        <Rect
-          x="8"
-          y="8"
-          width="984"
-          height="284"
-          rx="142"
-          fill="none"
-          stroke="url(#outerRim)"
-          strokeWidth="12"
-          opacity="0.82"
-        />
-
-        <Rect
-          x="34"
-          y="31"
-          width="932"
-          height="238"
-          rx="119"
-          fill="none"
-          stroke="url(#innerRefraction)"
-          strokeWidth="8"
-          opacity="0.7"
-        />
-
-        <Path
-          d="
-            M 42 110
-            C 215 25, 690 20, 964 94
-            C 695 66, 318 76, 42 152
-            Z
-          "
-          fill="url(#upperSweep)"
-          opacity="0.44"
-        />
-
-        <Path
-          d="
-            M 54 87
-            C 285 35, 690 41, 948 84
-          "
-          fill="none"
-          stroke="url(#upperSweep)"
-          strokeWidth="10"
-          strokeLinecap="round"
-          opacity="0.74"
-        />
-
-        <Path
-          d="
-            M 72 235
-            C 302 276, 720 276, 936 226
-          "
-          fill="none"
-          stroke="url(#bottomSweep)"
-          strokeWidth="12"
-          strokeLinecap="round"
-          opacity="0.62"
-        />
-
-        <Path
-          d="
-            M 88 62
-            C 24 105, 22 198, 86 242
-          "
-          fill="none"
-          stroke="#FFFFFF"
-          strokeWidth="10"
-          strokeLinecap="round"
-          opacity="0.52"
-        />
-
-        <Path
-          d="
-            M 916 62
-            C 976 108, 974 196, 916 242
-          "
-          fill="none"
-          stroke="#5E6874"
-          strokeWidth="5"
-          strokeLinecap="round"
-          opacity="0.16"
-        />
-      </Svg>
-    </View>
   );
 }
 
@@ -847,127 +586,14 @@ export function TabBar({
           );
         }}
       >
+        {/* The chosen tab sits on a plain black pill that slides, stretches and squeezes between tabs. */}
         <Animated.View
           pointerEvents="none"
           style={[
             styles.pillOuter,
             pillAnimatedStyle,
           ]}
-        >
-          <View style={styles.ambientShadow} />
-          <View style={styles.contactShadow} />
-
-          <View style={styles.pillClip}>
-            {/*
-             * No Android-specific blurMethod is selected.
-             * This prevents the missing blurTarget warning.
-             */}
-            <BlurView
-              intensity={32}
-              tint="light"
-              style={StyleSheet.absoluteFill}
-            />
-
-            <View style={styles.glassBody} />
-
-            <LinearGradient
-              colors={[
-                'rgba(255,255,255,0.54)',
-                'rgba(255,255,255,0.20)',
-                'rgba(230,236,243,0.10)',
-                'rgba(255,255,255,0.32)',
-              ]}
-              locations={[
-                0,
-                0.31,
-                0.68,
-                1,
-              ]}
-              start={{
-                x: 0.05,
-                y: 0,
-              }}
-              end={{
-                x: 0.96,
-                y: 1,
-              }}
-              style={StyleSheet.absoluteFill}
-            />
-
-            <LinearGradient
-              colors={[
-                'rgba(70,78,88,0.19)',
-                'rgba(95,104,114,0.08)',
-                'rgba(255,255,255,0)',
-              ]}
-              locations={[
-                0,
-                0.44,
-                1,
-              ]}
-              start={{
-                x: 0.5,
-                y: 0,
-              }}
-              end={{
-                x: 0.5,
-                y: 1,
-              }}
-              style={styles.upperInsetShadow}
-            />
-
-            <LinearGradient
-              colors={[
-                'rgba(255,255,255,0)',
-                'rgba(255,255,255,0.2)',
-                'rgba(255,255,255,0.72)',
-              ]}
-              locations={[
-                0,
-                0.54,
-                1,
-              ]}
-              start={{
-                x: 0.5,
-                y: 0,
-              }}
-              end={{
-                x: 0.5,
-                y: 1,
-              }}
-              style={styles.lowerBevel}
-            />
-
-            <LinearGradient
-              colors={[
-                'rgba(255,255,255,0.82)',
-                'rgba(255,255,255,0.34)',
-                'rgba(255,255,255,0)',
-              ]}
-              locations={[
-                0,
-                0.4,
-                1,
-              ]}
-              start={{
-                x: 0.12,
-                y: 0,
-              }}
-              end={{
-                x: 0.82,
-                y: 1,
-              }}
-              style={styles.topGloss}
-            />
-
-            <View style={styles.innerWell} />
-
-            <GlassRefraction />
-
-            <View style={styles.outerRim} />
-            <View style={styles.innerRim} />
-          </View>
-        </Animated.View>
+        />
 
         <View
           style={[
@@ -1043,11 +669,6 @@ export function TabBar({
                       mark={
                         MARKS[route.name] ??
                         '•'
-                      }
-                      color={
-                        MARK_COLORS[
-                          route.name
-                        ] ?? '#999999'
                       }
                     />
 
@@ -1135,179 +756,13 @@ const styles = StyleSheet.create({
     left: 0,
     height: PILL_HEIGHT,
     borderRadius: PILL_RADIUS,
-    backgroundColor: 'transparent',
-    overflow: 'visible',
-
-    boxShadow:
-      '0 18px 30px -11px rgba(42,48,56,0.28), 0 5px 11px -4px rgba(28,33,39,0.24)',
-
-    shadowColor: '#27303A',
-    shadowOpacity: 0.18,
-    shadowRadius: 18,
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-
-    elevation: 10,
-  },
-
-  ambientShadow: {
-    position: 'absolute',
-    left: 7,
-    right: 7,
-    top: 12,
-    bottom: -11,
-    borderRadius: PILL_RADIUS,
-    backgroundColor:
-      'rgba(65,72,82,0.09)',
-    transform: [
-      {
-        scaleX: 1.04,
-      },
-    ],
-  },
-
-  contactShadow: {
-    position: 'absolute',
-    left: 4,
-    right: 4,
-    bottom: -4,
-    height: 24,
-    borderRadius: PILL_RADIUS,
-    backgroundColor:
-      'rgba(44,50,58,0.09)',
-  },
-
-  pillClip: {
-    flex: 1,
-    borderRadius: PILL_RADIUS,
-    overflow: 'hidden',
-
-    backgroundColor:
-      `rgba(238,243,248,${GLASS_BODY_ALPHA})`,
-
-    boxShadow:
-      'inset 0 5px 11px rgba(73,82,92,0.17), inset 0 -3px 7px rgba(255,255,255,0.72)',
-  },
-
-  glassBody: {
-    ...StyleSheet.absoluteFill,
-
-    backgroundColor:
-      `rgba(239,244,249,${GLASS_BODY_ALPHA})`,
-  },
-
-  upperInsetShadow: {
-    position: 'absolute',
-    top: 0,
-    left: 12,
-    right: 12,
-    height: 28,
-
-    borderTopLeftRadius:
-      PILL_RADIUS,
-
-    borderTopRightRadius:
-      PILL_RADIUS,
-  },
-
-  lowerBevel: {
-    position: 'absolute',
-    left: 7,
-    right: 7,
-    bottom: 0,
-    height: 25,
-
-    borderBottomLeftRadius:
-      PILL_RADIUS,
-
-    borderBottomRightRadius:
-      PILL_RADIUS,
-  },
-
-  topGloss: {
-    position: 'absolute',
-    top: 2,
-    left: 13,
-    right: 13,
-    height: 23,
-    borderRadius: 18,
-    opacity: 0.78,
-  },
-
-  innerWell: {
-    position: 'absolute',
-    top: 4,
-    left: 5,
-    right: 5,
-    bottom: 4,
-
-    borderRadius:
-      PILL_RADIUS - 4,
-
-    borderTopWidth: 1.2,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderBottomWidth: 1.2,
-
-    borderTopColor:
-      'rgba(79,88,99,0.20)',
-
-    borderLeftColor:
-      'rgba(104,113,122,0.11)',
-
-    borderRightColor:
-      'rgba(255,255,255,0.52)',
-
-    borderBottomColor:
-      'rgba(255,255,255,0.66)',
-  },
-
-  outerRim: {
-    ...StyleSheet.absoluteFill,
-
-    borderRadius:
-      PILL_RADIUS,
-
-    borderWidth: 1.2,
-
-    borderTopColor:
-      'rgba(255,255,255,0.96)',
-
-    borderLeftColor:
-      'rgba(255,255,255,0.80)',
-
-    borderRightColor:
-      'rgba(110,120,132,0.26)',
-
-    borderBottomColor:
-      'rgba(255,255,255,0.75)',
-  },
-
-  innerRim: {
-    position: 'absolute',
-    top: 2,
-    left: 2,
-    right: 2,
-    bottom: 2,
-
-    borderRadius:
-      PILL_RADIUS - 2,
-
-    borderWidth: 1,
-
-    borderTopColor:
-      'rgba(78,86,96,0.14)',
-
-    borderLeftColor:
-      'rgba(255,255,255,0.18)',
-
-    borderRightColor:
-      'rgba(255,255,255,0.44)',
-
-    borderBottomColor:
-      'rgba(255,255,255,0.62)',
+    backgroundColor: PILL_COLOR,
+    boxShadow: '0 8px 18px -8px rgba(10,10,10,0.45)',
+    shadowColor: '#0A0A0A',
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 6,
   },
 
   tabsRow: {
@@ -1354,11 +809,7 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     lineHeight: 17,
     letterSpacing: 0.18,
-    color: '#929292',
+    color: TEXT_OFF,
     includeFontPadding: false,
-  },
-
-  labelFocused: {
-    color: '#111111',
   },
 });
