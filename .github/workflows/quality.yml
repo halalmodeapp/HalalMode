@@ -58,11 +58,14 @@ jobs:
             echo "No Docker Hub secrets set; pulling anonymously."
           fi
 
-      # A rate-limited pull is worth another go a little later.
+      # The contracts only need Postgres, auth and storage (the migrations create
+      # buckets and policies). Every other service is a download that can hit
+      # the registry's anonymous pull limit, so they are not started. A
+      # rate-limited pull is still worth another go a little later.
       - name: Start isolated Supabase services
         run: |
           for attempt in 1 2 3; do
-            supabase start && exit 0
+            supabase start -x studio,imgproxy,edge-runtime,realtime,mailpit,postgres-meta,vector,supavisor && exit 0
             echo "supabase start failed (attempt $attempt); retrying in 60 seconds"
             supabase stop --no-backup || true
             sleep 60
