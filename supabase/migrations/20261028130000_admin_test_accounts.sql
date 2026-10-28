@@ -98,7 +98,7 @@ begin
     on conflict do nothing;
   else
     if exists (select 1 from halal_mode_private.admin_members a where a.user_id = v_user) then
-      raise exception 'An owner always has demo mode' using errcode = '22023';
+      raise exception 'An owner always has test mode' using errcode = '22023';
     end if;
     delete from halal_mode_private.release_flag_members where user_id = v_user and key in ('tester_tools', 'demo_introductions');
     -- A tester grant of Premium goes with it; a real purchase never does.

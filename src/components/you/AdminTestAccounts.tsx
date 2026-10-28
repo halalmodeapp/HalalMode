@@ -11,7 +11,7 @@ const KEY = ['admin-test-accounts'] as const;
 
 /**
  * Owners only, and in English on purpose: it is an internal tool, not part of
- * the member experience. Lists the accounts that have demo mode and lets an
+ * the member experience. Lists the accounts that have test mode and lets an
  * owner add one (for example the account an AI assistant tests with).
  */
 export function AdminTestAccounts() {
@@ -31,7 +31,7 @@ export function AdminTestAccounts() {
 
   return (
     <View style={styles.wrap}>
-      <Text variant="micro">Demo mode accounts</Text>
+      <Text variant="micro">Test mode accounts</Text>
       <Text variant="caption">
         These accounts get sample members, free test Premium and the reset. Nobody else does. Add the account an AI assistant signs in with, after it has signed up.
       </Text>
@@ -41,7 +41,7 @@ export function AdminTestAccounts() {
             {account.email}{account.owner ? '  (owner)' : ''}
           </Text>
           <Switch
-            accessibilityLabel={`Demo mode for ${account.email}`}
+            accessibilityLabel={`Test mode for ${account.email}`}
             value
             disabled={account.owner || change.isPending}
             onValueChange={(enabled) => change.mutate({ address: account.email, enabled })}
@@ -61,7 +61,7 @@ export function AdminTestAccounts() {
       />
       {change.isError ? <Text variant="caption">{(change.error as Error).message}</Text> : null}
       <Button
-        label="Add demo account"
+        label="Add test account"
         variant="secondary"
         loading={change.isPending}
         disabled={!email.includes('@')}
