@@ -10,6 +10,7 @@
     "web": "expo start --web",
     "test": "tsc -p tests/tsconfig.json && node --test .test-build/tests/*.test.js tests/webRedirects.test.mjs",
     "typecheck": "tsc --noEmit",
+    "update:phone": "node scripts/publish-update.mjs",
     "lint": "eslint . --max-warnings=0",
     "verify:client": "npm run typecheck && npm run lint && npm run verify:sql && npm test",
     "export:android": "expo export --platform android --output-dir dist/ci-android",
