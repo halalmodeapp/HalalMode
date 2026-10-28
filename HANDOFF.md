@@ -1,12 +1,24 @@
 # Handoff notes
 
-> **State as of 2026-08-12.** Migrations through `0095` are applied to the
-> hosted project; the `generate-round` Edge Function is at version 12; the
-> active matching configuration is version 10. 209 client tests pass and **CI is
-> fully green**, including the 44-file pgTAP suite. The app has been run against
-> the live backend and a complete member journey verified end to end.
+> **State as of 2026-10-23.** All 223 migrations in `supabase/migrations`
+> (`0001`–`0190`, then dated ones through `20261022120000`) are applied to the
+> hosted project `lfuuywsmydruvqkqwvzw` (London), and all nine Edge Functions
+> in `supabase/functions` are deployed. `npm run verify:client` passes with 449
+> client tests, and CI (including the 65-file pgTAP suite) is green.
+>
+> Work happens on `feature/halal-cards`, which is ahead of the default branch
+> `codex/premium-foundation` and is what production was deployed from. Merge it
+> before anyone deploys or branches from the default branch.
+>
+> Still to do for launch: the App Store link and `inviteFlow` in
+> `site/launch.js` (see `docs/POST_LAUNCH_REFERRALS.md`), the SES switch once
+> AWS approves, and the device pass in `docs/RELEASE_CHECKLIST.md`. The admin
+> panel is described in `docs/ADMIN_PANEL.md`.
+>
+> The sections below are the August notes, kept for their reasoning; numbers
+> in them are from then.
 
-## What is actually proven now
+## What is actually proven now (August 2026)
 
 A real journey, walked in a browser against the hosted project rather than
 argued from tests:
@@ -30,9 +42,9 @@ correctly refused the test harness mid-run.
    closed, unconditionally. Recorded in `0092`, with the misleading comment that
    caused a near-miss corrected in the live function.
 
-2. **The waitlist lives at `/join`** and is the page halalmo.de points at. Same
-   backend, separate route from the app's sign-in splash, and it retires when
-   signups open. Collects email, city, age range.
+2. **The waitlist is the static site at halalmo.de** (`site/index.html`,
+   calling `join_waitlist_now`). The app is not published on the web; `/app`
+   redirects to the homepage. Collects email, city, age range.
 
 ## Still open
 

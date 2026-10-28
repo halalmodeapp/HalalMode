@@ -164,6 +164,7 @@ insert into profiles (
 ) values
   ('00000000-0000-0000-0000-000000005401', 'Shadow A', 'Shadow', '1990-01-01', 'male', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, repeat('a', 50), array['a.jpg'], true),
   ('00000000-0000-0000-0000-000000005402', 'Shadow B', 'Shadow', '1991-01-01', 'female', 'Madinah', 'Saudi Arabia', 24.4680, 39.6030, repeat('b', 50), array['b.jpg'], true);
+update profiles set marital_status = 'never_married' where marital_status is null; -- matching needs a declared status
 
 insert into private_preferences (
   user_id, min_age, max_age, preferred_countries, max_distance_km,
@@ -171,6 +172,27 @@ insert into private_preferences (
 ) values
   ('00000000-0000-0000-0000-000000005401', 18, 50, array['Saudi Arabia'], 100, now()),
   ('00000000-0000-0000-0000-000000005402', 18, 50, array['Saudi Arabia'], 100, now());
+
+update public.profiles
+set bio = repeat('r', 80),
+    languages_spoken = array['Arabic'],
+    education = 'University',
+    has_children = 'no',
+    family_goals_answered_at = now(),
+    religious_dress = case when gender::text = 'female' then 'hijab' else null end,
+    ethnicities = array['arab'],
+    heritage_countries = array['SA']
+where id in (
+  '00000000-0000-0000-0000-000000005401',
+  '00000000-0000-0000-0000-000000005402'
+);
+update public.private_preferences
+set own_height_cm = 170,
+    own_build = 'Average'
+where user_id in (
+  '00000000-0000-0000-0000-000000005401',
+  '00000000-0000-0000-0000-000000005402'
+);
 
 insert into halal_mode_private.member_legal_consent_history (
   user_id, document_type, version, acceptance_context
@@ -182,6 +204,13 @@ from (values
 ) member(id)
 cross join halal_mode_private.legal_document_registry document
 where document.is_current;
+
+update public.profiles p
+set sensitive_consent_at = now()
+where 2 = (select count(*)
+  from halal_mode_private.member_legal_consent_history h
+  join halal_mode_private.legal_document_registry d using (document_type, version)
+  where h.user_id = p.id and d.is_current);
 
 create temporary table matching_test_runs (
   mode text primary key,

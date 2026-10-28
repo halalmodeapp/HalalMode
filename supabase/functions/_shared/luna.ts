@@ -1,11 +1,12 @@
 /**
  * Which AI model the service uses: OpenAI's cheapest tier, "Luna".
  *
- * Each call site asks for the newest "-luna" model OpenAI lists (GPT-7 Luna
- * the day it appears), and falls back to FALLBACK_MODEL if that one fails.
- * Set the AI_MODEL secret to pin a model by hand. OpenAI does not publish
- * prices through its API, so "newest Luna" stands in for "cheapest": true of
- * every Luna release so far.
+ * The model is pinned to FALLBACK_MODEL, so moderation and summaries behave
+ * the same until someone changes them on purpose: a new model changes how
+ * photos are judged, and that should be checked with scripts/luna-photo-eval.ts
+ * before it goes live. Set the AI_MODEL secret to pin a different model, or
+ * AI_MODEL_AUTO=true to follow the newest "-luna" OpenAI lists (it still falls
+ * back to FALLBACK_MODEL if that one fails).
  */
 import OpenAI from 'npm:openai';
 
@@ -16,6 +17,7 @@ let cached: { id: string; at: number } | null = null;
 export async function newestLuna(openai: OpenAI): Promise<string> {
   const pinned = Deno.env.get('AI_MODEL') ?? Deno.env.get('MODERATION_MODEL');
   if (pinned) return pinned;
+  if (Deno.env.get('AI_MODEL_AUTO') !== 'true') return FALLBACK_MODEL;
   // One lookup an hour per running function is plenty.
   if (cached && Date.now() - cached.at < 3_600_000) return cached.id;
   let best = { id: FALLBACK_MODEL, version: 6 };

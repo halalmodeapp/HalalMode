@@ -20,6 +20,12 @@ export interface MemberSignals {
   timesShown: number;
   /** Times kept when shown, `selection_scores.times_kept`. */
   timesKept: number;
+  /** Private multi-signal reception estimate; absent during a rolling deploy. */
+  receptionScore?: number;
+  /** Confidence in the reception estimate, from 0 (new) to 1 (established). */
+  receptionConfidence?: number;
+  /** Small, backend-controlled preference for pairing similar reception levels. */
+  receptionSimilarityWeight?: number;
   /** From the `match_health` view. */
   roundsSinceLastMutual: number;
   /**
@@ -106,8 +112,31 @@ export function clamp(value: number, low: number, high: number): number {
  * this function, decides how much the value is trusted.
  */
 export function appeal(member: MemberSignals): number {
-  if (member.timesShown <= 0) return 0.5;
-  return clamp(member.timesKept / member.timesShown, 0, 1);
+  const prior = member.timesShown <= 0
+    ? 0.5
+    : clamp(member.timesKept / member.timesShown, 0, 1);
+  if (member.receptionScore === undefined) return prior;
+  const evidence = clamp(member.receptionConfidence ?? 0, 0, 1);
+  return prior * (1 - evidence) + clamp(member.receptionScore, 0, 1) * evidence;
+}
+
+/** A low-confidence score stays near neutral when comparing two members. */
+export function effectiveReception(member: MemberSignals): number {
+  const score = clamp(member.receptionScore ?? 0.5, 0, 1);
+  const evidence = clamp(member.receptionConfidence ?? 0, 0, 1);
+  return 0.5 + (score - 0.5) * evidence;
+}
+
+/** Softly prefers similar reception levels without imposing score bands. */
+export function receptionSimilarityMultiplier(
+  first: MemberSignals,
+  second: MemberSignals,
+): number {
+  const weight = Math.min(
+    0.2,
+    Math.max(0, Math.min(first.receptionSimilarityWeight ?? 0, second.receptionSimilarityWeight ?? 0))
+  );
+  return 1 - weight * Math.abs(effectiveReception(first) - effectiveReception(second));
 }
 
 /**

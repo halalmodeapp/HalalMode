@@ -46,7 +46,7 @@ export default function GalleryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { localeTag, isRTL, t } = useI18n();
   const insets = useSafeAreaInsets();
-  const { round, refresh, profileOpened, profileClosed } = useRound();
+  const { round, refresh, profileOpened, profileClosed, photoVisibility } = useRound();
   const listRef = useRef<FlatList<string>>(null);
   const [index, setIndex] = useState(0);
   // The app is held to a phone's width on a desktop, so the window is the
@@ -63,6 +63,9 @@ export default function GalleryScreen() {
     : [];
   const galleryState = getGalleryState(!!introduction, photos.length);
   const safeIndex = safeGalleryIndex(index, photos.length);
+  const activePhotoPath = introduction?.profile.photoMedia?.[safeIndex]?.storagePath ?? null;
+  const [isGalleryFocused, setIsGalleryFocused] = useState(false);
+  const trackedPhoto = useRef<{ introductionId: string; storagePath: string } | null>(null);
   const number = (value: number) => new Intl.NumberFormat(localeTag).format(value);
 
   // Looking through someone's photos is time spent on them, so it counts under
@@ -71,10 +74,33 @@ export default function GalleryScreen() {
   useFocusEffect(
     useCallback(() => {
       if (!id) return;
+      setIsGalleryFocused(true);
       profileOpened(id);
-      return () => profileClosed(id);
-    }, [id, profileClosed, profileOpened])
+      return () => {
+        setIsGalleryFocused(false);
+        const tracked = trackedPhoto.current;
+        if (tracked) {
+          photoVisibility(tracked.introductionId, tracked.storagePath, false);
+          trackedPhoto.current = null;
+        }
+        profileClosed(id);
+      };
+    }, [id, photoVisibility, profileClosed, profileOpened])
   );
+
+  // Only the full-size active slide counts, not the thumbnail strip. The intro
+  // screen closes its hero-photo timer while this gallery is in front.
+  useEffect(() => {
+    const current = trackedPhoto.current;
+    if (current && (current.introductionId !== id || current.storagePath !== activePhotoPath)) {
+      photoVisibility(current.introductionId, current.storagePath, false);
+      trackedPhoto.current = null;
+    }
+    if (isGalleryFocused && id && activePhotoPath && !trackedPhoto.current) {
+      photoVisibility(id, activePhotoPath, true);
+      trackedPhoto.current = { introductionId: id, storagePath: activePhotoPath };
+    }
+  }, [activePhotoPath, id, isGalleryFocused, photoVisibility]);
 
   useEffect(() => {
     if (safeIndex !== index) setIndex(safeIndex);

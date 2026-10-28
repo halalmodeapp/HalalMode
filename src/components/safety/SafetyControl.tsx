@@ -37,6 +37,7 @@ type SafetyView = 'closed' | 'menu' | 'report' | 'block' | 'hide' | 'reported' |
 const REPORT_REASONS: ReportReason[] = [
   'harassment',
   'misrepresentation',
+  'marital_status_mismatch',
   'safety_concern',
   'other',
 ];

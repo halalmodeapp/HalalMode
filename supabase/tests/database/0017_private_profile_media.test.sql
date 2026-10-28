@@ -78,6 +78,20 @@ end $$;
 select public.accept_current_legal_documents();
 select public.record_sensitive_consent();
 
+-- A private-media read across members requires current consent from both.
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"00000000-0000-0000-0000-0000000000f6","role":"authenticated"}',
+  true
+);
+select public.accept_current_legal_documents();
+select public.record_sensitive_consent();
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"00000000-0000-0000-0000-0000000000e5","role":"authenticated"}',
+  true
+);
+
 select ok(
   halal_mode_private.can_read_profile_media('00000000-0000-0000-0000-0000000000f6'),
   'a live introduction authorizes private profile media reads'

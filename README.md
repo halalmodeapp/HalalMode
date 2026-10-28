@@ -10,7 +10,7 @@ disclosure, endless browsing, and paid visibility.
 
 ## Current product status
 
-- Expo SDK 54 / React Native 0.81 / strict TypeScript / Expo Router.
+- Expo SDK 57 / React Native 0.86 / strict TypeScript / Expo Router.
 - Supabase for Auth, Postgres, Storage, Edge Functions, and RLS.
 - Email magic-link authentication and onboarding are implemented for the real
   backend. Mock mode remains the default for local product work.

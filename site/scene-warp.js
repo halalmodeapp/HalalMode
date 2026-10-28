@@ -55,6 +55,11 @@ const RIGS = {
 /** Line boil, as chosen on the live page. Amount and size are in world pixels
  * (the 1536x1024 frame); rough roughens soft edges (off). */
 const BOIL = { amount: 0.5, size: 6, fps: 8, drawings: 6, rough: 0 };
+/** How the boil on screen follows the scene's scale s: amount on screen goes as
+ * s^BOIL_AMOUNT_EASE and wobble size as s^BOIL_SIZE_EASE (1 would shrink with the
+ * picture, 0 would never shrink). Same numbers as boilSettings.ts. */
+const BOIL_AMOUNT_EASE = 0.2;
+const BOIL_SIZE_EASE = 0.35;
 const GRID = 40;
 const MARGIN = 14; // world px around each layer for movement to spill into
 
@@ -251,7 +256,14 @@ function prepare(layer, rig, onRestored) {
     draw(t, strength, look) {
       if (lost || gl.isContextLost()) return;
       gl.uniform4f(uView, MARGIN, w, h, t);
-      gl.uniform4f(uBoil, w, h, look ? look.amount : 0, look ? Math.max(1, look.size) : 1);
+      // Shrunk to a phone the scene is about a quarter size, which would shrink
+      // the boil below a device pixel. So it eases with the scene's size instead
+      // of following it: full size gives the chosen look, and each halving of
+      // the scene keeps a little more of the boil on screen (see boilSettings.ts).
+      const scale = Math.min(1.5, canvas.clientWidth / (w + 2 * MARGIN) || 1);
+      const amount = look ? Math.min(MARGIN / 3, look.amount * Math.pow(scale, BOIL_AMOUNT_EASE - 1)) : 0;
+      const size = look ? look.size * Math.pow(scale, BOIL_SIZE_EASE - 1) : 1;
+      gl.uniform4f(uBoil, w, h, amount, Math.max(1, size));
       gl.uniform2f(uBoil2, look ? look.seed : 0, look ? look.rough : 0);
       if (sway) gl.uniform4f(uSway, sway.ampX * strength, sway.ampY * strength, (2 * Math.PI) / sway.period, 0);
       if (b1) gl.uniform3f(uB1, b1.from[0] - ox, b1.from[1] - oy, angle(b1, t) * strength);

@@ -7,11 +7,24 @@
  * lawyer review the wording before public launch; the facts here are correct,
  * the legal framing is not a substitute for advice.
  *
- * The versions must match `legal_document_registry` in the database, because
- * that is what members' acceptance is recorded against.
+ * The one source for both documents: their words, version, date and address.
+ * The app's /terms and /privacy screens and the website's /legal pages
+ * (scripts/legal-pages.mjs) are drawn from here, and the app's links
+ * (src/lib/publicLinks.ts, src/lib/legalDocuments.ts) are derived from it.
+ * What cannot import this file is held to it by tests/legalDocuments.test.ts:
+ * the current rows of `legal_document_registry`, which members' acceptance is
+ * recorded against, and the website's footer and plain pages.
+ *
+ * To publish a new version: change the words, set LEGAL_VERSION to the new
+ * date, and add a migration making that version current in the registry.
+ * Members are asked to accept it on their next visit.
  */
 
-export const LEGAL_VERSION = '2026-10-06';
+export const LEGAL_VERSION = '2026-10-28';
+
+/** Where both documents live: halalmo.de/legal/terms and /legal/privacy. */
+export const LEGAL_SITE = 'https://halalmo.de';
+export const legalPath = (slug: 'terms' | 'privacy') => `/legal/${slug}`;
 
 /** Who runs the service. Shown in both documents and on halalmo.de/impressum. */
 export const OPERATOR = {
@@ -29,6 +42,7 @@ export interface LegalDocument {
   slug: 'terms' | 'privacy';
   title: string;
   updated: string;
+  url: string;
   intro: string;
   sections: LegalSection[];
 }
@@ -37,6 +51,7 @@ export const TERMS: LegalDocument = {
   slug: 'terms',
   title: 'Terms of Service',
   updated: LEGAL_VERSION,
+  url: LEGAL_SITE + legalPath('terms'),
   intro:
     'Halal Mode introduces a small number of people to each other each day, for the purpose of marriage. These terms explain what we promise you, and what we ask of you in return. Halal Mode is run by Halal Mode LLC, 1209 Mountain Road Pl NE, Ste R, Albuquerque, NM 87110, USA.',
   sections: [
@@ -53,7 +68,7 @@ export const TERMS: LegalDocument = {
       body: [
         'Each day you are shown a small set of people. Free members may show interest in up to three of them; Premium members see up to ten and may show interest in up to ten.',
         'Introductions are mutual. If someone appears in your set, you appear in theirs. Nobody is browsed without appearing themselves.',
-        'Interest is private. If you choose someone and they do not choose you, they are never told. You will never be told that someone chose you unless you chose them back.',
+        'Interest is private until it is returned. If you choose someone and they do not choose you back, they may see that you liked them, with your photo hidden: they can read your bio and see your age, city and occupation, but not your name or photos. Premium members can see who liked them, with photos, and like them back. You are never told that they saw it, or that you were not chosen.',
         'We do not guarantee that you will be matched, or how many introductions you will receive on any given day. That depends on how many suitable people are available.',
       ],
     },
@@ -65,6 +80,14 @@ export const TERMS: LegalDocument = {
         'Do not harass, threaten, deceive, or pressure anyone.',
         'Do not share anyone else’s photographs, messages, or details outside the app.',
         'Do not use Halal Mode to advertise, recruit, or sell.',
+      ],
+    },
+    {
+      heading: 'Your marital status',
+      body: [
+        'Tell us honestly whether you are single, divorced, widowed, or currently married, and keep it up to date.',
+        'It is shown on your profile from the first introduction, so the people you meet know from the start.',
+        'If someone reports that a profile does not match a person’s real situation, we look into it. If a false marital status is proven, the account is closed permanently. This protects every honest member.',
       ],
     },
     {
@@ -125,6 +148,7 @@ export const PRIVACY: LegalDocument = {
   slug: 'privacy',
   title: 'Privacy Notice',
   updated: LEGAL_VERSION,
+  url: LEGAL_SITE + legalPath('privacy'),
   intro:
     'This explains exactly what Halal Mode stores, who can see it, and what is never shown to anyone. It is written to be read, not to be skipped. Halal Mode LLC, 1209 Mountain Road Pl NE, Ste R, Albuquerque, NM 87110, USA, is responsible for your data (the “controller”). Write to hello@halalmo.de about anything here.',
   sections: [
@@ -133,8 +157,10 @@ export const PRIVACY: LegalDocument = {
       body: [
         'Your email address, so you can sign in.',
         'Your profile: name, date of birth, city and country, what you do, what you have written about yourself, your photographs, and an optional voice introduction.',
-        'Your preferences: the age, distance, and other qualities you are looking for, and which of them are must-haves.',
+        'Your preferences: the age, distance, and other qualities you are looking for, which of them are must-haves, and which marital statuses you are open to.',
+        'Your marital status, and when you change it.',
         'Your activity: which introductions you were shown, which you kept, your answers to the questions, and your messages.',
+        'While an introduction is open, approximate time spent on the profile, its written bio, and each full-size photograph. These times are rounded to five-second steps and capped at two minutes per item.',
         'Your location, rounded to about one kilometre, with the nearest city and country. It comes from your device, is used only to work out how far apart two people are, and is never shown to anyone.',
         'Your background and faith: your sect or school, how you practise, religious dress, ethnicity, the countries your family are from, and whether you have or want children. Also your height and body type, which are never shown to anyone.',
       ],
@@ -159,15 +185,26 @@ export const PRIVACY: LegalDocument = {
     {
       heading: 'What other members see',
       body: [
-        'People you are introduced to see your first name, age, city, occupation, what you have written, your photographs, and your voice introduction if you recorded one.',
+        'People you are introduced to see your first name, age, city, occupation, marital status, what you have written, your photographs, and your voice introduction if you recorded one.',
         'They never see your email address, your date of birth, your exact location, or your preferences.',
         'They are never told that you were shown their profile and did not choose them.',
+        'If you chose someone and they did not choose you back, they may see that you liked them: your age, city, occupation, marital status and bio, with a blurred photo and no name. A Premium member sees your name and photographs and can like you back.',
+      ],
+    },
+    {
+      heading: 'Your referral link',
+      body: [
+        'Your referral link carries a code that belongs to you. Anyone who opens it sees who invited them: your first name, or, if you have not added one yet (for example, while you are only on the waitlist), your email address.',
+        'Share your link only with people, and in places, where you are happy for that to be seen. Once you add your first name in the app, your name is shown instead of your email address.',
+        'When someone joins through your link, we record that you invited them, so the referral can be credited to you.',
       ],
     },
     {
       heading: 'What nobody sees',
       body: [
-        'We keep a private score used to decide who to introduce to whom. It is never shown to anyone, including you. It is not a rating of you as a person, and it is not shared.',
+        'We combine private signals such as whether introductions were chosen, first-choice and mutual outcomes, and approximate time spent on a profile, its bio, and each photograph. This produces a confidence-aware reception estimate used only by the matching system to help predict reciprocal interest and gently prefer pairs with similar estimates. It is never shown to anyone, including you, and is not a rating of your worth or suitability.',
+        'A separate rotation gives members opportunities to be introduced. A lower reception estimate does not make you ineligible or remove your place in that rotation.',
+        'If private photo-presentation analysis is enabled, OpenAI processes current profile photographs for image clarity, lighting, framing, and background distraction only. It is not asked to judge attractiveness, identity, age, ethnicity, religion, emotion, personality, or suitability. This optional analysis is off by default; its result is private and used only as a small input to matching.',
         'Your answers are shown to the other person only once they have answered all of their own questions, and theirs to you only once you have answered all of yours.',
         'Blocks, reports and hides are private. The person is not told. If you hide someone, you are hidden from them too.',
         'Your exact location is never kept. It is rounded to about a kilometre before it is stored, and used only to measure distance.',
@@ -185,6 +222,7 @@ export const PRIVACY: LegalDocument = {
       heading: 'Your photographs',
       body: [
         'Photographs and voice recordings are stored privately. They are never publicly accessible, and are served only to people you are currently introduced to or connected with, through links that expire within minutes.',
+        'If you choose someone who does not choose you back, a small, heavily blurred copy of your main photograph may be shown to them. It is made on our servers and is too blurred to recognise anyone.',
         'Once someone has seen a photograph, no app can stop them taking a screenshot. Share only photographs you are comfortable with someone keeping.',
       ],
     },
@@ -200,7 +238,7 @@ export const PRIVACY: LegalDocument = {
       heading: 'Who we share with',
       body: [
         'We do not sell your data. We never have and we will not.',
-        'We use suppliers who process data on our instructions and may not use it for anything else: Supabase (database, sign-in and file storage, hosted in London), Cloudflare (website), Resend (email), Expo, Apple and Google (push notifications), AI service providers (Halal Mode Bot summaries and automatic checks of photographs and bios), PostHog (usage counts, hosted in the EU), and Apple and Google (payments).',
+        'We use suppliers who process data on our instructions and may not use it for anything else: Supabase (database, sign-in and file storage, hosted in London), Cloudflare (website, and visit counts without cookies), Resend (email), Expo, Apple and Google (push notifications), AI service providers (Halal Mode Bot summaries and automatic checks of photographs and bios), PostHog (usage counts, hosted in the United States), and Apple and Google (payments).',
         'Halal Mode LLC is based in the United States, and some suppliers process data there. Where data leaves the UK or EU, it is protected by the European Commission’s standard contractual clauses and the UK addendum to them, or by an adequacy decision.',
         'We will share information if the law requires it, or to protect someone from serious harm.',
       ],
@@ -219,6 +257,7 @@ export const PRIVACY: LegalDocument = {
       heading: 'How long we keep things',
       body: [
         'While your account is open, we keep your profile and messages so the service works.',
+      'Approximate profile, bio, and photo viewing observations are kept for up to 180 days. A derived private matching estimate is kept while your account is active and is deleted with your profile. Photo-presentation results are deleted when the photo is removed or your profile is deleted.',
         'When you close your account, we remove your profile, photographs, preferences and messages after a 30-day recovery period.',
         'Safety reports, and the record of an account removed for breaking the terms, are kept for up to two years so that a removed member cannot simply return. Payment records are kept as long as tax law requires, usually six years.',
         'Waitlist email addresses are deleted when you join, or whenever you ask.',

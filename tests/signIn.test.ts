@@ -51,12 +51,26 @@ test('both providers are offered, and named in both languages', () => {
   // Phones lead with their own platform's sign-in (Apple on iPhone, Google
   // elsewhere); the other provider is offered on the web only, so Android
   // never shows an Apple button it cannot use.
-  assert.match(screen, /Platform\.OS === 'ios' \? 'apple' : 'google'/u);
+  assert.match(screen, /signInProviders\(Platform\.OS\)/u);
   assert.match(screen, /Platform\.OS === 'web' \?/u);
 
   const catalog = read('src/i18n/catalog.ts');
   for (const key of ['auth.continueGoogle', 'auth.continueApple', 'auth.orEmail']) {
     const hits = catalog.split(`'${key}':`).length - 1;
     assert.equal(hits, 2, `${key} must be translated in both catalogs, found ${hits}`);
+  }
+});
+
+test('an email sign-in 429 offers Google and the message is translated everywhere', () => {
+  const screen = read('app/auth-email.tsx');
+  assert.match(screen, /isHttpRateLimitError\(error\)/u);
+  assert.match(screen, /limited\s*\?\s*t\('auth\.emailRateLimited'\)/u);
+  assert.match(screen, /onPress=\{\(\) => void continueWithGoogle\(\)\}/u);
+  assert.match(screen, /signInWithProvider\('google'\)/u);
+
+  const base = read('src/i18n/catalog.ts');
+  assert.equal(base.split("'auth.emailRateLimited':").length - 1, 2);
+  for (const locale of ['am', 'bn', 'es', 'fa', 'fr', 'ha', 'hi', 'id', 'ms', 'ru', 'so', 'tr', 'ur', 'zh-Hans']) {
+    assert.match(read(`src/i18n/catalogs/${locale}.ts`), /'auth\.emailRateLimited':/u, `${locale} needs a translated rate-limit message`);
   }
 });

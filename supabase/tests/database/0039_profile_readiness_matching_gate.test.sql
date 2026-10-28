@@ -11,13 +11,14 @@ select ok(
   'the service scheduler retains authority to generate rounds'
 );
 select ok(
-  position('length(trim(bio)) >= 40' in pg_get_functiondef('public.profile_is_ready_for_matching(uuid)'::regprocedure)) > 0
-    and position('cardinality(photos) >= 1' in pg_get_functiondef('public.profile_is_ready_for_matching(uuid)'::regprocedure)) > 0,
+  position('length(trim(p.bio)) >= 80' in pg_get_functiondef('public.profile_is_ready_for_matching(uuid)'::regprocedure)) > 0
+    and position('cardinality(p.photos) >= 1' in pg_get_functiondef('public.profile_is_ready_for_matching(uuid)'::regprocedure)) > 0,
   'readiness requires a substantive bio and photo'
 );
 select ok(
-  position('matching_preferences_completed_at is not null' in pg_get_functiondef('public.profile_is_ready_for_matching(uuid)'::regprocedure)) > 0,
-  'readiness requires intentionally saved matching preferences'
+  position('matching_preferences_completed_at' in pg_get_functiondef('public.profile_is_ready_for_matching(uuid)'::regprocedure)) = 0
+    and position('ethnicities' in pg_get_functiondef('public.profile_is_ready_for_matching(uuid)'::regprocedure)) = 0,
+  'readiness asks only for name, location, a bio and a photo: the optional answers wait for a match'
 );
 select ok(
   position('profile_is_ready_for_matching(p.id)' in pg_get_functiondef('public.generate_round_for_pairs(timestamptz)'::regprocedure)) > 0,

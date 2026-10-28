@@ -30,7 +30,7 @@ interface Report {
 interface Moderation {
   id: number;
   user_id: string;
-  kind: 'photo' | 'bio';
+  kind: 'photo' | 'bio' | 'selfie' | 'marital';
   ref: string;
   decision: 'remove' | 'review';
   reason: string | null;
@@ -62,25 +62,15 @@ const MODERATION_MEDIA_LINK_TTL_SECONDS = 60 * 60;
 const escape = (value: unknown) =>
   String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 
-async function sign(secret: string, message: string): Promise<string> {
-  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message));
-  return Array.from(new Uint8Array(signature)).map((b) => b.toString(16).padStart(2, '0')).join('');
-}
+/**
+ * Decisions are made in the admin panel, which asks for the admin's
+ * two-factor code and writes every action to the audit log. The email only
+ * points there: a link that could suspend or ban by itself would let anyone
+ * who sees this inbox act with no second factor and no record.
+ */
+const ADMIN_REPORTS_URL = 'https://halalmo.de/admin#/reports';
 
-/** A link to a confirmation page, valid for 14 days. */
-async function actionLink(secret: string, reportId: string, action: string): Promise<string> {
-  const expires = Math.floor(Date.now() / 1000) + 14 * 24 * 3600;
-  const token = await sign(secret, `${reportId}.${action}.${expires}`);
-  return `https://halalmo.de/moderate?r=${reportId}&a=${action}&e=${expires}&t=${token}`;
-}
-
-async function reportEmail(report: Report, secret: string) {
-  const [suspend, ban, dismiss] = await Promise.all(
-    ['suspend', 'ban', 'dismiss'].map((action) => actionLink(secret, report.id, action)),
-  );
-  const button = (href: string, label: string, colour: string) =>
-    `<a href="${href}" style="display:inline-block;margin:4px 8px 4px 0;padding:10px 16px;border-radius:999px;background:${colour};color:#fff;text-decoration:none;font-weight:600">${label}</a>`;
+function reportEmail(report: Report) {
   const subject = `Report: ${report.subject_name ?? 'member'}, ${report.reason}${report.subject_report_count > 1 ? ` (${report.subject_report_count} reports)` : ''}`;
   const html = `<div style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.5;color:#0a0a0a">
 <p><b>Reason:</b> ${escape(report.reason)}</p>
@@ -90,8 +80,8 @@ async function reportEmail(report: Report, secret: string) {
 Reports against them in total: <b>${report.subject_report_count}</b>${report.subject_paused ? ' · already hidden' : ''}</p>
 <p><b>Reported by:</b> ${escape(report.reporter_name)} <code>${escape(report.reporter_id)}</code><br>
 <b>When:</b> ${escape(new Date(report.created_at).toUTCString())}</p>
-<p>${button(suspend, 'Suspend 7 days', '#8A6A34')}${button(ban, 'Ban', '#B3261E')}${button(dismiss, 'Dismiss', '#3B3934')}</p>
-<p style="color:#6C6A65;font-size:13px">Each button opens a page to confirm, so nothing happens by accident. Links work for 14 days.</p>
+<p><a href="${ADMIN_REPORTS_URL}" style="display:inline-block;margin:4px 0;padding:10px 16px;border-radius:999px;background:#0A0A0A;color:#fff;text-decoration:none;font-weight:600">Decide in the admin panel</a></p>
+<p style="color:#6C6A65;font-size:13px">Suspend, ban or dismiss from Reports in the admin panel. It asks for your two-factor code, and every decision is logged.</p>
 </div>`;
   return { subject, html };
 }
@@ -105,8 +95,11 @@ async function moderationEmail(item: Moderation, client: any) {
       ? `<p><a href="${signed.data.signedUrl}">Open the photo</a> (private link, 1 hour)</p>`
       : '<p>The photo could not be linked.</p>';
   }
+  if (item.kind === 'marital') shown = '<p>Their marital status changed. Look at the member in the admin panel.</p>';
   const what = item.kind === 'photo'
     ? (item.decision === 'remove' ? 'Photo removed automatically' : 'Photo needs a look')
+    : item.kind === 'marital' ? 'Marital status changed'
+    : item.kind === 'selfie' ? 'Selfie needs a look'
     : 'Bio needs a look';
   return {
     subject: `${what}: ${item.first_name ?? 'member'}`,
@@ -119,35 +112,30 @@ ${shown}
   };
 }
 
-const WELCOME: Record<string, { subject: string; thanks: string; offer: string; next: string; confirm: string; button: string }> = {
+const WELCOME: Record<string, { subject: string; thanks: string; offer: string; next: string; referralNote: string }> = {
   en: {
-    subject: 'You’re on the Halal Mode waitlist ✓',
-    thanks: 'Thank you for joining Halal Mode. You don’t need to do anything else: your place is saved.',
+    subject: 'You’re on the Halal Mode waitlist',
+    thanks: 'Thanks for joining Halal Mode. Your place is saved—there’s nothing else you need to do.',
     offer: 'You’re one of the first 10,000, so 1 month of Premium is reserved for you, free, at launch.',
-    next: 'We’re opening city by city, and we’ll write to you as soon as introductions begin where you are.',
-    confirm: 'A friend invited you. Confirm your email so they get the credit:',
-    button: 'Confirm my email',
+    next: 'We’re opening city by city. We’ll be in touch when Halal Mode is ready in your city.',
+    referralNote: 'If a friend invited you, they’ll receive referral credit only after you complete your profile in the app. Joining the waitlist or receiving this email does not count by itself.',
   },
   ar: {
-    subject: 'أنت على قائمة انتظار حلال مود ✓',
-    thanks: 'شكرًا لانضمامك إلى حلال مود. لا تحتاج إلى فعل أي شيء آخر: مكانك محفوظ.',
+    subject: 'أنت على قائمة انتظار حلال مود',
+    thanks: 'شكرًا لانضمامك إلى حلال مود. مكانك محفوظ، ولا تحتاج إلى فعل أي شيء آخر.',
     offer: 'أنت من أول 10,000 شخص، لذلك حجزنا لك شهرًا من بريميوم مجانًا عند الإطلاق.',
-    next: 'نفتح مدينةً تلو الأخرى، وسنكتب إليك فور بدء التعارفات في مدينتك.',
-    confirm: 'دعاك صديق. أكّد بريدك الإلكتروني ليُحتسب له ذلك:',
-    button: 'تأكيد بريدي',
+    next: 'نفتتح التطبيق مدينةً تلو الأخرى، وسنتواصل معك عندما يصبح حلال مود جاهزًا في مدينتك.',
+    referralNote: 'إذا دعاك صديق، فلن تُحتسب له الإحالة إلا بعد إكمال ملفك الشخصي في التطبيق. الانضمام إلى قائمة الانتظار أو استلام هذا البريد لا يُحتسب وحده.',
   },
 };
 
-function welcomeEmail(locale: string, eligible: boolean, token: string | null) {
+function welcomeEmail(locale: string, eligible: boolean) {
   const words = WELCOME[locale] ?? WELCOME.en;
   const rtl = locale === 'ar';
   const offer = eligible ? `<p><b>${escape(words.offer)}</b></p>` : '';
-  const confirm = token
-    ? `<p>${escape(words.confirm)}</p><p><a href="https://halalmo.de/refer?verify=${encodeURIComponent(token)}" style="display:inline-block;padding:11px 17px;border-radius:999px;background:#0a0a0a;color:#fff;text-decoration:none;font-weight:600">${escape(words.button)}</a></p>`
-    : '';
   return {
     subject: words.subject,
-    html: `<div dir="${rtl ? 'rtl' : 'ltr'}" style="font-family:system-ui,sans-serif;font-size:16px;line-height:1.6;color:#0a0a0a"><p>${escape(words.thanks)}</p>${offer}<p>${escape(words.next)}</p>${confirm}<p>Halal Mode</p></div>`,
+    html: `<div dir="${rtl ? 'rtl' : 'ltr'}" style="font-family:system-ui,sans-serif;font-size:16px;line-height:1.6;color:#0a0a0a"><p>${escape(words.thanks)}</p>${offer}<p>${escape(words.next)}</p><p>${escape(words.referralNote)}</p><p>Halal Mode</p></div>`,
   };
 }
 
@@ -160,7 +148,7 @@ const VERIFICATION: Record<string, {
     intro: 'Confirm your email to get your referral link. Invite a few good people and unlock more Premium.',
     button: 'Get my referral link',
     expiry: 'This link expires in 7 days.',
-    introConfirmed: 'Here is your referral link page, with how many friends have joined and the Premium you have earned.',
+    introConfirmed: 'Here is your referral progress, including how many friends have completed their app profiles and the Premium you have earned.',
     buttonConfirmed: 'See my referral link',
     expiryConfirmed: 'This link works for 30 days.',
   },
@@ -169,7 +157,7 @@ const VERIFICATION: Record<string, {
     intro: 'أكّد بريدك الإلكتروني لتحصل على رابط الدعوة. ادعُ أشخاصًا طيبين واحصل على مزيد من بريميوم.',
     button: 'احصل على رابطي',
     expiry: 'ينتهي هذا الرابط خلال 7 أيام.',
-    introConfirmed: 'هذه صفحة رابط الدعوة الخاص بك، وفيها عدد الأصدقاء الذين انضموا وما كسبته من بريميوم.',
+    introConfirmed: 'هذه صفحة تقدم إحالاتك، وفيها عدد الأصدقاء الذين أكملوا ملفاتهم في التطبيق ومقدار بريميوم الذي كسبته.',
     buttonConfirmed: 'اعرض رابطي',
     expiryConfirmed: 'يعمل هذا الرابط لمدة 30 يومًا.',
   },
@@ -214,16 +202,16 @@ function notJoinedEmail(locale: string) {
   };
 }
 
-// A friend's confirmation just counted. Progress toward the next reward, the
-// Premium reserved so far, and a fresh 30-day link to their page.
+// A referred friend joined the waitlist. This message reports completed app
+// profiles only; a waitlist or email confirmation alone never changes the count.
 const JOINED: Record<string, {
   subject: string; counted: string; next: string; top: string; months: string; month: string; button: string; expiry: string;
   rewards: Record<number, string>;
 }> = {
   en: {
-    subject: 'A friend joined Halal Mode with your link',
-    counted: '{joined} of {goal} friends have joined with your link.',
-    next: '{left} more for {reward}.',
+    subject: 'A friend joined the Halal Mode waitlist',
+    counted: '{joined} referred friends have completed their profiles and count toward your reward.',
+    next: '{left} more completed profiles to reach {reward}.',
     top: 'You have reached the top reward: 1 year of Premium, free.',
     months: 'Premium reserved for you so far: {months} months.',
     month: 'Premium reserved for you so far: 1 month.',
@@ -232,9 +220,9 @@ const JOINED: Record<string, {
     rewards: { 3: '3 months free', 5: '6 months free', 10: '1 year free' },
   },
   ar: {
-    subject: 'انضم صديق إلى حلال مود عبر رابطك',
-    counted: 'انضم {joined} من {goal} أصدقاء عبر رابطك.',
-    next: 'تبقّى {left} للحصول على {reward}.',
+    subject: 'انضم صديق إلى قائمة انتظار حلال مود عبر رابطك',
+    counted: 'أكمل {joined} من الأصدقاء الذين دعوتهم ملفاتهم الشخصية، ويُحتسبون ضمن مكافأتك.',
+    next: 'أكمل {left} أصدقاء آخرين ملفاتهم للوصول إلى {reward}.',
     top: 'وصلت إلى أعلى مكافأة: سنة من بريميوم مجانًا.',
     months: 'بريميوم المحجوز لك حتى الآن: {months} أشهر.',
     month: 'بريميوم المحجوز لك حتى الآن: شهر واحد.',
@@ -315,18 +303,69 @@ function ses(region: string, accessKeyId: string, secretAccessKey: string): Send
   };
 }
 
-/** SES when configured, otherwise Resend, with a pause that fits each one's per-second limit. */
-function mailer(): { send: Send; pauseMs: number } | null {
+interface Mailer {
+  provider: 'ses' | 'resend';
+  send: Send;
+  pauseMs: number;
+  batch: number;
+  /** The provider's own 24-hour quota, or null to use mail_settings.daily_limit. */
+  dailyLimit: number | null;
+}
+
+interface SesAccount {
+  ProductionAccessEnabled?: boolean;
+  SendingEnabled?: boolean;
+  SendQuota?: { Max24HourSend?: number; MaxSendRate?: number };
+}
+
+/**
+ * Amazon SES, but only once AWS has granted production access. In the sandbox
+ * SES only delivers to verified addresses, so every waitlist email would
+ * fail; until the account says otherwise, Resend keeps sending. That makes it
+ * safe to set SES_REGION now: the switch happens on its own when AWS approves,
+ * at the quota and speed AWS granted.
+ */
+async function sesMailer(region: string, accessKeyId: string, secretAccessKey: string): Promise<Mailer | null> {
+  const aws = new AwsClient({ accessKeyId, secretAccessKey, region, service: 'ses' });
+  try {
+    const response = await aws.fetch(`https://email.${region}.amazonaws.com/v2/email/account`);
+    if (!response.ok) return null;
+    const account = (await response.json()) as SesAccount;
+    if (account.ProductionAccessEnabled !== true || account.SendingEnabled !== true) return null;
+    const rate = Math.max(1, account.SendQuota?.MaxSendRate ?? 1);
+    const quota = Math.floor(account.SendQuota?.Max24HourSend ?? 0);
+    const pauseMs = Math.ceil(1000 / rate) + 20;
+    return {
+      provider: 'ses',
+      send: ses(region, accessKeyId, secretAccessKey),
+      pauseMs,
+      // About 45 seconds of sending, so a run finishes inside its minute.
+      batch: Math.max(1, Math.min(200, Math.floor(45_000 / (pauseMs + 120)))),
+      dailyLimit: quota > 10 ? quota : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** SES once it is in production, otherwise Resend, each paced for its per-second limit. */
+async function mailer(): Promise<Mailer | null> {
   const region = Deno.env.get('SES_REGION');
   const keyId = Deno.env.get('SES_ACCESS_KEY_ID');
   const secret = Deno.env.get('SES_SECRET_ACCESS_KEY');
-  // New SES accounts may send 1 email a second; this keeps 40 inside the minute.
-  if (region && keyId && secret) return { send: ses(region, keyId, secret), pauseMs: 1100 };
+  if (region && keyId && secret) {
+    const viaSes = await sesMailer(region, keyId, secret);
+    if (viaSes) return viaSes;
+  }
   const apiKey = Deno.env.get('RESEND_API_KEY');
-  // Resend's default limit is 2 requests a second.
-  if (apiKey) return { send: resend(apiKey), pauseMs: 600 };
+  // Resend's default limit is 2 requests a second; its daily plan limit is
+  // kept in mail_settings.daily_limit.
+  if (apiKey) return { provider: 'resend', send: resend(apiKey), pauseMs: 600, batch: 40, dailyLimit: null };
   return null;
 }
+
+/** Stop starting new sends after this long, so one run never overlaps the next. */
+const RUN_BUDGET_MS = 50_000;
 
 Deno.serve(async (request) => {
   const client = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
@@ -335,31 +374,37 @@ Deno.serve(async (request) => {
   });
   if (verified.error || verified.data !== true) return new Response('forbidden', { status: 403 });
 
-  const mail = mailer();
+  const started = Date.now();
+  const mail = await mailer();
   const operator = Deno.env.get('OPERATOR_EMAIL');
   if (!mail || !operator) return new Response('Mail provider secrets and OPERATOR_EMAIL are not set', { status: 503 });
   const send = mail.send;
 
-  const secret = await client.rpc('mail_link_secret_service');
-  // Runs every minute: 40 paced sends finish inside it, about 2,400 an hour.
-  const claimed = await client.rpc('claim_mail_service', { p_limit: 40 });
-  if (claimed.error || secret.error) return new Response('claim failed', { status: 500 });
+  // Runs every minute. Resend: 40 paced sends, about 2,400 an hour. SES: as
+  // many as its send rate fits in 45 seconds, up to 200 (12,000 an hour).
+  const claimed = await client.rpc('claim_mail_service', { p_limit: mail.batch, p_daily_limit: mail.dailyLimit });
+  if (claimed.error) return new Response('claim failed', { status: 500 });
 
   let sent = 0;
   let first = true;
   for (const item of (claimed.data ?? []) as Claimed[]) {
+    if (Date.now() - started > RUN_BUDGET_MS) {
+      // Out of time: hand it back for the next run without using an attempt.
+      await client.rpc('settle_mail_service', { p_id: item.id, p_ok: false, p_error: '429 rate deferred to the next run' });
+      continue;
+    }
     if (!first) await new Promise((resolve) => setTimeout(resolve, mail.pauseMs));
     first = false;
     let error: string | null = null;
     try {
       if (item.kind === 'report' && item.report) {
-        const mail = await reportEmail(item.report, secret.data as string);
+        const mail = reportEmail(item.report);
         error = await send(operator, mail.subject, mail.html, `mail-${item.id}`);
       } else if (item.kind === 'moderation' && item.moderation) {
         const mail = await moderationEmail(item.moderation, client);
         error = await send(operator, mail.subject, mail.html, `mail-${item.id}`);
       } else if (item.kind === 'waitlist_welcome' && item.to) {
-        const mail = welcomeEmail(item.locale, item.welcome?.eligible === true, item.verification?.token ?? null);
+        const mail = welcomeEmail(item.locale, item.welcome?.eligible === true);
         error = await send(item.to, mail.subject, mail.html, `mail-${item.id}`);
       } else if (item.kind === 'waitlist_verification' && item.to && item.verification?.token) {
         const mail = verificationEmail(item.locale, item.verification.token, item.verification.confirmed === true);
@@ -379,5 +424,5 @@ Deno.serve(async (request) => {
     await client.rpc('settle_mail_service', { p_id: item.id, p_ok: error === null, p_error: error });
     if (error === null) sent += 1;
   }
-  return Response.json({ sent });
+  return Response.json({ provider: mail.provider, sent });
 });

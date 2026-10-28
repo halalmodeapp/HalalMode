@@ -95,6 +95,7 @@ insert into profiles (
   ('00000000-0000-0000-0000-000000140004', 'Set F1', 'F1', '1970-01-01', 'female', 'Jeddah', 'Saudi Arabia', 21.5433, 39.1728, repeat('d', 50), array['f1.jpg'], array['Arabic','English'], 'practicing', 'within_3_months', 'wants_children_soon', 'sunni', 'open', true),
   ('00000000-0000-0000-0000-000000140005', 'Set F2', 'F2', '1992-01-01', 'female', 'Madinah', 'Saudi Arabia', null, null, repeat('e', 50), array['f2.jpg'], array['Arabic'], 'learning', '1_to_2_years', 'no_children', 'prefer_not_to_say', 'open', true),
   ('00000000-0000-0000-0000-000000140006', 'Set F3', 'F3', '1993-01-01', 'female', 'Madinah', 'Saudi Arabia', 24.4678, 39.6028, repeat('f', 50), array['f3.jpg'], array['English'], 'very_practicing', 'within_6_months', 'wants_children_later', 'shia', 'preferred_local', true);
+update profiles set marital_status = 'never_married' where marital_status is null; -- matching needs a declared status
 
 insert into private_preferences (
   user_id, min_age, max_age, min_height_cm, max_height_cm,
@@ -105,10 +106,21 @@ insert into private_preferences (
 ) values
   ('00000000-0000-0000-0000-000000140001', 25, 35, 150, 190, array['Athletic'], array['Saudi Arabia'], 100, array['very_practicing']::religious_practice[], array['within_6_months']::marriage_timeline[], array['wants_children_soon']::family_goals[], array['sunni']::sect[], '{}', 180, 'Athletic', now()),
   ('00000000-0000-0000-0000-000000140002', 25, 50, 150, 190, array['Average'], array['Saudi Arabia'], 100, array['practicing']::religious_practice[], array['within_1_year']::marriage_timeline[], array['open_to_children']::family_goals[], array['sunni']::sect[], '{}', 175, 'Average', now()),
-  ('00000000-0000-0000-0000-000000140003', 25, 35, 150, 190, array['Slim'], array['Saudi Arabia'], 100, array['moderate']::religious_practice[], array['within_1_year']::marriage_timeline[], array['wants_children_later']::family_goals[], array['shia']::sect[], '{"age":true,"distance":true}', 178, 'Lean', now()),
+  ('00000000-0000-0000-0000-000000140003', 25, 35, 150, 190, array['Slim'], array['Saudi Arabia'], 100, array['moderate']::religious_practice[], array['within_1_year']::marriage_timeline[], array['wants_children_later']::family_goals[], array['shia']::sect[], '{"age":true,"distance":true}', 178, 'Slim', now()),
   ('00000000-0000-0000-0000-000000140004', 18, 70, 150, 200, '{}', array['Saudi Arabia'], 100, '{}', '{}', '{}', '{}', '{}', 165, 'Average', now()),
   ('00000000-0000-0000-0000-000000140005', 18, 70, 150, 200, '{}', array['Saudi Arabia'], 100, '{}', '{}', '{}', '{}', '{}', 168, 'Slim', now()),
   ('00000000-0000-0000-0000-000000140006', 18, 70, 150, 200, '{}', array['Saudi Arabia'], 100, '{}', '{}', '{}', '{}', '{}', 170, 'Athletic', now());
+
+update public.profiles
+set bio = repeat('r', 80),
+    education = 'University',
+    has_children = 'no',
+    family_goals_answered_at = now(),
+    religious_dress = case when gender::text = 'female' then 'hijab' else null end,
+    ethnicities = array['arab'],
+    heritage_countries = array['SA']
+where id between '00000000-0000-0000-0000-000000140001'
+             and '00000000-0000-0000-0000-000000140006';
 
 insert into halal_mode_private.member_legal_consent_history (
   user_id, document_type, version, acceptance_context
@@ -120,6 +132,13 @@ from (
 ) member
 cross join halal_mode_private.legal_document_registry document
 where document.is_current;
+
+update public.profiles p
+set sensitive_consent_at = now()
+where 2 = (select count(*)
+  from halal_mode_private.member_legal_consent_history h
+  join halal_mode_private.legal_document_registry d using (document_type, version)
+  where h.user_id = p.id and d.is_current);
 
 insert into halal_mode_private.pair_exposure (
   user_low, user_high, times_shown, first_reciprocal_score,
@@ -278,6 +297,7 @@ select
   39.6024 + ((n - 141001)::double precision / 100000),
   repeat('g', 50), array['batch.jpg'], array['Arabic'], true
 from generate_series(141001, 141088) n;
+update profiles set marital_status = 'never_married' where marital_status is null; -- matching needs a declared status
 
 insert into private_preferences (
   user_id, min_age, max_age, preferred_countries, max_distance_km,
@@ -287,6 +307,22 @@ select
   ('00000000-0000-0000-0000-' || lpad(n::text, 12, '0'))::uuid,
   18, 70, array['Saudi Arabia'], 1000, now()
 from generate_series(141001, 141088) n;
+
+update public.profiles
+set bio = repeat('r', 80),
+    education = 'University',
+    has_children = 'no',
+    family_goals_answered_at = now(),
+    religious_dress = case when gender::text = 'female' then 'hijab' else null end,
+    ethnicities = array['arab'],
+    heritage_countries = array['SA']
+where id between '00000000-0000-0000-0000-000000141001'
+             and '00000000-0000-0000-0000-000000141088';
+update public.private_preferences
+set own_height_cm = 170,
+    own_build = 'Average'
+where user_id between '00000000-0000-0000-0000-000000141001'
+                  and '00000000-0000-0000-0000-000000141088';
 
 insert into halal_mode_private.member_legal_consent_history (
   user_id, document_type, version, acceptance_context
@@ -298,6 +334,13 @@ from (
 ) member
 cross join halal_mode_private.legal_document_registry document
 where document.is_current;
+
+update public.profiles p
+set sensitive_consent_at = now()
+where 2 = (select count(*)
+  from halal_mode_private.member_legal_consent_history h
+  join halal_mode_private.legal_document_registry d using (document_type, version)
+  where h.user_id = p.id and d.is_current);
 
 create temporary table set_large_context as
 select public.matching_run_start_service(

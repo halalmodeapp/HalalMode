@@ -18,3 +18,27 @@
 # The app is not open yet: keep it out of search results.
 /app/*
   X-Robots-Tag: noindex, nofollow
+
+# Where old report-email links land. Static, no script, nothing to cache.
+/moderate
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
+  Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+
+/moderate.html
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
+  Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+
+# Operator dashboard. The page grants nothing by itself (every RPC checks the
+# admin list and two-factor sign-in), but keep it out of caches, frames and
+# search, and let it talk only to this site and the Supabase API.
+/admin
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src https://lfuuywsmydruvqkqwvzw.supabase.co; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+
+/admin.html
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src https://lfuuywsmydruvqkqwvzw.supabase.co; base-uri 'none'; form-action 'self'; frame-ancestors 'none'

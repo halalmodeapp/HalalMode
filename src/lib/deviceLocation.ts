@@ -98,13 +98,12 @@ export function deviceLocationFromReverseGeocode(
 }
 
 /**
- * The device's answer, or the nearest listed city when the device cannot name
- * the place.
+ * The device's answer, or the nearest curated city when native reverse
+ * geocoding cannot name the place. Browser GPS uses the larger local GeoNames
+ * list through the web-specific browserPlace module.
  *
- * A browser gives coordinates but has no geocoder, Expo removed it, so on the
- * web the first answer is always empty and every member used to fail the
- * location step. The coordinates are still the member's own; only the name is
- * borrowed from the closest city on the list.
+ * A browser gives coordinates but no city label. The coordinates are still the
+ * member's own; the fallback supplies only the nearest city name.
  */
 export function placeFromDevice(
   place: ReverseGeocodedPlace | undefined,

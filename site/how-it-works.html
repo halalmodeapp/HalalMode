@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="/logo-effect.css?v=20261019c">
 <link rel="stylesheet" href="/ui.css?v=20261019a">
 <link rel="stylesheet" href="/i18n.css?v=20261019d">
+<link rel="stylesheet" href="/app-preview.css?v=20261026h">
 <style>
 :root{--surface:#FCFCFB;--ink:#0A0A0A;--soft:#3B3934;--muted:#6C6A65;--gold:#B8914F;--line:rgba(184,145,79,.2)}
 *{box-sizing:border-box}
@@ -22,6 +23,7 @@ body{margin:0;background:radial-gradient(ellipse 76% 40% at 50% 0%,#f7f1e6 0%,rg
 .wrap{max-width:1420px;margin:0 auto;padding:0 clamp(22px,5.3vw,84px)}
 header{padding:24px 0;display:flex;align-items:center;justify-content:space-between;gap:20px}
 .logo{height:30px;width:auto;display:block}
+.logo-tm{position:absolute;left:100%;top:-2px;margin-left:3px;font:600 12px/1 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:0;pointer-events:none;color:var(--ink)}
 .cta:focus-visible{outline:3px solid rgba(184,145,79,.5);outline-offset:3px}
 h1{font-weight:600;font-size:clamp(42px,5.1vw,76px);line-height:1.02;letter-spacing:-.035em;margin:clamp(46px,7vh,84px) 0 clamp(34px,5vw,58px);max-width:17ch}
 .features{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch;gap:20px;margin:0 0 54px}
@@ -32,6 +34,8 @@ h1{font-weight:600;font-size:clamp(42px,5.1vw,76px);line-height:1.02;letter-spac
 .feature-art::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 20%,rgba(255,255,255,.28) 48%,transparent 72%);opacity:0;transform:translateX(-45%);transition:transform .65s ease,opacity .35s ease}
 .feature:hover .feature-art::after{opacity:1;transform:translateX(45%)}
 .feature-art img{display:block;width:100%;height:100%;object-fit:cover;object-position:center;transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+.feature-canvas{position:absolute;inset:0;display:block;width:100%;height:100%;pointer-events:none;transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+.feature:hover .feature-canvas{transform:scale(1.035)}
 .feature:hover .feature-art img{transform:scale(1.035)}
 .feature-copy{display:flex;flex:1;flex-direction:column;gap:10px;padding:23px 23px 27px}
 .feature h2{font-weight:600;font-size:clamp(22px,1.75vw,27px);line-height:1.2;letter-spacing:-.02em;margin:0 0 11px;overflow-wrap:normal;word-break:normal;hyphens:none}
@@ -40,11 +44,22 @@ h1{font-weight:600;font-size:clamp(42px,5.1vw,76px);line-height:1.02;letter-spac
 .feature--privacy{--accent:#5d7895;--tint:#e9f0f6}
 .feature--conversation{--accent:#b96e55;--tint:#f7eae5}
 .feature--cards{--accent:#648575;--tint:#eaf1ec}
+.preview{display:grid;grid-template-columns:minmax(220px,286px) minmax(0,1fr);align-items:center;gap:clamp(40px,7vw,110px);margin:0 0 clamp(48px,6vw,84px);padding:clamp(34px,4.5vw,64px) clamp(28px,6vw,96px);border:1px solid var(--line);border-radius:32px;background:radial-gradient(ellipse 70% 90% at 22% 50%,#fbf2df 0%,rgba(251,242,223,0) 70%),linear-gradient(160deg,#faf6ee,#fff 60%)}
+.preview-phone{padding:12px}
+.preview-title{font-weight:600;font-size:clamp(28px,2.6vw,40px);line-height:1.1;letter-spacing:-.025em;margin:0 0 clamp(20px,2.4vw,30px)}
+.preview-steps{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-width:30em}
+.preview-steps button{display:flex;align-items:flex-start;gap:16px;width:100%;padding:14px 16px;border:0;border-radius:18px;background:transparent;color:var(--muted);text-align:start;font:inherit;font-size:clamp(17px,1.35vw,20px);line-height:1.4;cursor:pointer;transition:background .35s ease,color .35s ease}
+.preview-steps button:hover{background:rgba(184,145,79,.07)}
+.preview-steps button:focus-visible{outline:3px solid rgba(184,145,79,.5);outline-offset:2px}
+.preview-steps button.on{background:rgba(184,145,79,.11);color:var(--ink)}
+.preview-num{flex:none;display:grid;place-items:center;width:30px;height:30px;margin-top:-1px;border-radius:50%;border:1px solid rgba(184,145,79,.45);color:var(--gold);font:600 13px/1 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;transition:background .35s ease,color .35s ease,border-color .35s ease}
+.preview-steps button.on .preview-num{background:var(--gold);border-color:var(--gold);color:#fff}
 .cta{display:inline-flex;align-items:center;justify-content:center;min-height:52px;margin:4px 0 72px;padding:0 30px;border-radius:999px;background:var(--ink);color:var(--surface);text-decoration:none;font-weight:650;font-size:15px;transition:transform .2s ease,box-shadow .2s ease,background .2s ease}
 .cta:hover{transform:translateY(-2px);background:#25231f;box-shadow:0 12px 24px rgba(10,10,10,.16)}
 footer{padding:30px 0 56px;border-top:1px solid var(--line);color:var(--muted);font-size:14px;display:flex;flex-wrap:wrap;gap:10px 32px;justify-content:space-between}
 footer a{color:var(--gold)}
 @media(max-width:1120px){.features{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}h1{max-width:16ch}}
+@media(max-width:760px){.preview{grid-template-columns:minmax(0,1fr);justify-items:center;gap:30px;padding:30px 18px 22px;border-radius:26px}.preview-phone{width:min(250px,72vw);padding:10px}.preview-copy{width:100%}.preview-title{text-align:center}.preview-steps{max-width:none}.preview-steps button{padding:12px 14px}}
 @media(max-width:680px){.wrap{padding:0 20px}header{padding:18px 0}.logo{height:25px}h1{font-size:clamp(39px,10vw,54px);margin:42px 0 32px;max-width:15ch}.features{grid-template-columns:minmax(0,1fr);gap:16px;margin-bottom:38px}.feature-art{aspect-ratio:1.68}.feature-copy{padding:19px 20px 22px}.feature h2{font-size:24px}.feature p{font-size:16px}.cta{margin-bottom:54px}footer{padding:24px 0 40px;gap:8px 20px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}.feature:hover,.cta:hover{transform:none}.feature:hover .feature-art img{transform:none}}
 </style>
@@ -52,12 +67,26 @@ footer a{color:var(--gold)}
 <body>
 <div class="wrap">
 <header>
-  <a class="logo-link" href="/" aria-label="Halal Mode" data-brand-name-aria><img class="logo" src="/logo.svg" alt="Halal Mode"><span class="logo-effect" aria-hidden="true"><span class="logo-shader"></span></span></a>
+  <a class="logo-link" href="/" aria-label="Halal Mode" data-brand-name-aria><img class="logo" src="/logo.svg" alt="Halal Mode"><sup class="logo-tm" aria-hidden="true">™</sup><span class="logo-effect" aria-hidden="true"><span class="logo-shader"></span></span></a>
   <a class="pill-link pill-link-primary" href="/"><span data-i18n="join">Join the waitlist</span> <span class="pill-arrow" aria-hidden="true">→</span></a>
 </header>
 
 <main>
   <h1 data-i18n="howTitle">Halal Mode, a better Muslim marriage app.</h1>
+  <!-- A short looping preview of the real app (app-preview.js), before the explanation. -->
+  <section class="preview" aria-labelledby="preview-title">
+    <div class="preview-phone"><div data-app-preview role="img" aria-labelledby="preview-title"></div></div>
+    <div class="preview-copy">
+      <h2 id="preview-title" class="preview-title" data-i18n="previewTitle">A look inside the app.</h2>
+      <ol class="preview-steps">
+        <li><button type="button" data-preview-step="0"><span class="preview-num">1</span><span data-i18n="previewStep1">Five verified introductions every Fajr.</span></button></li>
+        <li><button type="button" data-preview-step="1"><span class="preview-num">2</span><span data-i18n="previewStep2">See where you already agree.</span></button></li>
+        <li><button type="button" data-preview-step="2"><span class="preview-num">3</span><span data-i18n="previewStep3">Your preferences stay private.</span></button></li>
+        <li><button type="button" data-preview-step="3"><span class="preview-num">4</span><span data-i18n="previewStep4">Earn the conversation: questions, answers, then chat.</span></button></li>
+        <li><button type="button" data-preview-step="4"><span class="preview-num">5</span><span data-i18n="previewStep5">Grow together with Halal Cards.</span></button></li>
+      </ol>
+    </div>
+  </section>
   <div class="features">
     <article class="feature feature--introductions">
       <figure class="feature-art"><img src="/img/how-it-works/introductions.webp" alt="" fetchpriority="high"></figure>
@@ -77,8 +106,7 @@ footer a{color:var(--gold)}
     <article class="feature feature--cards">
       <figure class="feature-art"><img src="/img/how-it-works/halal-cards.webp" alt="" loading="lazy"></figure>
       <div class="feature-copy"><h2 data-i18n="cardsTitle">Building relationships that last.</h2>
-      <p data-i18n="cardsBody">Halal Cards give you practical tools for a healthy, lasting marriage: 35 interactive quizzes, exercises and adventures to explore communication, expectations and compatibility together. Available in 16 languages.</p>
-      <p data-i18n="cardsPremium">2 are free to try on your own. Halal Mode Premium opens all 35: 4 Lab workshops with 13 scenarios, 16 quizzes for every stage and 15 stories. Play them with any match, and they play free.</p></div>
+      <p data-i18n="cardsBody">Halal Cards give you practical tools for a healthy, lasting marriage: 35 interactive quizzes, exercises and adventures to explore communication, expectations and compatibility together. Available in 16 languages.</p></div>
     </article>
   </div>
 
@@ -87,8 +115,10 @@ footer a{color:var(--gold)}
 
 <footer data-site-footer></footer>
 </div>
-<script src="/site-footer.js?v=20261019a"></script>
-<script src="/i18n.js?v=20261019g"></script>
+<script src="/site-footer.js?v=20261021a"></script>
+<script src="/i18n.js?v=20261026b"></script>
+<script src="/app-preview.js?v=20261026h" defer></script>
+<script src="/feature-art.js?v=20261026l" defer></script>
 <script type="module" src="/logo-effect.js?v=20261019d"></script>
 </body>
 </html>

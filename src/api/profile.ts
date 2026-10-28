@@ -1,7 +1,8 @@
 import { MOCK_PREFERENCES, MOCK_SELF } from '@/data/mock';
 import { requireSupabase, USE_MOCKS } from '@/lib/supabase';
 import { hydrateProfileMedia } from '@/api/profileMedia';
-import type { PrivatePreferences, Profile } from '@/types';
+import type { MaritalStatus, PrivatePreferences, Profile } from '@/types';
+import { DEFAULT_ACCEPTED, MARITAL_STATUSES } from '@/data/marital';
 import { isReadinessIssue, type ProfileReadinessIssue } from '@/lib/profileReadiness';
 import type { DeviceLocationUpdate } from '@/lib/deviceLocation';
 import { profilePatchToRow } from '@/lib/profilePatch';
@@ -59,7 +60,10 @@ export async function setMyHighLatitudeFajrMethod(method: HighLatitudeFajrMethod
 
 export interface ProfileReadinessStatus {
   ready: boolean;
+  /** Required before introductions start. */
   missing: ProfileReadinessIssue[];
+  /** Optional, asked for once there is a match. */
+  recommended?: ProfileReadinessIssue[];
 }
 
 export async function fetchMyProfileReadiness(): Promise<ProfileReadinessStatus> {
@@ -82,7 +86,10 @@ export async function fetchMyProfileReadiness(): Promise<ProfileReadinessStatus>
   const missing = Array.isArray(payload.missing)
     ? payload.missing.filter(isReadinessIssue)
     : [];
-  return { ready: payload.ready === true, missing };
+  const recommended = Array.isArray(payload.recommended)
+    ? payload.recommended.filter(isReadinessIssue)
+    : [];
+  return { ready: payload.ready === true, missing, recommended };
 }
 
 export async function fetchMyProfile(): Promise<Profile> {
@@ -162,6 +169,19 @@ export async function setMyProfileDetails(
   if (error) throw error;
 }
 
+/** Where you grew up and your diet: shown on your profile. */
+export async function setMyLifestyle(answers: Pick<Profile, 'grewUpCountries' | 'diet'>): Promise<void> {
+  if (USE_MOCKS) {
+    Object.assign(MOCK_SELF, { grewUpCountries: answers.grewUpCountries ?? [], diet: answers.diet ?? [] });
+    return;
+  }
+  const { error } = await requireSupabase().rpc('set_my_lifestyle', {
+    p_grew_up: answers.grewUpCountries ?? [],
+    p_diet: answers.diet ?? [],
+  });
+  if (error) throw error;
+}
+
 /** Premium filters. The server refuses this for anyone not on Premium. */
 export async function setMyPremiumPreferences(preferences: PrivatePreferences): Promise<void> {
   if (USE_MOCKS) {
@@ -177,6 +197,8 @@ export async function setMyPremiumPreferences(preferences: PrivatePreferences): 
       dress: preferences.preferredDress ?? [],
       ethnicities: preferences.preferredEthnicities ?? [],
       heritage: preferences.preferredHeritageCountries ?? [],
+      grew_up: preferences.preferredGrewUpCountries ?? [],
+      diet: preferences.preferredDiet ?? [],
       must_have: preferences.premiumMustHave ?? {},
     },
   });
@@ -229,6 +251,54 @@ export async function updateMyPreferences(
   if (error) throw error;
 }
 
+export interface MaritalSettings {
+  status: MaritalStatus | null;
+  /** Private: which statuses this member is open to. Never shown to anyone else. */
+  accepted: MaritalStatus[];
+}
+
+let mockMaritalSettings: MaritalSettings = { status: 'never_married', accepted: [...DEFAULT_ACCEPTED] };
+
+const asStatuses = (value: unknown): MaritalStatus[] =>
+  (Array.isArray(value) ? value : []).filter((item): item is MaritalStatus => MARITAL_STATUSES.includes(item as MaritalStatus));
+
+/** About how many people can be introduced to this member under their current choices. */
+export async function fetchMyPoolSize(): Promise<number> {
+  if (USE_MOCKS) return 42;
+  const { data, error } = await requireSupabase().rpc('get_my_pool_size');
+  if (error) throw error;
+  return typeof data === 'number' ? data : 0;
+}
+
+export async function fetchMyMaritalSettings(): Promise<MaritalSettings> {
+  if (USE_MOCKS) return mockMaritalSettings;
+  const { data, error } = await requireSupabase().rpc('get_my_marital_settings');
+  if (error) throw error;
+  const row = (data ?? {}) as { status?: string | null; accepted?: unknown };
+  return {
+    status: MARITAL_STATUSES.includes(row.status as MaritalStatus) ? (row.status as MaritalStatus) : null,
+    accepted: asStatuses(row.accepted),
+  };
+}
+
+export async function setMyMaritalStatus(status: MaritalStatus): Promise<void> {
+  if (USE_MOCKS) {
+    mockMaritalSettings = { ...mockMaritalSettings, status };
+    return;
+  }
+  const { error } = await requireSupabase().rpc('set_my_marital_status', { p_status: status });
+  if (error) throw error;
+}
+
+export async function setMyMaritalPreferences(accepted: MaritalStatus[]): Promise<void> {
+  if (USE_MOCKS) {
+    mockMaritalSettings = { ...mockMaritalSettings, accepted };
+    return;
+  }
+  const { error } = await requireSupabase().rpc('set_my_marital_preferences', { p_statuses: accepted });
+  if (error) throw error;
+}
+
 function profileFromRow(raw: Record<string, unknown>): Profile {
   // get_my_profile answers in camelCase (it shares safe_member_profile with
   // what other members see), while older reads were snake_case. Reading only
@@ -257,6 +327,7 @@ function profileFromRow(raw: Record<string, unknown>): Profile {
     firstName: String(row.first_name ?? ''),
     age: typeof row.age === 'number' ? row.age : ageFromDate(String(row.birth_date)),
     gender: row.gender as Profile['gender'],
+    maritalStatus: ((row.maritalStatus ?? row.marital_status) as MaritalStatus | null) ?? undefined,
     occupation: String(row.occupation ?? ''),
     education: row.education as string | undefined,
     city: String(row.city ?? ''),
@@ -278,6 +349,8 @@ function profileFromRow(raw: Record<string, unknown>): Profile {
     religiousDress: (row.religious_dress as string | null) ?? undefined,
     ethnicities: (row.ethnicities as string[] | null) ?? [],
     heritageCountries: ((row.heritage_countries ?? row.heritageCountries) as string[] | null) ?? [],
+    grewUpCountries: ((row.grew_up_countries ?? row.grewUpCountries) as string[] | null) ?? [],
+    diet: ((row.diet) as string[] | null) ?? [],
     languagesSpoken: (row.languages_spoken as string[] | null) ?? [],
     isVerified: Boolean(row.is_verified),
     isPaused: Boolean(row.is_paused),
@@ -308,6 +381,8 @@ function preferencesFromRow(row: Record<string, unknown>): PrivatePreferences {
     preferredDress: (row.preferred_dress as string[] | null) ?? [],
     preferredEthnicities: (row.preferred_ethnicities as string[] | null) ?? [],
     preferredHeritageCountries: (row.preferred_heritage_countries as string[] | null) ?? [],
+    preferredGrewUpCountries: (row.preferred_grew_up_countries as string[] | null) ?? [],
+    preferredDiet: (row.preferred_diet as string[] | null) ?? [],
     premiumMustHave: (row.premium_must_have as PrivatePreferences['premiumMustHave'] | null) ?? {},
     // Absent means nothing is absolute, which is the safe default: an unreadable
     // or missing map must never silently narrow somebody's pool.

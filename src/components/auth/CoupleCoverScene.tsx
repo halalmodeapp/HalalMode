@@ -15,7 +15,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import Svg, { Defs, Path, RadialGradient, Stop } from 'react-native-svg';
 
-import { BOIL, boilNoise } from './boilSettings';
+import { BOIL, boilNoise, boilPoints } from './boilSettings';
 import { COUPLE_SCENE_ASSETS } from './coupleLayerAssets';
 import { COUPLE_SCENE_LAYERS, COUPLE_SUN, COUPLE_WORLD, type CoupleSceneLayer } from './coupleSceneLayers';
 import { COUPLE_TILT, coupleCamera, coupleParallax, type CoupleCamera } from './coupleSceneLayout';
@@ -92,12 +92,12 @@ export function CoupleCoverScene({ width, height, active }: CoupleCoverSceneProp
       boilAmount.value = 0;
       return;
     }
-    boilAmount.value = BOIL.amount;
+    boilAmount.value = boilPoints(camera.unit);
     const timer = setInterval(() => {
       boilStep.value = (boilStep.value + 1) % BOIL.drawings;
     }, 1000 / BOIL.fps);
     return () => clearInterval(timer);
-  }, [active, boilAmount, boilStep]);
+  }, [active, boilAmount, boilStep, camera.unit]);
 
   // The heart drifts gently in place, between the two hands.
   useEffect(() => {

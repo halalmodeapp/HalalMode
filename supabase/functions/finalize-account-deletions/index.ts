@@ -40,6 +40,14 @@ Deno.serve(async (request) => {
         const result = await client.storage.from('profile-photos').remove(photoPaths);
         if (result.error) throw result.error;
       }
+      // Selfies are biometric data: every one this member ever took goes too.
+      const selfies = await client.storage.from('verification-selfies').list(item.user_id, { limit: 1000 });
+      if (selfies.error) throw selfies.error;
+      const selfiePaths = (selfies.data ?? []).map((file) => `${item.user_id}/${file.name}`);
+      if (selfiePaths.length) {
+        const result = await client.storage.from('verification-selfies').remove(selfiePaths);
+        if (result.error) throw result.error;
+      }
       if (item.voice_path) {
         const result = await client.storage.from('voice-introductions').remove([item.voice_path]);
         if (result.error) throw result.error;

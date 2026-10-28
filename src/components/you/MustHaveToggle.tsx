@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Text } from '@/components/ui/Text';
 import { onDark, useSurfaceTone } from '@/theme/tone';
 import { useI18n } from '@/i18n';
@@ -29,15 +31,18 @@ export interface MustHaveToggleProps {
 export function MustHaveToggle({ criterion, value, onChange }: MustHaveToggleProps) {
   const { t, isRTL } = useI18n();
   const dark = useSurfaceTone() === 'dark';
+  const [confirming, setConfirming] = useState(false);
 
   return (
+    <>
     <Pressable
       testID={`must-have-${criterion}`}
       accessibilityRole="switch"
       accessibilityState={{ checked: value }}
       accessibilityLabel={t('filters.mustHaveA11y')}
       accessibilityHint={t('filters.mustHaveHint')}
-      onPress={() => onChange(!value)}
+      // Turning it on asks first: a Must have can shrink the introductions a lot.
+      onPress={() => (value ? onChange(false) : setConfirming(true))}
       style={({ pressed }) => [
         styles.row,
         isRTL && styles.rowReverse,
@@ -51,6 +56,16 @@ export function MustHaveToggle({ criterion, value, onChange }: MustHaveTogglePro
         {t('filters.mustHave')}
       </Text>
     </Pressable>
+    <ConfirmDialog
+      visible={confirming}
+      title={t('filters.mustHaveConfirmTitle')}
+      body={t('filters.mustHaveConfirmBody')}
+      confirmLabel={t('filters.mustHaveConfirmYes')}
+      cancelLabel={t('filters.mustHaveConfirmNo')}
+      onConfirm={() => { setConfirming(false); onChange(true); }}
+      onCancel={() => setConfirming(false)}
+    />
+    </>
   );
 }
 

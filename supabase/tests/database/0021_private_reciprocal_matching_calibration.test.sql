@@ -46,12 +46,40 @@ insert into profiles (
   ('00000000-0000-0000-0000-000000000211', 'Lebanon Member', 'Lebanon', '1990-01-01', 'male', 'Beirut', 'Lebanon', 'open', 33.8938, 35.5018, repeat('a', 40), array['211/photo.jpg'], true),
   ('00000000-0000-0000-0000-000000000212', 'Peru Member', 'Peru', '1991-01-01', 'female', 'Lima', 'Peru', 'open', -12.0464, -77.0428, repeat('b', 40), array['212/photo.jpg'], true),
   ('00000000-0000-0000-0000-000000000213', 'Local Member', 'Local', '1991-01-01', 'female', 'Tripoli', 'Lebanon', 'open', 34.4367, 35.8497, repeat('c', 40), array['213/photo.jpg'], true);
+update profiles set marital_status = 'never_married' where marital_status is null; -- matching needs a declared status
 insert into private_preferences (
   user_id, preferred_countries, max_distance_km, matching_preferences_completed_at
 ) values
   ('00000000-0000-0000-0000-000000000211', array['peru'], 10, now()),
   ('00000000-0000-0000-0000-000000000212', array['LEBANON'], 10, now()),
   ('00000000-0000-0000-0000-000000000213', array['Lebanon'], 10, now());
+
+update public.profiles
+set bio = repeat('r', 80),
+    languages_spoken = array['Arabic'],
+    education = 'University',
+    has_children = 'no',
+    family_goals_answered_at = now(),
+    religious_dress = case when gender::text = 'female' then 'hijab' else null end,
+    ethnicities = array['arab'],
+    heritage_countries = case id
+      when '00000000-0000-0000-0000-000000000211' then array['LB']
+      when '00000000-0000-0000-0000-000000000212' then array['PE']
+      else array['LB'] end
+where id in (
+  '00000000-0000-0000-0000-000000000211',
+  '00000000-0000-0000-0000-000000000212',
+  '00000000-0000-0000-0000-000000000213'
+);
+update public.private_preferences
+set own_height_cm = 170,
+    own_build = 'Average'
+where user_id in (
+  '00000000-0000-0000-0000-000000000211',
+  '00000000-0000-0000-0000-000000000212',
+  '00000000-0000-0000-0000-000000000213'
+);
+
 insert into halal_mode_private.member_legal_consent_history (
   user_id, document_type, version, acceptance_context
 )
@@ -64,6 +92,13 @@ where p.id in (
     '00000000-0000-0000-0000-000000000213'
   )
   and d.is_current;
+
+update public.profiles p
+set sensitive_consent_at = now()
+where 2 = (select count(*)
+  from halal_mode_private.member_legal_consent_history h
+  join halal_mode_private.legal_document_registry d using (document_type, version)
+  where h.user_id = p.id and d.is_current);
 insert into selection_scores (user_id, score) values
   ('00000000-0000-0000-0000-000000000211', 0.9000),
   ('00000000-0000-0000-0000-000000000212', 0.9000),

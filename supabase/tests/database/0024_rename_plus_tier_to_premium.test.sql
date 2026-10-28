@@ -13,8 +13,8 @@ select is(
   'Premium members receive ten introductions'
 );
 select is(
-  (select keeps from tier_limits('premium')), 3,
-  'Premium members can keep three introductions'
+  (select keeps from tier_limits('premium')), 10,
+  'Premium members can keep ten introductions'
 );
 select is(
   (select open_connections from tier_limits('premium')), 10,

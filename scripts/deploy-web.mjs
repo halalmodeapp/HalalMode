@@ -18,6 +18,7 @@ import { dirname, join, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { legalPage, waitlistOnlyRedirects } from './legal-pages.mjs';
 import { findDynamicWebRoutes, pagesRedirects } from './web-routes.mjs';
+import { campaignRedirects } from './campaign-links.mjs';
 
 const mode = process.argv[2] ?? 'waitlist';
 if (!['waitlist', 'app', 'preview'].includes(mode)) {
@@ -66,9 +67,9 @@ try {
       throw new Error(`Expo static export is missing dynamic pages: ${missing.map((route) => route.target).join(', ')}`);
     }
     cpSync(exportDir, join(pagesDir, 'app'), { recursive: true });
-    writeFileSync(join(pagesDir, '_redirects'), pagesRedirects(routes));
+    writeFileSync(join(pagesDir, '_redirects'), campaignRedirects() + pagesRedirects(routes));
   } else {
-    writeFileSync(join(pagesDir, '_redirects'), waitlistOnlyRedirects());
+    writeFileSync(join(pagesDir, '_redirects'), campaignRedirects() + waitlistOnlyRedirects());
   }
 
   runFile(process.execPath, [wranglerCli, 'pages', 'deploy', pagesDir, '--project-name', 'halalmode', '--branch', branch, '--commit-dirty=true']);

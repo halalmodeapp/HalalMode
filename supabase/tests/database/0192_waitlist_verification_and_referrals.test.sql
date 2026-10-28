@@ -1,6 +1,6 @@
 begin;
 set local search_path = public, extensions, halal_mode_private;
-select plan(10);
+select plan(11);
 
 select is(public.waitlist_reward_months(true, 0), 1, 'an eligible verifier gets one month');
 select is(public.waitlist_reward_months(true, 2), 1, 'two referrals do not stack on the base month');
@@ -15,22 +15,26 @@ select ok(
 );
 select ok(
   -- Retired for the public in 20261020100000; join_waitlist_now replaces it.
-  not has_function_privilege('anon', 'public.request_waitlist_verification(text,text,text,text,text)', 'EXECUTE')
+  to_regprocedure('public.request_waitlist_verification(text,text,text,text,text)') is null
   and has_function_privilege('anon', 'public.referral_code_exists(text)', 'EXECUTE')
   and not has_function_privilege('anon', 'public.verify_waitlist_token(text)', 'EXECUTE'),
   'anonymous callers can validate codes, but cannot read verification state directly'
 );
 select ok(
   position('pg_advisory_xact_lock' in pg_get_functiondef(
-    'public.request_waitlist_verification(text,text,text,text,text)'::regprocedure
+    'public.join_waitlist_now(text,text,text,text,text,text)'::regprocedure
   )) > 0,
   'waitlist intake is serialized'
 );
 select ok(
   position('waitlist_verification' in pg_get_functiondef(
-    'public.claim_mail_service(integer)'::regprocedure
+    'public.claim_mail_service(integer,integer)'::regprocedure
   )) > 0,
-  'the mail claim includes verification messages'
+  'the budgeted mail claim includes verification messages'
+);
+select ok(
+  to_regprocedure('public.claim_mail_service(integer)') is null,
+  'the retired unbudgeted mail claim is not left as an overload'
 );
 
 select * from finish();

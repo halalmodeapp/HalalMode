@@ -321,6 +321,9 @@ export default function ChatScreen() {
     );
   }
 
+  const lastMessage = messages[messages.length - 1];
+  // Two quiet days after talking has started: offer a friendly opener.
+  const quiet = !!lastMessage && now > 0 && now - new Date(lastMessage.createdAt).getTime() > 2 * 86400_000;
   const answered = connection.questions.length;
   const days = Math.max(
     1,
@@ -462,6 +465,8 @@ export default function ChatScreen() {
             )
           }
         />
+
+        {quiet && !draft ? <QuietNudge onUse={setDraft} /> : null}
 
         <ChatCardsBanner connectionId={id} partnerName={connection.profile.firstName} />
 
@@ -905,6 +910,10 @@ const styles = StyleSheet.create({
   tick: { fontFamily: font.bodyBold, fontSize: 12, letterSpacing: -2, color: 'rgba(252,252,251,0.48)' },
   tickRead: { color: color.goldOnDark },
 
+  quietWrap: { paddingHorizontal: space.xl, paddingBottom: 6 },
+  quietActions: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
+  quietUse: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink },
+  quietDismiss: { fontFamily: font.body, fontSize: 14, color: color.faint },
   openerWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 36 },
   botCard: {
     maxWidth: 340,
@@ -1023,6 +1032,31 @@ const styles = StyleSheet.create({
  * It is set apart as the app speaking, in its own card with its own name, so
  * nobody mistakes it for a message from the other person.
  */
+/** After two quiet days the same assistant offers an opener to put in the box. */
+function QuietNudge({ onUse }: { onUse: (text: string) => void }) {
+  const { language, t } = useI18n();
+  const [opener] = useState(() => shuffledOpeners(language)[0]);
+  const [dismissed, setDismissed] = useState(false);
+  if (!opener || dismissed) return null;
+  return (
+    <View style={styles.quietWrap}>
+      <View style={styles.botCard}>
+        <Text style={styles.botName}>✦ {t('chat.botName')}</Text>
+        <Text style={styles.botLead}>{t('chat.quietTitle')}</Text>
+        <Text style={styles.opener}>“{opener}”</Text>
+        <View style={styles.quietActions}>
+          <Pressable accessibilityRole="button" onPress={() => onUse(opener)} hitSlop={8}>
+            <Text style={styles.quietUse}>{t('chat.useOpener')}</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('common.dismiss')} onPress={() => setDismissed(true)} hitSlop={8}>
+            <Text style={styles.quietDismiss}>✕</Text>
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 function OpenerHint() {
   const { language, t } = useI18n();
   const [opener] = useState(() => shuffledOpeners(language)[0]);

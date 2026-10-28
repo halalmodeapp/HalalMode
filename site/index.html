@@ -9,6 +9,14 @@
 <meta property="og:title" content="Halal Mode">
 <meta property="og:description" content="An intentional Muslim marriage app. A few reciprocal introductions a day, and a conversation only when the interest is mutual.">
 <meta property="og:image" content="/img/hero.webp">
+<script src="/launch.js?v=20261021a"></script>
+<script>
+/* After launch (launch.js), referral links open the invite page instead of the
+   waitlist. A sign-in that falls back to the homepage still finishes there. */
+(function(){var L=window.HALAL_MODE_LAUNCH||{},ref=(new URLSearchParams(location.search).get('ref')||'').trim().toUpperCase();
+if(L.inviteFlow&&/^HM[A-Z0-9]{8}$/.test(ref)){location.replace('/invite?ref='+ref);return}
+if(/access_token=/.test(location.hash)){try{if(localStorage.getItem('halal-mode-invite-pending'))location.replace('/invite'+location.hash)}catch(_){}}})();
+</script>
 <script>
 /* Email verification links land here; the referral page shows the result. */
 if(/[?&]verify=/.test(window.location.search))window.location.replace('/refer'+window.location.search);
@@ -76,7 +84,7 @@ header::before{content:'';position:absolute;z-index:-1;pointer-events:none;top:0
 .hero{position:relative}
 .logo{height:30px;width:auto;display:block}
 /* A small trademark mark beside the wordmark. */
-.logo-tm{position:absolute;left:100%;top:-1px;margin-left:3px;font:600 9px/1 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:0;pointer-events:none;color:#fff;text-shadow:0 1px 4px rgba(10,10,10,.35)}
+.logo-tm{position:absolute;left:100%;top:-2px;margin-left:3px;font:600 12px/1 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:0;pointer-events:none;color:#fff;text-shadow:0 1px 4px rgba(10,10,10,.35)}
 header .logo-link .logo{filter:brightness(0) invert(1) drop-shadow(0 1px 6px rgba(10,10,10,.35))}
 .pill{font:600 12px ui-sans-serif,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);background:rgba(252,252,251,.82);padding:7px 14px;border-radius:999px}
 
@@ -130,6 +138,12 @@ button:disabled{opacity:.55;cursor:wait}
 .fine{font-size:12px;line-height:1.4;color:var(--label);margin:clamp(4px,.9vh,14px) 0 0}
 .offer-fine{margin-top:8px}
 .row{display:grid;grid-template-columns:1.3fr 1fr;gap:12px}
+/* Shown only when a referral link brought this visitor: the code is saved and goes with the sign-up. */
+.ref-added{display:flex;align-items:center;gap:10px;margin:14px 0 2px;padding:10px 12px;border-radius:12px;background:rgba(47,93,74,.08);color:#2F5D4A;font:600 14px/1.35 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.ref-added[hidden]{display:none}
+.ref-tick{display:grid;place-items:center;width:22px;height:22px;flex:none;border-radius:50%;background:#2F5D4A}
+.ref-tick svg{width:14px;height:14px;fill:none;stroke:#FCFCFB;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.ref-code{font-weight:700;letter-spacing:.02em;white-space:nowrap}
 .hp{position:absolute;left:-9999px;height:0;overflow:hidden}
 
 /* Slide controls */
@@ -254,6 +268,7 @@ button:disabled{opacity:.55;cursor:wait}
       <option value="" disabled selected data-i18n="choose">Choose…</option>
       <option>18-24</option><option>25-29</option><option>30-34</option><option>35-39</option><option>40-49</option><option>50+</option>
     </select></div></div>
+    <p class="ref-added" id="ref-added" role="status" hidden><span class="ref-tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg></span><span><span data-i18n="referralAdded">Your referral code has been added</span> <b class="ref-code" id="ref-code" dir="ltr"></b></span></p>
     <div class="hp" aria-hidden="true"><label>Leave blank <input id="website" tabindex="-1" autocomplete="off"></label></div>
     <button id="go" type="submit" data-i18n="waitlistButton">Join the waitlist</button>
     <p id="msg" class="msg" role="status" aria-live="polite"></p>
@@ -262,7 +277,7 @@ button:disabled{opacity:.55;cursor:wait}
     <div class="joined" id="joined" role="status" aria-live="polite" hidden>
       <span class="joined-tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg></span>
       <h3 data-i18n="joinedTitle">You’re in.</h3>
-      <p id="joined-body" data-i18n="joinedBody">Thank you for being one of the first 10,000. Your free month of Premium is reserved for launch, and a note is on its way to your inbox.</p>
+      <p id="joined-body" data-i18n="joinedBody">Thank you for being one of the first 10,000. Your free month of Premium is reserved for launch.</p>
       <a class="joined-refer" href="/refer" data-i18n="navRefer">Refer your friends</a>
     </div>
   </form>
@@ -275,9 +290,10 @@ button:disabled{opacity:.55;cursor:wait}
 
 
 <div id="dots" role="tablist" aria-label="Photos" data-i18n-aria="photos"></div>
-<script src="/site-footer.js?v=20261019a"></script>
-<script src="/i18n.js?v=20261019g"></script>
+<script src="/site-footer.js?v=20261021a"></script>
+<script src="/i18n.js?v=20261022a"></script>
 <script src="/waitlist-email.js?v=20261018a"></script>
+<script src="/waitlist-source.js?v=20261023a"></script>
 <script>
 /* ---------- Waitlist ---------- */
 (function(){
@@ -291,18 +307,26 @@ button:disabled{opacity:.55;cursor:wait}
   function sayText(text,ok){msg.dataset.messageKey='';msg.textContent=text;msg.className='msg '+(ok?'ok':'bad')}
   function restOptions(body){return {method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+KEY},body:JSON.stringify(body)}}
   function validReferral(code){return /^HM[A-Z0-9]{8}$/.test(String(code||'').trim().toUpperCase())}
-  function readReferral(){try{var code=localStorage.getItem(REFERRAL_STORAGE)||'';return validReferral(code)?code.toUpperCase():''}catch(_){return ''}}
+  // A referral code belongs to the visit that came through the link: it is kept
+  // for this tab only (so How it works and back keeps it), never across visits,
+  // and a plain visit to halalmo.de shows no code. Earlier versions kept it in
+  // localStorage for good, so clear that once.
+  try{localStorage.removeItem(REFERRAL_STORAGE)}catch(_){}
+  function readReferral(){try{var code=sessionStorage.getItem(REFERRAL_STORAGE)||'';return validReferral(code)?code.toUpperCase():''}catch(_){return ''}}
   function rememberReferral(){
-    var saved=readReferral();
-    if(saved)return Promise.resolve();
     var code=new URLSearchParams(window.location.search).get('ref');
     if(!validReferral(code))return Promise.resolve();
     code=code.trim().toUpperCase();
+    if(readReferral()===code)return Promise.resolve();
     return fetch(REFERRAL_EXISTS_URL,restOptions({p_code:code})).then(function(r){return r.ok?r.json():false}).then(function(exists){
-      if(exists===true){try{localStorage.setItem(REFERRAL_STORAGE,code)}catch(_){} }
+      if(exists===true){try{sessionStorage.setItem(REFERRAL_STORAGE,code)}catch(_){} }
     }).catch(function(){});
   }
-  var referralReady=rememberReferral();
+  var source=window.HalalWaitlistSource?window.HalalWaitlistSource.current(window):'';
+  var referralReady=rememberReferral().then(function(){
+    var code=readReferral();
+    if(code){document.getElementById('ref-code').textContent=code;document.getElementById('ref-added').hidden=false}
+  });
   f.addEventListener('submit',function(e){
     e.preventDefault();
     if(document.getElementById('website').value)return say('thanks',true);
@@ -314,11 +338,11 @@ button:disabled{opacity:.55;cursor:wait}
     if(!age)return say('validationAge');
     go.disabled=true;say('');
     referralReady.then(function(){
-      return fetch(URL_,restOptions({p_email:email,p_city:city,p_age_range:age,p_locale:window.HalalI18n.language,p_referral_code:readReferral()}));
+      return fetch(URL_,restOptions({p_email:email,p_city:city,p_age_range:age,p_locale:window.HalalI18n.language,p_referral_code:readReferral(),p_source:source||null}));
     })
     .then(function(r){return r.json().catch(function(){return {}}).then(function(data){if(!r.ok){var err=new Error(r.status);err.status=r.status;err.code=data&&data.code;err.detail=String(data&&data.message||'');throw err}return data})})
     .then(function(data){
-      try{localStorage.removeItem(REFERRAL_STORAGE)}catch(_){}
+      try{sessionStorage.removeItem(REFERRAL_STORAGE)}catch(_){}
       say('');
       var body=document.getElementById('joined-body');
       body.dataset.i18n=data&&data.eligible===false?'joinedBodyLate':'joinedBody';
@@ -536,6 +560,6 @@ button:disabled{opacity:.55;cursor:wait}
 <script type="module" src="/scene-warp.js?v=20261020b"></script>
 <script type="module" src="/logo-effect.js?v=20261019d"></script>
 <!-- Halftone CMYK texture over the cover; ?halftone in the address adds a tuning panel. -->
-<script type="module" src="/halftone.js?v=20261020a"></script>
+<script type="module" src="/halftone.js?v=20261026g"></script>
 </body>
 </html>

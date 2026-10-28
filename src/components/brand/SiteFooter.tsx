@@ -1,13 +1,14 @@
 import { Linking, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useI18n } from '@/i18n';
-import { CONTACT_EMAIL, howItWorksUrl, referUrl } from '@/lib/publicLinks';
+import { CONTACT_EMAIL, PRIVACY_URL, TERMS_URL, howItWorksUrl, referUrl } from '@/lib/publicLinks';
 import { useSession } from '@/state/session';
 import { font } from '@/theme/tokens';
 
 /**
  * The halalmo.de footer (site/site-footer.js) for the app's public screens:
- * the year, How it works, Refer your friends, and the contact address. The
+ * the year, How it works, Refer your friends, the Privacy Notice and Terms,
+ * and the contact address. The
  * year follows the calendar; the words are the website's, kept in step by
  * tests/marketingContent.test.ts.
  */
@@ -22,6 +23,10 @@ export function SiteFooter({ style }: { style?: StyleProp<ViewStyle> }) {
         <Text accessibilityRole="link" style={styles.link} onPress={open(howItWorksUrl(language))}>{t('marketing.howItWorks')}</Text>
         {' · '}
         <Text accessibilityRole="link" style={styles.link} onPress={open(referUrl(language))}>{t('marketing.refer')}</Text>
+        {' · '}
+        <Text accessibilityRole="link" style={styles.link} onPress={open(PRIVACY_URL)}>{t('onboarding.privacyLink')}</Text>
+        {' · '}
+        <Text accessibilityRole="link" style={styles.link} onPress={open(TERMS_URL)}>{t('onboarding.termsLink')}</Text>
         {' · '}
         {t('marketing.questions')}{' '}
         <Text accessibilityRole="link" style={styles.link} onPress={open(`mailto:${CONTACT_EMAIL}`)}>{CONTACT_EMAIL}</Text>

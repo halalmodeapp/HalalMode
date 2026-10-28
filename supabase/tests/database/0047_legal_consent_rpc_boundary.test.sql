@@ -1,6 +1,6 @@
 begin;
 set local search_path = public, extensions, halal_mode_private;
-select plan(14);
+select plan(16);
 
 select ok(
   exists (
@@ -65,8 +65,6 @@ select is(
       ('public.send_message(uuid,text,text)'),
       ('public.mark_connection_messages_read(uuid)'),
       ('public.get_connection_messages(uuid,timestamp with time zone,uuid,integer)'),
-      ('public.report_connection_member(uuid,text)'),
-      ('public.block_connection_member(uuid)'),
       ('public.get_my_blocked_members()'),
       ('public.unblock_my_member(uuid)')
     )
@@ -76,8 +74,8 @@ select is(
       in pg_get_functiondef(signature::regprocedure)
     ) > 0
   ),
-  16,
-  'every intended member-facing RPC checks current legal consent first'
+  14,
+  'every non-safety member RPC checks current legal consent first'
 );
 
 select is(
@@ -248,6 +246,18 @@ select throws_ok(
   '42501',
   'Current legal documents must be accepted',
   'a stale member is rejected before the underlying member-facing RPC runs'
+);
+select throws_ok(
+  $$ select public.get_connection_messages('00000000-0000-0000-0000-000000004711') $$,
+  '42501',
+  'Current legal documents must be accepted',
+  'stale consent is checked before message history is read'
+);
+select throws_ok(
+  $$ select public.mark_connection_messages_read('00000000-0000-0000-0000-000000004711') $$,
+  '42501',
+  'Current legal documents must be accepted',
+  'stale consent is checked before read receipts are changed'
 );
 
 select * from finish();

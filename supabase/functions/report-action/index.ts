@@ -1,19 +1,24 @@
 /**
- * The quick actions in a report email: suspend for 7 days, ban, or dismiss.
+ * Report and account actions from the admin panel (halalmo.de/admin):
+ * suspend for 7 days, ban, unban, or dismiss a report.
  *
- * The email links to halalmo.de/moderate, a page that shows what will happen
- * and asks for a click; that page POSTs here. Acting on a plain link would let
- * a mail scanner, which opens links to check them, ban somebody by itself.
+ * Every call carries the admin's own session. admin_authorize_report_action
+ * and admin_authorize_member_action check, as that admin, the admin list,
+ * owner role and a recent authenticator code. The activity-log row is written
+ * by the apply_admin_*_service function in the same transaction that applies
+ * the action, so the log never shows an action that failed.
  *
- * Each link carries an HMAC over (report, action, expiry) made with the vault
- * secret, so only links this service sent are honoured, and only for 14 days.
+ * Report emails used to carry signed links that acted without a session.
+ * Anyone who could see the inbox could then suspend or ban with no second
+ * factor and no log entry, so those links are no longer honoured: the email
+ * points to the admin panel instead, and old links get a 410.
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const CORS = {
   'Access-Control-Allow-Origin': 'https://halalmo.de',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'content-type',
+  'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info',
 };
 
 const BAN_FOR: Record<string, string | null> = {
@@ -22,33 +27,52 @@ const BAN_FOR: Record<string, string | null> = {
   dismiss: null,
 };
 
-async function sign(secret: string, message: string): Promise<string> {
-  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message));
-  return Array.from(new Uint8Array(signature)).map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-function equal(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i += 1) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-}
-
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
   if (request.method !== 'POST') return new Response('method not allowed', { status: 405, headers: CORS });
 
-  const body = await request.json().catch(() => ({})) as { r?: string; a?: string; e?: string; t?: string };
-  const { r, a, e, t } = body;
-  if (!r || !a || !e || !t || !(a in BAN_FOR)) return Response.json({ error: 'invalid' }, { status: 400, headers: CORS });
-  if (Number(e) < Date.now() / 1000) return Response.json({ error: 'expired' }, { status: 410, headers: CORS });
-
-  const client = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
-  const secret = await client.rpc('mail_link_secret_service');
-  if (secret.error || !equal(await sign(secret.data as string, `${r}.${a}.${e}`), t)) {
-    return Response.json({ error: 'forbidden' }, { status: 403, headers: CORS });
+  const body = await request.json().catch(() => ({})) as { r?: string; a?: string; why?: string; admin?: boolean; member?: string };
+  const { r, a } = body;
+  // Only the admin panel may act. Old signed email links land here without
+  // `admin` and are refused.
+  if (body.admin !== true) {
+    return Response.json({ error: 'Email links no longer act. Open Reports in the admin panel.' }, { status: 410, headers: CORS });
   }
+  const client = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+  const bearer = request.headers.get('authorization') ?? '';
+  // Runs as the admin, so the database decides with their own session.
+  const asAdmin = () => createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_ANON_KEY') ?? '', {
+    global: { headers: { Authorization: bearer } },
+    auth: { persistSession: false },
+  });
+
+  // Account actions from the admin panel's Trust & safety pages: suspend,
+  // ban or unban a member directly, without a report.
+  if (body.member) {
+    const ACCOUNT: Record<string, string> = { suspend: '168h', ban: '876000h', unban: 'none' };
+    if (!a || !(a in ACCOUNT) || !bearer.startsWith('Bearer ')) {
+      return Response.json({ error: 'invalid' }, { status: 400, headers: CORS });
+    }
+    const allowed = await asAdmin().rpc('admin_authorize_member_action', { p_user_id: body.member, p_action: a, p_reason: body.why ?? '' });
+    if (allowed.error || !allowed.data) {
+      return Response.json({ error: allowed.error?.message ?? 'forbidden', hint: allowed.error?.hint ?? null }, { status: 403, headers: CORS });
+    }
+    const ok = allowed.data as { actor: string; reason: string };
+    const changed = await client.auth.admin.updateUserById(body.member, { ban_duration: ACCOUNT[a] });
+    if (changed.error) return Response.json({ error: changed.error.message }, { status: 500, headers: CORS });
+    const applied = await client.rpc('apply_admin_member_action_service', { p_user_id: body.member, p_action: a, p_actor: ok.actor, p_reason: ok.reason });
+    if (applied.error) return Response.json({ error: applied.error.message }, { status: 500, headers: CORS });
+    return Response.json({ done: a }, { headers: CORS });
+  }
+
+  if (!r || !a || !(a in BAN_FOR) || !bearer.startsWith('Bearer ')) {
+    return Response.json({ error: 'invalid' }, { status: 400, headers: CORS });
+  }
+  const allowed = await asAdmin().rpc('admin_authorize_report_action', { p_report_id: r, p_action: a, p_reason: body.why ?? '' });
+  if (allowed.error || !allowed.data) {
+    return Response.json({ error: allowed.error?.message ?? 'forbidden', hint: allowed.error?.hint ?? null }, { status: 403, headers: CORS });
+  }
+  const admin = allowed.data as { actor: string; reason: string };
 
   const duration = BAN_FOR[a];
   const claimed = await client.rpc('claim_report_action_service', { p_report_id: r, p_action: a });
@@ -63,9 +87,9 @@ Deno.serve(async (request) => {
     }
   }
   // The database action is applied only after the external Auth side effect
-  // succeeds. If the worker dies here, the claim makes the same signed action
+  // succeeds. If the worker dies here, the claim makes the same action
   // retryable without allowing a different action or a second notice.
-  const applied = await client.rpc('apply_report_action_service', { p_report_id: r, p_action: a });
+  const applied = await client.rpc('apply_admin_report_action_service', { p_report_id: r, p_action: a, p_actor: admin.actor, p_reason: admin.reason });
   if (applied.error) return Response.json({ error: applied.error.message }, { status: 500, headers: CORS });
   return Response.json({ done: a }, { headers: CORS });
 });

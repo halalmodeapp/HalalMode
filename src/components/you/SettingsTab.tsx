@@ -1,10 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { router } from 'expo-router';
-import { Linking, Pressable, StyleSheet, Switch, View } from 'react-native';
-
+import { Linking, Pressable, Switch, View } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
+import { ADMIN_PANEL_URL, fetchIsAdmin } from '@/api/admin';
 import { fetchMyReadReceipts, fetchMySampleMembers, requestAccountDeletion, setMyReadReceipts, setMySampleMembers, setMyTestPremium, setProfilePaused } from '@/api/account';
-import { fetchMyHighLatitudeFajrSettings, setMyHighLatitudeFajrMethod, type HighLatitudeFajrSettings } from '@/api/profile';
+import { fetchMyHighLatitudeFajrSettings, fetchMyMaritalSettings, setMyHighLatitudeFajrMethod, setMyMaritalPreferences, setMyMaritalStatus, type HighLatitudeFajrSettings, type MaritalSettings } from '@/api/profile';
+import { ACCEPTED_KEYS, acceptableStatuses, declarableStatuses, MARITAL_STATUS_KEYS } from '@/data/marital';
+import { NotificationKindSwitches } from '@/components/you/NotificationKindSwitches';
 import { disableMyNotifications, enableMyNotifications, fetchMyNotificationConsent } from '@/api/notifications';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -27,21 +30,23 @@ import { useFeatureFlags } from '@/state/featureFlags';
 import { USE_MOCKS } from '@/lib/supabase';
 import { testIds } from '@/lib/testIds';
 import { queryKeys } from '@/lib/queryClient';
-import { alpha, color, font, radius, space } from '@/theme/tokens';
-import { TIER_LIMITS, type Profile } from '@/types';
-import { RTL_LAYOUT } from '@/lib/rtl';
+import { color } from '@/theme/tokens';
+import { TIER_LIMITS, type Gender, type MaritalStatus, type Profile } from '@/types';
 import { showNotice } from '@/lib/notice';
 import { useToast } from '@/state/toast';
 import { useRound } from '@/state/round';
+import { styles } from './settingsTabStyles';
 
 export function SettingsTab({
   liveCount,
   openConnections,
   profilePaused,
+  gender,
 }: {
   liveCount: number;
   openConnections: number;
   profilePaused: boolean;
+  gender: Gender;
 }) {
   const { t, isRTL, localeTag, nativeRestartRequired } = useI18n();
   const cardsCopy = useCardsCopy();
@@ -72,6 +77,7 @@ export function SettingsTab({
     },
   });
   const sampleMembersQuery = useQuery({ queryKey: ['sample-members'], queryFn: fetchMySampleMembers });
+  const isAdminQuery = useQuery({ queryKey: ['admin-session'], queryFn: fetchIsAdmin, staleTime: 10 * 60_000 });
   const fajrSettingsQuery = useQuery({
     queryKey: queryKeys.highLatitudeFajrSettings,
     queryFn: fetchMyHighLatitudeFajrSettings,
@@ -87,6 +93,31 @@ export function SettingsTab({
     },
     onError: () => showNotice(t('settings.activityErrorTitle'), t('settings.activityErrorBody')),
   });
+  const maritalQuery = useQuery({ queryKey: queryKeys.maritalSettings, queryFn: fetchMyMaritalSettings });
+  const maritalStatus = useMutation({
+    mutationFn: setMyMaritalStatus,
+    onSuccess: (_, status) => {
+      queryClient.setQueryData<MaritalSettings>(queryKeys.maritalSettings, (current) => (current ? { ...current, status } : current));
+      void queryClient.invalidateQueries({ queryKey: queryKeys.poolSize });
+      toast.show(`✓ ${t('filters.saved')}`);
+    },
+    onError: () => showNotice(t('settings.activityErrorTitle'), t('settings.activityErrorBody')),
+  });
+  const maritalPreferences = useMutation({
+    mutationFn: setMyMaritalPreferences,
+    onSuccess: (_, accepted) => {
+      queryClient.setQueryData<MaritalSettings>(queryKeys.maritalSettings, (current) => (current ? { ...current, accepted } : current));
+      void queryClient.invalidateQueries({ queryKey: queryKeys.poolSize });
+      toast.show(`✓ ${t('filters.saved')}`);
+    },
+    onError: () => showNotice(t('settings.activityErrorTitle'), t('settings.activityErrorBody')),
+  });
+  const toggleAccepted = (status: MaritalStatus) => {
+    const current = maritalQuery.data?.accepted ?? [];
+    const next = current.includes(status) ? current.filter((item) => item !== status) : [...current, status];
+    // At least one choice stays on, or nobody could be introduced.
+    if (next.length > 0) maritalPreferences.mutate(next);
+  };
   const sampleMembers = useMutation({
     mutationFn: setMySampleMembers,
     onSuccess: () => {
@@ -240,6 +271,7 @@ export function SettingsTab({
           }}
           badge={!pushNotifications ? t('settings.comingLater') : undefined}
         />
+        {pushNotifications && notificationsQuery.data ? <NotificationKindSwitches /> : null}
         <PermissionExplainer
           visible={notificationsExplainer}
           eyebrow={t('permission.notifications.eyebrow')}
@@ -268,6 +300,40 @@ export function SettingsTab({
           />
         ) : null}
       </Section>
+
+      {maritalQuery.data ? (
+        <>
+          <Section eyebrow={t('settings.preferences')} title={t('marital.statusTitle')}>
+            <Text variant="caption" style={styles.fajrMethodIntro}>{t('marital.statusBody')}</Text>
+            {declarableStatuses(gender).map((status) => (
+              <MaritalOption
+                key={status}
+                title={t(MARITAL_STATUS_KEYS[status])}
+                selected={maritalQuery.data?.status === status}
+                kind="radio"
+                disabled={maritalStatus.isPending}
+                testID={`settings.marital.status.${status}`}
+                onPress={() => maritalStatus.mutate(status)}
+              />
+            ))}
+          </Section>
+          <Section eyebrow={t('settings.preferences')} title={t('marital.prefTitle')}>
+            <Text variant="caption" style={styles.fajrMethodIntro}>{t('marital.prefQuestion')}</Text>
+            {acceptableStatuses(gender).map((status) => (
+              <MaritalOption
+                key={status}
+                title={t(ACCEPTED_KEYS[status])}
+                selected={maritalQuery.data?.accepted.includes(status) ?? false}
+                kind="checkbox"
+                disabled={maritalPreferences.isPending}
+                testID={`settings.marital.accepts.${status}`}
+                onPress={() => toggleAccepted(status)}
+              />
+            ))}
+            <Text variant="caption" style={styles.fajrMethodIntro}>{t('marital.prefNote')}</Text>
+          </Section>
+        </>
+      ) : null}
 
       {fajrSettingsQuery.data?.isHighLatitude ? (
         <Section eyebrow={t('settings.preferences')} title={t('settings.highLatitudeFajrTitle')}>
@@ -514,6 +580,19 @@ export function SettingsTab({
         </View>
       </Section>
 
+      {/* Operators only, and in English like the panel itself. The panel asks
+          for its own Google and authenticator sign-in; this is just the way in. */}
+      {isAdminQuery.data ? (
+        <Section eyebrow="Admin" title="Halal Mode admin">
+          <SettingRow
+            title="Open admin panel"
+            subtitle="Growth, matching, scoring, feature flags, settings and the audit log. Needs your authenticator code."
+            testID={testIds.settings.adminPanel}
+            onPress={() => void WebBrowser.openBrowserAsync(ADMIN_PANEL_URL)}
+          />
+        </Section>
+      ) : null}
+
       <Section eyebrow={t('settings.account')} title={t('settings.dangerZone')}>
         <SettingRow
           title={t('settings.delete')}
@@ -688,6 +767,47 @@ function SettingRow({
   return <View style={[styles.row, isRTL && styles.rowReverse]}>{content}</View>;
 }
 
+function MaritalOption({
+  title,
+  selected,
+  kind,
+  disabled,
+  testID,
+  onPress,
+}: {
+  title: string;
+  selected: boolean;
+  kind: 'radio' | 'checkbox';
+  disabled: boolean;
+  testID: string;
+  onPress: () => void;
+}) {
+  const { isRTL } = useI18n();
+  return (
+    <Pressable
+      accessibilityRole={kind}
+      accessibilityLabel={title}
+      accessibilityState={{ checked: selected, disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      testID={testID}
+      style={({ pressed }) => [
+        styles.fajrMethodOption,
+        isRTL && styles.rowReverse,
+        selected && styles.fajrMethodOptionSelected,
+        pressed && !disabled && styles.openRowPressed,
+      ]}
+    >
+      <View style={styles.fajrMethodCopy}>
+        <Text style={styles.rowTitle}>{title}</Text>
+      </View>
+      <View style={[kind === 'radio' ? styles.fajrRadio : styles.maritalBox, selected && styles.fajrRadioSelected, selected && kind === 'checkbox' && styles.maritalBoxOn]}>
+        {selected ? (kind === 'radio' ? <View style={styles.fajrRadioDot} /> : <Text style={styles.maritalTick}>✓</Text>) : null}
+      </View>
+    </Pressable>
+  );
+}
+
 function HighLatitudeMethodOption({
   title,
   subtitle,
@@ -730,168 +850,3 @@ function HighLatitudeMethodOption({
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  rtl: RTL_LAYOUT,
-  rowReverse: { flexDirection: 'row-reverse' },
-  wrap: { gap: 22, paddingBottom: 30 },
-  split: { flexDirection: 'row', alignItems: 'flex-start', gap: 22 },
-  splitRTL: { flexDirection: 'row-reverse', alignItems: 'flex-start', gap: 22 },
-  column: { flex: 1, gap: 22 },
-  stack: { gap: 22 },
-  section: { gap: 10 },
-  sectionHead: { gap: 5, paddingHorizontal: 2 },
-  sectionTitle: { fontSize: 21, lineHeight: 27 },
-  group: { paddingVertical: 0, paddingHorizontal: space.lg + 2 },
-
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 17,
-    borderBottomWidth: 1,
-    borderBottomColor: alpha.lineFaint,
-  },
-  // Same box as the Preferences fields: the whole outline is the button.
-  openRow: {
-    borderWidth: 1,
-    borderColor: alpha.lineStrong,
-    borderBottomColor: alpha.lineStrong,
-    borderRadius: radius.md,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginVertical: 6,
-    backgroundColor: color.surface,
-  },
-  openRowPressed: { backgroundColor: color.sandLight },
-  chevron: { fontFamily: font.body, fontSize: 20, lineHeight: 20, color: color.faintest },
-  rowText: { flex: 1, gap: 5 },
-  rowTitleLine: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 7 },
-  rowTitle: { fontFamily: font.bodyBold, fontSize: 13.5, color: color.ink },
-  rowSubtitle: { lineHeight: 19, color: color.muted },
-  fajrMethodIntro: { lineHeight: 19, color: color.muted, paddingTop: 14 },
-  fajrMethodOption: {
-    minHeight: 68,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 13,
-    borderTopWidth: 1,
-    borderTopColor: alpha.lineFaint,
-  },
-  fajrMethodOptionSelected: { backgroundColor: color.sandLight },
-  fajrMethodCopy: { flex: 1, gap: 4 },
-  fajrRadio: {
-    width: 21,
-    height: 21,
-    borderWidth: 1.5,
-    borderColor: color.faint,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  fajrRadioSelected: { borderColor: color.ink },
-  fajrRadioDot: { width: 11, height: 11, borderRadius: 6, backgroundColor: color.ink },
-  rowControl: { alignItems: 'flex-end', justifyContent: 'center' },
-  badge: {
-    borderRadius: radius.pill,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    backgroundColor: 'rgba(184,145,79,0.12)',
-    color: color.gold,
-    fontFamily: font.bodyBold,
-    fontSize: 8.5,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-  },
-  arrow: { fontFamily: font.body, fontSize: 16, color: color.faint },
-  disclosure: { minWidth: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center' },
-  lockGlyph: { fontFamily: font.body, fontSize: 20, color: color.green },
-  languagePill: {
-    borderWidth: 1,
-    borderColor: alpha.lineStrong,
-    borderRadius: radius.pill,
-    paddingVertical: 7,
-    paddingHorizontal: 12,
-    minHeight: 44,
-    justifyContent: 'center',
-  },
-  languagePillLabel: { fontFamily: font.bodyBold, fontSize: 10, letterSpacing: 1, color: color.ink },
-  restartNotice: { color: color.gold, marginTop: 8 },
-  backRow: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
-  backLabel: { fontFamily: font.bodyBold, fontSize: 12, letterSpacing: 0.6, color: color.ink },
-  signOutWrap: { paddingVertical: 16 },
-
-  premiumCard: { gap: 14, borderRadius: radius.panel },
-  premiumLabel: {
-    fontFamily: font.bodyBold,
-    fontSize: 9,
-    letterSpacing: 2.4,
-    textTransform: 'uppercase',
-    color: color.goldOnDark,
-  },
-  premiumTitle: { marginTop: 12 },
-  premiumUnavailable: { color: 'rgba(252,252,251,0.72)', lineHeight: 18 },
-  featureList: { gap: 9 },
-  featureRow: { flexDirection: 'row', gap: 9, alignItems: 'flex-start' },
-  featureMark: { color: color.goldOnDark, fontSize: 11, marginTop: 3 },
-  featureText: {
-    flex: 1,
-    fontFamily: font.body,
-    fontSize: 12.5,
-    lineHeight: 19,
-    color: 'rgba(252,252,251,0.88)',
-  },
-  premiumDetails: { gap: 16, borderRadius: radius.panel, padding: 18 },
-  premiumDetailsHead: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
-  premiumDetailsTitle: { marginTop: 6, fontSize: 20, lineHeight: 26, flexShrink: 1 },
-  planBadge: {
-    borderWidth: 1,
-    borderColor: 'rgba(214,180,110,0.4)',
-    borderRadius: radius.pill,
-    paddingVertical: 6,
-    paddingHorizontal: 9,
-  },
-  // The badge now sits on the dark Premium card.
-  planBadgeActive: { borderColor: color.goldOnDark },
-  planBadgeLabel: {
-    color: color.goldOnDark,
-    fontFamily: font.bodyBold,
-    fontSize: 8.5,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  planBadgeLabelActive: { color: color.goldOnDark },
-  benefitGrid: { gap: 9 },
-  benefit: {
-    flexDirection: 'row',
-    gap: 11,
-    alignItems: 'flex-start',
-    padding: 13,
-    borderRadius: radius.lg,
-    backgroundColor: color.surface,
-  },
-  benefitMark: {
-    width: 31,
-    height: 31,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(184,145,79,0.12)',
-  },
-  benefitMarkLabel: { fontFamily: font.bodyBold, fontSize: 10, color: color.gold },
-  benefitText: { flex: 1, gap: 3 },
-  benefitTitle: { fontFamily: font.bodyBold, fontSize: 12.5, color: color.ink },
-  benefitDetail: { lineHeight: 18, color: color.muted },
-  premiumRule: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    paddingTop: 2,
-  },
-  premiumRuleMark: { color: color.gold, fontFamily: font.bodyBold, fontSize: 14 },
-  premiumRuleText: { flex: 1, lineHeight: 18, color: color.muted },
-  paceCard: { backgroundColor: color.sand, borderRadius: radius.lg, padding: 14, gap: 7 },
-  paceBody: { fontSize: 11.5, lineHeight: 19 },
-  version: { color: color.faint, marginTop: -4 },
-});

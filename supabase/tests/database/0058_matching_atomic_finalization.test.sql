@@ -37,6 +37,7 @@ select
   'Madinah', 'Saudi Arabia', 24.4670 + ((n - 5800)::numeric / 10000),
   39.6024, repeat('a', 50), array['atomic.jpg'], true
 from generate_series(5801, 5806) n;
+update profiles set marital_status = 'never_married' where marital_status is null; -- matching needs a declared status
 
 insert into private_preferences (
   user_id, min_age, max_age, preferred_countries, max_distance_km,
@@ -45,6 +46,23 @@ insert into private_preferences (
 select ('00000000-0000-0000-0000-' || lpad(n::text, 12, '0'))::uuid,
        18, 50, array['Saudi Arabia'], 100, now()
 from generate_series(5801, 5806) n;
+
+update public.profiles
+set bio = repeat('r', 80),
+    languages_spoken = array['Arabic'],
+    education = 'University',
+    has_children = 'no',
+    family_goals_answered_at = now(),
+    religious_dress = case when gender::text = 'female' then 'hijab' else null end,
+    ethnicities = array['arab'],
+    heritage_countries = array['SA']
+where id between '00000000-0000-0000-0000-000000005801'
+             and '00000000-0000-0000-0000-000000005806';
+update public.private_preferences
+set own_height_cm = 170,
+    own_build = 'Average'
+where user_id between '00000000-0000-0000-0000-000000005801'
+                  and '00000000-0000-0000-0000-000000005806';
 
 insert into halal_mode_private.member_legal_consent_history (
   user_id, document_type, version, acceptance_context
@@ -56,6 +74,13 @@ from (
 ) member
 cross join halal_mode_private.legal_document_registry document
 where document.is_current;
+
+update public.profiles p
+set sensitive_consent_at = now()
+where 2 = (select count(*)
+  from halal_mode_private.member_legal_consent_history h
+  join halal_mode_private.legal_document_registry d using (document_type, version)
+  where h.user_id = p.id and d.is_current);
 
 -- A/B will reach the repeat limit on this live appearance. C/D has declined
 -- far enough from its first score to support a score-collapse retirement.
@@ -309,6 +334,7 @@ insert into profiles (
   '1991-01-01', 'female', 'Madinah', 'Saudi Arabia', 24.4688, 39.6033,
   repeat('l', 50), array['late.jpg'], true
 );
+update profiles set marital_status = 'never_married' where marital_status is null; -- matching needs a declared status
 insert into private_preferences (
   user_id, min_age, max_age, preferred_countries, max_distance_km,
   matching_preferences_completed_at
@@ -321,6 +347,9 @@ insert into halal_mode_private.member_legal_consent_history (
 )
 select '00000000-0000-0000-0000-000000005899', document_type, version, 'onboarding'
 from halal_mode_private.legal_document_registry where is_current;
+update public.profiles
+set sensitive_consent_at = now()
+where id = '00000000-0000-0000-0000-000000005899';
 
 select throws_ok(
   format(

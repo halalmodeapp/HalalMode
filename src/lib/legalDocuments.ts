@@ -1,17 +1,24 @@
-/** Mock/offline display metadata only. Live version authority is the server registry. */
+import { LEGAL_VERSION, PRIVACY, TERMS } from '../data/legalDocuments';
+
+/**
+ * Mock/offline display metadata, derived from the documents themselves
+ * (src/data/legalDocuments.ts) so it can never name an old version or a
+ * stale address. Live version authority is the server registry, which
+ * tests/legalDocuments.test.ts holds to the same source.
+ */
 export const LEGAL_DOCUMENT_FALLBACKS = {
   terms: {
-    type: 'terms',
-    version: '2026-07-29',
-    title: 'Terms of Service',
-    effectiveDate: '2026-07-29',
-    url: 'https://halalmo.de/terms',
+    type: 'terms' as const,
+    version: LEGAL_VERSION,
+    title: TERMS.title,
+    effectiveDate: TERMS.updated,
+    url: TERMS.url,
   },
   privacy: {
-    type: 'privacy',
-    version: '2026-07-29',
-    title: 'Privacy Notice',
-    effectiveDate: '2026-07-29',
-    url: 'https://halalmo.de/privacy',
+    type: 'privacy' as const,
+    version: LEGAL_VERSION,
+    title: PRIVACY.title,
+    effectiveDate: PRIVACY.updated,
+    url: PRIVACY.url,
   },
-} as const;
+};

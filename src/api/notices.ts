@@ -1,14 +1,14 @@
 import { requireSupabase, USE_MOCKS } from '@/lib/supabase';
 
 /** Fixed moderation notices; the app holds the wording (migration 0186). */
-export type NoticeKind = 'report_actioned' | 'report_reviewed' | 'photo_removed';
+export type NoticeKind = 'report_actioned' | 'report_reviewed' | 'photo_removed' | 'selfie_rejected';
 
 export interface MemberNotice {
   id: number;
   kind: NoticeKind;
 }
 
-const KINDS: readonly NoticeKind[] = ['report_actioned', 'report_reviewed', 'photo_removed'];
+const KINDS: readonly NoticeKind[] = ['report_actioned', 'report_reviewed', 'photo_removed', 'selfie_rejected'];
 
 export async function fetchMyNotices(): Promise<MemberNotice[]> {
   if (USE_MOCKS) return [];

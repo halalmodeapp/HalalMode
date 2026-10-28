@@ -44,8 +44,33 @@ jobs:
         with:
           version: 2.110.0
 
+      # Docker Hub limits anonymous pulls, and shared CI machines hit that limit
+      # (the database job once failed before running a single test). Signing in
+      # lifts it: add DOCKERHUB_USERNAME and DOCKERHUB_TOKEN as repository secrets.
+      - name: Sign in to Docker Hub
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ -n "$DOCKERHUB_TOKEN" ]; then
+            echo "$DOCKERHUB_TOKEN" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+          else
+            echo "No Docker Hub secrets set; pulling anonymously."
+          fi
+
+      # The contracts only need Postgres, auth and storage (the migrations create
+      # buckets and policies). Every other service is a download that can hit
+      # the registry's anonymous pull limit, so they are not started. A
+      # rate-limited pull is still worth another go a little later.
       - name: Start isolated Supabase services
-        run: supabase start
+        run: |
+          for attempt in 1 2 3; do
+            supabase start -x studio,imgproxy,edge-runtime,realtime,mailpit,postgres-meta,vector,supavisor && exit 0
+            echo "supabase start failed (attempt $attempt); retrying in 60 seconds"
+            supabase stop --no-backup || true
+            sleep 60
+          done
+          exit 1
 
       - name: Reset local database and run pgTAP contracts
         run: supabase db reset --local && supabase test db

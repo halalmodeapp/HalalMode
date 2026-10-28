@@ -6,6 +6,7 @@ import { EDUCATION_GROUPS } from '@/data/educationLevels';
 import { HAS_CHILDREN_PROFILE, dressOptions } from '@/data/matchingOptions';
 import { findEthnicity } from '@/data/ethnicities';
 import { heritageName } from '@/data/heritage';
+import { DIETS, DIET_KEYS, type Diet } from '@/data/diet';
 import { SECT_GROUPS } from '@/data/sects';
 import { languageName } from '@/data/spokenLanguages';
 import type { Profile } from '@/types';
@@ -60,6 +61,8 @@ export function profileDetailLines(profile: Profile, t: Translate, language: App
     .join(', '));
   add('profile.heritage', shown(profile.heritageCountries).map((code) => heritageName(code, language)).join(', '));
 
+  add('profile.grewUp', shown(profile.grewUpCountries).map((code) => heritageName(code, language)).join(', '));
+  add('profile.diet', (profile.diet ?? []).filter((id): id is Diet => DIETS.includes(id as Diet)).map((id) => t(DIET_KEYS[id])).join(', '));
   add('filters.education', profile.education ? storedLabel(EDUCATION_GROUPS, profile.education, language) : undefined);
   add('filters.languages', (profile.languagesSpoken ?? []).map((code) => languageName(code, language)).join(', '));
   return lines;

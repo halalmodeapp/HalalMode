@@ -9,6 +9,12 @@ const DESTINATIONS: Record<string, AppNotificationDestination> = {
   new_message: '/(tabs)/connections',
   notice: '/(tabs)/you',
   halal_cards: '/(tabs)/connections',
+  liked_you: '/(tabs)/connections',
+  waiting_on_you: '/(tabs)/connections',
+  quiet_match: '/(tabs)/connections',
+  round_expiring: '/(tabs)/daily',
+  recap_ready: '/(tabs)/connections',
+  photo_decision: '/(tabs)/you',
 };
 
 /** Resolve only known server notification kinds to routes inside the app. */

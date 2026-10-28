@@ -14,6 +14,8 @@ module.exports = defineConfig([
       '.claude/**',
       'site/logo-effect.js',
       'site/halftone.js',
+      // Runs on Deno, by hand.
+      'scripts/luna-photo-eval.ts',
       // This old staging-only helper is not loaded by any shipped route.
       'site/stage.js',
       'supabase/functions/**',

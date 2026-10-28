@@ -16,6 +16,7 @@ const WORDING: Record<NoticeKind, { title: TranslationKey; body: TranslationKey 
   report_actioned: { title: 'notice.reportTitle', body: 'notice.reportActioned' },
   report_reviewed: { title: 'notice.reportTitle', body: 'notice.reportReviewed' },
   photo_removed: { title: 'notice.photoTitle', body: 'notice.photoRemoved' },
+  selfie_rejected: { title: 'notice.selfieTitle', body: 'notice.selfieRejected' },
 };
 
 /**

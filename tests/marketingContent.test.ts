@@ -181,7 +181,7 @@ test('waitlist and auth home surfaces use a compact How it works action, not the
   assert.match(howItWorks, /@media\(max-width:1120px\).*repeat\(2,minmax\(0,1fr\)\)/s);
   assert.match(howItWorks, /@media\(max-width:680px\).*grid-template-columns:minmax\(0,1fr\)/s);
   assert.match(howItWorks, /prefers-reduced-motion:reduce/);
-  for (const file of ['app/auth.tsx', 'app/auth-email.tsx', 'app/join.tsx']) {
+  for (const file of ['app/auth.tsx', 'app/auth-email.tsx']) {
     const source = readFileSync(`${root}/${file}`, 'utf8');
     assert.doesNotMatch(source, /marketing\.cards(?:Title|Body)/);
     // Every public screen uses the one shared link button.
@@ -226,7 +226,7 @@ test('website Halal Cards title and body have a non-empty translation for all si
 });
 
 test('auth and native waitlist surfaces use a compact How it works action', () => {
-  for (const file of ['app/auth.tsx', 'app/auth-email.tsx', 'app/join.tsx']) {
+  for (const file of ['app/auth.tsx', 'app/auth-email.tsx']) {
     const source = readFileSync(`${root}/${file}`, 'utf8');
     assert.doesNotMatch(source, /marketing\.cards(?:Title|Body)/);
     // Every public screen uses the one shared link button.
@@ -257,12 +257,39 @@ test('the sign-up screen speaks with the waitlist page words in every language',
     ['marketing.howItWorks', 'navHow'],
     ['marketing.refer', 'navRefer'],
     ['marketing.questions', 'questions'],
+    ['onboarding.privacyLink', 'navPrivacy'],
+    ['onboarding.termsLink', 'navTerms'],
   ];
   for (const [language, catalog] of catalogs) {
     const site = websiteCopy(language, '/');
     for (const [app, web] of same) assert.equal(catalog[app], site.t(web), `${language}: ${app}`);
     assert.equal(catalog['auth.heroIntro'], `${site.t('heroIntro')} ${site.t('heroBold')}`.trim(), `${language}: auth.heroIntro`);
   }
+});
+
+test('app and public referral pages explain the same referral counting rule', () => {
+  const catalogs: [string, Record<string, string>][] = [
+    ['en', en], ['ar', ar], ['ur', ur], ['fa', fa], ['hi', hi], ['id', id],
+    ['ms', ms], ['bn', bn], ['fr', fr], ['tr', tr], ['ha', ha], ['am', am],
+    ['so', so], ['es', es], ['ru', ru], ['zh-Hans', zhHans],
+  ];
+  for (const [language, catalog] of catalogs) {
+    assert.equal(websiteCopy(language, '/refer').t('referralNote'), catalog['referrals.note'], `${language}: referral note`);
+  }
+  assert.equal(en['referrals.note'], 'Referrals count after your friend completes their profile in the app.');
+  assert.doesNotMatch(en['referrals.note'], /Waitlist sign-ups/u);
+  assert.match(en['referrals.note'], /completes their profile in the app/u);
+  assert.doesNotMatch(en['referrals.note'], /confirm their waitlist email/u);
+  assert.doesNotMatch(websiteCopy('en', '/refer').t('confirmBody'), /counts it for them/u);
+});
+
+test('waitlist welcome email is complete without asking the recipient to confirm', () => {
+  const mail = readFileSync(`${root}/supabase/functions/send-mail/index.ts`, 'utf8');
+  const welcome = mail.slice(mail.indexOf('const WELCOME:'), mail.indexOf('const VERIFICATION:'));
+  assert.match(welcome, /function welcomeEmail\(locale: string, eligible: boolean\)/u);
+  assert.match(welcome, /Your place is saved/u);
+  assert.match(welcome, /complete your profile in the app/u);
+  assert.doesNotMatch(welcome, /Confirm my email|confirm your email|ref=verify/u);
 });
 
 test('there is no launch switch: the app is after-launch copy, the waitlist site before-launch', () => {

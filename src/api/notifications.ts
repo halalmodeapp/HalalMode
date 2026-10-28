@@ -89,6 +89,34 @@ async function registerNotificationDevice(token: string, platform: 'ios' | 'andr
   if (error) throw error;
 }
 
+/** The reminders a member can switch off on their own; notices from us cannot be. */
+export const SWITCHABLE_NOTIFICATIONS = [
+  'round_ready',
+  'mutual_match',
+  'new_message',
+  'halal_cards',
+  'liked_you',
+  'waiting_on_you',
+  'quiet_match',
+  'photo_decision',
+  'recap_ready',
+  'round_expiring',
+] as const;
+export type SwitchableNotification = (typeof SWITCHABLE_NOTIFICATIONS)[number];
+
+export async function fetchMutedNotificationKinds(): Promise<string[]> {
+  if (USE_MOCKS) return [];
+  const { data, error } = await requireSupabase().rpc('get_my_muted_notification_kinds');
+  if (error) throw error;
+  return (data ?? []) as string[];
+}
+
+export async function setNotificationKind(kind: SwitchableNotification, enabled: boolean): Promise<void> {
+  if (USE_MOCKS) return;
+  const { error } = await requireSupabase().rpc('set_my_notification_kind', { p_kind: kind, p_enabled: enabled });
+  if (error) throw error;
+}
+
 export async function disableMyNotifications(): Promise<void> {
   if (USE_MOCKS) return;
   const { error } = await requireSupabase().rpc('disable_my_notifications');

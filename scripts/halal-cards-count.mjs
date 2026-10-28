@@ -46,8 +46,9 @@ for (const file of ['site/how-it-works.html']) {
     return `${open}${current}${close}`;
   });
   const premiumPattern = /(<p\b[^>]*data-i18n="cardsPremium"[^>]*>)([\s\S]*?)(<\/p>)/;
-  if (!premiumPattern.test(updated)) throw new Error(`Missing Halal Cards Premium copy in ${file}`);
-  updated = updated.replace(premiumPattern, (_match, open, body, close) => {
+  // The website no longer lists what Premium includes; keep the counts
+  // current only where a page still shows that paragraph.
+  if (premiumPattern.test(updated)) updated = updated.replace(premiumPattern, (_match, open, body, close) => {
     const values = [
       CATALOGUE_COUNTS.free,
       CATALOGUE_COUNTS.total,

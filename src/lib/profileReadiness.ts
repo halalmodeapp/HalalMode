@@ -40,8 +40,15 @@ export function isReadinessIssue(value: unknown): value is ProfileReadinessIssue
   return typeof value === 'string' && (READINESS_ISSUES as readonly string[]).includes(value);
 }
 
+/**
+ * Only these stand between a member and their first introduction. The rest are
+ * recommended: asked for once there is a match, never held against anyone.
+ */
+export const REQUIRED_ISSUES: readonly ProfileReadinessIssue[] = ['name', 'location', 'bio', 'photo'];
+
 export function getProfileReadiness(input: ProfileReadinessInput) {
-  const missing: ProfileReadinessIssue[] = [];
+  const found: ProfileReadinessIssue[] = [];
+  const missing = found;
   const height = Number(input.ownHeightCm);
   if (!input.firstName?.trim()) missing.push('name');
   if (!input.city?.trim() || !input.country?.trim()) missing.push('location');
@@ -57,7 +64,12 @@ export function getProfileReadiness(input: ProfileReadinessInput) {
   if (!(height >= 140 && height <= 210)) missing.push('height');
   if (!input.ownBuild?.trim()) missing.push('body_type');
   if (input.preferencesSaved === false) missing.push('preferences');
-  return { ready: missing.length === 0, missing };
+  const required = found.filter((issue) => REQUIRED_ISSUES.includes(issue));
+  return {
+    ready: required.length === 0,
+    missing: required,
+    recommended: found.filter((issue) => !REQUIRED_ISSUES.includes(issue)),
+  };
 }
 
 /**
@@ -78,6 +90,11 @@ const STEP_ISSUES: Record<ReadinessStep, readonly ProfileReadinessIssue[]> = {
   body: ['height', 'body_type'],
   preferences: ['preferences'],
 };
+
+/** The optional steps, once the required ones are done. */
+export function recommendedSteps(recommended: readonly ProfileReadinessIssue[], gender?: string | null) {
+  return readinessSteps(recommended, gender).filter((step) => !step.done);
+}
 
 export function readinessSteps(missing: readonly ProfileReadinessIssue[], gender?: string | null) {
   // Men are not asked about religious dress, so theirs is "Ethnicity and heritage".

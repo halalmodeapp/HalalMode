@@ -7,6 +7,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { fetchConnections } from '@/api/connections';
 import { BrandHeader } from '@/components/navigation/BrandHeader';
+import { LikedYouTray } from '@/components/likedYou/LikedYouTray';
+import { CompleteProfileNudge } from '@/components/readiness/CompleteProfileNudge';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/AsyncState';
 import { Screen } from '@/components/ui/Screen';
 import { StretchScrollView } from '@/components/ui/StretchScrollView';
@@ -64,6 +66,8 @@ export default function ConnectionsScreen() {
             onRetry={() => void connectionsQuery.refetch()}
           />
         ) : null}
+        <LikedYouTray />
+        <CompleteProfileNudge hasMatch={connections.length > 0} />
         {connections.map((connection) => (
           <ConnectionRow key={connection.id} connection={connection} />
         ))}

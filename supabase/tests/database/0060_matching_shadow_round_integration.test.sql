@@ -29,6 +29,7 @@ select
   case when n in (6001, 6004, 6006, 6008) then 'premium'::membership_tier else 'free'::membership_tier end,
   true
 from generate_series(6001, 6008) n;
+update profiles set marital_status = 'never_married' where marital_status is null; -- matching needs a declared status
 
 insert into private_preferences (
   user_id, min_age, max_age, preferred_countries, max_distance_km,
@@ -42,6 +43,17 @@ select
   now()
 from generate_series(6001, 6008) n;
 
+update public.profiles
+set bio = repeat('r', 80),
+    education = 'University',
+    has_children = 'no',
+    family_goals_answered_at = now(),
+    religious_dress = case when gender::text = 'female' then 'hijab' else null end,
+    ethnicities = array['arab'],
+    heritage_countries = array['SA']
+where id between '00000000-0000-0000-0000-000000006001'
+             and '00000000-0000-0000-0000-000000006008';
+
 insert into selection_scores (user_id, score, band, times_shown, times_kept)
 select
   ('00000000-0000-0000-0000-' || lpad(n::text, 12, '0'))::uuid,
@@ -50,6 +62,12 @@ select
   (n - 5998),
   greatest(0, n - 6002)
 from generate_series(6001, 6008) n;
+
+update public.private_preferences
+set own_height_cm = 170,
+    own_build = 'Average'
+where user_id between '00000000-0000-0000-0000-000000006001'
+                  and '00000000-0000-0000-0000-000000006008';
 
 insert into halal_mode_private.member_legal_consent_history (
   user_id, document_type, version, acceptance_context
@@ -61,6 +79,13 @@ from (
 ) member
 cross join halal_mode_private.legal_document_registry document
 where document.is_current;
+
+update public.profiles p
+set sensitive_consent_at = now()
+where 2 = (select count(*)
+  from halal_mode_private.member_legal_consent_history h
+  join halal_mode_private.legal_document_registry d using (document_type, version)
+  where h.user_id = p.id and d.is_current);
 
 -- A submitted historic round gives M2 a deliberate permanent pass on F2.
 insert into rounds (id, user_id, tier, opens_at, expires_at, submitted_at) values

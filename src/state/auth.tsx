@@ -319,9 +319,6 @@ export function AuthGate({ children }: { children: ReactNode }) {
     const inAuth = rootSegment === 'auth' || rootSegment === 'auth-email';
     const inOnboarding = rootSegment === 'onboarding';
     const inLegalConsent = rootSegment === 'legal-consent';
-    // The public waitlist landing. Reachable by anyone, signed in or not, and
-    // never redirected away from, it is the page halalmo.de points at.
-    const inJoin = rootSegment === 'join';
     // Terms and the Privacy Notice, at the addresses the database already sends
     // members to. Readable before signing up, because deciding whether to agree
     // to something requires reading it first.
@@ -335,7 +332,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
           inAuth ||
           inOnboarding ||
           inLegalConsent) &&
-        !inJoin && !inLegalPage
+        !inLegalPage
       ) {
         router.replace('/(tabs)/daily');
       }
@@ -343,7 +340,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (inJoin || inLegalPage) return;
+    if (inLegalPage) return;
 
     if (!user && !inAuth) {
       router.replace('/auth');

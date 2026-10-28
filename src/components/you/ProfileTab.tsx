@@ -1,49 +1,35 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  RecordingPresets,
-  requestRecordingPermissionsAsync,
-  setAudioModeAsync,
-  useAudioRecorder,
-  useAudioRecorderState,
-} from 'expo-audio';
+import { RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder, useAudioRecorderState } from 'expo-audio';
 import * as ImagePicker from 'expo-image-picker';
-
 import { PhotoCropSheet } from '@/components/you/PhotoCropSheet';
 import * as Location from 'expo-location';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Linking, Platform, Pressable, View } from 'react-native';
 import { z } from 'zod';
-
-import { fetchMyProfileReadiness, setMyProfileDetails, setMySect, updateMyLocation, updateMyPreferences, updateMyProfile } from '@/api/profile';
+import { fetchMyProfileReadiness, setMyLifestyle, setMyProfileDetails, setMySect, updateMyLocation, updateMyPreferences, updateMyProfile } from '@/api/profile';
 import { HAS_CHILDREN_PROFILE, asGroups, dressOptions } from '@/data/matchingOptions';
 import { ETHNICITY_MAX, ETHNICITY_PROFILE_GROUPS, findEthnicity, withUnstatedAlone } from '@/data/ethnicities';
 import { HERITAGE_MAX, heritageGroups, heritageName } from '@/data/heritage';
+import { DIETS, DIET_KEYS, GREW_UP_MAX, toggleDiet } from '@/data/diet';
 import { buildGroups, buildLabel } from '@/components/you/PrivateTab';
 import { BUILD_OPTIONS, OWN_BUILD_MAX, PRACTICE_LABELS, TIMELINE_LABELS } from '@/data/preferences';
-import {
-  createProfileMediaSignedUrl,
-  deleteProfilePhoto,
-  PROFILE_PHOTO_BUCKET,
-  VOICE_INTRODUCTION_BUCKET,
-  reorderProfilePhotos,
-  uploadProfilePhoto,
-  uploadVoiceIntroduction,
-} from '@/api/profileMedia';
+import { createProfileMediaSignedUrl, deleteProfilePhoto, PROFILE_PHOTO_BUCKET, VOICE_INTRODUCTION_BUCKET, reorderProfilePhotos, uploadProfilePhoto, uploadVoiceIntroduction } from '@/api/profileMedia';
 import { AudioGreeting } from '@/components/introductions/AudioGreeting';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { SelfieVerificationCard } from '@/components/verification/SelfieVerificationCard';
 import { Chip } from '@/components/ui/Chip';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Field } from '@/components/ui/Field';
 import { Text } from '@/components/ui/Text';
 import { queryKeys } from '@/lib/queryClient';
 import { testIds } from '@/lib/testIds';
-
-import { BIO_MIN_LENGTH, getProfileReadiness, readinessSteps } from '@/lib/profileReadiness';
+import { BIO_MIN_LENGTH, getProfileReadiness, readinessSteps, recommendedSteps } from '@/lib/profileReadiness';
 import { ReadinessChecklist } from '@/components/readiness/ReadinessChecklist';
-import { browserDeviceCoordinates, nativeDevicePlace, placeFromDevice } from '@/lib/deviceLocation';
+import { browserDeviceCoordinates, nativeDevicePlace } from '@/lib/deviceLocation';
+import { placeFromBrowserCoordinates } from '@/lib/browserPlace';
 import { CITY_GROUPS, placeForCity } from '@/data/cities';
 import { useI18n, type Translate } from '@/i18n';
 import { useSession } from '@/state/session';
@@ -60,10 +46,10 @@ import { useToast } from '@/state/toast';
 import { EDUCATION_GROUPS } from '@/data/educationLevels';
 import { OCCUPATION_GROUPS } from '@/data/occupations';
 import { USE_MOCKS } from '@/lib/supabase';
-import { alpha, color, font, radius } from '@/theme/tokens';
 import type { MarriageTimeline, PrivatePreferences, Profile, ReligiousPractice } from '@/types';
-import { RTL_LAYOUT } from '@/lib/rtl';
 import { errorMessage } from '@/lib/errorMessage';
+import type { ReadinessStep } from '@/lib/profileReadiness';
+import { styles } from './profileTabStyles';
 
 function profileSchema(t: Translate) {
   return z.object({
@@ -87,6 +73,8 @@ function profileSchema(t: Translate) {
 }
 
 type FormValues = z.infer<ReturnType<typeof profileSchema>>;
+type ChecklistTarget = ReadinessStep | 'displayName' | 'location' | 'education' | 'languages'
+  | 'childrenWhen' | 'dress' | 'ethnicity' | 'heritage' | 'height' | 'bodyType';
 
 interface PhotoTile {
   /** Stable across a reorder, so a dragged tile keeps its identity. */
@@ -107,11 +95,13 @@ export function ProfileTab({
   profile,
   preferences,
   onOpenPreferences,
+  onScrollToTarget,
 }: {
   profile: Profile;
   /** For the member's own height, weight and build, kept private but edited here. */
   preferences?: PrivatePreferences;
   onOpenPreferences?: () => void;
+  onScrollToTarget: (target: View | null) => void;
 }) {
   const { localeTag, isRTL, language, t } = useI18n();
   const { tier } = useSession();
@@ -155,14 +145,14 @@ export function ProfileTab({
   const [religiousDress, setReligiousDress] = useState<string | undefined>(profile.religiousDress);
   const [ethnicities, setEthnicities] = useState<string[]>(profile.ethnicities ?? []);
   const [heritage, setHeritage] = useState<string[]>(profile.heritageCountries ?? []);
-  const [detailPicker, setDetailPicker] = useState<'dress' | 'ethnicity' | 'heritage' | null>(null);
+  const [grewUp, setGrewUp] = useState<string[]>(profile.grewUpCountries ?? []);
+  const [diet, setDiet] = useState<string[]>(profile.diet ?? []);
+  const [detailPicker, setDetailPicker] = useState<'dress' | 'ethnicity' | 'heritage' | 'grewUp' | null>(null);
   // The column has a default, so only an answer the member chose counts.
   const [familyGoals, setFamilyGoals] = useState<Profile['familyGoals'] | undefined>(
     profile.familyGoalsAnswered ? profile.familyGoals : undefined
   );
-  const [ownChecked, setOwnChecked] = useState(false);
   const heightMissing = !(Number(ownHeight) >= 140 && Number(ownHeight) <= 210);
-  const buildMissing = !ownBuild;
   const [updatingLocation, setUpdatingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locationExplainer, setLocationExplainer] = useState(false);
@@ -195,18 +185,6 @@ export function ProfileTab({
     },
   });
   const draft = useWatch({ control });
-  // Everything Save asks for about you, named one by one beside Save.
-  const ownMissingLabels = [
-    heightMissing ? t('profile.todo.height') : null,
-    buildMissing ? t('profile.todo.bodyType') : null,
-    !hasChildren ? t('profile.todo.hasChildren') : null,
-    !familyGoals ? t('profile.todo.childrenWhen') : null,
-    profile.gender === 'female' && !religiousDress ? t('profile.dress') : null,
-    ethnicities.length === 0 ? t('profile.ethnicity') : null,
-    heritage.length === 0 ? t('profile.heritage') : null,
-    !(draft.education ?? '').trim() ? t('filters.education') : null,
-    (draft.languages ?? []).length === 0 ? t('profile.languages') : null,
-  ].filter((label): label is string => label !== null);
   const serverReadinessQuery = useQuery({
     queryKey: queryKeys.profileReadiness,
     queryFn: fetchMyProfileReadiness,
@@ -241,6 +219,34 @@ export function ProfileTab({
   const readyToShow = !unsaved && liveReadiness.ready
     && (USE_MOCKS || serverReadinessQuery.data?.ready === true);
   const steps = readinessSteps(liveReadiness.missing, profile.gender);
+  // Optional, and shown only once the required steps are done.
+  const optionalSteps = recommendedSteps(liveReadiness.recommended, profile.gender);
+  const checklistTargets = useRef<Partial<Record<ChecklistTarget, View | null>>>({});
+  const setChecklistTarget = (targetName: ChecklistTarget, target: View | null) => {
+    checklistTargets.current[targetName] = target;
+  };
+  const pressChecklistStep = (step: ReadinessStep) => {
+    if (step === 'preferences') {
+      onOpenPreferences?.();
+      return;
+    }
+    const targetName: ChecklistTarget = step === 'essentials'
+      ? (String(draft.name ?? '').trim().length < 2 ? 'displayName' : 'location')
+      : step === 'details'
+        ? (!(draft.education ?? '').trim() ? 'education' : 'languages')
+        : step === 'children'
+          ? (!hasChildren ? 'children' : 'childrenWhen')
+          : step === 'faith'
+            ? (profile.gender === 'female' && !religiousDress
+              ? 'dress'
+              : ethnicities.length === 0 ? 'ethnicity' : 'heritage')
+            : step === 'background'
+              ? (ethnicities.length === 0 ? 'ethnicity' : 'heritage')
+              : step === 'body'
+                ? (heightMissing ? 'height' : 'bodyType')
+                : step;
+    onScrollToTarget(checklistTargets.current[targetName] ?? null);
+  };
 
   useEffect(() => {
     setMedia(mediaFrom(profile));
@@ -363,6 +369,7 @@ export function ProfileTab({
         ethnicities,
         heritageCountries: heritage,
       });
+      await setMyLifestyle({ grewUpCountries: grewUp, diet });
       await updateMyPreferences({
         ownHeightCm: Number(ownHeight) || 0,
         ownWeightKg: Number(ownWeight) || 0,
@@ -390,6 +397,8 @@ export function ProfileTab({
         religiousDress,
         ethnicities,
         heritageCountries: heritage,
+        grewUpCountries: grewUp,
+        diet,
         familyGoals: familyGoals ?? profile.familyGoals,
         familyGoalsAnswered: Boolean(familyGoals) || profile.familyGoalsAnswered,
       };
@@ -413,23 +422,17 @@ export function ProfileTab({
    */
   const submit = useMemo(() => handleSubmit(
     (values) => {
-      setOwnChecked(true);
-      if (ownMissingLabels.length > 0) {
-        setMissing(ownMissingLabels);
-        return;
-      }
       setMissing([]);
       save.mutate(values);
     },
     (invalid) => {
-      setOwnChecked(true);
-      setMissing([
-        ...(Object.keys(invalid) as (keyof FormValues)[]).map((key) => t(FIELD_LABELS[key])),
-        ...ownMissingLabels,
-      ].filter((label, index, all) => all.indexOf(label) === index));
+      setMissing(
+        (Object.keys(invalid) as (keyof FormValues)[]).map((key) => t(FIELD_LABELS[key]))
+          .filter((label, index, all) => all.indexOf(label) === index),
+      );
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  ), [handleSubmit, save, t, ownHeight, ownBuild, hasChildren, familyGoals, religiousDress, ethnicities, heritage, draft.education, draft.languages]);
+  ), [handleSubmit, save, t, ownHeight, ownBuild, hasChildren, familyGoals, religiousDress, ethnicities, heritage, grewUp, diet, draft.education, draft.languages]);
 
 
   const refreshDeviceLocation = useCallback(async () => {
@@ -439,7 +442,7 @@ export function ProfileTab({
     try {
       if (Platform.OS === 'web') {
         const coordinates = await browserDeviceCoordinates();
-        const resolved = placeFromDevice(undefined, coordinates);
+        const resolved = await placeFromBrowserCoordinates(coordinates);
         if (!resolved) {
           setLocationError(t('profile.locationUnavailable'));
           return;
@@ -731,6 +734,7 @@ export function ProfileTab({
   return (
     <View style={[styles.wrap, isRTL && styles.rtl]}>
       <View style={styles.stack}>
+      <SelfieVerificationCard />
       <Card tone="filled" style={styles.readinessCard}>
         {readyToShow ? (
           <>
@@ -743,14 +747,26 @@ export function ProfileTab({
           <ReadinessChecklist
             steps={steps}
             lead={liveReadiness.ready ? t('readiness.saveToFinish') : t('readiness.lead')}
-            isPressable={(step) => step === 'preferences' && Boolean(onOpenPreferences)}
-            onPressStep={() => onOpenPreferences?.()}
+            isPressable={(step) => step !== 'preferences' || Boolean(onOpenPreferences)}
+            onPressStep={pressChecklistStep}
           />
         )}
         {save.isPending ? (
           <Text variant="caption" style={styles.readinessBody}>{t('common.saving')}</Text>
         ) : null}
       </Card>
+      {liveReadiness.ready && optionalSteps.length > 0 ? (
+        <Card tone="filled" style={styles.readinessCard}>
+          <ReadinessChecklist
+            title={t('readiness.optionalTitle')}
+            steps={optionalSteps}
+            lead={t('readiness.optionalLead')}
+            isPressable={(step) => step !== 'preferences' || Boolean(onOpenPreferences)}
+            onPressStep={pressChecklistStep}
+          />
+        </Card>
+      ) : null}
+      <View ref={(target) => setChecklistTarget('photo', target)} collapsable={false}>
       {photos.length === 0 ? (
         <Card testID={testIds.you.photoGuide} tone="filled" style={styles.photoGuide}>
           <Text variant="micro">{t('profile.photoGuideTitle')}</Text>
@@ -851,6 +867,7 @@ export function ProfileTab({
           </Pressable>
         </View>
       </Card>
+      </View>
 
       <Card>
         <Text variant="micro">{t('profile.voice')}</Text>
@@ -914,7 +931,11 @@ export function ProfileTab({
         <Text variant="caption" style={styles.requiredNote}>
           {t('profile.requiredNote')}
         </Text>
-        <View style={styles.formRow}>
+        <View
+          ref={(target) => setChecklistTarget('displayName', target)}
+          collapsable={false}
+          style={styles.formRow}
+        >
           <Controller
             control={control}
             name="name"
@@ -929,7 +950,7 @@ export function ProfileTab({
           />
         </View>
 
-        <View style={styles.locationBlock}>
+        <View ref={(target) => setChecklistTarget('location', target)} collapsable={false} style={styles.locationBlock}>
           <Text variant="micro">{required(t('profile.locationCurrent'))}</Text>
           <Text
             accessibilityLabel={`${t('profile.locationCurrent')}: ${currentLocation}`}
@@ -1006,7 +1027,7 @@ export function ProfileTab({
           render={({ field }) => (
             <>
               <SelectField
-                label={required(t('profile.profession'))}
+                label={t('profile.profession')}
                 value={storedLabel(OCCUPATION_GROUPS, field.value, language)}
                 placeholder={t('profile.professionPlaceholder')}
                 onPress={() => setPicking('occupation')}
@@ -1028,13 +1049,14 @@ export function ProfileTab({
           )}
         />
 
+        <View ref={(target) => setChecklistTarget('education', target)} collapsable={false}>
         <Controller
           control={control}
           name="education"
           render={({ field }) => (
             <>
               <SelectField
-                label={required(t('filters.education'))}
+                label={t('filters.education')}
                 value={storedLabel(EDUCATION_GROUPS, field.value, language)}
                 placeholder={t('profile.educationPlaceholder')}
                 onPress={() => setPicking('education')}
@@ -1056,7 +1078,9 @@ export function ProfileTab({
             </>
           )}
         />
+        </View>
 
+        <View ref={(target) => setChecklistTarget('bio', target)} collapsable={false}>
         <Controller
           control={control}
           name="bio"
@@ -1073,6 +1097,7 @@ export function ProfileTab({
             />
           )}
         />
+        </View>
 
         <Controller
           control={control}
@@ -1088,13 +1113,14 @@ export function ProfileTab({
           )}
         />
 
+        <View ref={(target) => setChecklistTarget('languages', target)} collapsable={false}>
         <Controller
           control={control}
           name="languages"
           render={({ field }) => (
             <>
               <SelectField
-                label={required(t('profile.languages'))}
+                label={t('profile.languages')}
                 value={field.value.map((code) => languageName(code, language)).join(', ')}
                 placeholder={t('profile.languagesPlaceholder')}
                 onPress={() => setLanguagePicker(true)}
@@ -1115,9 +1141,10 @@ export function ProfileTab({
             </>
           )}
         />
+        </View>
 
         <View style={styles.profileChoice}>
-          <Text variant="micro">{required(t('profile.practice'))}</Text>
+          <Text variant="micro">{t('profile.practice')}</Text>
           <Controller
             control={control}
             name="religiousPractice"
@@ -1154,7 +1181,7 @@ export function ProfileTab({
                   return (
                     <>
                       <SelectField
-                        label={required(t('profile.sect'))}
+                        label={t('profile.sect')}
                         value={chosen ? sectChoiceLabel(chosen, language, t) : ''}
                         placeholder={t('profile.sectPlaceholder')}
                         onPress={() => setSectPicker(true)}
@@ -1194,7 +1221,7 @@ export function ProfileTab({
         </View>
 
         <View style={styles.profileChoice}>
-          <Text variant="micro">{required(t('profile.timing'))}</Text>
+          <Text variant="micro">{t('profile.timing')}</Text>
           <Controller
             control={control}
             name="timeline"
@@ -1218,9 +1245,9 @@ export function ProfileTab({
           ) : null}
         </View>
 
-        <View style={styles.profileChoice}>
-          <Text variant="micro">{required(t('profile.hasChildren'))}</Text>
-          <View style={[styles.choiceChips, ownChecked && !hasChildren && styles.choiceMissing]}>
+        <View ref={(target) => setChecklistTarget('children', target)} collapsable={false} style={styles.profileChoice}>
+          <Text variant="micro">{t('profile.hasChildren')}</Text>
+          <View style={[styles.choiceChips]}>
             {HAS_CHILDREN_PROFILE.map((option) => (
               <Chip
                 key={option.id}
@@ -1232,9 +1259,9 @@ export function ProfileTab({
           </View>
         </View>
 
-        <View style={styles.profileChoice}>
-          <Text variant="micro">{required(t('profile.childrenWhen'))}</Text>
-          <View style={[styles.choiceChips, ownChecked && !familyGoals && styles.choiceMissing]}>
+        <View ref={(target) => setChecklistTarget('childrenWhen', target)} collapsable={false} style={styles.profileChoice}>
+          <Text variant="micro">{t('profile.childrenWhen')}</Text>
+          <View style={[styles.choiceChips]}>
             {FAMILY_CHOICES.map(([value, key]) => (
               <Chip
                 key={value}
@@ -1248,10 +1275,13 @@ export function ProfileTab({
 
         {/* Religious dress is asked of women only. */}
         {profile.gender === 'female' ? (
-        <View style={styles.profileChoice}>
+        <View
+          ref={(target) => setChecklistTarget('dress', target)}
+          collapsable={false}
+          style={styles.profileChoice}
+        >
           <SelectField
-            label={required(t('profile.dress'))}
-            error={ownChecked && !religiousDress ? ' ' : undefined}
+            label={t('profile.dress')}
             value={religiousDress
               ? optionLabel(dressOptions(profile.gender).find((o) => o.id === religiousDress) ?? { id: religiousDress, en: religiousDress, ar: religiousDress }, language)
               : ''}
@@ -1271,12 +1301,18 @@ export function ProfileTab({
         </View>
         ) : null}
 
-        <View style={styles.profileChoice}>
+        <View
+          ref={(target) => {
+            setChecklistTarget('ethnicity', target);
+            if (profile.gender !== 'female') setChecklistTarget('background', target);
+          }}
+          collapsable={false}
+          style={styles.profileChoice}
+        >
           {/* Two questions cover everyone: a broad ethnicity (two for mixed
               heritage) and the countries you or your family are from. */}
           <SelectField
-            label={required(t('profile.ethnicity'))}
-            error={ownChecked && ethnicities.length === 0 ? ' ' : undefined}
+            label={t('profile.ethnicity')}
             value={ethnicities
               .map((id) => { const option = findEthnicity(id); return option ? optionLabel(option, language) : id; })
               .join(', ')}
@@ -1297,10 +1333,9 @@ export function ProfileTab({
           />
         </View>
 
-        <View style={styles.profileChoice}>
+        <View ref={(target) => setChecklistTarget('heritage', target)} collapsable={false} style={styles.profileChoice}>
           <SelectField
-            label={required(t('profile.heritage'))}
-            error={ownChecked && heritage.length === 0 ? ' ' : undefined}
+            label={t('profile.heritage')}
             value={heritage.map((code) => heritageName(code, language)).join(', ')}
             placeholder={t('profile.heritageHint')}
             onPress={() => setDetailPicker('heritage')}
@@ -1320,15 +1355,51 @@ export function ProfileTab({
         </View>
 
         <View style={styles.profileChoice}>
+          <SelectField
+            label={t('profile.grewUp')}
+            value={grewUp.map((code) => heritageName(code, language)).join(', ')}
+            placeholder={t('profile.grewUpHint')}
+            onPress={() => setDetailPicker('grewUp')}
+          />
+          <PickerSheet
+            visible={detailPicker === 'grewUp'}
+            groups={heritageGroups(language, false)}
+            selected={grewUp}
+            selectionMode="multiple"
+            maxSelected={GREW_UP_MAX}
+            onChange={(next) => { setGrewUp(next); setOwnDirty(true); }}
+            onClose={() => setDetailPicker(null)}
+            title={t('profile.grewUp')}
+            eyebrow={t('profile.grewUpHint')}
+            searchLabel={t('profile.heritageSearch')}
+          />
+        </View>
+
+        <View style={styles.profileChoice}>
+          <Text variant="micro">{t('profile.diet')}</Text>
+          <Text variant="caption" style={styles.choiceNote}>{t('profile.dietHint')}</Text>
+          <View style={[styles.formRow, isRTL && styles.rowRTL, { flexWrap: 'wrap', gap: 8 }]}>
+            {DIETS.map((option) => (
+              <Chip
+                key={option}
+                label={t(DIET_KEYS[option])}
+                selected={diet.includes(option)}
+                showMark
+                onPress={() => { setDiet(toggleDiet(diet, option)); setOwnDirty(true); }}
+              />
+            ))}
+          </View>
+        </View>
+
+        <View ref={(target) => setChecklistTarget('body', target)} collapsable={false} style={styles.profileChoice}>
           <Text variant="micro">{t('filters.yourTitle')}</Text>
           <Text variant="caption" style={styles.choiceNote}>{t('filters.yourBody')}</Text>
-          <View style={[styles.formRow, isRTL && styles.rowRTL]}>
+          <View ref={(target) => setChecklistTarget('height', target)} collapsable={false} style={[styles.formRow, isRTL && styles.rowRTL]}>
             <Field
-              label={required(t('filters.yourHeight'))}
+              label={t('filters.yourHeight')}
               keyboardType="number-pad"
               value={ownHeight}
               onChangeText={(text) => { setOwnHeight(text.replace(/\D/g, '')); setOwnDirty(true); }}
-              error={ownChecked && heightMissing ? ' ' : undefined}
             />
             <Field
               label={t('filters.yourWeight')}
@@ -1337,13 +1408,14 @@ export function ProfileTab({
               onChangeText={(text) => { setOwnWeight(text.replace(/\D/g, '')); setOwnDirty(true); }}
             />
           </View>
-          <SelectField
-            label={required(t('filters.yourBodyType'))}
-            value={ownBuilds.map((build) => buildLabel(build as (typeof BUILD_OPTIONS)[number], t)).join(', ')}
-            placeholder={t('filters.yourBodyType')}
-            onPress={() => setBuildPicker(true)}
-            error={ownChecked && buildMissing ? ' ' : undefined}
-          />
+          <View ref={(target) => setChecklistTarget('bodyType', target)} collapsable={false}>
+            <SelectField
+              label={t('filters.yourBodyType')}
+              value={ownBuilds.map((build) => buildLabel(build as (typeof BUILD_OPTIONS)[number], t)).join(', ')}
+              placeholder={t('filters.yourBodyType')}
+              onPress={() => setBuildPicker(true)}
+            />
+          </View>
           <PickerSheet
             visible={buildPicker}
             groups={buildGroups(t)}
@@ -1492,158 +1564,3 @@ function showPermissionRecovery(
     },
   ]);
 }
-
-const styles = StyleSheet.create({
-  rtl: RTL_LAYOUT,
-  rowRTL: { flexDirection: 'row-reverse' },
-  wrap: { gap: 12, paddingBottom: 24 },
-  readinessCard: { gap: 5 },
-  readinessBody: { color: color.inkSoft },
-  photoGuide: { gap: 10 },
-  photoGuideBody: { color: color.inkSoft },
-  photoGuideRules: { gap: 8, marginTop: 2 },
-  photoGuideRule: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  photoGuideMark: { width: 7, height: 7, borderRadius: 4, backgroundColor: color.gold },
-  photoGuideRuleText: { flex: 1, color: color.ink },
-  photoGuideAction: { flex: 1, paddingHorizontal: 8 },
-
-  cardHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 10,
-  },
-  tagPill: {
-    borderWidth: 1,
-    borderColor: 'rgba(10,10,10,0.12)',
-    borderRadius: radius.pill,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-  },
-  tagPillLabel: {
-    fontFamily: font.bodySemi,
-    fontSize: 11,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: color.inkSoft,
-  },
-
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 },
-  gridCell: {
-    width: '31%',
-    aspectRatio: 3 / 4,
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-    backgroundColor: color.clay,
-  },
-  mainBadge: {
-    position: 'absolute',
-    top: 7,
-    left: 7,
-    backgroundColor: color.ink,
-    borderRadius: radius.pill,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
-  mainBadgeLabel: {
-    fontFamily: font.bodyBold,
-    fontSize: 8,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: color.white,
-  },
-  removePhoto: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(10,10,10,0.72)',
-  },
-  removePhotoLabel: {
-    color: color.white,
-    fontFamily: font.body,
-    fontSize: 20,
-    lineHeight: 22,
-  },
-  photoNote: { marginTop: 12 },
-  photoActions: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  unavailableNote: { marginTop: 12, color: color.inkSoft },
-  photoButton: {
-    flex: 1,
-    minHeight: 44,
-    borderWidth: 1,
-    borderColor: alpha.lineStrong,
-    borderRadius: radius.md,
-    paddingVertical: 13,
-    alignItems: 'center',
-  },
-  photoButtonLabel: {
-    fontFamily: font.bodySemi,
-    fontSize: 13,
-    color: color.ink,
-  },
-
-  recordZone: {
-    minHeight: 56,
-    marginTop: 12,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: 'rgba(10,10,10,0.2)',
-    borderRadius: radius.lg,
-    backgroundColor: color.sandLight,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 11,
-  },
-  recordZoneActive: { borderColor: color.gold, backgroundColor: color.sand },
-  recordDot: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: color.ink,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  recordGlyph: { color: color.white, fontSize: 11, fontFamily: font.body },
-  recordLabel: { fontSize: 14 },
-  voicePlayer: { marginTop: 12 },
-  recordAgain: {
-    minHeight: 44,
-    marginTop: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  recordAgainLabel: {
-    fontFamily: font.bodySemi,
-    fontSize: 12,
-    color: color.inkSoft,
-  },
-  choiceNote: { marginTop: -2 },
-  voiceNote: { marginTop: 10 },
-
-  formCard: { gap: 14 },
-  locationBlock: { gap: 8 },
-  locationPrivacy: { color: color.inkSoft },
-  locationError: { color: color.inkSoft },
-  profileChoice: { gap: 9 },
-  choiceChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
-  formRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
-  saveError: { color: color.inkSoft, textAlign: 'center' },
-  split: { flexDirection: 'row', alignItems: 'flex-start' },
-  splitRTL: { flexDirection: 'row-reverse', alignItems: 'flex-start' },
-  column: { flex: 1, gap: 14 },
-  stack: { gap: 14 },
-  checklist: { gap: 8, marginTop: 10 },
-  checkItem: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  checkBox: { width: 16, height: 16, borderRadius: 4, borderWidth: 1.5, borderColor: color.gold },
-  checkLabel: { flex: 1 },
-  choiceMissing: { borderWidth: 1.5, borderColor: '#B3261E', borderRadius: radius.md, padding: 6 },
-  fieldError: { color: '#B3261E', fontFamily: font.bodyBold, marginTop: 6 },
-  requiredNote: { color: color.inkSoft, marginBottom: 4 },
-});

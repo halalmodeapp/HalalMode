@@ -50,6 +50,13 @@ from (values
 cross join halal_mode_private.legal_document_registry d
 where d.is_current;
 
+update public.profiles p
+set sensitive_consent_at = now()
+where 2 = (select count(*)
+  from halal_mode_private.member_legal_consent_history h
+  join halal_mode_private.legal_document_registry d using (document_type, version)
+  where h.user_id = p.id and d.is_current);
+
 insert into rounds (id, user_id, tier, expires_at) values
   ('00000000-0000-0000-0000-00000000700a', '00000000-0000-0000-0000-000000007001',
    'free', now() + interval '1 day');

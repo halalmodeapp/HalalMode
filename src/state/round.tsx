@@ -20,6 +20,10 @@ import {
   type OwedAnswers,
 } from '@/api/introductions';
 import { DwellLedger, inferSoftSelect } from '@/lib/dwell';
+import {
+  MatchingEngagementLedger,
+  type MatchingEngagementObservation,
+} from '@/lib/matchingEngagement';
 import type { DailyRoundEmptyReason, NarrowingCriterion } from '@/lib/dailyRoundState';
 import { queryKeys } from '@/lib/queryClient';
 import { resolveActiveId } from '@/lib/roundInvariants';
@@ -64,9 +68,12 @@ interface RoundValue {
   /** Premium: everyone in the set at once. */
   selectAll: () => void;
 
-  /** How long each profile was read. Kept on the device and never sent. */
+  /** Local reading timer; a bounded, rounded total is submitted as a private matching signal. */
   profileOpened: (introductionId: string) => void;
   profileClosed: (introductionId: string) => void;
+  /** Visibility timers for optional, private matching signals. */
+  bioVisibility: (introductionId: string, visible: boolean) => void;
+  photoVisibility: (introductionId: string, storagePath: string | null | undefined, visible: boolean) => void;
   /**
    * Notes whoever was read longest but not chosen, before the set is sent.
    * Never shown to anyone.
@@ -183,18 +190,34 @@ export function RoundProvider({ children }: { children: ReactNode }) {
 
   // A ref, not state: reading a profile must never re-render the round.
   const ledger = useRef(new DwellLedger()).current;
+  const matchingEngagement = useRef(new MatchingEngagementLedger()).current;
 
   // Backgrounding is not navigation, so nothing else stops the clock on an
   // open profile.
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (next) => {
-      if (next === 'active') ledger.resume();
-      else ledger.pause();
+      if (next === 'active') {
+        ledger.resume();
+        matchingEngagement.resume();
+      } else {
+        ledger.pause();
+        matchingEngagement.pause();
+      }
     });
     return () => subscription.remove();
-  }, [ledger]);
+  }, [ledger, matchingEngagement]);
   const profileOpened = useCallback((id: string) => ledger.opened(id), [ledger]);
   const profileClosed = useCallback((id: string) => ledger.closed(id), [ledger]);
+  const bioVisibility = useCallback(
+    (id: string, visible: boolean) =>
+      matchingEngagement.bioVisibility(id, visible),
+    [matchingEngagement]
+  );
+  const photoVisibility = useCallback(
+    (id: string, path: string | null | undefined, visible: boolean) =>
+      matchingEngagement.photoVisibility(id, path, visible),
+    [matchingEngagement]
+  );
 
   const softSelectMutation = useMutation({ mutationFn: softSelectIntroduction });
   const recordSoftSelect = useCallback(async () => {
@@ -211,9 +234,12 @@ export function RoundProvider({ children }: { children: ReactNode }) {
   }, [ledger, live, softSelectMutation]);
 
   const submitMutation = useMutation({
-    mutationFn: async (keptIntroductionIds: string[]) => {
+    mutationFn: async ({ keptIntroductionIds, engagement }: {
+      keptIntroductionIds: string[];
+      engagement: ReturnType<MatchingEngagementLedger['snapshot']>;
+    }) => {
       if (!round) return { mutualProfileIds: [] };
-      return submitKeeps(round.id, keptIntroductionIds);
+      return submitKeeps(round.id, keptIntroductionIds, engagement);
     },
     onSuccess: (result) => {
       setSubmitted(true);
@@ -226,20 +252,39 @@ export function RoundProvider({ children }: { children: ReactNode }) {
 
   const submit = useCallback(
     async (keptIntroductionIds?: string[]) => {
-      const result = await submitMutation.mutateAsync(keptIntroductionIds ?? selectedRef.current);
+      const engagement = new Map<string, MatchingEngagementObservation>(
+        matchingEngagement.snapshot().map((observation) => [observation.introductionId, observation] as const)
+      );
+      for (const record of ledger.records()) {
+        const profileSeconds = Math.min(120, Math.round(record.totalMs / 5000) * 5);
+        if (profileSeconds <= 0) continue;
+        const observation = engagement.get(record.introductionId) ?? {
+          introductionId: record.introductionId,
+        };
+        observation.profileSeconds = profileSeconds;
+        engagement.set(record.introductionId, observation);
+      }
+      const observations = [...engagement.values()].filter((observation) =>
+        observation.profileSeconds !== undefined || observation.bioSeconds !== undefined || !!observation.photos?.length
+      );
+      const result = await submitMutation.mutateAsync({
+        keptIntroductionIds: keptIntroductionIds ?? selectedRef.current,
+        engagement: observations,
+      });
       return result.mutualProfileIds;
     },
-    [submitMutation]
+    [ledger, matchingEngagement, submitMutation]
   );
 
   const clearLocal = useCallback(() => {
     ledger.clear();
+    matchingEngagement.clear();
     selectedRef.current = [];
     setSelected([]);
     setActiveId(null);
     setSubmitted(false);
     setWaitingForConnection(false);
-  }, [ledger]);
+  }, [ledger, matchingEngagement]);
 
   const reset = useCallback(() => {
     // Live, this is the testers' reset: the server clears sample rounds and
@@ -283,6 +328,8 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       selectAll,
       profileOpened,
       profileClosed,
+      bioVisibility,
+      photoVisibility,
       recordSoftSelect,
       submitting: submitMutation.isPending,
       submit,
@@ -313,6 +360,8 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       selectAll,
       profileOpened,
       profileClosed,
+      bioVisibility,
+      photoVisibility,
       recordSoftSelect,
       submitMutation.isPending,
       submit,

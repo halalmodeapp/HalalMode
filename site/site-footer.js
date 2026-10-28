@@ -8,6 +8,10 @@
   const LINKS = [
     ['/how-it-works', 'navHow', 'How it works'],
     ['/refer', 'navRefer', 'Refer your friends'],
+    // The form collects an email, a city and an age: what happens to them is
+    // one tap away on every page.
+    ['/legal/privacy', 'navPrivacy', 'Privacy Notice'],
+    ['/legal/terms', 'navTerms', 'Terms of Service'],
   ];
   const EMAIL = 'hello@halalmo.de';
   const here = location.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';

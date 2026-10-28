@@ -84,3 +84,9 @@ verify_jwt = false
 
 [functions.verify-waitlist]
 verify_jwt = false
+
+# Called by signed-in members, not cron. The gateway check is off to match the
+# deployed function, which reads the member from the Authorization header
+# itself and answers 401 without a valid session.
+[functions.connection-summary]
+verify_jwt = false
