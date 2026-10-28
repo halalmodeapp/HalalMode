@@ -410,12 +410,11 @@ export function SettingsTab({
               </SurfaceToneProvider>
             </View>
           </View>
-          {entitlementStatus !== 'error' ? (
+          {/* Only ever says "Active" (or that it is loading); a free member sees no pill. */}
+          {entitlementStatus !== 'error' && (entitlementStatus === 'loading' || isPremium) ? (
             <View style={[styles.planBadge, isPremium && styles.planBadgeActive]}>
               <Text style={[styles.planBadgeLabel, isPremium && styles.planBadgeLabelActive]}>
-                {entitlementStatus === 'loading'
-                  ? t('common.loading')
-                  : isPremium ? t('settings.active') : t('settings.preview')}
+                {entitlementStatus === 'loading' ? t('common.loading') : t('settings.active')}
               </Text>
             </View>
           ) : null}

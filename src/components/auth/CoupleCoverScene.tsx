@@ -15,6 +15,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import Svg, { Defs, Path, RadialGradient, Stop } from 'react-native-svg';
 
+import { baselineStep } from '@/lib/tiltBaseline';
 import { BOIL, boilNoise, boilPoints } from './boilSettings';
 import { CoupleHalftone } from './CoupleHalftone';
 import { COUPLE_SCENE_ASSETS } from './coupleLayerAssets';
@@ -315,21 +316,26 @@ function NativeCoverTiltSensor({ tiltX, tiltY }: { tiltX: SharedValue<number>; t
   const rotation = useAnimatedSensor(SensorType.ROTATION, { interval: 20, adjustToInterfaceOrientation: true });
   const basePitch = useSharedValue<number | null>(null);
   const baseRoll = useSharedValue<number | null>(null);
+  const lastAt = useSharedValue(0);
 
   useEffect(() => {
     basePitch.value = null;
     baseRoll.value = null;
+    lastAt.value = 0;
     return () => {
       tiltX.value = withTiming(0, { duration: 260, easing: Easing.out(Easing.cubic) });
       tiltY.value = withTiming(0, { duration: 260, easing: Easing.out(Easing.cubic) });
     };
-  }, [basePitch, baseRoll, tiltX, tiltY]);
+  }, [basePitch, baseRoll, lastAt, tiltX, tiltY]);
 
   useAnimatedReaction(
     () => ({ pitch: rotation.sensor.value.pitch, roll: rotation.sensor.value.roll }),
     ({ pitch, roll }) => {
       'worklet';
       if (!Number.isFinite(pitch) || !Number.isFinite(roll)) return;
+      const now = Date.now();
+      const elapsed = lastAt.value === 0 ? 0 : now - lastAt.value;
+      lastAt.value = now;
       if (basePitch.value === null || baseRoll.value === null) {
         basePitch.value = pitch;
         baseRoll.value = roll;
@@ -343,6 +349,11 @@ function NativeCoverTiltSensor({ tiltX, tiltY }: { tiltX: SharedValue<number>; t
       const { degrees: full, gain, ease } = COUPLE_TILT;
       tiltX.value += (clampNumber((rollDelta * degrees) / full, -gain, gain) - tiltX.value) * ease;
       tiltY.value += (clampNumber((-pitchDelta * degrees) / full, -gain, gain) - tiltY.value) * ease;
+      // The baseline slowly follows the phone, so the scene settles back to
+      // centre at whatever angle it is held.
+      const settle = baselineStep(elapsed);
+      basePitch.value += pitchDelta * settle;
+      baseRoll.value += rollDelta * settle;
     },
   );
 
