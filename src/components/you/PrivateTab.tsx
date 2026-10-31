@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { fetchMyProfile, setMyPreferredSects, setMyPremiumPreferences, updateMyPreferences } from '@/api/profile';
 import { Button } from '@/components/ui/Button';
@@ -36,6 +36,8 @@ import type { FamilyGoals, MarriageTimeline, MustHaveCriterion, PremiumCriterion
 import { errorMessage } from '@/lib/errorMessage';
 import { useToast } from '@/state/toast';
 import { useRegisterUnsaved } from '@/state/unsavedChanges';
+import { useAutosave } from '@/hooks/useAutosave';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MaritalPreferencesCard } from '@/components/you/MaritalSections';
 import { PremiumLogo } from '@/components/brand/PremiumLogo';
 import { onDark, SurfaceToneProvider, useSurfaceTone } from '@/theme/tone';
@@ -69,7 +71,6 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
       if (isPremium) await setMyPremiumPreferences(draft);
     },
     onSuccess: () => {
-      savedRef.current = JSON.stringify(draft);
       void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
       void queryClient.invalidateQueries({ queryKey: queryKeys.preferences });
       void queryClient.invalidateQueries({ queryKey: queryKeys.poolSize });
@@ -79,16 +80,47 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
 
   // What was last saved: the baseline the draft is compared with.
   const savedRef = useRef(JSON.stringify(preferences));
-  const draftDirty = JSON.stringify(draft) !== savedRef.current;
-  useRegisterUnsaved(draftDirty, async () => {
-    try {
-      await save.mutateAsync();
-      savedRef.current = JSON.stringify(draft);
-      return true;
-    } catch {
-      return false;
-    }
+  const version = JSON.stringify(draft);
+  const draftDirty = version !== savedRef.current;
+  // Every choice is kept at once and sent as one batch a few seconds after the
+  // last one (see useAutosave); a toast says "Saved" when it has gone through.
+  const { flush } = useAutosave({
+    dirty: draftDirty,
+    version,
+    onFailure: () => toast.show(t('autosave.retry')),
+    save: async () => {
+      const sent = JSON.stringify(draft);
+      try {
+        await save.mutateAsync();
+        savedRef.current = sent;
+        void AsyncStorage.removeItem(PENDING_KEY).catch(() => undefined);
+        return 'saved';
+      } catch {
+        return 'failed';
+      }
+    },
   });
+  useRegisterUnsaved(draftDirty, flush);
+
+  // Choices not yet sent are also kept on the phone, so closing the app (or
+  // losing signal) before they go does not lose them.
+  useEffect(() => {
+    if (draftDirty) void AsyncStorage.setItem(PENDING_KEY, version).catch(() => undefined);
+  }, [draftDirty, version]);
+  useEffect(() => {
+    let cancelled = false;
+    void AsyncStorage.getItem(PENDING_KEY).then((stored) => {
+      if (cancelled || !stored || stored === savedRef.current) return;
+      try {
+        setDraft(JSON.parse(stored) as PrivatePreferences);
+      } catch {
+        void AsyncStorage.removeItem(PENDING_KEY).catch(() => undefined);
+      }
+    }).catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const setMustHave = (criterion: MustHaveCriterion, next: boolean) =>
     setDraft((current) => ({
@@ -518,11 +550,6 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
             onPress={() => setClearConfirm(true)}
           />
 
-          <Button
-            label={save.isSuccess ? t('filters.saved') : t('filters.savePartner')}
-            loading={save.isPending}
-            onPress={() => save.mutate()}
-          />
           {save.isError ? <InlineNotice message={errorMessage(save.error, t, 'filters.saveError')} /> : null}
         </Card>
       )}
@@ -575,6 +602,9 @@ function FilterCheck({
     </Pressable>
   );
 }
+
+/** Where choices waiting to be sent are kept on the phone. */
+const PENDING_KEY = 'halalmode-pending-preferences';
 
 const BUILD_KEYS: Record<(typeof BUILD_OPTIONS)[number], TranslationKey> = {
   Slim: 'filters.build.slim',

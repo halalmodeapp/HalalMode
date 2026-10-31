@@ -963,4 +963,8 @@ export const ru: TranslationCatalog = {
   "unsaved.body": "Сохранить их, прежде чем уйти?",
   "unsaved.yes": "Да, сохранить",
   "unsaved.no": "Нет, отменить",
+  "daily.nextAtFajrCityAt": "Следующие знакомства придут на фаджр в городе {{city}}, в {{time}}.",
+  "daily.nextAtFajrAt": "Следующие знакомства придут на фаджр, в {{time}}.",
+  "autosave.retry": "Пока не удалось сохранить. Скоро попробуем снова.",
+  "settings.notificationSetupBody": "Push-уведомления в этой версии приложения ещё не настроены, поэтому их нельзя включить. Ваш выбор не изменился.",
 };

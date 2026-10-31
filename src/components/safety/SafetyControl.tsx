@@ -53,11 +53,14 @@ export function SafetyControl({
   memberName,
   onBlocked,
   tone = 'light',
+  extraActions,
 }: {
   scope: SafetyScope;
   memberName?: string;
   onBlocked?: () => void;
   tone?: 'light' | 'dark';
+  /** More entries for the menu, above the safety ones (the chat adds "close this connection"). */
+  extraActions?: { key: string; label: string; testID?: string; disabled?: boolean; onPress: () => void }[];
 }) {
   const { isRTL, t } = useI18n();
   const { show: showToast } = useToast();
@@ -193,6 +196,18 @@ export function SafetyControl({
                     }}
                   />
                 ) : null}
+                {extraActions?.map((action) => (
+                  <SafetyOption
+                    key={action.key}
+                    testID={action.testID ?? `safety-action-${action.key}`}
+                    label={action.label}
+                    disabled={action.disabled}
+                    onPress={() => {
+                      close();
+                      action.onPress();
+                    }}
+                  />
+                ))}
                 <SafetyOption
                   testID={testIds.safety.hide}
                   label={t('safety.hide')}

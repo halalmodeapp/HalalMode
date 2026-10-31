@@ -16,8 +16,6 @@ import Reanimated, {
 import Svg, { Defs, Path, RadialGradient, Stop } from 'react-native-svg';
 
 import { TILT_STILL, baselineStep, turnRate } from '@/lib/tiltBaseline';
-import { BOIL, boilNoise, boilPoints } from './boilSettings';
-import { CoupleHalftone } from './CoupleHalftone';
 import { COUPLE_SCENE_ASSETS } from './coupleLayerAssets';
 import { COUPLE_SCENE_LAYERS, COUPLE_SUN, COUPLE_WORLD, type CoupleSceneLayer } from './coupleSceneLayers';
 import { COUPLE_TILT, coupleCamera, coupleParallax, type CoupleCamera } from './coupleSceneLayout';
@@ -30,8 +28,6 @@ type CoupleCoverSceneProps = {
 };
 
 type Tilt = { x: SharedValue<number>; y: SharedValue<number> };
-/** Line boil: the current held drawing, and the jitter in world pixels (0 when off). */
-type Boil = { step: SharedValue<number>; amount: SharedValue<number> };
 
 const BACKDROP = COUPLE_SCENE_LAYERS.find((layer) => layer.key === 'sky')!;
 /** Broad light shafts, as angles clockwise from straight down, and their half-widths. */
@@ -58,9 +54,6 @@ export function CoupleCoverScene({ width, height, active }: CoupleCoverSceneProp
   const pressScale = useSharedValue(1);
   const float = useSharedValue(0);
   const tilt = useMemo(() => ({ x: tiltX, y: tiltY }), [tiltX, tiltY]);
-  const boilStep = useSharedValue(0);
-  const boilAmount = useSharedValue(0);
-  const boil = useMemo(() => ({ step: boilStep, amount: boilAmount }), [boilStep, boilAmount]);
   const camera = useMemo(() => coupleCamera(width, height), [width, height]);
 
   const heartPanResponder = useMemo(() => PanResponder.create({
@@ -88,19 +81,6 @@ export function CoupleCoverScene({ width, height, active }: CoupleCoverSceneProp
     },
   }), [dragX, dragY, pressScale, width, height]);
 
-  // Held frames: a new drawing fps times a second, cycling through a few.
-  useEffect(() => {
-    if (!active) {
-      boilAmount.value = 0;
-      return;
-    }
-    boilAmount.value = boilPoints(camera.unit);
-    const timer = setInterval(() => {
-      boilStep.value = (boilStep.value + 1) % BOIL.drawings;
-    }, 1000 / BOIL.fps);
-    return () => clearInterval(timer);
-  }, [active, boilAmount, boilStep, camera.unit]);
-
   // The heart drifts gently in place, between the two hands.
   useEffect(() => {
     if (!active) {
@@ -126,8 +106,8 @@ export function CoupleCoverScene({ width, height, active }: CoupleCoverSceneProp
   return (
     <View pointerEvents="box-none" style={styles.scene}>
       <View pointerEvents="box-none" style={[styles.world, { left: camera.left, top: camera.top, width: COUPLE_WORLD.width * unit, height: COUPLE_WORLD.height * unit }]}>
-        {COUPLE_SCENE_LAYERS.map((layer, index) => (
-          <SceneLayer key={layer.key} layer={layer} index={index} camera={camera} tilt={tilt} boil={boil}>
+        {COUPLE_SCENE_LAYERS.map((layer) => (
+          <SceneLayer key={layer.key} layer={layer} camera={camera} tilt={tilt}>
             {layer.key === 'heart' ? (
               <Reanimated.View
                 {...heartPanResponder.panHandlers}
@@ -137,111 +117,29 @@ export function CoupleCoverScene({ width, height, active }: CoupleCoverSceneProp
               >
                 <Image source={COUPLE_SCENE_ASSETS.heart} fadeDuration={0} resizeMode="stretch" style={styles.image} />
               </Reanimated.View>
-            ) : layer.key === 'sky' ? (
-              <Image source={COUPLE_SCENE_ASSETS[layer.key]} fadeDuration={0} resizeMode="stretch" style={styles.image} />
             ) : (
-              <BoilStrips source={COUPLE_SCENE_ASSETS[layer.key]} layer={layer} index={index} unit={unit} boil={boil} />
+              <Image source={COUPLE_SCENE_ASSETS[layer.key]} fadeDuration={0} resizeMode="stretch" style={styles.image} />
             )}
             {layer.key === 'sky' ? <SceneLight camera={camera} active={active} /> : null}
           </SceneLayer>
         ))}
       </View>
-      <CoupleHalftone width={width} height={height} camera={camera} active={active} />
       {active ? <NativeCoverTiltSensor tiltX={tiltX} tiltY={tiltY} /> : null}
     </View>
   );
 }
 
-/** How many horizontal bands a layer is cut into, so its outlines can wobble line by line. */
-const BOIL_STRIPS = 8;
-/** A band's sideways wobble, as a multiple of the boil amount. */
-const BOIL_WOBBLE = 1.5;
-
-/**
- * A layer drawn as horizontal bands, each nudged sideways by its own amount in
- * every drawing. The whole picture no longer just shifts: its outlines wobble
- * from one drawing to the next, as a hand-redrawn line does.
- */
-function BoilStrips({ source, layer, index, unit, boil }: {
-  source: number;
+function SceneLayer({ layer, camera, tilt, children }: {
   layer: CoupleSceneLayer;
-  index: number;
-  unit: number;
-  boil: Boil;
-}) {
-  const fullHeight = layer.height * unit;
-  const band = fullHeight / BOIL_STRIPS;
-  return (
-    <>
-      {Array.from({ length: BOIL_STRIPS }, (_, strip) => (
-        <BoilStrip key={strip} source={source} index={index} strip={strip} band={band} fullHeight={fullHeight} boil={boil} />
-      ))}
-    </>
-  );
-}
-
-function BoilStrip({ source, index, strip, band, fullHeight, boil }: {
-  source: number;
-  index: number;
-  strip: number;
-  band: number;
-  fullHeight: number;
-  boil: Boil;
-}) {
-  const style = useAnimatedStyle(() => {
-    const amount = boil.amount.value;
-    if (amount <= 0) return { transform: [{ translateX: 0 }] };
-    return { transform: [{ translateX: boilNoise(boil.step.value, index * 31 + strip + 5, 4) * amount * BOIL_WOBBLE }] };
-  }, [index, strip]);
-  return (
-    <Reanimated.View
-      pointerEvents="none"
-      // One point of overlap hides the seam between neighbouring bands.
-      style={[styles.strip, { top: strip * band, height: band + 1 }, style]}
-    >
-      <Image
-        source={source}
-        fadeDuration={0}
-        resizeMode="stretch"
-        style={[styles.stripImage, { top: -strip * band, height: fullHeight }]}
-      />
-    </Reanimated.View>
-  );
-}
-
-function SceneLayer({ layer, index, camera, tilt, boil, children }: {
-  layer: CoupleSceneLayer;
-  index: number;
   camera: CoupleCamera;
   tilt: Tilt;
-  boil: Boil;
   children?: ReactNode;
 }) {
   const { unit } = camera;
-  // The sky has no outlines to boil.
-  const boils = layer.key !== 'sky';
   const animatedStyle = useAnimatedStyle(() => {
     const offset = coupleParallax(layer.depth, tilt.x.value, tilt.y.value, unit);
-    const amount = boils ? boil.amount.value : 0;
-    if (amount <= 0) return { transform: [{ translateX: offset.x }, { translateY: offset.y }] };
-    const step = boil.step.value;
-    // A nudge of about half a point, with a hair of turn and stretch sized so
-    // a layer's far edge moves no more than its middle: every drawing is
-    // slightly redrawn.
-    const size = Math.max(layer.width, layer.height) * unit;
-    const turn = (boilNoise(step, index, 2) * amount * 180) / (Math.PI * size);
-    const stretch = 1 + (boilNoise(step, index, 3) * amount) / size;
-    return {
-      transform: [
-        // Smaller than the bands' wobble: the layer as a whole barely moves.
-        { translateX: offset.x + boilNoise(step, index, 0) * amount * 0.4 },
-        { translateY: offset.y + boilNoise(step, index, 1) * amount * 0.4 },
-        { rotate: `${turn}deg` },
-        { scaleX: stretch },
-        { scaleY: 2 - stretch },
-      ],
-    };
-  }, [layer.depth, layer.width, layer.height, boils, index, unit]);
+    return { transform: [{ translateX: offset.x }, { translateY: offset.y }] };
+  }, [layer.depth, unit]);
   return (
     <Reanimated.View
       pointerEvents="box-none"
@@ -385,8 +283,6 @@ const styles = StyleSheet.create({
   world: { position: 'absolute', overflow: 'visible' },
   layer: { position: 'absolute', overflow: 'visible' },
   image: { ...StyleSheet.absoluteFill, width: '100%', height: '100%' },
-  strip: { position: 'absolute', left: 0, width: '100%', overflow: 'hidden' },
-  stripImage: { position: 'absolute', left: 0, width: '100%' },
   heart: { ...StyleSheet.absoluteFill, overflow: 'visible' },
   mote: { position: 'absolute', backgroundColor: 'rgba(255,248,226,0.9)' },
 });

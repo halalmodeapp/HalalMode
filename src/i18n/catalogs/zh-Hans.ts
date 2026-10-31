@@ -963,4 +963,8 @@ export const zhHans: TranslationCatalog = {
   "unsaved.body": "离开前要保存吗？",
   "unsaved.yes": "是，保存",
   "unsaved.no": "否，放弃",
+  "daily.nextAtFajrCityAt": "你的下一批介绍将在 {{city}} 的晨礼时间 {{time}} 到来。",
+  "daily.nextAtFajrAt": "你的下一批介绍将在晨礼时间 {{time}} 到来。",
+  "autosave.retry": "暂时无法保存，稍后会再试。",
+  "settings.notificationSetupBody": "此版本的应用尚未设置推送通知，因此无法开启。你的选择没有改变。",
 };

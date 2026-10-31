@@ -963,4 +963,8 @@ export const bn: TranslationCatalog = {
   "unsaved.body": "যাওয়ার আগে কি সংরক্ষণ করতে চান?",
   "unsaved.yes": "হ্যাঁ, সংরক্ষণ করুন",
   "unsaved.no": "না, বাদ দিন",
+  "daily.nextAtFajrCityAt": "আপনার পরবর্তী পরিচয়গুলো {{city}}-এ ফজরের সময়, {{time}}-এ আসবে।",
+  "daily.nextAtFajrAt": "আপনার পরবর্তী পরিচয়গুলো ফজরের সময়, {{time}}-এ আসবে।",
+  "autosave.retry": "এখনই সংরক্ষণ করা যায়নি। একটু পরে আবার চেষ্টা করব।",
+  "settings.notificationSetupBody": "অ্যাপের এই সংস্করণে পুশ নোটিফিকেশন এখনও সেট আপ করা হয়নি, তাই চালু করা যাবে না। আপনার পছন্দ বদলায়নি।",
 };

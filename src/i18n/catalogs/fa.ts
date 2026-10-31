@@ -963,4 +963,8 @@ export const fa: TranslationCatalog = {
   "unsaved.body": "می‌خواهید پیش از رفتن ذخیره‌شان کنید؟",
   "unsaved.yes": "بله، ذخیره کن",
   "unsaved.no": "نه، صرف‌نظر کن",
+  "daily.nextAtFajrCityAt": "معرفی‌های بعدی شما هنگام اذان صبح در {{city}}، ساعت {{time}} می‌رسند.",
+  "daily.nextAtFajrAt": "معرفی‌های بعدی شما هنگام اذان صبح، ساعت {{time}} می‌رسند.",
+  "autosave.retry": "هنوز ذخیره نشد. کمی بعد دوباره تلاش می‌کنیم.",
+  "settings.notificationSetupBody": "اعلان‌های فوری هنوز در این نسخه از برنامه راه‌اندازی نشده‌اند و روشن نمی‌شوند. انتخاب شما تغییر نکرد.",
 };

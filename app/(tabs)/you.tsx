@@ -17,7 +17,6 @@ import { PreferencesIcon, ProfileIcon } from '@/components/ui/TabIcons';
 import { PrivateTab } from '@/components/you/PrivateTab';
 import { ProfileAvatar } from '@/components/you/ProfileAvatar';
 import { ProfileTab } from '@/components/you/ProfileTab';
-import { UnsavedChangesDialog } from '@/components/you/UnsavedChangesDialog';
 import { guardNavigation } from '@/state/unsavedChanges';
 import { useI18n } from '@/i18n';
 import { trackProductEvent } from '@/lib/analytics';
@@ -31,8 +30,6 @@ export default function YouScreen() {
   const { t, isRTL } = useI18n();
   const { tab: requestedTab } = useLocalSearchParams<{ tab?: string }>();
   const [tab, setTab] = useState<Tab>('profile');
-  // Bumped when someone says no to "save your changes?": the tabs start again from what was last saved.
-  const [resetKey, setResetKey] = useState(0);
   // The avatar gives a little pop whenever the tab changes.
   const pop = useSharedValue(1);
   const popStyle = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }] }));
@@ -170,7 +167,7 @@ export default function YouScreen() {
 
         {/* Each tab slides in from the side it sits on. */}
         <Animated.View
-          key={`${tab}-${resetKey}`}
+          key={tab}
           entering={(tab === 'private' ? FadeInRight : FadeInLeft).duration(260)}
         >
           {tab === 'profile' ? (
@@ -188,7 +185,6 @@ export default function YouScreen() {
           )}
         </Animated.View>
       </StretchScrollView>
-      <UnsavedChangesDialog onDiscard={() => setResetKey((key) => key + 1)} />
       <ReadyMoment
         visible={celebrating}
         name={profile.firstName || profile.name}

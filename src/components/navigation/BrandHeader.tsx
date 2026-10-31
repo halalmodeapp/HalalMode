@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { ShiningWordmark } from '@/components/brand/ShiningWordmark';
@@ -7,7 +8,8 @@ import { useI18n } from '@/i18n';
 import { useSession } from '@/state/session';
 
 /** The wordmark strip that tops every primary screen in the reference. */
-export function BrandHeader() {
+/** `trailing` sits just left of the settings gear (the Daily tab's reset button in demo mode). */
+export function BrandHeader({ trailing }: { trailing?: ReactNode } = {}) {
   const { tier } = useSession();
   const { t } = useI18n();
 
@@ -21,6 +23,7 @@ export function BrandHeader() {
         </View>
       ) : null}
       <View style={styles.spacer} />
+      {trailing ? <View style={styles.trailing}>{trailing}</View> : null}
       <SettingsGear />
     </View>
   );
@@ -36,4 +39,5 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   spacer: { flex: 1 },
+  trailing: { marginRight: 8 },
 });

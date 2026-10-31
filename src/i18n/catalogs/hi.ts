@@ -963,4 +963,8 @@ export const hi: TranslationCatalog = {
   "unsaved.body": "क्या आप जाने से पहले उन्हें सहेजना चाहेंगे?",
   "unsaved.yes": "हाँ, सहेजें",
   "unsaved.no": "नहीं, छोड़ दें",
+  "daily.nextAtFajrCityAt": "आपके अगले परिचय {{city}} में फ़ज्र पर, {{time}} बजे आएँगे।",
+  "daily.nextAtFajrAt": "आपके अगले परिचय फ़ज्र पर, {{time}} बजे आएँगे।",
+  "autosave.retry": "अभी सहेज नहीं सके। हम थोड़ी देर में फिर कोशिश करेंगे।",
+  "settings.notificationSetupBody": "ऐप के इस संस्करण में पुश नोटिफ़िकेशन अभी सेट नहीं हैं, इसलिए चालू नहीं हो सकते। आपका चुनाव नहीं बदला है।",
 };

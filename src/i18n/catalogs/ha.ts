@@ -963,4 +963,8 @@ export const ha: TranslationCatalog = {
   "unsaved.body": "Kuna so ku adana su kafin ku tafi?",
   "unsaved.yes": "Ee, adana",
   "unsaved.no": "A'a, bar su",
+  "daily.nextAtFajrCityAt": "Gabatarwarku ta gaba tana zuwa a Asuba a {{city}}, da ƙarfe {{time}}.",
+  "daily.nextAtFajrAt": "Gabatarwarku ta gaba tana zuwa a Asuba, da ƙarfe {{time}}.",
+  "autosave.retry": "Ba a iya adanawa yanzu ba. Za mu sake gwadawa nan da ɗan lokaci.",
+  "settings.notificationSetupBody": "Ba a saita sanarwar turawa a wannan sigar manhajar ba tukuna, don haka ba za a iya kunna ta ba. Zaɓinku bai canja ba.",
 };

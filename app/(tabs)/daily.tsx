@@ -86,8 +86,6 @@ export default function DailyScreen() {
   const breakpoint = useBreakpoint();
   const wideLayout = breakpoint !== 'phone';
   const queryClient = useQueryClient();
-  // Testers get the reset button on the live app too, during this phase.
-  const testerQuery = useQuery({ queryKey: ['sample-members'], queryFn: fetchMySampleMembers });
   const { user } = useAuth();
   const { tier } = useSession();
   const headerProfile = useQuery({ queryKey: queryKeys.profile('me'), queryFn: fetchMyProfile });
@@ -120,7 +118,6 @@ export default function DailyScreen() {
     submitted,
     waitingForConnection,
     submitError,
-    reset,
     recordSoftSelect,
   } = useRound();
 
@@ -288,7 +285,7 @@ export default function DailyScreen() {
   if (isLoading) {
     return (
       <DailyScrollScreen isRTL={isRTL}>
-        <BrandHeader />
+        <DailyHeader />
         <LoadingState label={t('daily.loading')} />
       </DailyScrollScreen>
     );
@@ -297,7 +294,7 @@ export default function DailyScreen() {
   if (error) {
     return (
       <DailyScrollScreen isRTL={isRTL}>
-        <BrandHeader />
+        <DailyHeader />
         <ErrorState
           title={t('daily.loadErrorTitle')}
           message={t('daily.loadErrorBody')}
@@ -315,7 +312,7 @@ export default function DailyScreen() {
     const names = listNames(owedAll.map((item) => item.name), localeTag);
     return (
       <DailyScrollScreen isRTL={isRTL}>
-        <BrandHeader />
+        <DailyHeader />
         <View style={styles.readinessEmpty}>
           <EmptyState
             title={t('daily.owedListTitle', { names })}
@@ -345,7 +342,7 @@ export default function DailyScreen() {
     const next = steps.find((step) => !step.done);
     return (
       <DailyScrollScreen isRTL={isRTL}>
-        <BrandHeader />
+        <DailyHeader />
         <View style={styles.readinessGate}>
           <Text variant="display" style={styles.gateTitle}>{t('readiness.gateTitle')}</Text>
           <View style={styles.gateCard}>
@@ -363,7 +360,7 @@ export default function DailyScreen() {
   if (emptyReason === 'legal_consent_required') {
     return (
       <DailyScrollScreen isRTL={isRTL}>
-        <BrandHeader />
+        <DailyHeader />
         <LoadingState label={t('legal.redirecting')} />
       </DailyScrollScreen>
     );
@@ -371,7 +368,7 @@ export default function DailyScreen() {
 
   // The same screen as the moment after choosing, so a reload looks the same.
   if (emptyReason === 'set_complete' && (!round || round.introductions.length === 0)) {
-    return <SetCompleteState onReset={reset} waitingForConnection={false} nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
+    return <SetCompleteState waitingForConnection={false} nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
   }
 
   if (!round || round.introductions.length === 0) {
@@ -390,7 +387,7 @@ export default function DailyScreen() {
     if (emptyReason === 'next_set_scheduled') {
       return (
         <DailyScrollScreen isRTL={isRTL}>
-          <BrandHeader />
+          <DailyHeader />
           <EmptyState
             title={t('daily.nextSetTitle')}
             message={
@@ -407,7 +404,7 @@ export default function DailyScreen() {
     if (filtersTooNarrow) {
       return (
         <DailyScrollScreen isRTL={isRTL}>
-          <BrandHeader />
+          <DailyHeader />
           <EmptyState
             title={t('daily.filtersTooNarrowTitle')}
             message={t('daily.filtersTooNarrowBody', {
@@ -438,7 +435,7 @@ export default function DailyScreen() {
     if (emptyTitle === 'daily.noSuitableTitle') return <FajrWaitState nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
     return (
       <DailyScrollScreen isRTL={isRTL}>
-        <BrandHeader />
+        <DailyHeader />
         <EmptyState
           title={t(emptyTitle)}
           message={t(emptyBody)}
@@ -448,7 +445,7 @@ export default function DailyScreen() {
   }
 
   if (submitted) {
-    return <SetCompleteState onReset={reset} waitingForConnection={waitingForConnection} nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
+    return <SetCompleteState waitingForConnection={waitingForConnection} nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
   }
 
   const activeChosen = !!active && selected.includes(active.id);
@@ -468,7 +465,7 @@ export default function DailyScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <BrandHeader />
+        <DailyHeader />
 
       <View style={[styles.headline, isRTL && styles.rowReverse]}>
         <View style={styles.headlineText}>
@@ -490,17 +487,6 @@ export default function DailyScreen() {
             ].filter(Boolean).join(' · ')}
           </Text>
         </View>
-        {USE_MOCKS || testerQuery.data?.allowed ? (
-          <Pressable
-            testID={testIds.daily.reset}
-            accessibilityRole="button"
-            accessibilityLabel={t('daily.demoResetLabel')}
-            onPress={reset}
-            style={styles.resetButton}
-          >
-            <ActionIcon name="refresh" size={14} color={color.muted} />
-          </Pressable>
-        ) : null}
       </View>
 
       {submitError ? (
@@ -736,7 +722,7 @@ function FajrWaitState({ firstSet = false, nextFajrAt }: { firstSet?: boolean; n
   };
   return (
     <DailyScrollScreen isRTL={isRTL}>
-      <BrandHeader />
+      <DailyHeader />
       <Animated.View entering={FadeIn.duration(300)} style={styles.complete}>
         {/* "No one fitted" only when matching ran and found nobody. */}
         {firstSet ? null : (
@@ -765,36 +751,59 @@ function FajrWaitState({ firstSet = false, nextFajrAt }: { firstSet?: boolean; n
   );
 }
 
-function SetCompleteState({ onReset, waitingForConnection, nextFajrAt }: {
-  onReset: () => void;
+function SetCompleteState({ waitingForConnection, nextFajrAt }: {
   waitingForConnection: boolean;
   nextFajrAt?: string | null;
 }) {
-  const { t, isRTL } = useI18n();
+  const { t, isRTL, localeTag } = useI18n();
   const city = useQuery({ queryKey: queryKeys.profile('me'), queryFn: fetchMyProfile }).data?.city;
+  // The Fajr this member's next set arrives at, as a clock time in their own city.
+  const calculated = useNextFajr();
+  const scheduled = nextFajrAt ? new Date(nextFajrAt) : null;
+  const fajr = scheduled && Number.isFinite(scheduled.getTime()) ? scheduled : calculated;
+  const time = fajr ? new Intl.DateTimeFormat(localeTag, { hour: '2-digit', minute: '2-digit' }).format(fajr) : null;
+  const lead = time
+    ? (city ? t('daily.nextAtFajrCityAt', { city, time }) : t('daily.nextAtFajrAt', { time }))
+    : (city ? t('daily.nextAtFajrCity', { city }) : t('daily.nextAtFajr'));
   return (
     <DailyScrollScreen isRTL={isRTL}>
-      <BrandHeader />
+      <DailyHeader />
       <Animated.View entering={FadeIn.duration(300)} style={styles.complete}>
-        <Text variant="micro">{t('daily.completeLabel')}</Text>
         <Text variant="display" center style={styles.completeTitle}>
           {t('daily.completeTitle')}
         </Text>
-        <Text variant="bodySmall" center style={styles.completeBody}>
-          {t('daily.completeBody')}
-        </Text>
-        <FajrCountdown nextFajrAt={nextFajrAt} lead={city ? t('daily.nextAtFajrCity', { city }) : t('daily.nextAtFajr')} />
+        <FajrCountdown nextFajrAt={nextFajrAt} lead={lead} />
         {waitingForConnection ? <InlineNotice message={t('daily.waitingConnection')} /> : null}
-        {USE_MOCKS ? (
-          <Button
-            label={t('daily.demoAgain')}
-            variant="quiet"
-            onPress={onReset}
-            style={styles.completeReset}
-          />
-        ) : null}
       </Animated.View>
     </DailyScrollScreen>
+  );
+}
+
+/**
+ * The brand strip for every state of this tab. In demo mode (and for testers) a
+ * reset button sits in its top right, beside the gear, so a test can start again
+ * from any state, including once a set is complete.
+ */
+function DailyHeader() {
+  const { t } = useI18n();
+  const { reset } = useRound();
+  const tester = useQuery({ queryKey: ['sample-members'], queryFn: fetchMySampleMembers });
+  const show = USE_MOCKS || tester.data?.allowed;
+  return (
+    <BrandHeader
+      trailing={show ? (
+        <Pressable
+          testID={testIds.daily.reset}
+          accessibilityRole="button"
+          accessibilityLabel={t('daily.demoResetLabel')}
+          hitSlop={8}
+          onPress={reset}
+          style={styles.headerReset}
+        >
+          <ActionIcon name="refresh" size={15} color={color.muted} />
+        </Pressable>
+      ) : null}
+    />
   );
 }
 
@@ -821,6 +830,16 @@ const styles = StyleSheet.create({
   countdown: { color: color.faintest, marginTop: 6 },
   headlineText: { flex: 1 },
   title: { marginTop: 2 },
+  headerReset: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: color.sandDeep,
+    borderWidth: 1,
+    borderColor: alpha.line,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   resetButton: {
     width: 34,
     height: 34,

@@ -125,7 +125,9 @@ export function SettingsTab({
           ? 'settings.notificationDeviceBody'
           : code === 'unsupported_runtime'
             ? 'settings.notificationBuildBody'
-          : 'settings.notificationErrorBody';
+            : code === 'push_unconfigured' || code === 'project_unconfigured'
+              ? 'settings.notificationSetupBody'
+              : 'settings.notificationErrorBody';
       showNotice(t('settings.notificationErrorTitle'), t(key));
     },
   });

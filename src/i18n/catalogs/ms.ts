@@ -963,4 +963,8 @@ export const ms: TranslationCatalog = {
   "unsaved.body": "Mahu simpannya sebelum pergi?",
   "unsaved.yes": "Ya, simpan",
   "unsaved.no": "Tidak, buang",
+  "daily.nextAtFajrCityAt": "Perkenalan seterusnya datang pada waktu Subuh di {{city}}, pada pukul {{time}}.",
+  "daily.nextAtFajrAt": "Perkenalan seterusnya datang pada waktu Subuh, pada pukul {{time}}.",
+  "autosave.retry": "Belum dapat disimpan. Kami akan cuba lagi sebentar nanti.",
+  "settings.notificationSetupBody": "Pemberitahuan tolak belum disediakan dalam versi aplikasi ini, jadi tidak boleh dihidupkan. Pilihan anda tidak berubah.",
 };

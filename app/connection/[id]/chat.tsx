@@ -383,22 +383,18 @@ export default function ChatScreen() {
           </Pressable>
           ) : null}
 
+          {/* Top right: the menu holds closing the connection along with the safety options. */}
           <SafetyControl
             scope={{ kind: 'connection', id }}
             memberName={connection.profile.firstName}
+            extraActions={[{
+              key: 'close',
+              testID: testIds.chat.retry,
+              label: t('chat.pause'),
+              disabled: close.isPending,
+              onPress: confirmClose,
+            }]}
           />
-
-          <Pressable
-            testID={testIds.chat.retry}
-            accessibilityRole="button"
-            accessibilityLabel={t('chat.closeA11y')}
-            accessibilityState={{ busy: close.isPending }}
-            disabled={close.isPending}
-            onPress={confirmClose}
-            style={styles.pauseButton}
-          >
-            <Text style={styles.pauseLabel} numberOfLines={2}>{t('chat.pause')}</Text>
-          </Pressable>
         </View>
 
         <Pressable

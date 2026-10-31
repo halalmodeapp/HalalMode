@@ -963,4 +963,8 @@ export const tr: TranslationCatalog = {
   "unsaved.body": "Ayrılmadan önce kaydetmek ister misiniz?",
   "unsaved.yes": "Evet, kaydet",
   "unsaved.no": "Hayır, vazgeç",
+  "daily.nextAtFajrCityAt": "Bir sonraki tanışmalarınız {{city}}’de sabah ezanında, saat {{time}}’de gelir.",
+  "daily.nextAtFajrAt": "Bir sonraki tanışmalarınız sabah ezanında, saat {{time}}’de gelir.",
+  "autosave.retry": "Şimdilik kaydedilemedi. Birazdan yeniden deneyeceğiz.",
+  "settings.notificationSetupBody": "Anlık bildirimler uygulamanın bu sürümünde henüz kurulu değil, bu yüzden açılamıyor. Seçiminiz değişmedi.",
 };

@@ -963,4 +963,8 @@ export const es: TranslationCatalog = {
   "unsaved.body": "¿Quieres guardarlos antes de salir?",
   "unsaved.yes": "Sí, guardar",
   "unsaved.no": "No, descartar",
+  "daily.nextAtFajrCityAt": "Tus próximas presentaciones llegan con el Fajr en {{city}}, a las {{time}}.",
+  "daily.nextAtFajrAt": "Tus próximas presentaciones llegan con el Fajr, a las {{time}}.",
+  "autosave.retry": "No se pudo guardar todavía. Lo intentaremos de nuevo en un momento.",
+  "settings.notificationSetupBody": "Las notificaciones push aún no están configuradas en esta versión de la app, así que no se pueden activar. Tu elección no ha cambiado.",
 };

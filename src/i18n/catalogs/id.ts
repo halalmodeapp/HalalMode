@@ -963,4 +963,8 @@ export const id: TranslationCatalog = {
   "unsaved.body": "Mau menyimpannya sebelum pergi?",
   "unsaved.yes": "Ya, simpan",
   "unsaved.no": "Tidak, buang",
+  "daily.nextAtFajrCityAt": "Perkenalan berikutnya datang saat Subuh di {{city}}, pukul {{time}}.",
+  "daily.nextAtFajrAt": "Perkenalan berikutnya datang saat Subuh, pukul {{time}}.",
+  "autosave.retry": "Belum bisa menyimpan. Kami akan mencoba lagi sebentar lagi.",
+  "settings.notificationSetupBody": "Notifikasi push belum disiapkan di versi aplikasi ini, jadi belum bisa dinyalakan. Pilihanmu tidak berubah.",
 };

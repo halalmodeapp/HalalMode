@@ -974,6 +974,10 @@ export const en = {
   "unsaved.body": "Would you like to save them before you go?",
   "unsaved.yes": "Yes, save",
   "unsaved.no": "No, discard",
+  "daily.nextAtFajrCityAt": "Your next introductions come at Fajr in {{city}}, at {{time}}.",
+  "daily.nextAtFajrAt": "Your next introductions come at Fajr, at {{time}}.",
+  "autosave.retry": "Couldn’t save yet. We’ll try again shortly.",
+  "settings.notificationSetupBody": "Push notifications aren’t set up on this version of the app yet, so they can’t be switched on. Your choice has not changed.",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -1942,4 +1946,8 @@ export const ar: TranslationCatalog = {
   "unsaved.body": "هل تريد حفظها قبل أن تغادر؟",
   "unsaved.yes": "نعم، احفظ",
   "unsaved.no": "لا، تجاهل",
+  "daily.nextAtFajrCityAt": "تعارفاتك التالية تصل عند الفجر في {{city}}، الساعة {{time}}.",
+  "daily.nextAtFajrAt": "تعارفاتك التالية تصل عند الفجر، الساعة {{time}}.",
+  "autosave.retry": "تعذّر الحفظ الآن. سنحاول مجددًا بعد قليل.",
+  "settings.notificationSetupBody": "الإشعارات غير مُعدّة بعد في هذا الإصدار من التطبيق، لذا لا يمكن تفعيلها. لم يتغير اختيارك.",
 };

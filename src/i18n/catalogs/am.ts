@@ -963,4 +963,8 @@ export const am: TranslationCatalog = {
   "unsaved.body": "ከመሄድዎ በፊት ማስቀመጥ ይፈልጋሉ?",
   "unsaved.yes": "አዎ፣ አስቀምጥ",
   "unsaved.no": "አይ፣ ተው",
+  "daily.nextAtFajrCityAt": "የሚቀጥሉት መግቢያዎችዎ በ{{city}} ፈጅር ላይ፣ በ{{time}} ይመጣሉ።",
+  "daily.nextAtFajrAt": "የሚቀጥሉት መግቢያዎችዎ ፈጅር ላይ፣ በ{{time}} ይመጣሉ።",
+  "autosave.retry": "አሁን ማስቀመጥ አልተቻለም። በቅርቡ እንደገና እንሞክራለን።",
+  "settings.notificationSetupBody": "የግፋ ማሳወቂያዎች በዚህ የመተግበሪያ ስሪት ገና አልተዘጋጁም፣ ስለዚህ ማብራት አይቻልም። ምርጫዎ አልተለወጠም።",
 };

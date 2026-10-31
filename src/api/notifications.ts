@@ -11,7 +11,9 @@ export type NotificationPermissionError =
   | 'unsupported_device'
   | 'unsupported_runtime'
   | 'permission_denied'
-  | 'project_unconfigured';
+  | 'project_unconfigured'
+  | 'push_unconfigured'
+  | 'token_failed';
 
 export async function fetchMyNotificationConsent(): Promise<boolean> {
   if (USE_MOCKS) return false;
@@ -49,7 +51,16 @@ export async function enableMyNotifications(locale: string): Promise<void> {
   if (!projectId || /^0{8}-0{4}-0{4}-0{4}-0{12}$/.test(projectId)) {
     throw new Error('project_unconfigured' satisfies NotificationPermissionError);
   }
-  const token = await Notifications.getExpoPushTokenAsync({ projectId });
+  let token;
+  try {
+    token = await Notifications.getExpoPushTokenAsync({ projectId });
+  } catch (error) {
+    // The usual cause on Android is a build made without Firebase (FCM) set up,
+    // which can never hand out a push token. Say so, instead of a vague failure.
+    const detail = String((error as { message?: string })?.message ?? error);
+    console.warn('push token failed:', detail);
+    throw new Error(/firebase|fcm|google-services|google play|SERVICE_NOT_AVAILABLE|FIS_AUTH|MISSING_INSTANCEID/i.test(detail) ? 'push_unconfigured' : 'token_failed');
+  }
   const platform = Platform.OS;
   if (platform !== 'ios' && platform !== 'android') throw new Error('unsupported_device' satisfies NotificationPermissionError);
   await registerNotificationDevice(token.data, platform, locale);

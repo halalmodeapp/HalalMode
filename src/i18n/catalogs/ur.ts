@@ -963,4 +963,8 @@ export const ur: TranslationCatalog = {
   "unsaved.body": "کیا آپ جانے سے پہلے انہیں محفوظ کرنا چاہتے ہیں؟",
   "unsaved.yes": "ہاں، محفوظ کریں",
   "unsaved.no": "نہیں، رہنے دیں",
+  "daily.nextAtFajrCityAt": "آپ کے اگلے تعارف فجر کے وقت {{city}} میں، {{time}} پر آئیں گے۔",
+  "daily.nextAtFajrAt": "آپ کے اگلے تعارف فجر کے وقت، {{time}} پر آئیں گے۔",
+  "autosave.retry": "ابھی محفوظ نہیں ہو سکا۔ ہم جلد دوبارہ کوشش کریں گے۔",
+  "settings.notificationSetupBody": "اس ایپ ورژن میں پش نوٹیفکیشن ابھی سیٹ اپ نہیں ہیں، اس لیے آن نہیں ہو سکتے۔ آپ کا انتخاب نہیں بدلا۔",
 };

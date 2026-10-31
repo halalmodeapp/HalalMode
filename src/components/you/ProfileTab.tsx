@@ -5,6 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { PhotoCropSheet } from '@/components/you/PhotoCropSheet';
 import * as Location from 'expo-location';
 import { useRegisterUnsaved } from '@/state/unsavedChanges';
+import { useAutosave, type SaveResult } from '@/hooks/useAutosave';
 import { MaritalStatusCard } from '@/components/you/MaritalSections';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -130,7 +131,6 @@ export function ProfileTab({
   >(null);
   const [languagePicker, setLanguagePicker] = useState(false);
   const [sectPicker, setSectPicker] = useState(false);
-  const [missing, setMissing] = useState<string[]>([]);
   // Your own figures: private, never on your profile, but they are about you,
   // so they are filled in here rather than among the partner filters.
   const [ownHeight, setOwnHeight] = useState(preferences?.ownHeightCm ? String(preferences.ownHeightCm) : '');
@@ -218,6 +218,12 @@ export function ProfileTab({
       : undefined,
   });
   const unsaved = isDirty || photosDirty || ownDirty;
+  // Everything edited outside the form, as one string: it changes with each edit,
+  // and tells a save which of these edits it carried.
+  const ownSignature = JSON.stringify([ownHeight, ownWeight, ownBuilds, hasChildren, familyGoals, religiousDress, ethnicities, heritage, grewUp, diet]);
+  const latestOwnSignature = useRef(ownSignature);
+  latestOwnSignature.current = ownSignature;
+  const sentOwnSignature = useRef(ownSignature);
   const readyToShow = !unsaved && liveReadiness.ready
     && (USE_MOCKS || serverReadinessQuery.data?.ready === true);
   const steps = readinessSteps(liveReadiness.missing, profile.gender);
@@ -406,57 +412,44 @@ export function ProfileTab({
       };
       queryClient.setQueryData(queryKeys.profile('me'), saved);
       void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
-      reset(values);
+      // Keep anything typed while this was being sent: only the saved values become the new baseline.
+      reset(values, { keepValues: true });
       setPhotosDirty(false);
-      setOwnDirty(false);
+      if (latestOwnSignature.current === sentOwnSignature.current) setOwnDirty(false);
       void queryClient.invalidateQueries({ queryKey: queryKeys.preferences });
       toast.show(`✓ ${t('filters.saved')}`);
     },
   });
 
-  /**
-   * One Save, at the bottom, for the whole profile.
-   *
-   * A long form saves when the member means it to. If something required is
-   * still empty, every such box is outlined in red (and stays so until it is
-   * filled), and the list beside the button names them, rather than refusing
-   * silently as the old button did.
-   */
-  // The same save, for "do you want to save?" when leaving with changes:
-  // resolves true only when it was valid and went through.
-  const saveForLeaving = async (): Promise<boolean> => {
-    let saved = false;
+
+
+  // The automatic save. Nothing is outlined in red while someone is still typing:
+  // if a required box is empty it simply waits for the next change.
+  const saveQuietly = async (): Promise<SaveResult> => {
+    let result: SaveResult = 'invalid';
     await handleSubmit(
       async (values) => {
-        setMissing([]);
-        await save.mutateAsync(values);
-        saved = true;
+        sentOwnSignature.current = latestOwnSignature.current;
+        try {
+          await save.mutateAsync(values);
+          result = 'saved';
+        } catch {
+          result = 'failed';
+        }
       },
-      (invalid) => {
-        setMissing(
-          (Object.keys(invalid) as (keyof FormValues)[]).map((key) => t(FIELD_LABELS[key]))
-            .filter((label, index, all) => all.indexOf(label) === index),
-        );
-      },
+      () => undefined,
     )().catch(() => undefined);
-    return saved;
+    return result;
   };
-  useRegisterUnsaved(isDirty || photosDirty || ownDirty, saveForLeaving);
-
-  const submit = useMemo(() => handleSubmit(
-    (values) => {
-      setMissing([]);
-      save.mutate(values);
-    },
-    (invalid) => {
-      setMissing(
-        (Object.keys(invalid) as (keyof FormValues)[]).map((key) => t(FIELD_LABELS[key]))
-          .filter((label, index, all) => all.indexOf(label) === index),
-      );
-    },
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  ), [handleSubmit, save, t, ownHeight, ownBuild, hasChildren, familyGoals, religiousDress, ethnicities, heritage, grewUp, diet, draft.education, draft.languages]);
-
+  // Every edit is kept at once and sent as one batch a few seconds after the
+  // last one (see useAutosave); the "Saved" toast comes when it has gone through.
+  const { flush } = useAutosave({
+    dirty: unsaved,
+    version: JSON.stringify([draft, ownSignature, photosDirty]),
+    onFailure: () => toast.show(t('autosave.retry')),
+    save: saveQuietly,
+  });
+  useRegisterUnsaved(unsaved, flush);
 
   const refreshDeviceLocation = useCallback(async () => {
     if (updatingLocation) return;
@@ -1457,17 +1450,6 @@ export function ProfileTab({
       </Card>
       </View>
 
-      <Button
-        label={t('profile.save')}
-        loading={save.isPending}
-        disabled={!isDirty && !photosDirty && !ownDirty}
-        onPress={() => void submit()}
-      />
-      {missing.length > 0 ? (
-        <Text accessibilityRole="alert" variant="caption" style={styles.fieldError}>
-          {t('profile.missingFields', { fields: missing.join(', ') })}
-        </Text>
-      ) : null}
 
       <PhotoCropSheet
         shape="card"
@@ -1503,19 +1485,6 @@ const FAMILY_CHOICES: [Profile['familyGoals'], TranslationKey][] = [
   ['open_to_children', 'filters.children.open'],
   ['no_children', 'filters.children.none'],
 ];
-
-const FIELD_LABELS: Record<keyof FormValues, TranslationKey> = {
-  name: 'profile.displayName',
-  occupation: 'profile.profession',
-  education: 'profile.education',
-  bio: 'profile.bio',
-  values: 'profile.values',
-  languages: 'profile.languages',
-  religiousPractice: 'profile.practice',
-  sect: 'profile.sect',
-  sectDetail: 'profile.sect',
-  timeline: 'profile.timing',
-};
 
 /** Marks a label as one the member must fill in. */
 function required(label: string): string {

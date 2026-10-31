@@ -963,4 +963,8 @@ export const so: TranslationCatalog = {
   "unsaved.body": "Ma rabtaa inaad kaydiso kahor intaadan tegin?",
   "unsaved.yes": "Haa, kaydi",
   "unsaved.no": "Maya, ka tag",
+  "daily.nextAtFajrCityAt": "Isbarashooyinkaaga xiga waxay yimaadaan Fajarka {{city}}, saacadda {{time}}.",
+  "daily.nextAtFajrAt": "Isbarashooyinkaaga xiga waxay yimaadaan Fajarka, saacadda {{time}}.",
+  "autosave.retry": "Hadda lama kaydin karo. Dhawaan ayaan mar kale isku dayi doonaa.",
+  "settings.notificationSetupBody": "Ogeysiisyada push-ka weli lagama dejin noocan app-ka, sidaa darteed laguma shidi karo. Doorashadaadu ma isbeddelin.",
 };
