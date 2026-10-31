@@ -25,6 +25,7 @@
     },
     "android": {
       "package": "com.halalmode.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"

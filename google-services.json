@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "40847616549",
+    "project_id": "halal-mode-bc9ec",
+    "storage_bucket": "halal-mode-bc9ec.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:40847616549:android:6fd4cd53d711844b08edcc",
+        "android_client_info": {
+          "package_name": "com.halalmode.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCj3dUV15o-5LTm0jYbJLXDYQvUfPA3zkE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
