@@ -38,6 +38,8 @@ import { useToast } from '@/state/toast';
 import { useRegisterUnsaved } from '@/state/unsavedChanges';
 import { useAutosave } from '@/hooks/useAutosave';
 import { isNetworkError } from '@/lib/autosave';
+import { pendingKey } from '@/lib/pendingEdits';
+import { useAuth } from '@/state/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MaritalPreferencesField } from '@/components/you/MaritalSections';
 import { PremiumLogo } from '@/components/brand/PremiumLogo';
@@ -67,7 +69,11 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
 
   const save = useMutation({
     mutationFn: async () => {
-      await updateMyPreferences(draft);
+      // Only what this tab edits. The member's own height, weight and body type
+      // belong to the Profile tab; sending this tab's older copy would overwrite them.
+      const { ownHeightCm: _h, ownWeightKg: _w, ownBuild: _b, ownBuildAlso: _a, ...matching } = draft;
+      void [_h, _w, _b, _a];
+      await updateMyPreferences(matching);
       await setMyPreferredSects(draft.preferredSects ?? [], draft.preferredSectDetails ?? []);
       if (isPremium) await setMyPremiumPreferences(draft);
     },
@@ -79,6 +85,8 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
   });
 
   // What was last saved: the baseline the draft is compared with.
+  const userId = useAuth().user?.id;
+  const pendingStorageKey = pendingKey('preferences', userId);
   const savedRef = useRef(JSON.stringify(preferences));
   const version = JSON.stringify(draft);
   const latestDraft = useRef(draft);
@@ -97,7 +105,7 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
         await save.mutateAsync();
         savedRef.current = sent;
         // Only forget the copy on the phone if nothing newer has been kept since.
-        if (JSON.stringify(latestDraft.current) === sent) void AsyncStorage.removeItem(PENDING_KEY).catch(() => undefined);
+        if (JSON.stringify(latestDraft.current) === sent) if (pendingStorageKey) void AsyncStorage.removeItem(pendingStorageKey).catch(() => undefined);
         return 'saved';
       } catch (error) {
         return isNetworkError(error) ? 'offline' : 'failed';
@@ -109,21 +117,24 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
   // Choices not yet sent are also kept on the phone, so closing the app (or
   // losing signal) before they go does not lose them.
   useEffect(() => {
-    if (draftDirty) void AsyncStorage.setItem(PENDING_KEY, version).catch(() => undefined);
-  }, [draftDirty, version]);
+    if (draftDirty && pendingStorageKey) void AsyncStorage.setItem(pendingStorageKey, version).catch(() => undefined);
+  }, [draftDirty, version, pendingStorageKey]);
   useEffect(() => {
     let cancelled = false;
-    void AsyncStorage.getItem(PENDING_KEY).then((stored) => {
+    if (!pendingStorageKey) return;
+    void AsyncStorage.getItem(pendingStorageKey).then((stored) => {
       if (cancelled || !stored || stored === savedRef.current) return;
       try {
         setDraft(JSON.parse(stored) as PrivatePreferences);
       } catch {
-        void AsyncStorage.removeItem(PENDING_KEY).catch(() => undefined);
+        if (pendingStorageKey) void AsyncStorage.removeItem(pendingStorageKey).catch(() => undefined);
       }
     }).catch(() => undefined);
     return () => {
       cancelled = true;
     };
+  // Once, when the tab opens.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const setMustHave = (criterion: MustHaveCriterion, next: boolean) =>
@@ -607,9 +618,6 @@ function FilterCheck({
     </Pressable>
   );
 }
-
-/** Where choices waiting to be sent are kept on the phone. */
-const PENDING_KEY = 'halalmode-pending-preferences';
 
 const BUILD_KEYS: Record<(typeof BUILD_OPTIONS)[number], TranslationKey> = {
   Slim: 'filters.build.slim',

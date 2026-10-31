@@ -1,3 +1,4 @@
+import { clearPendingEdits } from '@/lib/pendingEdits';
 import { useQuery } from '@tanstack/react-query';
 import * as Linking from 'expo-linking';
 import { useRouter, useSegments, type Href } from 'expo-router';
@@ -70,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (previousUserId) {
         void clearOnboardingDraft(previousUserId);
+        void clearPendingEdits(previousUserId);
       }
     }
 
@@ -237,6 +239,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void clearPrivateMediaCache();
 
     if (activeUserId.current) {
+      void clearPendingEdits(activeUserId.current);
       void clearOnboardingDraft(activeUserId.current);
     }
 

@@ -10,6 +10,8 @@ export const AUTOSAVE = {
   minGapMs: 20000,
   /** After a failed send, the waits before trying again (the last one repeats). */
   retryMs: [15000, 30000, 60000],
+  /** How many times in a row the server may refuse before retrying waits for the next change. */
+  maxRefusals: 3,
   /** The "Saved" toast comes this soon after an edit pauses: the change is already kept on the phone. */
   savedToastAfterMs: 900,
   /** ...and not more often than this, however long someone keeps editing. */

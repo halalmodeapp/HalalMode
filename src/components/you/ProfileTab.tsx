@@ -7,6 +7,8 @@ import * as Location from 'expo-location';
 import { useRegisterUnsaved } from '@/state/unsavedChanges';
 import { useAutosave, type SaveResult } from '@/hooks/useAutosave';
 import { isNetworkError } from '@/lib/autosave';
+import { pendingKey } from '@/lib/pendingEdits';
+import { useAuth } from '@/state/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MaritalStatusField } from '@/components/you/MaritalSections';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -95,9 +97,6 @@ function mediaFrom(profile: Profile): PhotoTile[] {
     return { key: storagePath ?? displayUrl, displayUrl, storagePath };
   });
 }
-
-/** Where edits not yet sent are kept on the phone. */
-const PENDING_KEY = 'halalmode-pending-profile';
 
 export function ProfileTab({
   profile,
@@ -430,6 +429,8 @@ export function ProfileTab({
 
   // Edits are also kept on the phone until they have gone to the server, so closing
   // the app or losing signal first does not lose them.
+  const userId = useAuth().user?.id;
+  const pendingStorageKey = pendingKey('profile', userId);
   const snapshot = JSON.stringify({
     form: draft,
     own: { ownHeight, ownWeight, ownBuilds, hasChildren, familyGoals, religiousDress, ethnicities, heritage, grewUp, diet },
@@ -437,11 +438,12 @@ export function ProfileTab({
   const latestSnapshot = useRef(snapshot);
   latestSnapshot.current = snapshot;
   useEffect(() => {
-    if (unsaved) void AsyncStorage.setItem(PENDING_KEY, snapshot).catch(() => undefined);
-  }, [unsaved, snapshot]);
+    if (unsaved && pendingStorageKey) void AsyncStorage.setItem(pendingStorageKey, snapshot).catch(() => undefined);
+  }, [unsaved, snapshot, pendingStorageKey]);
   useEffect(() => {
     let cancelled = false;
-    void AsyncStorage.getItem(PENDING_KEY).then((stored) => {
+    if (!pendingStorageKey) return;
+    void AsyncStorage.getItem(pendingStorageKey).then((stored) => {
       if (cancelled || !stored) return;
       try {
         const kept = JSON.parse(stored) as { form?: Record<string, unknown>; own?: Record<string, unknown> };
@@ -461,7 +463,7 @@ export function ProfileTab({
         if (Array.isArray(own.diet)) setDiet(own.diet as string[]);
         setOwnDirty(true);
       } catch {
-        void AsyncStorage.removeItem(PENDING_KEY).catch(() => undefined);
+        if (pendingStorageKey) void AsyncStorage.removeItem(pendingStorageKey).catch(() => undefined);
       }
     }).catch(() => undefined);
     return () => {
@@ -483,7 +485,7 @@ export function ProfileTab({
           await save.mutateAsync(values);
           result = 'saved';
           // Only forget the copy on the phone if nothing newer has been kept since.
-          if (latestSnapshot.current === sentSnapshot) void AsyncStorage.removeItem(PENDING_KEY).catch(() => undefined);
+          if (latestSnapshot.current === sentSnapshot) if (pendingStorageKey) void AsyncStorage.removeItem(pendingStorageKey).catch(() => undefined);
         } catch (error) {
           result = isNetworkError(error) ? 'offline' : 'failed';
         }
@@ -496,6 +498,8 @@ export function ProfileTab({
   // last one (see useAutosave); the "Saved" toast comes when it has gone through.
   const { flush } = useAutosave({
     dirty: unsaved,
+    // Nothing can be sent (or called saved) while a required box is empty.
+    valid: schema.safeParse(draft).success,
     version: JSON.stringify([draft, ownSignature, photosDirty]),
     onLocalSave: () => toast.show(`✓ ${t('filters.saved')}`),
     onFailure: (kind) => toast.show(t(kind === 'offline' ? 'autosave.offline' : 'autosave.retry')),

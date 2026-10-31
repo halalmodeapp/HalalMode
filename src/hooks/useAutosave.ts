@@ -29,19 +29,22 @@ export function useAutosave({
   dirty,
   version,
   save,
+  valid = true,
   onLocalSave,
   onFailure,
 }: {
   dirty: boolean;
   version: string;
   save: () => Promise<SaveResult>;
+  /** False while something required is empty or wrong: nothing can be sent yet, so nothing says "Saved". */
+  valid?: boolean;
   /** The optimistic "Saved": the edit is safe on the phone. Not more than once every few seconds. */
   onLocalSave?: () => void;
   /** Called once when a run of failures begins; `offline` says the phone could not reach the server. */
   onFailure?: (kind: 'offline' | 'error') => void;
 }): { flush: () => Promise<void> } {
-  const latest = useRef({ dirty, save, onFailure, onLocalSave });
-  latest.current = { dirty, save, onFailure, onLocalSave };
+  const latest = useRef({ dirty, save, onFailure, onLocalSave, valid });
+  latest.current = { dirty, save, onFailure, onLocalSave, valid };
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastToastAt = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -78,7 +81,9 @@ export function useAutosave({
       } else if (result === 'failed' || result === 'offline') {
         failures.current += 1;
         if (failures.current === 1) latest.current.onFailure?.(result === 'offline' ? 'offline' : 'error');
-        schedule(retryDelay(failures.current));
+        // No signal is worth waiting out for ever; a server that keeps refusing is not, so
+        // after a few refusals it waits for the member's next change instead of hammering it.
+        if (result === 'offline' || failures.current < AUTOSAVE.maxRefusals) schedule(retryDelay(failures.current));
       }
     })().finally(() => {
       running.current = null;
@@ -98,7 +103,7 @@ export function useAutosave({
     schedule(nextFlushDelay({ now: Date.now(), lastChangeAt: lastChangeAt.current, lastSentAt: lastSentAt.current }));
     if (toastTimer.current) clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => {
-      if (savedToastDue(Date.now(), lastToastAt.current)) {
+      if (latest.current.valid && savedToastDue(Date.now(), lastToastAt.current)) {
         lastToastAt.current = Date.now();
         latest.current.onLocalSave?.();
       }
