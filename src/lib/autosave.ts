@@ -13,7 +13,7 @@ export const AUTOSAVE = {
   /** The "Saved" toast comes this soon after an edit pauses: the change is already kept on the phone. */
   savedToastAfterMs: 900,
   /** ...and not more often than this, however long someone keeps editing. */
-  savedToastGapMs: 6000,
+  savedToastGapMs: 3000,
 } as const;
 
 /** Whether an error is the phone being offline (or unable to reach the server), as opposed to the server refusing. */
