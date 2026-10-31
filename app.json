@@ -28,7 +28,7 @@
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/adaptive-icon.png",
-        "backgroundColor": "#FFFFFF"
+        "backgroundImage": "./assets/icons/adaptive-background.png"
       },
       "permissions": [
         "android.permission.RECORD_AUDIO",
@@ -53,10 +53,15 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#FFFFFF",
+          "backgroundColor": "#F6476C",
           "image": "./assets/icons/adaptive-icon.png",
           "imageWidth": 260,
-          "resizeMode": "contain"
+          "resizeMode": "contain",
+          "ios": {
+            "image": "./assets/splash/splash.png",
+            "resizeMode": "cover",
+            "backgroundColor": "#F6476C"
+          }
         }
       ],
       [
