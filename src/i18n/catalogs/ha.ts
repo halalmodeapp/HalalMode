@@ -591,7 +591,7 @@ export const ha: TranslationCatalog = {
   'match.missingTitle': 'Wannan haɗin bai samu ba',
   'match.missingBody': 'Wataƙila lokacinsa ya ƙare, ko ya koma cikin haɗinku.',
   'match.viewConnections': 'Duba haɗi',
-  'match.title': 'Haɗi ne na ɓangarorin biyu.',
+  'match.title': 'Kuna son juna!',
   'match.you': 'Ku',
   "match.body": "Aika saƙo yana buɗewa bayan kowannenku ya zaɓi tambayoyi biyu masu muhimmanci, ya amsa a asirce, kuma ya karanta amsoshin juna.",
   'match.choose': 'Zaɓi tambayoyi',

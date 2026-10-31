@@ -591,7 +591,7 @@ export const tr: TranslationCatalog = {
   'match.missingTitle': 'Bu eşleşme kullanılamıyor',
   'match.missingBody': 'Süresi dolmuş veya Bağlantılarınıza taşınmış olabilir.',
   'match.viewConnections': 'Bağlantıları gör',
-  'match.title': 'Karşılıklı bir eşleşme.',
+  'match.title': 'İlgi karşılıklı!',
   'match.you': 'Siz',
   "match.body": "Mesajlaşma, ikiniz de iki önemli soru seçip özel olarak yanıtladıktan ve birbirinizin yanıtlarını okuduktan sonra açılır.",
   'match.choose': 'Soruları seç',

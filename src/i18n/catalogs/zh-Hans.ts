@@ -591,7 +591,7 @@ export const zhHans: TranslationCatalog = {
   'match.missingTitle': '此配对不可用',
   'match.missingBody': '它可能已过期，或已转入您的连接中。',
   'match.viewConnections': '查看连接',
-  'match.title': '你们互相有意。',
+  'match.title': '你们互相有意！',
   'match.you': '您',
   "match.body": "你们各自选出两个重要问题、私下回答并读到彼此的回答后，才会开启消息。",
   'match.choose': '选择问题',

@@ -591,7 +591,7 @@ export const am: TranslationCatalog = {
   'match.missingTitle': 'ይህ ተዛማጅ አይገኝም',
   'match.missingBody': 'ጊዜው አልፎ ሊሆን ይችላል፣ ወይም ወደ ግንኙነቶችዎ ተዛውሯል።',
   'match.viewConnections': 'ግንኙነቶችን ተመልከት',
-  'match.title': 'የጋራ ተዛማጅ ነው።',
+  'match.title': 'ፍላጎታችሁ የጋራ ነው!',
   'match.you': 'እርስዎ',
   "match.body": "መልእክት መላላክ የሚከፈተው እያንዳንዳችሁ ሁለት አስፈላጊ ጥያቄዎችን መርጣችሁ፣ በግል መልሳችሁ እና የእርስ በርስ መልሶችን ካነበባችሁ በኋላ ነው።",
   'match.choose': 'ጥያቄዎችን ምረጥ',

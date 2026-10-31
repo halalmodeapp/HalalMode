@@ -591,7 +591,7 @@ export const ur: TranslationCatalog = {
   'match.missingTitle': 'یہ میچ دستیاب نہیں',
   'match.missingBody': 'یہ شاید ختم ہو چکا ہے یا آپ کے کنکشنز میں منتقل ہو چکا ہے۔',
   'match.viewConnections': 'کنکشن دیکھیں',
-  'match.title': 'یہ باہمی میچ ہے۔',
+  'match.title': 'آپ دونوں ایک دوسرے کو پسند کرتے ہیں!‏',
   'match.you': 'آپ',
   "match.body": "پیغام رسانی تب کھلتی ہے جب آپ دونوں دو اہم سوال چنیں، نجی طور پر جواب دیں، اور ایک دوسرے کے جواب پڑھیں۔",
   'match.choose': 'سوال چنیں',

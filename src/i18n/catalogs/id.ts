@@ -591,7 +591,7 @@ export const id: TranslationCatalog = {
   'match.missingTitle': 'Kecocokan ini tidak tersedia',
   'match.missingBody': 'Mungkin sudah kedaluwarsa atau sudah pindah ke Koneksi Anda.',
   'match.viewConnections': 'Lihat koneksi',
-  'match.title': 'Saling cocok.',
+  'match.title': 'Kalian saling suka!',
   'match.you': 'Anda',
   "match.body": "Pesan terbuka setelah kalian masing-masing memilih dua pertanyaan penting, menjawab secara pribadi, dan membaca jawaban satu sama lain.",
   'match.choose': 'Pilih pertanyaan',

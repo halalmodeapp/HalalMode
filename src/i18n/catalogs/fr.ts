@@ -591,7 +591,7 @@ export const fr: TranslationCatalog = {
   'match.missingTitle': 'Cette correspondance n’est pas disponible',
   'match.missingBody': 'Elle a peut-être expiré ou se trouve déjà dans vos connexions.',
   'match.viewConnections': 'Voir les connexions',
-  'match.title': 'C’est réciproque.',
+  'match.title': 'C’est réciproque !',
   'match.you': 'Vous',
   "match.body": "La messagerie s’ouvre une fois que chacun a choisi deux questions importantes, y a répondu en privé et a lu les réponses de l’autre.",
   'match.choose': 'Choisir les questions',

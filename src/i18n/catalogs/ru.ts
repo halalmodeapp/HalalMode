@@ -591,7 +591,7 @@ export const ru: TranslationCatalog = {
   'match.missingTitle': 'Это совпадение недоступно',
   'match.missingBody': 'Возможно, оно истекло или уже перенесено в ваши связи.',
   'match.viewConnections': 'Открыть связи',
-  'match.title': 'Это взаимно.',
+  'match.title': 'Это взаимно!',
   'match.you': 'Вы',
   "match.body": "Переписка открывается, когда каждый из вас выберет два важных вопроса, ответит на них приватно и прочитает ответы другого.",
   'match.choose': 'Выбрать вопросы',

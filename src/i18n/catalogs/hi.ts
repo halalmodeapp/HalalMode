@@ -591,7 +591,7 @@ export const hi: TranslationCatalog = {
   'match.missingTitle': 'यह मैच उपलब्ध नहीं',
   'match.missingBody': 'यह शायद ख़त्म हो चुका है या आपके कनेक्शन में जा चुका है।',
   'match.viewConnections': 'कनेक्शन देखें',
-  'match.title': 'यह आपसी मैच है।',
+  'match.title': 'आप दोनों एक-दूसरे को पसंद करते हैं!',
   'match.you': 'आप',
   "match.body": "संदेश तब खुलते हैं जब आप दोनों दो ज़रूरी सवाल चुन लें, निजी तौर पर जवाब दें और एक-दूसरे के जवाब पढ़ें।",
   'match.choose': 'सवाल चुनें',

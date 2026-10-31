@@ -591,7 +591,7 @@ export const ms: TranslationCatalog = {
   'match.missingTitle': 'Padanan ini tidak tersedia',
   'match.missingBody': 'Ia mungkin telah tamat tempoh atau sudah berpindah ke Sambungan anda.',
   'match.viewConnections': 'Lihat sambungan',
-  'match.title': 'Ini padanan bersama.',
+  'match.title': 'Perasaan itu berbalas!',
   'match.you': 'Anda',
   "match.body": "Pemesejan dibuka selepas kamu masing-masing memilih dua soalan penting, menjawab secara peribadi, dan membaca jawapan satu sama lain.",
   'match.choose': 'Pilih soalan',

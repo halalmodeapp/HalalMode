@@ -591,7 +591,7 @@ export const es: TranslationCatalog = {
   'match.missingTitle': 'Esta coincidencia no está disponible',
   'match.missingBody': 'Puede que haya caducado o que ya esté en tus conexiones.',
   'match.viewConnections': 'Ver conexiones',
-  'match.title': 'Es mutuo.',
+  'match.title': '¡Es mutuo!',
   'match.you': 'Tú',
   "match.body": "Los mensajes se abren cuando cada uno ha elegido dos preguntas importantes, las ha respondido en privado y ha leído las respuestas del otro.",
   'match.choose': 'Elegir preguntas',

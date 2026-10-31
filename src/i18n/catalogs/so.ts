@@ -591,7 +591,7 @@ export const so: TranslationCatalog = {
   'match.missingTitle': 'Isku-aadkan lama heli karo',
   'match.missingBody': 'Waxaa laga yaabaa inuu dhacay, ama uu u guuray xiriirradaada.',
   'match.viewConnections': 'Eeg xiriirrada',
-  'match.title': 'Waa isku-aad labada dhinac ah.',
+  'match.title': 'Labadiinuba waad is xiisaynaysaan!',
   'match.you': 'Adiga',
   "match.body": "Fariin-dirku wuxuu furmaa kadib markaad labadiinuba dooratan laba su'aalood oo muhiim ah, si gaar ah u jawaabtaan, oo aad akhrisaan jawaabaha midba midka kale.",
   'match.choose': 'Dooro su’aalaha',

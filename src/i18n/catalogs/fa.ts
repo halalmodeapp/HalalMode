@@ -591,7 +591,7 @@ export const fa: TranslationCatalog = {
   'match.missingTitle': 'این تطبیق در دسترس نیست',
   'match.missingBody': 'ممکن است منقضی شده یا به پیوندهای شما منتقل شده باشد.',
   'match.viewConnections': 'دیدن پیوندها',
-  'match.title': 'علاقه دوطرفه است.',
+  'match.title': 'علاقه‌مندی دوطرفه است!‏',
   'match.you': 'شما',
   "match.body": "پیام‌رسانی وقتی باز می‌شود که هر دو نفر دو پرسش مهم انتخاب کنید، خصوصی پاسخ دهید و پاسخ‌های یکدیگر را بخوانید.",
   'match.choose': 'انتخاب پرسش‌ها',
