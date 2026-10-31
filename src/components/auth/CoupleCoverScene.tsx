@@ -21,7 +21,7 @@ import { COUPLE_SCENE_LAYERS, COUPLE_SUN, COUPLE_WORLD, type CoupleSceneLayer } 
 import { COUPLE_TILT, coupleCamera, coupleParallax, type CoupleCamera } from './coupleSceneLayout';
 import { rubberBandOffset } from './coverMotion';
 
-const COUPLE_HALFTONE = require('../../../assets/couple-scene/halftone.png');
+const COUPLE_HALFTONE_TILE = require('../../../assets/couple-scene/halftone-tile.png');
 
 type CoupleCoverSceneProps = {
   width: number;
@@ -125,10 +125,10 @@ export function CoupleCoverScene({ width, height, active }: CoupleCoverSceneProp
             {layer.key === 'sky' ? <SceneLight camera={camera} active={active} /> : null}
           </SceneLayer>
         ))}
-        {/* A still halftone texture over the picture: one image, no animation, no per-frame work. */}
-        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-          <Image source={COUPLE_HALFTONE} fadeDuration={0} resizeMode="stretch" style={styles.image} />
-        </View>
+      </View>
+      {/* A still halftone texture over the picture: a tiny tile the phone repeats, no animation, no per-frame work. */}
+      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        <Image source={COUPLE_HALFTONE_TILE} fadeDuration={0} resizeMode="repeat" style={styles.image} />
       </View>
       {active ? <NativeCoverTiltSensor tiltX={tiltX} tiltY={tiltY} /> : null}
     </View>
