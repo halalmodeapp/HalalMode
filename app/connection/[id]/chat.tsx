@@ -18,6 +18,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AppState,
   FlatList,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -87,6 +88,9 @@ export default function ChatScreen() {
   const queryClient = useQueryClient();
   const listRef = useRef<FlatList<ConversationItem>>(null);
   const shouldScrollToEndRef = useRef(true);
+  // While the keyboard is opening or closing the list is resized under the member's thumb;
+  // that resize must not be mistaken for them scrolling up, nor trigger a jump.
+  const keyboardSettlingUntil = useRef(0);
   const lastMarkedIncomingIdRef = useRef<string | null>(null);
   const markingIncomingIdRef = useRef<string | null>(null);
   const [draft, setDraft] = useState('');
@@ -273,6 +277,23 @@ export default function ChatScreen() {
 
   // Our own dialog: Alert with buttons never appears in a browser, so closing
   // a conversation on the web silently did nothing.
+  // Keyboard up or down: if they were reading the latest messages, stay on the latest, in one
+  // step and without animation, so the conversation does not drift or bounce.
+  useEffect(() => {
+    const settle = () => {
+      keyboardSettlingUntil.current = Date.now() + 450;
+      if (!shouldScrollToEndRef.current) return;
+      listRef.current?.scrollToEnd({ animated: false });
+      setTimeout(() => listRef.current?.scrollToEnd({ animated: false }), 120);
+    };
+    const show = Keyboard.addListener('keyboardDidShow', settle);
+    const hide = Keyboard.addListener('keyboardDidHide', settle);
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+
   const [closeAsk, setCloseAsk] = useState(false);
   const confirmClose = () => setCloseAsk(true);
 
@@ -437,6 +458,7 @@ export default function ChatScreen() {
             listRef.current?.scrollToEnd({ animated: false });
           }}
           onScroll={(event) => {
+            if (Date.now() < keyboardSettlingUntil.current) return;
             const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
             // Keep a conversation anchored only while the member is already
             // reading its newest messages; never pull them away from history.

@@ -1,12 +1,11 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeInLeft, FadeInRight, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
 import { fetchMyPreferences, fetchMyProfile, fetchMyProfileReadiness } from '@/api/profile';
-import { ReadyMoment } from '@/components/readiness/ReadyMoment';
 import { BrandHeader } from '@/components/navigation/BrandHeader';
 import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
 import { Screen } from '@/components/ui/Screen';
@@ -18,6 +17,7 @@ import { PrivateTab } from '@/components/you/PrivateTab';
 import { ProfileAvatar } from '@/components/you/ProfileAvatar';
 import { ProfileTab } from '@/components/you/ProfileTab';
 import { guardNavigation } from '@/state/unsavedChanges';
+import { markReady, releaseReady } from '@/state/readyCelebration';
 import { useI18n } from '@/i18n';
 import { trackProductEvent } from '@/lib/analytics';
 import { queryKeys } from '@/lib/queryClient';
@@ -39,6 +39,7 @@ export default function YouScreen() {
       void Haptics.selectionAsync();
       pop.value = withSequence(withTiming(0.9, { duration: 90 }), withSpring(1, { damping: 6, stiffness: 240 }));
       setTab(next);
+      releaseReady();
     });
   };
 
@@ -57,7 +58,6 @@ export default function YouScreen() {
   // Only a change seen here counts, so a member who was already complete is
   // never shown it again on opening the screen.
   const router = useRouter();
-  const queryClient = useQueryClient();
   const profileScrollRef = useRef<ScrollView | null>(null);
   const scrollToChecklistTarget = useCallback((target: View | null) => {
     const scrollView = profileScrollRef.current;
@@ -78,21 +78,21 @@ export default function YouScreen() {
     refetchOnMount: 'always',
   });
   const wasReady = useRef<boolean | null>(null);
-  const [celebrating, setCelebrating] = useState(false);
   const ready = readinessQuery.data?.ready;
   useEffect(() => {
     if (ready === undefined) return;
     if (wasReady.current === false && ready) {
-      setCelebrating(true);
+      // Held until the member moves to another page, so it never lands mid-edit.
+      markReady();
       trackProductEvent('profile_completed');
     }
     wasReady.current = ready;
   }, [ready]);
-  const startIntroductions = () => {
-    setCelebrating(false);
-    void queryClient.invalidateQueries({ queryKey: queryKeys.round });
-    router.navigate('/(tabs)/daily');
-  };
+
+  // Leaving the You screen (another tab, Settings) lets a waiting celebration show.
+  useFocusEffect(
+    useCallback(() => () => releaseReady(), []),
+  );
 
   useEffect(() => {
     if (requestedTab === 'profile' || requestedTab === 'private') setTab(requestedTab);
@@ -185,12 +185,6 @@ export default function YouScreen() {
           )}
         </Animated.View>
       </StretchScrollView>
-      <ReadyMoment
-        visible={celebrating}
-        name={profile.firstName || profile.name}
-        onStart={startIntroductions}
-        onLater={() => setCelebrating(false)}
-      />
     </Screen>
   );
 }

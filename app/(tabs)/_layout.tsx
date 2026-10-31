@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 
 import { TabBar } from '@/components/navigation/TabBar';
 import { NoticeDialog } from '@/components/notices/NoticeDialog';
+import { ReadyMomentHost } from '@/components/readiness/ReadyMomentHost';
 import { guardNavigation } from '@/state/unsavedChanges';
 
 export default function TabsLayout() {
@@ -34,6 +35,8 @@ export default function TabsLayout() {
     </Tabs>
     {/* What came of a report, or a removed photo. */}
     <NoticeDialog />
+    {/* The "you're ready" moment, shown once the member has moved off the form they finished. */}
+    <ReadyMomentHost />
     </>
   );
 }
