@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { AUTOSAVE, nextFlushDelay, retryDelay } from '../src/lib/autosave';
+import { AUTOSAVE, isNetworkError, nextFlushDelay, retryDelay, savedToastDue } from '../src/lib/autosave';
 import { guardNavigation, hasUnsavedChanges } from '../src/state/unsavedChanges';
 
 test('with nothing registered, navigation goes straight ahead', () => {
@@ -38,4 +38,18 @@ test('failed sends are retried with a growing wait that then holds', () => {
   assert.ok(retryDelay(2) > retryDelay(1));
   assert.equal(retryDelay(10), AUTOSAVE.retryMs[AUTOSAVE.retryMs.length - 1]);
   assert.equal(retryDelay(0), AUTOSAVE.retryMs[0]);
+});
+
+test('a phone that cannot reach the server is told apart from a server that refuses', () => {
+  assert.equal(isNetworkError(new Error('Network request failed')), true);
+  assert.equal(isNetworkError({ message: 'TypeError: Failed to fetch' }), true);
+  assert.equal(isNetworkError(new Error('The request timed out')), true);
+  assert.equal(isNetworkError(new Error('new row violates row-level security policy')), false);
+  assert.equal(isNetworkError(undefined), false);
+});
+
+test('the optimistic Saved toast comes at once, then at most every few seconds', () => {
+  assert.equal(savedToastDue(1000, 0), true);
+  assert.equal(savedToastDue(2000, 1000), false);
+  assert.equal(savedToastDue(1000 + AUTOSAVE.savedToastGapMs, 1000), true);
 });

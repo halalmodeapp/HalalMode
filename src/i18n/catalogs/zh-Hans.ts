@@ -967,4 +967,5 @@ export const zhHans: TranslationCatalog = {
   "daily.nextAtFajrAt": "你的下一批介绍将在晨礼时间 {{time}} 到来。",
   "autosave.retry": "暂时无法保存，稍后会再试。",
   "settings.notificationSetupBody": "此版本的应用尚未设置推送通知，因此无法开启。你的选择没有改变。",
+  "autosave.offline": "请检查网络连接。你的更改已保存在手机上，恢复联网后会自动保存。",
 };

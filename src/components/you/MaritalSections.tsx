@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pressable, View } from 'react-native';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { fetchMyMaritalSettings, setMyMaritalPreferences, setMyMaritalStatus, type MaritalSettings } from '@/api/profile';
-import { Card } from '@/components/ui/Card';
+import { Chip } from '@/components/ui/Chip';
 import { Text } from '@/components/ui/Text';
 import { ACCEPTED_KEYS, acceptableStatuses, declarableStatuses, MARITAL_STATUS_KEYS } from '@/data/marital';
 import { useI18n } from '@/i18n';
@@ -10,12 +10,11 @@ import { showNotice } from '@/lib/notice';
 import { queryKeys } from '@/lib/queryClient';
 import { useToast } from '@/state/toast';
 import type { Gender, MaritalStatus } from '@/types';
-import { styles } from './settingsTabStyles';
 
 /**
- * Marital status belongs on the profile, and who they would accept belongs in
- * the preferences; both used to sit in Settings. They save as soon as they are
- * tapped, like every other choice of this kind.
+ * Marital status belongs with the profile choices, and who they would accept
+ * with the preferences; both used to sit in Settings. They save as soon as they
+ * are tapped.
  */
 function useMaritalSettings() {
   const { t } = useI18n();
@@ -44,34 +43,32 @@ function useMaritalSettings() {
   return { query, status, accepted };
 }
 
-/** "Marital status": what the member is, shown to everyone they are introduced to. */
-export function MaritalStatusCard({ gender }: { gender: Gender }) {
+/** "Marital status", as one more profile choice among the others: what the member is, shown to everyone they are introduced to. */
+export function MaritalStatusField({ gender, choiceStyle, chipsStyle }: { gender: Gender; choiceStyle?: StyleProp<ViewStyle>; chipsStyle?: StyleProp<ViewStyle> }) {
   const { t } = useI18n();
   const { query, status } = useMaritalSettings();
   if (!query.data) return null;
   return (
-    <Card>
+    <View style={choiceStyle} testID="profile-marital-status">
       <Text variant="micro">{t('marital.statusTitle')}</Text>
-      <Text variant="caption" style={styles.fajrMethodIntro}>{t('marital.statusBody')}</Text>
-      <View>
+      <View style={chipsStyle}>
         {declarableStatuses(gender).map((option) => (
-          <MaritalOption
+          <Chip
             key={option}
-            title={t(MARITAL_STATUS_KEYS[option])}
+            label={t(MARITAL_STATUS_KEYS[option])}
             selected={query.data?.status === option}
-            kind="radio"
-            disabled={status.isPending}
-            testID={`profile.marital.status.${option}`}
-            onPress={() => status.mutate(option)}
+            onPress={() => {
+              if (!status.isPending && query.data?.status !== option) status.mutate(option);
+            }}
           />
         ))}
       </View>
-    </Card>
+    </View>
   );
 }
 
-/** "Who would you accept": the statuses a match may have, at least one always on. */
-export function MaritalPreferencesCard({ gender }: { gender: Gender }) {
+/** "Who would you accept": one more of the preferences, the statuses a match may have (at least one stays on). */
+export function MaritalPreferencesField({ gender, sectionStyle, chipsStyle }: { gender: Gender; sectionStyle?: StyleProp<ViewStyle>; chipsStyle?: StyleProp<ViewStyle> }) {
   const { t } = useI18n();
   const { query, accepted } = useMaritalSettings();
   if (!query.data) return null;
@@ -79,67 +76,24 @@ export function MaritalPreferencesCard({ gender }: { gender: Gender }) {
     const current = query.data?.accepted ?? [];
     const next = current.includes(option) ? current.filter((item) => item !== option) : [...current, option];
     // At least one choice stays on, or nobody could be introduced.
-    if (next.length > 0) accepted.mutate(next);
+    if (next.length > 0 && !accepted.isPending) accepted.mutate(next);
   };
   return (
-    <Card>
+    <View style={sectionStyle} testID="preferences-marital">
       <Text variant="micro">{t('marital.prefTitle')}</Text>
-      <Text variant="caption" style={styles.fajrMethodIntro}>{t('marital.prefQuestion')}</Text>
-      <View>
+      <Text variant="caption">{t('marital.prefQuestion')}</Text>
+      <View style={chipsStyle}>
         {acceptableStatuses(gender).map((option) => (
-          <MaritalOption
+          <Chip
             key={option}
-            title={t(ACCEPTED_KEYS[option])}
+            label={t(ACCEPTED_KEYS[option])}
             selected={query.data?.accepted.includes(option) ?? false}
-            kind="checkbox"
-            disabled={accepted.isPending}
-            testID={`preferences.marital.accepts.${option}`}
+            showMark
             onPress={() => toggle(option)}
           />
         ))}
       </View>
-      <Text variant="caption" style={styles.fajrMethodIntro}>{t('marital.prefNote')}</Text>
-    </Card>
-  );
-}
-
-function MaritalOption({
-  title,
-  selected,
-  kind,
-  disabled,
-  testID,
-  onPress,
-}: {
-  title: string;
-  selected: boolean;
-  kind: 'radio' | 'checkbox';
-  disabled: boolean;
-  testID: string;
-  onPress: () => void;
-}) {
-  const { isRTL } = useI18n();
-  return (
-    <Pressable
-      accessibilityRole={kind}
-      accessibilityLabel={title}
-      accessibilityState={{ checked: selected, disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      testID={testID}
-      style={({ pressed }) => [
-        styles.fajrMethodOption,
-        isRTL && styles.rowReverse,
-        selected && styles.fajrMethodOptionSelected,
-        pressed && !disabled && styles.openRowPressed,
-      ]}
-    >
-      <View style={styles.fajrMethodCopy}>
-        <Text style={styles.rowTitle}>{title}</Text>
-      </View>
-      <View style={[kind === 'radio' ? styles.fajrRadio : styles.maritalBox, selected && styles.fajrRadioSelected, selected && kind === 'checkbox' && styles.maritalBoxOn]}>
-        {selected ? (kind === 'radio' ? <View style={styles.fajrRadioDot} /> : <Text style={styles.maritalTick}>✓</Text>) : null}
-      </View>
-    </Pressable>
+      <Text variant="caption">{t('marital.prefNote')}</Text>
+    </View>
   );
 }

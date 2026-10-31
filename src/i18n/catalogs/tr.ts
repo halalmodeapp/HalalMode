@@ -967,4 +967,5 @@ export const tr: TranslationCatalog = {
   "daily.nextAtFajrAt": "Bir sonraki tanışmalarınız sabah ezanında, saat {{time}}’de gelir.",
   "autosave.retry": "Şimdilik kaydedilemedi. Birazdan yeniden deneyeceğiz.",
   "settings.notificationSetupBody": "Anlık bildirimler uygulamanın bu sürümünde henüz kurulu değil, bu yüzden açılamıyor. Seçiminiz değişmedi.",
+  "autosave.offline": "Lütfen bağlantınızı kontrol edin. Değişiklikleriniz telefonunuzda tutuluyor ve yeniden çevrimiçi olunca kaydedilecek.",
 };

@@ -967,4 +967,5 @@ export const fr: TranslationCatalog = {
   "daily.nextAtFajrAt": "Vos prochaines présentations arrivent au Fajr, à {{time}}.",
   "autosave.retry": "Enregistrement impossible pour l’instant. Nous réessaierons dans un instant.",
   "settings.notificationSetupBody": "Les notifications push ne sont pas encore configurées dans cette version de l’app, elles ne peuvent donc pas être activées. Votre choix n’a pas changé.",
+  "autosave.offline": "Vérifiez votre connexion. Vos modifications sont conservées sur votre téléphone et seront enregistrées dès que vous serez de nouveau en ligne.",
 };

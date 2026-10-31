@@ -978,6 +978,7 @@ export const en = {
   "daily.nextAtFajrAt": "Your next introductions come at Fajr, at {{time}}.",
   "autosave.retry": "Couldn’t save yet. We’ll try again shortly.",
   "settings.notificationSetupBody": "Push notifications aren’t set up on this version of the app yet, so they can’t be switched on. Your choice has not changed.",
+  "autosave.offline": "Please check your connection. Your changes are kept on your phone and will be saved when you’re back online.",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -1950,4 +1951,5 @@ export const ar: TranslationCatalog = {
   "daily.nextAtFajrAt": "تعارفاتك التالية تصل عند الفجر، الساعة {{time}}.",
   "autosave.retry": "تعذّر الحفظ الآن. سنحاول مجددًا بعد قليل.",
   "settings.notificationSetupBody": "الإشعارات غير مُعدّة بعد في هذا الإصدار من التطبيق، لذا لا يمكن تفعيلها. لم يتغير اختيارك.",
+  "autosave.offline": "يرجى التحقق من اتصالك. تغييراتك محفوظة على هاتفك وستُحفظ عند عودة الاتصال.",
 };

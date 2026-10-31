@@ -967,4 +967,5 @@ export const ha: TranslationCatalog = {
   "daily.nextAtFajrAt": "Gabatarwarku ta gaba tana zuwa a Asuba, da ƙarfe {{time}}.",
   "autosave.retry": "Ba a iya adanawa yanzu ba. Za mu sake gwadawa nan da ɗan lokaci.",
   "settings.notificationSetupBody": "Ba a saita sanarwar turawa a wannan sigar manhajar ba tukuna, don haka ba za a iya kunna ta ba. Zaɓinku bai canja ba.",
+  "autosave.offline": "Da fatan za a duba haɗinku. Canje-canjenku suna nan a wayarku kuma za a adana su idan kun dawo kan layi.",
 };

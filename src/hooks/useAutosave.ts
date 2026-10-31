@@ -1,19 +1,23 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 
-import { nextFlushDelay, retryDelay } from '@/lib/autosave';
+import { AUTOSAVE, nextFlushDelay, retryDelay, savedToastDue } from '@/lib/autosave';
 
 /**
- * 'saved': it went through. 'failed': the network or server refused; keep the
- * edits and try again later. 'invalid': something required is empty; keep the
- * edits and wait for the next change rather than retrying.
+ * 'saved': it went through. 'offline': the phone could not reach the server;
+ * 'failed': the server refused. Either way the edits are kept and tried again
+ * later. 'invalid': something required is empty; the edits are kept and it
+ * waits for the next change rather than retrying.
  */
-export type SaveResult = 'saved' | 'failed' | 'invalid';
+export type SaveResult = 'saved' | 'offline' | 'failed' | 'invalid';
 
 /**
- * Saves edits by itself, in batches.
+ * Saves edits by itself, in batches, and says so at once.
  *
- * `version` changes with every edit; while `dirty`, each change restarts a short
+ * An edit is kept on the phone the moment it is made, so `onLocalSave` (the
+ * "Saved" toast) fires as soon as the edits pause, without waiting for the
+ * server. The server send follows: `version` changes with every edit; while
+ * `dirty`, each change restarts a short
  * quiet timer, and the save runs when it ends, but never sooner than a minimum
  * gap after the previous one. Leaving the screen, or the app going to the
  * background, sends what is pending straight away. A failed send keeps the edits
@@ -25,16 +29,21 @@ export function useAutosave({
   dirty,
   version,
   save,
+  onLocalSave,
   onFailure,
 }: {
   dirty: boolean;
   version: string;
   save: () => Promise<SaveResult>;
-  /** Called once when a run of failures begins, so the screen can say it will try again. */
-  onFailure?: () => void;
+  /** The optimistic "Saved": the edit is safe on the phone. Not more than once every few seconds. */
+  onLocalSave?: () => void;
+  /** Called once when a run of failures begins; `offline` says the phone could not reach the server. */
+  onFailure?: (kind: 'offline' | 'error') => void;
 }): { flush: () => Promise<void> } {
-  const latest = useRef({ dirty, save, onFailure });
-  latest.current = { dirty, save, onFailure };
+  const latest = useRef({ dirty, save, onFailure, onLocalSave });
+  latest.current = { dirty, save, onFailure, onLocalSave };
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastToastAt = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastChangeAt = useRef(0);
   const lastSentAt = useRef(0);
@@ -66,9 +75,9 @@ export function useAutosave({
       }
       if (result === 'saved') {
         failures.current = 0;
-      } else if (result === 'failed') {
+      } else if (result === 'failed' || result === 'offline') {
         failures.current += 1;
-        if (failures.current === 1) latest.current.onFailure?.();
+        if (failures.current === 1) latest.current.onFailure?.(result === 'offline' ? 'offline' : 'error');
         schedule(retryDelay(failures.current));
       }
     })().finally(() => {
@@ -79,7 +88,7 @@ export function useAutosave({
   }, [schedule]);
   flushRef.current = flush;
 
-  // Every edit restarts the quiet timer.
+  // Every edit restarts the quiet timer, and the optimistic "Saved" comes as soon as the edits pause.
   useEffect(() => {
     if (!dirty) {
       clearTimer();
@@ -87,16 +96,31 @@ export function useAutosave({
     }
     lastChangeAt.current = Date.now();
     schedule(nextFlushDelay({ now: Date.now(), lastChangeAt: lastChangeAt.current, lastSentAt: lastSentAt.current }));
-    return clearTimer;
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => {
+      if (savedToastDue(Date.now(), lastToastAt.current)) {
+        lastToastAt.current = Date.now();
+        latest.current.onLocalSave?.();
+      }
+    }, AUTOSAVE.savedToastAfterMs);
+    return () => {
+      clearTimer();
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    };
   }, [dirty, version, schedule]);
 
-  // Going to the background, or leaving the screen, sends what is waiting.
+  // Going to the background, coming back, or leaving the screen sends what is waiting;
+  // so does the connection returning (the browser says so; on a phone, coming back to the app).
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', (state) => {
-      if (state !== 'active') void flushRef.current();
+    const subscription = AppState.addEventListener('change', () => {
+      void flushRef.current();
     });
+    const online = () => void flushRef.current();
+    const hasWindow = typeof window !== 'undefined' && typeof window.addEventListener === 'function';
+    if (hasWindow) window.addEventListener('online', online);
     return () => {
       subscription.remove();
+      if (hasWindow) window.removeEventListener('online', online);
       void flushRef.current();
     };
   }, []);

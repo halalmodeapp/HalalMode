@@ -967,4 +967,5 @@ export const ms: TranslationCatalog = {
   "daily.nextAtFajrAt": "Perkenalan seterusnya datang pada waktu Subuh, pada pukul {{time}}.",
   "autosave.retry": "Belum dapat disimpan. Kami akan cuba lagi sebentar nanti.",
   "settings.notificationSetupBody": "Pemberitahuan tolak belum disediakan dalam versi aplikasi ini, jadi tidak boleh dihidupkan. Pilihan anda tidak berubah.",
+  "autosave.offline": "Sila semak sambungan anda. Perubahan anda disimpan pada telefon dan akan disimpan apabila kembali dalam talian.",
 };

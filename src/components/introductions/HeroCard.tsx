@@ -16,7 +16,6 @@ import { useScreenActive } from '@/hooks/useScreenActive';
 import { useI18n } from '@/i18n';
 import { deckDirectionForAccessibilityAction } from '@/lib/roundInvariants';
 import { occupationLabel } from '@/data/occupations';
-import { MaritalStatusBadge } from './MaritalStatusBadge';
 import { testIds } from '@/lib/testIds';
 import type { Profile } from '@/types';
 import { styles } from './heroCardStyles';
@@ -1283,9 +1282,6 @@ function DeckCard({
           {profile.city} ·{' '}
           {occupationLabel(profile.occupation, language)}
         </Text>
-        <View style={styles.maritalOnCard}>
-          <MaritalStatusBadge status={profile.maritalStatus} onPhoto center />
-        </View>
       </View>
 
       {isActive &&

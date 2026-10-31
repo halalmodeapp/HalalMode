@@ -967,4 +967,5 @@ export const so: TranslationCatalog = {
   "daily.nextAtFajrAt": "Isbarashooyinkaaga xiga waxay yimaadaan Fajarka, saacadda {{time}}.",
   "autosave.retry": "Hadda lama kaydin karo. Dhawaan ayaan mar kale isku dayi doonaa.",
   "settings.notificationSetupBody": "Ogeysiisyada push-ka weli lagama dejin noocan app-ka, sidaa darteed laguma shidi karo. Doorashadaadu ma isbeddelin.",
+  "autosave.offline": "Fadlan hubi xiriirkaaga. Isbeddelladaadu waxay ku jiraan taleefankaaga waxaana la kaydin doonaa marka aad online noqoto.",
 };

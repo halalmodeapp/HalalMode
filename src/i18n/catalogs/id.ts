@@ -967,4 +967,5 @@ export const id: TranslationCatalog = {
   "daily.nextAtFajrAt": "Perkenalan berikutnya datang saat Subuh, pukul {{time}}.",
   "autosave.retry": "Belum bisa menyimpan. Kami akan mencoba lagi sebentar lagi.",
   "settings.notificationSetupBody": "Notifikasi push belum disiapkan di versi aplikasi ini, jadi belum bisa dinyalakan. Pilihanmu tidak berubah.",
+  "autosave.offline": "Periksa koneksimu. Perubahanmu tersimpan di ponsel dan akan disimpan saat kembali online.",
 };

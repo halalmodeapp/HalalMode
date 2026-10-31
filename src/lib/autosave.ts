@@ -10,7 +10,22 @@ export const AUTOSAVE = {
   minGapMs: 20000,
   /** After a failed send, the waits before trying again (the last one repeats). */
   retryMs: [15000, 30000, 60000],
+  /** The "Saved" toast comes this soon after an edit pauses: the change is already kept on the phone. */
+  savedToastAfterMs: 900,
+  /** ...and not more often than this, however long someone keeps editing. */
+  savedToastGapMs: 6000,
 } as const;
+
+/** Whether an error is the phone being offline (or unable to reach the server), as opposed to the server refusing. */
+export function isNetworkError(error: unknown): boolean {
+  const text = String((error as { message?: unknown } | null | undefined)?.message ?? error ?? '');
+  return /network request failed|failed to fetch|network error|networkerror|load failed|timed? ?out|offline|internet|connection|econn|enotfound|unable to resolve/i.test(text);
+}
+
+/** Whether the optimistic "Saved" toast may show now. */
+export function savedToastDue(now: number, lastShownAt: number): boolean {
+  return lastShownAt === 0 || now - lastShownAt >= AUTOSAVE.savedToastGapMs;
+}
 
 /** Milliseconds until the next send is due. Never negative; a first send waits only for quiet. */
 export function nextFlushDelay(input: {

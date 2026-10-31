@@ -37,8 +37,9 @@ import { errorMessage } from '@/lib/errorMessage';
 import { useToast } from '@/state/toast';
 import { useRegisterUnsaved } from '@/state/unsavedChanges';
 import { useAutosave } from '@/hooks/useAutosave';
+import { isNetworkError } from '@/lib/autosave';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { MaritalPreferencesCard } from '@/components/you/MaritalSections';
+import { MaritalPreferencesField } from '@/components/you/MaritalSections';
 import { PremiumLogo } from '@/components/brand/PremiumLogo';
 import { onDark, SurfaceToneProvider, useSurfaceTone } from '@/theme/tone';
 import { styles } from './privateTabStyles';
@@ -74,29 +75,32 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
       void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
       void queryClient.invalidateQueries({ queryKey: queryKeys.preferences });
       void queryClient.invalidateQueries({ queryKey: queryKeys.poolSize });
-      toast.show(`✓ ${t('filters.saved')}`);
     },
   });
 
   // What was last saved: the baseline the draft is compared with.
   const savedRef = useRef(JSON.stringify(preferences));
   const version = JSON.stringify(draft);
+  const latestDraft = useRef(draft);
+  latestDraft.current = draft;
   const draftDirty = version !== savedRef.current;
   // Every choice is kept at once and sent as one batch a few seconds after the
   // last one (see useAutosave); a toast says "Saved" when it has gone through.
   const { flush } = useAutosave({
     dirty: draftDirty,
     version,
-    onFailure: () => toast.show(t('autosave.retry')),
+    onLocalSave: () => toast.show(`✓ ${t('filters.saved')}`),
+    onFailure: (kind) => toast.show(t(kind === 'offline' ? 'autosave.offline' : 'autosave.retry')),
     save: async () => {
       const sent = JSON.stringify(draft);
       try {
         await save.mutateAsync();
         savedRef.current = sent;
-        void AsyncStorage.removeItem(PENDING_KEY).catch(() => undefined);
+        // Only forget the copy on the phone if nothing newer has been kept since.
+        if (JSON.stringify(latestDraft.current) === sent) void AsyncStorage.removeItem(PENDING_KEY).catch(() => undefined);
         return 'saved';
-      } catch {
-        return 'failed';
+      } catch (error) {
+        return isNetworkError(error) ? 'offline' : 'failed';
       }
     },
   });
@@ -392,6 +396,9 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
             {mustHaveFor('sect')}
           </View>
 
+          {/* A normal preference, with the others: who they would accept. */}
+          {meQuery.data ? <MaritalPreferencesField gender={meQuery.data.gender} sectionStyle={styles.section} chipsStyle={styles.chips} /> : null}
+
           {/* Everything below is Premium. Shown to everyone, so a free member
               can see what it offers; only a Premium member can change it. */}
           {/* Its own black card with gold, so it reads as something special. */}
@@ -553,8 +560,6 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
           {save.isError ? <InlineNotice message={errorMessage(save.error, t, 'filters.saveError')} /> : null}
         </Card>
       )}
-
-      {meQuery.data ? <MaritalPreferencesCard gender={meQuery.data.gender} /> : null}
 
       <CountrySheet
         visible={countrySheet}

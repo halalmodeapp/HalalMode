@@ -6,7 +6,9 @@ import { PhotoCropSheet } from '@/components/you/PhotoCropSheet';
 import * as Location from 'expo-location';
 import { useRegisterUnsaved } from '@/state/unsavedChanges';
 import { useAutosave, type SaveResult } from '@/hooks/useAutosave';
-import { MaritalStatusCard } from '@/components/you/MaritalSections';
+import { isNetworkError } from '@/lib/autosave';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { MaritalStatusField } from '@/components/you/MaritalSections';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Linking, Platform, Pressable, View } from 'react-native';
@@ -94,6 +96,9 @@ function mediaFrom(profile: Profile): PhotoTile[] {
   });
 }
 
+/** Where edits not yet sent are kept on the phone. */
+const PENDING_KEY = 'halalmode-pending-profile';
+
 export function ProfileTab({
   profile,
   preferences,
@@ -170,6 +175,7 @@ export function ProfileTab({
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isDirty },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -417,11 +423,53 @@ export function ProfileTab({
       setPhotosDirty(false);
       if (latestOwnSignature.current === sentOwnSignature.current) setOwnDirty(false);
       void queryClient.invalidateQueries({ queryKey: queryKeys.preferences });
-      toast.show(`✓ ${t('filters.saved')}`);
     },
   });
 
 
+
+  // Edits are also kept on the phone until they have gone to the server, so closing
+  // the app or losing signal first does not lose them.
+  const snapshot = JSON.stringify({
+    form: draft,
+    own: { ownHeight, ownWeight, ownBuilds, hasChildren, familyGoals, religiousDress, ethnicities, heritage, grewUp, diet },
+  });
+  const latestSnapshot = useRef(snapshot);
+  latestSnapshot.current = snapshot;
+  useEffect(() => {
+    if (unsaved) void AsyncStorage.setItem(PENDING_KEY, snapshot).catch(() => undefined);
+  }, [unsaved, snapshot]);
+  useEffect(() => {
+    let cancelled = false;
+    void AsyncStorage.getItem(PENDING_KEY).then((stored) => {
+      if (cancelled || !stored) return;
+      try {
+        const kept = JSON.parse(stored) as { form?: Record<string, unknown>; own?: Record<string, unknown> };
+        Object.entries(kept.form ?? {}).forEach(([key, value]) => {
+          if (value !== undefined) setValue(key as keyof FormValues, value as never, { shouldDirty: true });
+        });
+        const own = kept.own ?? {};
+        if (typeof own.ownHeight === 'string') setOwnHeight(own.ownHeight);
+        if (typeof own.ownWeight === 'string') setOwnWeight(own.ownWeight);
+        if (Array.isArray(own.ownBuilds)) setOwnBuilds(own.ownBuilds as string[]);
+        if (own.hasChildren) setHasChildren(own.hasChildren as Profile['hasChildren']);
+        if (own.familyGoals) setFamilyGoals(own.familyGoals as Profile['familyGoals']);
+        if (typeof own.religiousDress === 'string') setReligiousDress(own.religiousDress);
+        if (Array.isArray(own.ethnicities)) setEthnicities(own.ethnicities as string[]);
+        if (Array.isArray(own.heritage)) setHeritage(own.heritage as string[]);
+        if (Array.isArray(own.grewUp)) setGrewUp(own.grewUp as string[]);
+        if (Array.isArray(own.diet)) setDiet(own.diet as string[]);
+        setOwnDirty(true);
+      } catch {
+        void AsyncStorage.removeItem(PENDING_KEY).catch(() => undefined);
+      }
+    }).catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  // Once, when the tab opens.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // The automatic save. Nothing is outlined in red while someone is still typing:
   // if a required box is empty it simply waits for the next change.
@@ -430,11 +478,14 @@ export function ProfileTab({
     await handleSubmit(
       async (values) => {
         sentOwnSignature.current = latestOwnSignature.current;
+        const sentSnapshot = latestSnapshot.current;
         try {
           await save.mutateAsync(values);
           result = 'saved';
-        } catch {
-          result = 'failed';
+          // Only forget the copy on the phone if nothing newer has been kept since.
+          if (latestSnapshot.current === sentSnapshot) void AsyncStorage.removeItem(PENDING_KEY).catch(() => undefined);
+        } catch (error) {
+          result = isNetworkError(error) ? 'offline' : 'failed';
         }
       },
       () => undefined,
@@ -446,7 +497,8 @@ export function ProfileTab({
   const { flush } = useAutosave({
     dirty: unsaved,
     version: JSON.stringify([draft, ownSignature, photosDirty]),
-    onFailure: () => toast.show(t('autosave.retry')),
+    onLocalSave: () => toast.show(`✓ ${t('filters.saved')}`),
+    onFailure: (kind) => toast.show(t(kind === 'offline' ? 'autosave.offline' : 'autosave.retry')),
     save: saveQuietly,
   });
   useRegisterUnsaved(unsaved, flush);
@@ -885,8 +937,6 @@ export function ProfileTab({
       </Card>
       </View>
 
-      <MaritalStatusCard gender={profile.gender} />
-
       <Card>
         <Text variant="micro">{t('profile.voice')}</Text>
         {voiceUrl && !recorderState.isRecording ? (
@@ -1290,6 +1340,8 @@ export function ProfileTab({
             ))}
           </View>
         </View>
+
+        <MaritalStatusField gender={profile.gender} choiceStyle={styles.profileChoice} chipsStyle={styles.choiceChips} />
 
         {/* Religious dress is asked of women only. */}
         {profile.gender === 'female' ? (

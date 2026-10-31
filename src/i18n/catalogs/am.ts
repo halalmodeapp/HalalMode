@@ -967,4 +967,5 @@ export const am: TranslationCatalog = {
   "daily.nextAtFajrAt": "የሚቀጥሉት መግቢያዎችዎ ፈጅር ላይ፣ በ{{time}} ይመጣሉ።",
   "autosave.retry": "አሁን ማስቀመጥ አልተቻለም። በቅርቡ እንደገና እንሞክራለን።",
   "settings.notificationSetupBody": "የግፋ ማሳወቂያዎች በዚህ የመተግበሪያ ስሪት ገና አልተዘጋጁም፣ ስለዚህ ማብራት አይቻልም። ምርጫዎ አልተለወጠም።",
+  "autosave.offline": "እባክዎ ግንኙነትዎን ይፈትሹ። ለውጦችዎ በስልክዎ ላይ ተቀምጠዋል፣ ወደ መስመር ሲመለሱ ይቀመጣሉ።",
 };

@@ -21,6 +21,8 @@ import { COUPLE_SCENE_LAYERS, COUPLE_SUN, COUPLE_WORLD, type CoupleSceneLayer } 
 import { COUPLE_TILT, coupleCamera, coupleParallax, type CoupleCamera } from './coupleSceneLayout';
 import { rubberBandOffset } from './coverMotion';
 
+const COUPLE_HALFTONE = require('../../../assets/couple-scene/halftone.png');
+
 type CoupleCoverSceneProps = {
   width: number;
   height: number;
@@ -123,6 +125,10 @@ export function CoupleCoverScene({ width, height, active }: CoupleCoverSceneProp
             {layer.key === 'sky' ? <SceneLight camera={camera} active={active} /> : null}
           </SceneLayer>
         ))}
+        {/* A still halftone texture over the picture: one image, no animation, no per-frame work. */}
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          <Image source={COUPLE_HALFTONE} fadeDuration={0} resizeMode="stretch" style={styles.image} />
+        </View>
       </View>
       {active ? <NativeCoverTiltSensor tiltX={tiltX} tiltY={tiltY} /> : null}
     </View>
