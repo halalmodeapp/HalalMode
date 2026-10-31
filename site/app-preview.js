@@ -201,7 +201,7 @@
       <div class="ap-heart">♥</div>
       <div class="ap-plate ap-pr"><div class="ap-avatar"><img src="${IMG + P.img}" alt=""></div><b>${P.first}</b></div>
     </div>
-    <p class="ap-explain">Messaging opens after you each choose two important questions, answer privately, and read each other’s answers.</p>
+    <p class="ap-explain">Messaging opens after you each choose a couple of important questions, answer privately, and read each other’s answers.</p>
     <div class="ap-btn ap-btn-primary ap-matchbtn">Choose questions</div>
     <div class="ap-quiet">Maybe later</div>
     <div class="ap-confetti"></div>`;
@@ -224,12 +224,12 @@
     ['Handling disagreements', 'What do you do when we disagree?'],
     ['Future plans', 'Where do you see us living in five years?'],
   ];
-  const MINE = [0, 2, 3];
+  const MINE = [0, 2];
   const questionsV = el('div', 'ap-view ap-fade ap-questions');
   questionsV.innerHTML = `
     ${header('')}
     <div class="ap-qhead"><div class="ap-micro">Step 1 of 3 · with ${P.first}</div>
-      <div class="ap-h1">Choose the two questions that matter most.</div>
+      <div class="ap-h1">Choose a couple of questions that matter most.</div>
       <p class="ap-sub2">${P.first} chooses three separately. Shared choices are marked when both sets are ready.</p></div>
     <div class="ap-qlist">${QUESTIONS.map(([cat, text]) => `<div class="ap-qcard"><div class="ap-qtxt"><div class="ap-micro">${cat}</div><div class="ap-qtext">${text}</div></div><i class="ap-dot"></i></div>`).join('')}</div>
     <div class="ap-qfoot"><span class="ap-qcount"></span><div class="ap-btn ap-btn-primary ap-qbtn">Answer them</div></div>`;
@@ -500,13 +500,13 @@
       b.e.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${(b.rot + b.spin * tau).toFixed(0)}deg)`;
     });
 
-    // ---- the two questions: each of you chooses two
+    // ---- the questions: each of you chooses a couple
     fade(questionsV, W.questions, t);
-    const chooseAt = [18.95, 19.5, 20.05];
+    const chooseAt = [19.2, 19.9];
     qcards.forEach((c, i) => { const k = MINE.indexOf(i); c.classList.toggle('on', k >= 0 && t >= chooseAt[k] + 0.05); });
     const nChosen = chooseAt.filter((a) => t >= a + 0.05).length;
-    qcount.textContent = `${nChosen} of 3 chosen`;
-    qbtn.classList.toggle('disabled', nChosen < 3);
+    qcount.textContent = `${nChosen} of 2 chosen`;
+    qbtn.classList.toggle('disabled', nChosen < 2);
     qbtn.style.transform = `scale(${1 - press(t, 20.8) * 0.04})`;
 
     // ---- answering: type, finish, and only then read hers
@@ -592,7 +592,7 @@
       || tap(9.95, mustH) || tap(10.55, buildBox) || tap(12.05, practiceChecks[2])
       || tap(13.95, nochild) || tap(14.55, mustD) || tap(15.45, eduBox)
       || tap(17.9, matchBtn)
-      || tap(chooseAt[0], qcards[MINE[0]]) || tap(chooseAt[1], qcards[MINE[1]]) || tap(chooseAt[2], qcards[MINE[2]]) || tap(20.8, qbtn)
+      || tap(chooseAt[0], qcards[MINE[0]]) || tap(chooseAt[1], qcards[MINE[1]]) || tap(20.8, qbtn)
       || tap(22.9, finishBtn) || tap(27.3, openBtn) || tap(29.0, sendC)
       || tap(32.95, gates[1]) || tap(34.2, pickEl) || tap(36.2, spickEl);
     finger.style.transform = `translate(${fx}px, ${fy}px) scale(${fs})`;
