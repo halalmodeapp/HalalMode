@@ -9,6 +9,7 @@ module.exports = defineConfig([
       '**/.test-build/**',
       '**/.count-build/**',
       '**/dist/**',
+      'walkthrough/**',
       '**/tmp/**',
       '**/output/**',
       '.claude/**',

@@ -30,3 +30,6 @@ android/
 
 .DS_Store
 deno.lock
+
+# generated walkthrough videos
+walkthrough/exports/

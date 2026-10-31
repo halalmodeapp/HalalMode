@@ -1,0 +1,12 @@
+{
+  "name": "halal-mode-walkthrough-tools",
+  "private": true,
+  "description": "Exports the walkthrough films to MP4.",
+  "type": "module",
+  "scripts": {
+    "export": "node export.mjs"
+  },
+  "dependencies": {
+    "playwright-core": "^1.48.2"
+  }
+}
