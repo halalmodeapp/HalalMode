@@ -495,7 +495,7 @@ export function SettingsTab({
             onValueChange={(enabled) => sampleMembers.mutate(enabled)}
           />
         ) : null}
-        {sampleMembersQuery.data?.allowed ? (
+        {sampleMembersQuery.data?.allowed && sampleMembersQuery.data.premiumSwitch ? (
           <SettingRow
             title={t('settings.testPremium')}
             subtitle={t('settings.testPremiumBody')}

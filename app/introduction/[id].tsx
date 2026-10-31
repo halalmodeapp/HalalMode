@@ -3,7 +3,7 @@ import { getProfilePhotoGallery, getProfilePhotoSource } from '@/data/demoProfil
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AudioGreeting } from '@/components/introductions/AudioGreeting';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
@@ -40,9 +40,13 @@ export default function IntroductionDetailScreen() {
     bioHeight: 0,
   });
 
+  // The photo showing in the hero, which swipes sideways through all of them.
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const [heroWidth, setHeroWidth] = useState(0);
+
   const introduction =
     round?.introductions.find((item) => item.id === id) ?? null;
-  const firstPhotoPath = introduction?.profile.photoMedia?.[0]?.storagePath;
+  const firstPhotoPath = introduction?.profile.photoMedia?.[photoIndex]?.storagePath;
   const firstPhotoPathRef = useRef(firstPhotoPath);
   const updateVisibleTiming = useCallback(() => {
     const layout = timingLayout.current;
@@ -60,9 +64,13 @@ export default function IntroductionDetailScreen() {
   }, [bioVisibility, id, photoVisibility]);
 
   useEffect(() => {
+    // Swiping to another photo ends the time counted on the one before it.
+    if (id && firstPhotoPathRef.current && firstPhotoPathRef.current !== firstPhotoPath) {
+      photoVisibility(id, firstPhotoPathRef.current, false);
+    }
     firstPhotoPathRef.current = firstPhotoPath;
     updateVisibleTiming();
-  }, [firstPhotoPath, updateVisibleTiming]);
+  }, [firstPhotoPath, id, photoVisibility, updateVisibleTiming]);
 
   // Before the early return below, because hooks cannot be conditional. The
   // old local dwell is only used for the optional soft-select prompt. Separate,
@@ -94,6 +102,7 @@ export default function IntroductionDetailScreen() {
   }
 
   const { profile, agreements } = introduction;
+  const photoCount = Math.max(1, getProfilePhotoGallery(profile.id, profile.photos).length);
   const chosen = selected.includes(introduction.id);
   const position = (round?.introductions.indexOf(introduction) ?? 0) + 1;
   const total = round?.introductions.length ?? 0;
@@ -128,28 +137,52 @@ export default function IntroductionDetailScreen() {
         <Pressable
           accessibilityRole="imagebutton"
           accessibilityLabel={t('intro.photosA11y', { name: profile.firstName })}
-          onPress={() => router.push(`/gallery/${introduction.id}`)}
+          onPress={() => router.push(`/gallery/${introduction.id}?index=${photoIndex}` as never)}
           onLayout={(event) => {
+            setHeroWidth(event.nativeEvent.layout.width);
             timingLayout.current.heroTop = event.nativeEvent.layout.y;
             timingLayout.current.heroHeight = event.nativeEvent.layout.height;
             updateVisibleTiming();
           }}
           style={styles.hero}
         >
-          <Image
-            source={getProfilePhotoSource(profile.id, profile.photos, 0)}
-            storagePath={profile.photoMedia?.[0]?.storagePath}
-            style={StyleSheet.absoluteFill}
-            contentFit="cover"
-            transition={220}
-            accessibilityIgnoresInvertColors
-          />
+          {heroWidth > 0 && photoCount > 1 ? (
+            <FlatList
+              style={StyleSheet.absoluteFill}
+              data={Array.from({ length: photoCount }, (_, page) => page)}
+              keyExtractor={(page) => String(page)}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              getItemLayout={(_data, page) => ({ length: heroWidth, offset: heroWidth * page, index: page })}
+              onMomentumScrollEnd={(event) =>
+                setPhotoIndex(Math.min(photoCount - 1, Math.max(0, Math.round(event.nativeEvent.contentOffset.x / heroWidth))))}
+              renderItem={({ item: page }) => (
+                <Image
+                  source={getProfilePhotoSource(profile.id, profile.photos, page)}
+                  storagePath={profile.photoMedia?.[page]?.storagePath}
+                  style={{ width: heroWidth, height: heroWidth }}
+                  contentFit="cover"
+                  accessibilityIgnoresInvertColors
+                />
+              )}
+            />
+          ) : (
+            <Image
+              source={getProfilePhotoSource(profile.id, profile.photos, 0)}
+              storagePath={profile.photoMedia?.[0]?.storagePath}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              transition={220}
+              accessibilityIgnoresInvertColors
+            />
+          )}
           <View style={[styles.photoBadge, isRTL && styles.rowRTL]}>
             <View style={styles.photoBadgeIcon} />
             <Text style={styles.photoBadgeLabel}>
-              {t('intro.photoCount', {
-                count: number(getProfilePhotoGallery(profile.id, profile.photos).length),
-              })}
+              {photoCount > 1
+                ? `${number(photoIndex + 1)} / ${number(photoCount)}`
+                : t('intro.photoCount', { count: number(photoCount) })}
             </Text>
           </View>
           <LinearGradient

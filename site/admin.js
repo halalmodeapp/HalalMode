@@ -40,7 +40,8 @@
     live_calling: ['Calls', 'Voice or video calls between matched members.'],
     controlled_beta: ['Beta-only mode', 'Only people on the beta list can use the app.'],
     demo_introductions: ['Sample members', 'Shows sample profiles to members who turned them on.'],
-    tester_tools: ['Tester tools', 'Extra tools in the app for people on the tester list.']
+    tester_tools: ['Tester tools', 'Extra tools in the app for people on the tester list.'],
+    tester_premium_switch: ['Tester Premium switch', 'Lets testers switch free Premium on for themselves. Turn this off at launch: Premium is then given only here, in Grants, with an end date and a reason.']
   };
 
   const ICONS = {

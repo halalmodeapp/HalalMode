@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { fetchConnections } from '@/api/connections';
 import { fetchMyProfile } from '@/api/profile';
@@ -15,7 +14,7 @@ import { useI18n } from '@/i18n';
 import { queryKeys } from '@/lib/queryClient';
 import { RTL_LAYOUT } from '@/lib/rtl';
 import { useRound } from '@/state/round';
-import { color, space } from '@/theme/tokens';
+import { space } from '@/theme/tokens';
 
 /**
  * Settings, opened from the gear in the top right of the main screens. It used
@@ -27,18 +26,11 @@ export default function SettingsScreen() {
   const profileQuery = useQuery({ queryKey: queryKeys.profile('me'), queryFn: fetchMyProfile });
   const connectionsQuery = useQuery({ queryKey: queryKeys.connections, queryFn: fetchConnections });
 
-  const turn = useSharedValue(-160);
-  useEffect(() => {
-    turn.value = withSpring(0, { damping: 9, stiffness: 70 });
-  }, [turn]);
-  const gear = useAnimatedStyle(() => ({ transform: [{ rotate: `${turn.value}deg` }] }));
-
   const profile = profileQuery.data;
   return (
     <Screen style={isRTL ? styles.rtl : undefined}>
       <ScreenHeader action="back" />
       <View style={[styles.title, isRTL && styles.rowReverse]}>
-        <Animated.Text style={[styles.gear, gear]}>⚙︎</Animated.Text>
         <View style={styles.titleText}>
           <Text variant="displaySmall">{t('you.tab.settings')}</Text>
           <Text variant="caption">{t('you.subtitle.settings')}</Text>
@@ -51,7 +43,7 @@ export default function SettingsScreen() {
       ) : null}
       {profile ? (
         <StretchScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          <Animated.View entering={FadeInDown.duration(420).springify().damping(16)}>
+          <Animated.View entering={FadeInDown.duration(260)}>
             <SettingsTab
               liveCount={live.length}
               openConnections={(connectionsQuery.data ?? []).length}
@@ -69,7 +61,6 @@ const styles = StyleSheet.create({
   rtl: RTL_LAYOUT,
   rowReverse: { flexDirection: 'row-reverse' },
   title: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: space.xl, paddingTop: 6, paddingBottom: 4, width: '100%', maxWidth: 720, alignSelf: 'center' },
-  gear: { fontSize: 30, lineHeight: 36, color: color.gold },
   titleText: { flex: 1, gap: 2 },
   content: { paddingHorizontal: space.xl, paddingTop: 16, paddingBottom: 40, width: '100%', maxWidth: 720, alignSelf: 'center' },
 });

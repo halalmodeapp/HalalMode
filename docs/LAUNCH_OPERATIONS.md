@@ -18,3 +18,12 @@
 ## Incident basics
 
 Disable the affected server flag first, preserve minimal audit metadata, and use the existing block/report boundary to stop further contact. Do not inspect private messages or media unless the incident process and applicable policy allow it.
+
+## Test tools at launch (decided 2026-10-31)
+
+The admin test tools stay in production, locked down.
+
+- **Who:** the owners plus at most three other accounts, added in the web panel's Grants page (owner role, authenticator code, a reason, audit row). The database refuses a fourth.
+- **Test Premium:** the self-service switch for testers sits behind the `tester_premium_switch` feature. **At launch, turn that feature off in the panel's Features page.** From then on Premium is given only through Grants, with an end date and a reason.
+- **Sample members:** they stay in the database, paused, and are shown only to accounts with test mode. Real members never meet them.
+- **Before launch, check:** the Grants list holds only people you recognise; `tester_premium_switch` is off; the first test account to be added after launch goes through the panel, not SQL.

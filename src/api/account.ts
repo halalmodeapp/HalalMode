@@ -37,12 +37,13 @@ export async function setMyReadReceipts(enabled: boolean): Promise<void> {
 }
 
 /** Testers only: whether sample members appear in this member's daily set. */
-export async function fetchMySampleMembers(): Promise<{ allowed: boolean; enabled: boolean }> {
-  if (USE_MOCKS) return { allowed: true, enabled: true };
+export async function fetchMySampleMembers(): Promise<{ allowed: boolean; enabled: boolean; premiumSwitch: boolean }> {
+  if (USE_MOCKS) return { allowed: true, enabled: true, premiumSwitch: true };
   const { data, error } = await requireSupabase().rpc('get_my_sample_members');
   if (error) throw error;
-  const row = (data ?? {}) as { allowed?: boolean; enabled?: boolean };
-  return { allowed: Boolean(row.allowed), enabled: Boolean(row.enabled) };
+  const row = (data ?? {}) as { allowed?: boolean; enabled?: boolean; premiumSwitch?: boolean };
+  // Older servers do not say; the switch then stays as it was.
+  return { allowed: Boolean(row.allowed), enabled: Boolean(row.enabled), premiumSwitch: row.premiumSwitch !== false };
 }
 
 export async function setMySampleMembers(enabled: boolean): Promise<void> {

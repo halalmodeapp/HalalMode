@@ -1,6 +1,5 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
@@ -12,21 +11,6 @@ export interface SegmentedProps<T extends string> {
   value: T;
   onChange: (value: T) => void;
   testIDPrefix?: string;
-}
-
-/** A small pop when a segment becomes the chosen one (not on first show). */
-function Pop({ active, children }: { active: boolean; children: ReactNode }) {
-  const scale = useSharedValue(1);
-  const shown = useRef(false);
-  useEffect(() => {
-    if (!shown.current) {
-      shown.current = true;
-      return;
-    }
-    if (active) scale.value = withSequence(withTiming(0.88, { duration: 80 }), withSpring(1, { damping: 6, stiffness: 260 }));
-  }, [active, scale]);
-  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
-  return <Animated.View style={style}>{children}</Animated.View>;
 }
 
 /** The pill-track tab switcher used on the You screen and its Private sub-tabs. */
@@ -50,7 +34,6 @@ export function Segmented<T extends string>({
             onPress={() => onChange(option.value)}
             style={[styles.segment, active && styles.segmentActive]}
           >
-            <Pop active={active}>
             <View style={[styles.labelRow, isRTL && styles.rowReverse]}>
               {typeof option.icon === 'function' ? (
                 <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
@@ -65,7 +48,6 @@ export function Segmented<T extends string>({
                 {option.label}
               </Text>
             </View>
-            </Pop>
           </Pressable>
         );
       })}

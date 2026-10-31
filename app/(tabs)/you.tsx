@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import Animated, { FadeInLeft, FadeInRight, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { FadeInLeft, FadeInRight } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
 import { fetchMyPreferences, fetchMyProfile, fetchMyProfileReadiness } from '@/api/profile';
@@ -30,14 +30,10 @@ export default function YouScreen() {
   const { t, isRTL } = useI18n();
   const { tab: requestedTab } = useLocalSearchParams<{ tab?: string }>();
   const [tab, setTab] = useState<Tab>('profile');
-  // The avatar gives a little pop whenever the tab changes.
-  const pop = useSharedValue(1);
-  const popStyle = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }] }));
   const changeTab = (next: Tab) => {
     if (next === tab) return;
     guardNavigation(() => {
       void Haptics.selectionAsync();
-      pop.value = withSequence(withTiming(0.9, { duration: 90 }), withSpring(1, { damping: 6, stiffness: 240 }));
       setTab(next);
       releaseReady();
     });
@@ -152,9 +148,7 @@ export default function YouScreen() {
       >
         <View style={[styles.identity, isRTL && styles.rowReverse]}>
           {/* Tap to move or zoom the circle on the main photo. */}
-          <Animated.View style={popStyle}>
-            <ProfileAvatar profile={profile} />
-          </Animated.View>
+          <ProfileAvatar profile={profile} />
           <View style={styles.identityText}>
             <Text variant="displaySmall" style={styles.name}>
               {profile.name}

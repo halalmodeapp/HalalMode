@@ -43,12 +43,13 @@ import { usePrivateMedia } from '@/hooks/usePrivateMedia';
 import { color, font, layout, radius } from '@/theme/tokens';
 
 export default function GalleryScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, index: startIndex } = useLocalSearchParams<{ id: string; index?: string }>();
   const { localeTag, isRTL, t } = useI18n();
   const insets = useSafeAreaInsets();
   const { round, refresh, profileOpened, profileClosed, photoVisibility } = useRound();
   const listRef = useRef<FlatList<string>>(null);
-  const [index, setIndex] = useState(0);
+  // Opened from the profile's hero, it starts on the photo that was showing there.
+  const [index, setIndex] = useState(() => Math.max(0, Number(startIndex) || 0));
   // The app is held to a phone's width on a desktop, so the window is the
   // wrong ruler: sizing each page to it made every photo 1345px wide inside a
   // 560px screen, and only its left edge was ever seen.
