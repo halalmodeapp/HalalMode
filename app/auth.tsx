@@ -423,8 +423,8 @@ const styles = StyleSheet.create({
   headerCompact: { paddingHorizontal: 14 },
   // The wordmark is English in every language, so its trademark mark always sits to its right.
   brand: { flexDirection: 'row', alignItems: 'flex-start' },
-  trademark: { marginLeft: 3, marginTop: -3, color: C.surface, fontFamily: appFont.bodySemi, fontSize: 13, lineHeight: 15 },
-  trademarkCompact: { fontSize: 11, lineHeight: 13 },
+  trademark: { marginLeft: 1, marginTop: -1, color: C.surface, fontFamily: appFont.bodySemi, fontSize: 15, lineHeight: 17 },
+  trademarkCompact: { fontSize: 13, lineHeight: 15 },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: 12 }, // Halal Pink, deep
   globe: {
     width: 38,
