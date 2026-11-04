@@ -22,11 +22,17 @@ html[data-page-hidden="true"] #cover-couple .scene-heart-float{animation-play-st
   transition:opacity .35s ease,transform .5s cubic-bezier(.34,1.56,.64,1)}
 #cover-couple .scene-bubble span::after{content:'';position:absolute;left:50%;margin-left:-.3em;bottom:-.26em;width:.6em;height:.6em;background:rgba(255,255,255,.94);border-radius:0 0 .12em 0;transform:rotate(45deg);box-shadow:2px 2px 3px rgba(10,10,10,.04)}
 #cover-couple .scene-bubble b{font-weight:500}
+/* The heart's verse: Arabic first, then the visitor's language, then the source. */
+#cover-couple .scene-bubble-heart span{flex-direction:column;align-items:center;gap:.15em;white-space:normal;width:max-content;max-width:calc(260 * var(--u));min-width:calc(150 * var(--u));text-align:center}
+#cover-couple .scene-bubble-heart .verse-ar{font-size:1.7em;font-weight:500;line-height:1.5;font-family:"Amiri","Scheherazade New","Traditional Arabic","Geeza Pro","Segoe UI",serif}
+#cover-couple .scene-bubble-heart .verse-tr{font-size:.92em}
+#cover-couple .scene-bubble-heart small{font-size:.72em;letter-spacing:.04em;opacity:.55}
+html[lang=ar] #cover-couple .scene-bubble-heart .verse-tr{display:none}
 #cover-couple .scene-bubble-emoji{font-style:normal;font-size:1.05em;line-height:1}
 #cover-couple .scene-bubble[data-show] span{opacity:1;transform:translateX(var(--tx,-50%)) scale(1);animation:scene-bubble-float 3.2s ease-in-out .5s infinite alternate}
-#cover-couple .scene-bubble[data-hide] span{opacity:0;transform:translateX(var(--tx,-50%)) scale(.92);transition:opacity .6s ease,transform .6s ease;animation:none}
-@keyframes scene-bubble-float{from{transform:translateX(var(--tx,-50%)) translateY(0)}to{transform:translateX(var(--tx,-50%)) translateY(calc(-3 * var(--u)))}}
-@media(prefers-reduced-motion:reduce){#cover-couple .scene-bubble span{transform:translateX(var(--tx,-50%))!important;animation:none!important;transition:opacity .4s ease}}
+#cover-couple .scene-bubble[data-hide] span{opacity:0;transform:translateX(var(--tx,-50%)) scale(.92);transition:opacity .6s ease,transform .6s ease}
+@keyframes scene-bubble-float{from{translate:0 0}to{translate:0 calc(-3 * var(--u))}}
+@media(prefers-reduced-motion:reduce){#cover-couple .scene-bubble span{transform:translateX(var(--tx,-50%))!important;animation:none!important;translate:none!important;transition:opacity .4s ease}}
 /* Warm light: a soft glow on the sun and a few broad shafts falling toward
    the stairs, screened over the sky, city and walls only. */
 #cover-couple .scene-light{--x:-48;--y:-48;--w:1632;--h:1120;pointer-events:none;overflow:hidden}
