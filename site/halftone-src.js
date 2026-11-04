@@ -20,6 +20,23 @@ import {
   ShaderFitOptions,
 } from '@paper-design/shaders';
 
+// Paper's shader keeps its grid fixed to the picture. This turns and shifts the
+// grid alone (u_gridShift in cells, u_gridAngle in radians, about the centre);
+// the colour under each dot is still read from where that dot really is.
+function patchedShader(src) {
+  const swaps = [
+    ['uniform float u_gridNoise;', 'uniform float u_gridNoise;\nuniform vec2 u_gridShift;\nuniform float u_gridAngle;'],
+    ['vec2 uvGrid = (uv - .5) / pad;', 'vec2 uvGrid = mat2(cos(u_gridAngle), sin(u_gridAngle), -sin(u_gridAngle), cos(u_gridAngle)) * ((uv - .5) / pad) + u_gridShift;'],
+    ['return uvGrid * pad + 0.5;', 'uvGrid = mat2(cos(u_gridAngle), -sin(u_gridAngle), sin(u_gridAngle), cos(u_gridAngle)) * (uvGrid - u_gridShift);\n  return uvGrid * pad + 0.5;'],
+  ];
+  for (const [from, to] of swaps) {
+    if (!src.includes(from)) throw new Error('halftone shader changed: ' + from);
+    src = src.replace(from, () => to);
+  }
+  return src;
+}
+const HALFTONE_SHADER = patchedShader(halftoneCmykFragmentShader);
+
 /** The chosen look. */
 export const HALFTONE_DEFAULTS = {
   on: true,
@@ -75,10 +92,9 @@ export function startHalftone(scene, { settings = HALFTONE_DEFAULTS, still = fal
   const composite = document.createElement('canvas');
   const ctx = composite.getContext('2d');
   let mount = null, frame = 0, building = false, stopped = false, last = 0;
-  // The dots are re-rolled a few times a second, a little: spacing, how far each
-  // dot strays from its grid, how coarse the grain is and how much shows. The
-  // picture underneath is not touched. Still with reduced motion.
-  const VARY_EVERY = 1000 / 6;
+  // The dots are re-rolled 4 times a second: a fresh noise sample and grid
+  // position. The picture underneath is not touched. Still with reduced motion.
+  const VARY_EVERY = 1000 / 4;
   let varied = 0;
   // The shader scatters the dots, and breaks up the grain, with a noise picture.
   // Reusing one picture made each frame a tweak of the last, so every re-roll
@@ -98,14 +114,15 @@ export function startHalftone(scene, { settings = HALFTONE_DEFAULTS, still = fal
     if (!mount || still || reduceMotion.matches || now - varied < VARY_EVERY) return;
     varied = now;
     rerollNoise();
+    // Dot size, grain and opacity stay put; only the noise sample and where the
+    // grid sits and how it is turned change, so it reads as a new comic print,
+    // not film grain. The picture the dots are read from never moves.
     const r = () => Math.random();
-    mount.setUniforms(uniforms({
-      ...current,
-      size: current.size * (0.72 + 0.56 * r()),
-      gridNoise: Math.min(1, Math.max(0, current.gridNoise + (r() - 0.2) * 1.3)),
-      grainSize: current.grainSize * (0.8 + 0.4 * r()),
-    }));
-    overlay.style.opacity = String(current.opacity * (0.82 + 0.36 * r()));
+    mount.setUniforms({
+      ...uniforms(current),
+      u_gridShift: [(r() - 0.5) * 4, (r() - 0.5) * 4],
+      u_gridAngle: r() * Math.PI / 2,
+    });
   };
 
   // Every layer where it currently sits; a layer the breeze is bending is
@@ -141,9 +158,10 @@ export function startHalftone(scene, { settings = HALFTONE_DEFAULTS, still = fal
     if (stopped || !current.on) return;
     scene.append(overlay);
     try {
-      mount = new ShaderMount(overlay, halftoneCmykFragmentShader, {
+      mount = new ShaderMount(overlay, HALFTONE_SHADER, {
         u_image: first, u_noiseTexture: noise, ...uniforms(current),
         u_fit: ShaderFitOptions.cover, u_scale: 1, u_rotation: 0, u_originX: 0.5, u_originY: 0.5,
+        u_gridShift: [0, 0], u_gridAngle: 0,
         u_offsetX: 0, u_offsetY: 0, u_worldWidth: 0, u_worldHeight: 0,
       }, { alpha: false, antialias: false }, 0, 0, 1);
     } catch {
