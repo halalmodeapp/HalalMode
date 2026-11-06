@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AppState } from 'react-native';
 import {
   createContext,
   useCallback,
@@ -12,7 +13,8 @@ import {
 
 import type { Language, MembershipTier } from '@/types';
 import { isSupportedLocale } from '@/i18n/locales';
-import { normalizeMembershipTier } from '@/lib/membership';
+import { membershipTierAt, normalizeMembershipTier } from '@/lib/membership';
+import { withDeadline } from '@/lib/withDeadline';
 import { supabase, USE_MOCKS } from '@/lib/supabase';
 import { useAuth } from '@/state/auth';
 
@@ -45,6 +47,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [entitlementStatus, setEntitlementStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [ready, setReady] = useState(false);
   const entitlementRequest = useRef(0);
+  const expiryTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     let cancelled = false;
@@ -98,13 +101,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
     setEntitlementStatus('loading');
     try {
-      const { data, error } = await supabase.rpc('get_my_membership_entitlement');
+      const { data, error } = await withDeadline(supabase.rpc('get_my_membership_entitlement'));
       if (request !== entitlementRequest.current) return;
       if (error) throw error;
-      const payload = data as { tier?: unknown } | null;
-      const nextTier = normalizeMembershipTier(payload?.tier);
+      const payload = data as { tier?: unknown; expiresAt?: string | null } | null;
+      const nextTier = membershipTierAt(payload);
       if (!nextTier) throw new Error('Membership entitlement response is invalid.');
-      setTierState(nextTier);
+      const expires = payload?.expiresAt ? Date.parse(payload.expiresAt) : null;
+      if (expiryTimer.current) clearTimeout(expiryTimer.current);
+      setTierState(expires !== null && expires <= Date.now() ? 'free' : nextTier);
+      if (nextTier === 'premium' && expires !== null && Number.isFinite(expires) && expires > Date.now()) {
+        expiryTimer.current = setTimeout(() => {
+          if (expires <= Date.now()) setTierState('free');
+          void refreshEntitlement();
+        }, Math.min(expires - Date.now(), 2_147_000_000));
+      }
       setEntitlementStatus('ready');
     } catch {
       if (request !== entitlementRequest.current) return;
@@ -117,7 +128,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void refreshEntitlement();
-    return () => { entitlementRequest.current += 1; };
+    const interval = setInterval(() => void refreshEntitlement(), 60_000);
+    const subscription = AppState.addEventListener('change', state => {
+      if (state === 'active') void refreshEntitlement();
+    });
+    return () => {
+      entitlementRequest.current += 1;
+      clearInterval(interval);
+      subscription.remove();
+      if (expiryTimer.current) clearTimeout(expiryTimer.current);
+    };
   }, [refreshEntitlement]);
 
   const persist = useCallback((next: { tier: MembershipTier; language: Language }) => {

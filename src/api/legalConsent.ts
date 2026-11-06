@@ -31,10 +31,16 @@ export async function recordSensitiveConsent(): Promise<void> {
   if (error) throw error;
 }
 
-export async function acceptCurrentLegalDocuments(): Promise<LegalConsentStatus> {
+export async function acceptCurrentLegalDocuments(status: LegalConsentStatus): Promise<LegalConsentStatus> {
   if (USE_MOCKS) return mockStatus;
-  await recordSensitiveConsent();
-  const { data, error } = await requireSupabase().rpc('accept_current_legal_documents');
+  const terms = status.currentDocuments.find(document => document.type === 'terms');
+  const privacy = status.currentDocuments.find(document => document.type === 'privacy');
+  if (!terms || !privacy) throw new Error('Current legal documents are unavailable.');
+  const { data, error } = await requireSupabase().rpc('accept_legal_documents', {
+    p_terms_version: terms.version,
+    p_privacy_version: privacy.version,
+    p_sensitive_consent: true,
+  });
   if (error) throw error;
   return normalizeLegalConsentStatus(data);
 }

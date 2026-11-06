@@ -54,10 +54,8 @@ select ok(
 
 -- ---------------------------------------------------------------- matching and reports use it
 select ok(
-  position('male.marital_status = any(female.accepted_marital_statuses)'
-    in pg_get_functiondef('halal_mode_private.matching_shortlist_batch_edges(uuid,uuid[],uuid[],timestamptz,integer)'::regprocedure)) > 0
-  and position('female.marital_status = any(male.accepted_marital_statuses)'
-    in pg_get_functiondef('halal_mode_private.matching_shortlist_batch_edges(uuid,uuid[],uuid[],timestamptz,integer)'::regprocedure)) > 0,
+  position('b.marital_status = any(a.accepted_marital_statuses)'
+    in pg_get_functiondef('halal_mode_private.accepts_row(halal_mode_private.member_matching_facts,halal_mode_private.member_matching_facts,text)'::regprocedure)) > 0,
   'matching requires each status to be one the other is open to');
 select ok(
   position('marital_status_mismatch' in pg_get_functiondef('halal_mode_private.report_connection_member_after_legal_consent(uuid,text)'::regprocedure)) > 0

@@ -193,6 +193,7 @@ function partnerTick(session: MockSession) {
     }
     if (answer !== undefined) {
       session.answers[turn.key] = { ...session.answers[turn.key], [seat]: answer };
+      session.version += 1;
       session.partnerClock = clock;
       recomputeAwaiting(session);
       touch(session);
@@ -343,16 +344,17 @@ export const halalCardsMock = {
     }
     return view(session);
   },
-  async answer(id: string, key: string, answer: unknown, awaiting: Awaiting | null): Promise<CardsSession> {
+  async answer(id: string, key: string, answer: unknown, _awaiting: Awaiting | null): Promise<CardsSession> {
     await delay();
     const session = requireSession(id);
     if (session.status !== 'active') throw new Error('This session is not in play');
     const seat = mySeat(session);
     if (session.answers[key]?.[seat] === undefined) {
       session.answers[key] = { ...session.answers[key], [seat]: answer };
+      session.version += 1;
+      recomputeAwaiting(session);
       session.partnerClock = Math.min(session.partnerClock, Date.now() - PARTNER_DELAY_MS / 2);
     }
-    session.awaiting = awaiting;
     touch(session);
     return view(session);
   },

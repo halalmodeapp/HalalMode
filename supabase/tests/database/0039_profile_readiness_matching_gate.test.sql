@@ -1,17 +1,13 @@
 begin;
 set local search_path = public, extensions;
-select plan(8);
+select plan(4);
 
 select ok(
   not has_function_privilege('authenticated', 'public.profile_is_ready_for_matching(uuid)', 'EXECUTE'),
   'members cannot invoke the matching-readiness helper directly'
 );
 select ok(
-  has_function_privilege('service_role', 'public.generate_round_for_pairs(timestamptz)', 'EXECUTE'),
-  'the service scheduler retains authority to generate rounds'
-);
-select ok(
-  position('length(trim(p.bio)) >= 80' in pg_get_functiondef('public.profile_is_ready_for_matching(uuid)'::regprocedure)) > 0
+  position('length(trim(p.bio)) >= 50' in pg_get_functiondef('public.profile_is_ready_for_matching(uuid)'::regprocedure)) > 0
     and position('cardinality(p.photos) >= 1' in pg_get_functiondef('public.profile_is_ready_for_matching(uuid)'::regprocedure)) > 0,
   'readiness requires a substantive bio and photo'
 );
@@ -19,18 +15,6 @@ select ok(
   position('matching_preferences_completed_at' in pg_get_functiondef('public.profile_is_ready_for_matching(uuid)'::regprocedure)) = 0
     and position('ethnicities' in pg_get_functiondef('public.profile_is_ready_for_matching(uuid)'::regprocedure)) = 0,
   'readiness asks only for name, location, a bio and a photo: the optional answers wait for a match'
-);
-select ok(
-  position('profile_is_ready_for_matching(p.id)' in pg_get_functiondef('public.generate_round_for_pairs(timestamptz)'::regprocedure)) > 0,
-  'the real generator gates round creation on profile readiness'
-);
-select ok(
-  (select count(*) from regexp_matches(pg_get_functiondef('public.generate_round_for_pairs(timestamptz)'::regprocedure), E'profile_is_ready_for_matching\\(p.id\\)', 'g')) = 2,
-  'the generator gates both round creation and candidate eligibility'
-);
-select ok(
-  position('passes_criteria(m.id, f.id)' in pg_get_functiondef('public.generate_round_for_pairs(timestamptz)'::regprocedure)) > 0,
-  'readiness supplements rather than replaces reciprocal criteria'
 );
 select ok(
   position('not profile_is_ready_for_matching(auth.uid())' in pg_get_functiondef('public.get_current_round()'::regprocedure)) > 0,

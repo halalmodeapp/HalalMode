@@ -27,6 +27,7 @@ import { alpha, color, radius, space } from '@/theme/tokens';
 import type { QuestionAnswer } from '@/types';
 import { RTL_LAYOUT } from '@/lib/rtl';
 import { errorMessage } from '@/lib/errorMessage';
+import { showNotice } from '@/lib/notice';
 
 /**
  * Step 2 of 3, answer each question in turn; theirs wait for the recap.
@@ -75,7 +76,7 @@ export default function AnswersScreen() {
         // A convenience. Failing to keep a copy never costs the answer itself.
         void saveAnswer(result.questionId, text)
           .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.savedAnswers }))
-          .catch(() => undefined);
+          .catch(() => showNotice(t('common.errorTitle'), t('answers.saveCopyFailed')));
       }
       // No pause to "reveal": an answer goes straight on to the next question,
       // and the other person's answers wait for the side-by-side recap.
@@ -120,11 +121,11 @@ export default function AnswersScreen() {
   // A saved answer is only ever a starting point: it fills the box, and the
   // member still reads it and presses send themselves.
   const savedAnswer = saved[current.questionId];
-  const draft = drafts[current.questionId] ?? savedAnswer ?? '';
+  const reveal = revealed[current.questionId] ?? current;
+  const committed = !!reveal.mySubmittedAt;
+  const draft = committed ? reveal.myAnswer : drafts[current.questionId] ?? savedAnswer ?? '';
   const usingSaved = !!savedAnswer && draft === savedAnswer;
   const keepThis = !!keep[current.questionId];
-  const reveal = revealed[current.questionId];
-  const committed = !!reveal;
   const isLast = index === answers.length - 1;
 
   advanceRef.current = () => {

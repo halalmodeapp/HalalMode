@@ -4,13 +4,11 @@ set local search_path = public, extensions;
 select plan(5);
 
 select ok(
-  has_function_privilege('service_role', 'public.generate_round_for_pairs(timestamptz)', 'EXECUTE')
-  and has_function_privilege('service_role', 'public.expire_stale_rounds()', 'EXECUTE'),
+  has_function_privilege('service_role', 'public.expire_stale_rounds()', 'EXECUTE'),
   'the Fajr service role can execute both internal round routines'
 );
 select ok(
-  not has_function_privilege('authenticated', 'public.generate_round_for_pairs(timestamptz)', 'EXECUTE')
-  and not has_function_privilege('authenticated', 'public.expire_stale_rounds()', 'EXECUTE'),
+  not has_function_privilege('authenticated', 'public.expire_stale_rounds()', 'EXECUTE'),
   'members cannot invoke the internal round routines'
 );
 -- Whitespace-normalised, because this asserts that the guard exists rather than

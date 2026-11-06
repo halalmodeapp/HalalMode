@@ -1,6 +1,6 @@
 begin;
 set local search_path = public, extensions;
-select plan(14);
+select plan(10);
 
 select ok(
   to_regprocedure('public.get_daily_round_state()') is null,
@@ -12,9 +12,9 @@ select ok(
   'the established round-state RPC remains authenticated only'
 );
 select ok(
-  not has_table_privilege('anon', 'halal_mode_private.matching_member_run_outcomes', 'SELECT')
-  and not has_table_privilege('authenticated', 'halal_mode_private.matching_member_run_outcomes', 'SELECT'),
-  'queue outcomes cannot be inspected by clients'
+  not has_table_privilege('anon', 'halal_mode_private.league_seats', 'SELECT')
+  and not has_table_privilege('authenticated', 'halal_mode_private.league_seats', 'SELECT'),
+  'who sits at which table cannot be inspected by clients'
 );
 select ok(
   position('get_current_round_state_before_answer_gate()' in pg_get_functiondef('public.get_current_round_state()'::regprocedure)) > 0
@@ -105,57 +105,7 @@ select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000
 select is(
   public.get_current_round_state() ->> 'status',
   'waiting_for_first_set',
-  'a member with no live outcome is waiting for the first set, not queued'
-);
-
-insert into halal_mode_private.matching_runs (
-  id, algorithm_version, config_version, seed, mode, started_at
-) values
-  ('00000000-0000-0000-0000-000000005321', 'test', 1, 1, 'live', now()),
-  ('00000000-0000-0000-0000-000000005322', 'test', 1, 2, 'shadow', now() + interval '1 second');
-insert into halal_mode_private.matching_member_run_outcomes (
-  run_id, user_id, outcome, valid_until
-) values (
-  '00000000-0000-0000-0000-000000005321',
-  '00000000-0000-0000-0000-000000005301',
-  'deferred', now() + interval '1 day'
-);
-select is(
-  public.get_current_round_state() ->> 'status',
-  'awaiting_turn',
-  'a current durable live deferred outcome returns awaiting_turn'
-);
-update halal_mode_private.matching_member_run_outcomes
-set outcome = 'no_candidate'
-where run_id = '00000000-0000-0000-0000-000000005321'
-  and user_id = '00000000-0000-0000-0000-000000005301';
-select is(
-  public.get_current_round_state() ->> 'status',
-  'no_suitable_introductions',
-  'a no-candidate outcome keeps the established empty state'
-);
-update halal_mode_private.matching_member_run_outcomes
-set outcome = 'deferred', valid_until = now() - interval '1 second'
-where run_id = '00000000-0000-0000-0000-000000005321'
-  and user_id = '00000000-0000-0000-0000-000000005301';
-select is(
-  public.get_current_round_state() ->> 'status',
-  'waiting_for_first_set',
-  'an expired deferred outcome does not claim the member is still queued'
-);
-delete from halal_mode_private.matching_member_run_outcomes
-where run_id = '00000000-0000-0000-0000-000000005321';
-insert into halal_mode_private.matching_member_run_outcomes (
-  run_id, user_id, outcome, valid_until
-) values (
-  '00000000-0000-0000-0000-000000005322',
-  '00000000-0000-0000-0000-000000005301',
-  'deferred', now() + interval '1 day'
-);
-select is(
-  public.get_current_round_state() ->> 'status',
-  'waiting_for_first_set',
-  'a shadow-only outcome cannot affect member-facing state'
+  'a member with no round yet is waiting for the first set'
 );
 
 insert into connections (user_a, user_b) values

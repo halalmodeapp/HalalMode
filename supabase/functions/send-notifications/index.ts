@@ -288,7 +288,8 @@ Deno.serve(async (request) => {
     return new Response('Forbidden', { status: 403 });
   }
 
-  const claimed = await client.rpc('claim_notifications_service', { p_limit: 100 });
+  const claimToken = crypto.randomUUID();
+  const claimed = await client.rpc('claim_notifications_fenced_service', { p_limit: 100, p_claim_token: claimToken });
   if (claimed.error) {
     return Response.json({ error: claimed.error.message }, { status: 500 });
   }
@@ -379,7 +380,8 @@ Deno.serve(async (request) => {
     .filter((id) => !delivered.has(id))
     .map((id) => ({ id, error: lastError.get(id) ?? 'unknown' }));
 
-  const settled = await client.rpc('settle_notifications_service', {
+  const settled = await client.rpc('settle_notifications_fenced_service', {
+    p_claim_token: claimToken,
     p_sent: sent,
     p_failed: failed,
     p_dead_tokens: deadTokens,

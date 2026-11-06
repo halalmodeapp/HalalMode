@@ -186,7 +186,7 @@ test('closing a profile that is not open changes nothing', () => {
   assert.deepEqual(ledger.records(), [{ introductionId: 'a', totalMs: 2_000, opens: 1 }]);
 });
 
-test('records are idempotent, reading them twice does not double-count', () => {
+test('snapshots keep the current visit running after an abandoned or failed submission', () => {
   let clock = 0;
   const ledger = new DwellLedger(() => clock);
   ledger.opened('a');
@@ -196,9 +196,38 @@ test('records are idempotent, reading them twice does not double-count', () => {
   clock += 5_000;
   assert.deepEqual(
     ledger.records(),
-    [{ introductionId: 'a', totalMs: 3_000, opens: 1 }],
-    'the open profile was already closed by the first read'
+    [{ introductionId: 'a', totalMs: 8_000, opens: 1 }],
+    'time after the snapshot is still part of the same visit'
   );
+  assert.deepEqual(ledger.records(), [{ introductionId: 'a', totalMs: 8_000, opens: 1 }]);
+});
+
+test('repeated background events retain the resume target', () => {
+  let clock = 0;
+  const ledger = new DwellLedger(() => clock);
+  ledger.opened('a');
+  clock = 1000;
+  ledger.pause();
+  clock = 2000;
+  ledger.pause();
+  ledger.records();
+  clock = 9000;
+  ledger.resume();
+  clock = 10000;
+  ledger.closed('a');
+  assert.deepEqual(ledger.records(), [{ introductionId: 'a', totalMs: 2000, opens: 1 }]);
+});
+
+test('closing while paused does not resume a profile that was left', () => {
+  let clock = 0;
+  const ledger = new DwellLedger(() => clock);
+  ledger.opened('a');
+  clock = 1000;
+  ledger.pause();
+  ledger.closed('a');
+  ledger.resume();
+  clock = 9000;
+  assert.deepEqual(ledger.records(), [{ introductionId: 'a', totalMs: 1000, opens: 1 }]);
 });
 
 // --- Leaving the app --------------------------------------------------------

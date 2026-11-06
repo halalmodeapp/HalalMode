@@ -6,7 +6,7 @@ import type {
   QuizAnswer,
   Seat,
 } from '../types.ts';
-import { adventurePending, resolveSealedChoices, startAdventure } from './adventure.ts';
+import { adventurePending, choicesFor, resolveSealedChoices, startAdventure } from './adventure.ts';
 import { currentLabStep, labKey, labNeedsAnswers } from './lab.ts';
 import { answerComplete, quizKey, quizNeeds } from './quiz.ts';
 import { answersBySeat, bothAnswered, otherSeat } from './seats.ts';
@@ -139,11 +139,79 @@ export function awaitingOf(activity: Activity, session: CardsSession): Awaiting 
 export function contentMatches(activity: Activity, session: Pick<CardsSession, 'state' | 'contentVersion'>): boolean {
   if ((activity.version ?? 1) !== (session.contentVersion ?? 1)) return false;
   const { state } = session;
-  if (state.kind !== activity.kind) return false;
-  if (state.kind === 'lab' && activity.kind === 'lab') return state.cursor <= activity.steps.length;
-  if (state.kind === 'quiz' && activity.kind === 'quiz') return state.cursor <= activity.cards.length;
+  if (!state || typeof state !== 'object' || state.kind !== activity.kind) return false;
+  const count = (value: number) => Number.isSafeInteger(value) && value >= 0;
+  if (state.kind === 'lab' && activity.kind === 'lab') return count(state.cursor) && state.cursor <= activity.steps.length;
+  if (state.kind === 'quiz' && activity.kind === 'quiz') return count(state.cursor) && state.cursor <= activity.cards.length;
   if (state.kind === 'adventure' && activity.kind === 'adventure') {
-    return state.endingId ? !!activity.endings[state.endingId] : !!activity.scenes[state.sceneId];
+    const record = (value: unknown): value is Record<string, unknown> =>
+      !!value && typeof value === 'object' && !Array.isArray(value);
+    const strings = (value: unknown): value is string[] => Array.isArray(value) && value.every((item) => typeof item === 'string');
+    const picks = (value: unknown) => record(value) && Object.entries(value).every(([seat, choice]) =>
+      (seat === 'host' || seat === 'guest') && typeof choice === 'string');
+    if (!count(state.step) || !count(state.attempt) || !record(state.roles)
+      || !['host', 'guest'].includes(state.roles.A) || !['host', 'guest'].includes(state.roles.B)
+      || state.roles.A === state.roles.B || !record(state.vars)
+      || !Object.values(state.vars).every((value) => typeof value === 'number' && Number.isFinite(value))
+      || !strings(state.flags) || !Array.isArray(state.history)) return false;
+    if (!state.history.every((entry) => record(entry) && typeof entry.sceneId === 'string'
+      && !!activity.scenes[entry.sceneId] && picks(entry.picks) && strings(entry.beats))) return false;
+    if (state.reveals !== undefined && (!Array.isArray(state.reveals) || !state.reveals.every((reveal) =>
+      record(reveal) && count(reveal.seq) && count(reveal.step) && typeof reveal.sceneId === 'string'
+      && !!activity.scenes[reveal.sceneId] && ['role', 'private', 'joint'].includes(reveal.mode)
+      && picks(reveal.picks) && strings(reveal.beats) && strings(reveal.lessonIds)))) return false;
+    if (typeof state.sceneId !== 'string' || !activity.scenes[state.sceneId]) return false;
+    return state.endingId === undefined || (typeof state.endingId === 'string' && !!activity.endings[state.endingId]);
   }
   return false;
+}
+
+/** Bad persisted data reaches recovery before turn or automatic resolution runs. */
+export function inspectSession(activity: Activity | undefined, session: CardsSession): {
+  compatible: boolean;
+  turn?: Turn;
+  resolvedState?: ActivityState;
+} {
+  if (!activity || !contentMatches(activity, session)) return { compatible: false };
+  try {
+    // Sealed rows cannot be edited. Offer restart if an older client saved an
+    // answer this content cannot use, including answers on past quiz cards.
+    for (const [key, sealed] of Object.entries(session.answers)) {
+      for (const [seat, answer] of [[session.mySeat, sealed.mine], [otherSeat(session.mySeat), sealed.theirs]] as const) {
+        if (answer === undefined) continue;
+        if (activity.kind === 'quiz') {
+          const index = activity.cards.findIndex((card) => quizKey(card) === key);
+          if (index < 0) continue;
+          const card = activity.cards[index];
+          if (!card) return { compatible: false };
+          const limit = activity.format === 'more_likely' ? 2 : card.options.length;
+          const value = answer as QuizAnswer;
+          const needs = quizNeeds(activity, index, seat);
+          const valid = (choice: unknown) => Number.isInteger(choice) && (choice as number) >= 0 && (choice as number) < limit;
+          if (!value || (needs.self && !valid(value.self)) || (needs.guess && !valid(value.guess))) return { compatible: false };
+        } else if (activity.kind === 'lab') {
+          const step = activity.steps.find((item) => labKey(item) === key);
+          if (step?.type === 'scenario' && !step.choices.some((choice) => choice.id === answer)) return { compatible: false };
+        }
+      }
+    }
+    const turn = session.status === 'active' ? currentTurn(activity, session) : undefined;
+    if (turn?.kind === 'resolve') {
+      return { compatible: true, turn, resolvedState: resolveStory(activity, session.state, turn.picks) };
+    }
+    // An unusable first answer must also recover while the other is sealed.
+    if (activity.kind === 'adventure' && session.state.kind === 'adventure' && turn && 'key' in turn) {
+      const scene = activity.scenes[session.state.sceneId];
+      if (!scene) return { compatible: false };
+      const answers = answersBySeat<string>(session, turn.key);
+      for (const seat of ['host', 'guest'] as const) {
+        if (answers[seat] !== undefined && !choicesFor(scene.decision, session.state, seat).some((choice) => choice.id === answers[seat])) {
+          return { compatible: false };
+        }
+      }
+    }
+    return { compatible: true, turn };
+  } catch {
+    return { compatible: false };
+  }
 }

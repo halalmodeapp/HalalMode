@@ -1,6 +1,6 @@
 begin;
 set local search_path = public, extensions, halal_mode_private;
-select plan(16);
+select plan(13);
 
 select has_table('halal_mode_private', 'matching_signal_metric_config',
   'matching signal inputs have one private configuration table');
@@ -10,12 +10,6 @@ select has_table('halal_mode_private', 'matching_engagement_observations',
   'view-time observations are stored privately');
 select has_table('halal_mode_private', 'matching_photo_presentations',
   'optional Luna presentation features are stored privately');
-select has_column('halal_mode_private', 'matching_run_member_snapshots', 'reception_score',
-  'a run freezes the private reception estimate');
-select has_column('halal_mode_private', 'matching_run_member_snapshots', 'reception_confidence',
-  'a run freezes how much evidence supports the estimate');
-select has_column('halal_mode_private', 'matching_run_member_snapshots', 'reception_similarity_weight',
-  'a run freezes the small pair-level similarity preference');
 
 select is(
   (select count(*)::integer from halal_mode_private.matching_signal_metric_config),

@@ -35,9 +35,8 @@ select ok(
 );
 select ok(
   position('passes_criteria' in pg_get_functiondef('halal_mode_private.get_current_round_state_before_answer_gate()'::regprocedure)) = 0
-  and position('selection_scores' in pg_get_functiondef('halal_mode_private.get_current_round_state_before_answer_gate()'::regprocedure)) = 0
-  and position('count(' in pg_get_functiondef('halal_mode_private.get_current_round_state_before_answer_gate()'::regprocedure)) = 0,
-  'the explanation does not inspect candidates, scores, or popularity counts'
+  and position('selection_scores' in pg_get_functiondef('halal_mode_private.get_current_round_state_before_answer_gate()'::regprocedure)) = 0,
+  'the explanation does not inspect scores or popularity'
 );
 
 select * from finish();

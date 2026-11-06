@@ -28,7 +28,7 @@ select ok(
 );
 select ok(
   position('waitlist_verification' in pg_get_functiondef(
-    'public.claim_mail_service(integer,integer)'::regprocedure
+    'public.claim_mail_fenced_service(integer,integer,uuid,text,boolean)'::regprocedure
   )) > 0,
   'the budgeted mail claim includes verification messages'
 );

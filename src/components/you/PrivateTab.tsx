@@ -38,7 +38,7 @@ import { useToast } from '@/state/toast';
 import { useRegisterUnsaved } from '@/state/unsavedChanges';
 import { useAutosave } from '@/hooks/useAutosave';
 import { isNetworkError } from '@/lib/autosave';
-import { pendingKey } from '@/lib/pendingEdits';
+import { forgetSavedEdits, keepPendingEdits, pendingKey } from '@/lib/pendingEdits';
 import { useAuth } from '@/state/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MaritalPreferencesField } from '@/components/you/MaritalSections';
@@ -54,6 +54,11 @@ import { styles } from './privateTabStyles';
  * because this is the part of the product that most needs to be trusted.
  */
 export function PrivateTab({ preferences }: { preferences: PrivatePreferences }) {
+  const { user, isCurrentUser } = useAuth();
+  const userId = user?.id;
+  const assertOwner = () => {
+    if (!isCurrentUser(userId)) throw new Error('Preferences session changed.');
+  };
   const { t, isRTL, language } = useI18n();
   const [picking, setPicking] = useState<'builds' | 'sects' | null>(null);
   const [premiumPicking, setPremiumPicking] = useState<PremiumCriterion | null>(null);
@@ -66,48 +71,66 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
   const meQuery = useQuery({ queryKey: queryKeys.profile('me'), queryFn: fetchMyProfile });
   const partnerGender = meQuery.data?.gender === 'female' ? 'male' : 'female';
   const toast = useToast();
+  // Choosing nobody's country means your own.
+  const lookingIn = draft.preferredCountries.length > 0
+    ? draft.preferredCountries
+    : meQuery.data?.country ? [meQuery.data.country] : [];
 
   const save = useMutation({
     mutationFn: async () => {
+      assertOwner();
       // Only what this tab edits. The member's own height, weight and body type
       // belong to the Profile tab; sending this tab's older copy would overwrite them.
       const { ownHeightCm: _h, ownWeightKg: _w, ownBuild: _b, ownBuildAlso: _a, ...matching } = draft;
       void [_h, _w, _b, _a];
       await updateMyPreferences(matching);
+      assertOwner();
       await setMyPreferredSects(draft.preferredSects ?? [], draft.preferredSectDetails ?? []);
+      assertOwner();
       if (isPremium) await setMyPremiumPreferences(draft);
     },
     onSuccess: () => {
+      if (!isCurrentUser(userId)) return;
       void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
       void queryClient.invalidateQueries({ queryKey: queryKeys.preferences });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.poolSize });
+    },
+    onError: () => {
+      if (!isCurrentUser(userId)) return;
+      // Earlier RPCs may have committed before a later one failed.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.preferences });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
       void queryClient.invalidateQueries({ queryKey: queryKeys.poolSize });
     },
   });
 
   // What was last saved: the baseline the draft is compared with.
-  const userId = useAuth().user?.id;
   const pendingStorageKey = pendingKey('preferences', userId);
   const savedRef = useRef(JSON.stringify(preferences));
+  const [savedVersion, setSavedVersion] = useState(savedRef.current);
   const version = JSON.stringify(draft);
   const latestDraft = useRef(draft);
   latestDraft.current = draft;
-  const draftDirty = version !== savedRef.current;
+  const draftDirty = version !== savedVersion;
   // Every choice is kept at once and sent as one batch a few seconds after the
   // last one (see useAutosave); a toast says "Saved" when it has gone through.
   const { flush } = useAutosave({
     dirty: draftDirty,
     version,
-    onLocalSave: () => toast.show(`✓ ${t('filters.saved')}`),
-    onFailure: (kind) => toast.show(t(kind === 'offline' ? 'autosave.offline' : 'autosave.retry')),
+    onLocalSave: () => { if (isCurrentUser(userId)) toast.show(`✓ ${t('filters.saved')}`); },
+    onFailure: (kind) => { if (isCurrentUser(userId)) toast.show(t(kind === 'offline' ? 'autosave.offline' : 'autosave.retry')); },
     save: async () => {
+      if (!isCurrentUser(userId)) return 'invalid';
       const sent = JSON.stringify(draft);
       try {
         await save.mutateAsync();
         savedRef.current = sent;
+        setSavedVersion(sent);
         // Only forget the copy on the phone if nothing newer has been kept since.
-        if (JSON.stringify(latestDraft.current) === sent) if (pendingStorageKey) void AsyncStorage.removeItem(pendingStorageKey).catch(() => undefined);
+        if (pendingStorageKey) void forgetSavedEdits(pendingStorageKey, sent).catch(() => undefined);
         return 'saved';
       } catch (error) {
+        if (!isCurrentUser(userId)) return 'invalid';
         return isNetworkError(error) ? 'offline' : 'failed';
       }
     },
@@ -117,13 +140,14 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
   // Choices not yet sent are also kept on the phone, so closing the app (or
   // losing signal) before they go does not lose them.
   useEffect(() => {
-    if (draftDirty && pendingStorageKey) void AsyncStorage.setItem(pendingStorageKey, version).catch(() => undefined);
+    if (draftDirty && pendingStorageKey) void keepPendingEdits(pendingStorageKey, version).catch(() => undefined);
   }, [draftDirty, version, pendingStorageKey]);
   useEffect(() => {
     let cancelled = false;
+    const initialDraft = JSON.stringify(latestDraft.current);
     if (!pendingStorageKey) return;
     void AsyncStorage.getItem(pendingStorageKey).then((stored) => {
-      if (cancelled || !stored || stored === savedRef.current) return;
+      if (cancelled || !stored || stored === savedRef.current || JSON.stringify(latestDraft.current) !== initialDraft) return;
       try {
         setDraft(JSON.parse(stored) as PrivatePreferences);
       } catch {
@@ -342,14 +366,39 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
           </View>
 
           <View style={styles.section}>
+            <SelectField
+              label={t('filters.bodyTypes')}
+              value={draft.preferredBuilds
+                .map((build) => buildLabel(build as (typeof BUILD_OPTIONS)[number], t))
+                .join(', ')}
+              placeholder={t('filters.bodyTypesPlaceholder')}
+              onPress={() => setPicking('builds')}
+            />
+            <PickerSheet
+              visible={picking === 'builds'}
+              groups={buildGroups(t)}
+              selected={draft.preferredBuilds}
+              selectionMode="multiple"
+              maxSelected={3}
+              onChange={(next) => patch('preferredBuilds', next)}
+              onClose={() => setPicking(null)}
+              title={t('filters.bodyTypes')}
+              eyebrow={t('filters.bodyTypesPlaceholder')}
+              searchLabel={t('filters.bodyTypes')}
+            />
+            {mustHaveFor('build')}
+          </View>
+
+          <View style={styles.section}>
             <View style={[styles.sectionHead, isRTL && styles.rowReverse]}>
               <Text variant="micro">{t('filters.countries')}</Text>
               <Text variant="caption">
-                {t('filters.selected', { count: draft.preferredCountries.length })}
+                {t('filters.selected', { count: lookingIn.length })}
               </Text>
             </View>
+            <Text variant="caption">{t('filters.countriesHint')}</Text>
             <View style={styles.chips}>
-              {draft.preferredCountries.slice(0, 6).map((country) => (
+              {lookingIn.slice(0, 6).map((country) => (
                 <Chip
                   key={country}
                   label={country}
@@ -358,7 +407,7 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
                   onPress={() =>
                     patch(
                       'preferredCountries',
-                      draft.preferredCountries.filter((item) => item !== country)
+                      lookingIn.filter((item) => item !== country)
                     )
                   }
                 />
@@ -426,30 +475,6 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
           </View>
           <View style={styles.premiumBlock}>
             <View style={[styles.premiumInner, !isPremium && styles.locked]} pointerEvents={isPremium ? 'auto' : 'none'}>
-          <View style={styles.section}>
-            <SelectField
-              label={t('filters.bodyTypes')}
-              value={draft.preferredBuilds
-                .map((build) => buildLabel(build as (typeof BUILD_OPTIONS)[number], t))
-                .join(', ')}
-              placeholder={t('filters.bodyTypesPlaceholder')}
-              onPress={() => setPicking('builds')}
-            />
-            <PickerSheet
-              visible={picking === 'builds'}
-              groups={buildGroups(t)}
-              selected={draft.preferredBuilds}
-              selectionMode="multiple"
-              maxSelected={3}
-              onChange={(next) => patch('preferredBuilds', next)}
-              onClose={() => setPicking(null)}
-              title={t('filters.bodyTypes')}
-              eyebrow={t('filters.bodyTypesPlaceholder')}
-              searchLabel={t('filters.bodyTypes')}
-            />
-            {mustHaveFor('build')}
-          </View>
-
           <View style={styles.section}>
             <Text variant="micro">{t('filters.practice')}</Text>
             <Text variant="caption" style={styles.filterNote}>
@@ -574,7 +599,7 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
 
       <CountrySheet
         visible={countrySheet}
-        selected={draft.preferredCountries}
+        selected={lookingIn}
         onChange={(next) => patch('preferredCountries', next)}
         onClose={() => setCountrySheet(false)}
       />

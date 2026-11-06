@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -28,6 +28,9 @@ import { LinkPill } from '@/components/brand/LinkPill';
 import { howItWorksUrl } from '@/lib/publicLinks';
 import { useSession } from '@/state/session';
 import { isHttpRateLimitError } from '@/lib/authErrors';
+import { withDeadline } from '@/lib/withDeadline';
+
+let resendAt = 0;
 
 const C = {
   surface: '#FCFCFB',
@@ -49,36 +52,39 @@ export default function AuthEmailScreen() {
   const [email, setEmail] = useState('');
   const [sending, setSending] = useState(false);
   const [googleSending, setGoogleSending] = useState(false);
+  const requesting = useRef(false);
   const [rateLimited, setRateLimited] = useState(false);
-  const [secondsUntilResend, setSecondsUntilResend] = useState(0);
+  const [secondsUntilResend, setSecondsUntilResend] = useState(() => Math.max(0, Math.ceil((resendAt - Date.now()) / 1000)));
   const [notice, setNotice] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     if (secondsUntilResend <= 0) return;
     const timer = setInterval(() => {
-      setSecondsUntilResend((remaining) => Math.max(0, remaining - 1));
+      setSecondsUntilResend(Math.max(0, Math.ceil((resendAt - Date.now()) / 1000)));
     }, 1_000);
     return () => clearInterval(timer);
   }, [secondsUntilResend]);
 
   const sendLink = async () => {
-    if (sending || secondsUntilResend > 0) return;
+    if (requesting.current || secondsUntilResend > 0) return;
     const cleanEmail = email.trim().toLowerCase();
     if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
       setNotice({ tone: 'error', text: t('auth.invalidEmail') });
       return;
     }
     clearAuthError();
+    requesting.current = true;
     setNotice(null);
     setRateLimited(false);
     setSending(true);
     try {
-      const { error } = await requireSupabase().auth.signInWithOtp({
+      const { error } = await withDeadline(requireSupabase().auth.signInWithOtp({
         email: cleanEmail,
         options: { emailRedirectTo: authReturnAddress() },
-      });
+      }));
       if (error) throw error;
       trackProductEvent('auth_link_requested');
+      resendAt = Date.now() + 60_000;
       setSecondsUntilResend(60);
       setNotice({ tone: 'ok', text: `${t('auth.checkEmail')}. ${t('auth.linkSent')}` });
     } catch (error) {
@@ -91,12 +97,14 @@ export default function AuthEmailScreen() {
           : `${t('auth.sendFailed')}. ${t('auth.sendFailedBody')}`,
       });
     } finally {
+      requesting.current = false;
       setSending(false);
     }
   };
 
   const continueWithGoogle = async () => {
-    if (googleSending) return;
+    if (requesting.current) return;
+    requesting.current = true;
     clearAuthError();
     setNotice(null);
     setGoogleSending(true);
@@ -105,6 +113,7 @@ export default function AuthEmailScreen() {
     } catch {
       setNotice({ tone: 'error', text: `${t('auth.providerFailed')}. ${t('auth.providerFailedBody')}` });
     } finally {
+      requesting.current = false;
       setGoogleSending(false);
     }
   };

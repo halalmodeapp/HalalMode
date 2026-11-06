@@ -1,5 +1,7 @@
 # Handoff notes
 
+Read [docs/MANIFESTO.md](docs/MANIFESTO.md) first.
+
 > **State as of 2026-10-23.** All 223 migrations in `supabase/migrations`
 > (`0001`–`0190`, then dated ones through `20261022120000`) are applied to the
 > hosted project `lfuuywsmydruvqkqwvzw` (London), and all nine Edge Functions
@@ -48,13 +50,15 @@ correctly refused the test harness mid-run.
 
 ## Still open
 
-- **The thresholds in the matching config are estimates**, not findings: 30 days
-  after a first pass, x0.5 rank per pass, x1.5 per soft select, the 0.6
-  generosity anchor, 2-5 appearances, 2-21 day cooldowns. All versioned config,
-  changeable without a deploy, none tested against a real member.
-- **`reciprocal_matching_v1` is still off**, so live rounds use the legacy band
-  matcher. The v1 scoring work is inert until it is flipped; shadow first, per
-  the rollout section at the foot of this file.
+- **The numbers in `league_config` are estimates,** not findings: the one-day repeat gap, the 7-day wait on a yes, like-meets-like
+  strength and table size. Changeable without a deploy, none tested against a real member.
+- **The league is on production as of 2026-11-06,** and the legacy generator is gone. Its capacity is proven
+  to 1,000 members in a country on the smallest instance. See `docs/FIVE_A_DAY_PLAN.md`. The app and website
+  have not been updated to match. `scripts/backend-sim/hosted.mts` tests a throwaway project, and refuses this one.
+- **`PHOTO_COACH_MODEL` is unconfirmed.** It defaults to `gpt-6.1-luna` and falls back to `gpt-6-luna`.
+  Confirm the model on the OpenAI account before Halal Bot goes live.
+- **The privacy notice does not mention leaving answers yet.** Photo advice sits close to the existing
+  photo-presentation paragraph. Both need a look before release, as legal documents are versioned.
 - **The client-side dwell inference has never run in a browser.** The pass and
   soft-select server paths are covered by pgTAP and by `0085` against the live
   database, but the part that watches how long a profile is read has only unit
@@ -77,9 +81,6 @@ correctly refused the test harness mid-run.
   a page that will not load is usually still compiling. Expo's reverse geocoding
   does not work on web, so onboarding cannot pass its location step in a
   browser; call `complete_onboarding` directly instead.
-- **A shadow round is a free end-to-end smoke test** after any migration
-  touching the round pipeline. It needs the scheduler secret from Dashboard ->
-  Project Settings -> Vault.
 
 ## The failure mode this codebase actually has
 
@@ -178,140 +179,11 @@ or production verification.
 
 ---
 
-# Reciprocal matching v1 — handoff (2026-08)
+# Matching
 
-Branch `main`. Read `docs/RECIPROCAL_MATCHING_V1_DESIGN.md` first,
-especially §10 (three design errors simulation caught), §11 (scale) and §12
-(imbalance).
+The reciprocal pipeline, its four allocators and shadow mode have been replaced by the league. See
+[docs/BACKEND_SIMULATION.md](docs/BACKEND_SIMULATION.md) for how it works, what proves it and what does not.
+The older matcher documents in `docs/` describe code that has gone.
 
-## Verified implementation baseline
-
-- Migrations through `0095` apply from a clean database and all 44 pgTAP files
-  pass in GitHub Actions.
-- Client typecheck, lint, all 209 tests, the Android export, and the
-  `generate-round` Deno typecheck pass.
-- Live completion is one idempotent database transaction: it rechecks current
-  safety state, persists reciprocal rounds, stores durable repeat retirements,
-  records derived metrics, and claims the cycle together. A classifiable late
-  veto gets at most one fresh snapshot/replan; an ambiguous response gets one
-  exact retry of the same request.
-- Shadow completion can write only private shadow results and run diagnostics;
-  its database contracts assert that live rounds, introductions, connections,
-  pair exposure, notifications, and repeat retirements remain untouched.
-
-## Assess this work independently before extending it
-
-Do not treat the previous agent's code as correct because the tests pass. The
-tests were written by the same agent that wrote the code, so they encode its
-assumptions as well as its intent. Specifically worth attacking:
-
-- **The estimator is not a calibrated probability.** `directionalEstimate`
-  returns a number in [0,1] used for *ranking*. Nothing validates that it
-  predicts anything. Once real selection data exists, check whether the
-  predicted reciprocal score correlates with observed mutual picks at all. If it
-  does not, the weights are decoration.
-- **Independent simulation invalidated the original headline claims.** The
-  mixed model shows a smaller synthetic quality gain but worse zero-match and
-  mutual rates; an unobserved choice model is flat. Real shadow selections must
-  validate the estimator before any live rollout.
-- **Waiting is not durable.** The simulator increments an in-memory counter, but
-  production persists no deferred/no-candidate outcome. A rotation guarantee
-  cannot be enforced across Edge Function runs until this is server state.
-- **Candidate truncation is biased.** `matching_candidate_edges` uses an
-  unordered `limit 500000`; a large graph is silently cut at an arbitrary point
-  and the discarded work is absent from overload metrics.
-- **Database fetch latency is omitted from threshold breaches.** The fetch
-  duration is appended after `planRound()` has already classified the run.
-- **Compatibility weights every term equally** (`avg` over the terms array). Age
-  and shared languages count the same as religious practice. That is almost
-  certainly wrong as product judgement; it was chosen for simplicity.
-
-## What remains to reach done
-
-In dependency order.
-
-1. **Run the shadow proof against an approved hosted environment.**
-   `supabase/tests/database/0060_matching_shadow_round_integration.test.sql`
-   now seeds a mixed eight-member population, pages the candidate snapshot,
-   finalizes three shadow pairs, retries exactly, and fingerprints live tables
-   to prove that `introductions`, `connections`, `pair_exposure`, notifications,
-   and live rounds remain untouched. The isolated CI proof is complete; only an
-   explicitly approved hosted shadow run remains.
-
-2. **Benchmark `passes_criteria`.** The entire latency model in §7 rests on an
-   assumed ~25 µs per call. Measure it, then correct §7 rather than leaving an
-   estimate presented as a projection.
-
-3. **Wire the new round states into the app.** **Complete.** `awaiting_turn`
-   and `at_match_capacity` are accepted by the client normalizer and rendered
-   with their existing English and Arabic copy in `app/(tabs)/daily.tsx`.
-
-4. **`explicit_pass` has no way to be set.** **Done.** It is inferred from how
-   a member reads their whole set — every profile read and one read least, or
-   every profile but one read and that one never opened — then confirmed once
-   before submission. Reading times never leave the device. `soft_select` was
-   added as its positive counterpart and is not confirmed, because it costs the
-   member nothing if wrong. Neither has run against a real member.
-
-5. **Retire the dead path.** Once v1 is live, `generate_round_for_pairs` and the
-   `|band| <= 1` gate are unused. Removing them is the point at which the band
-   retirement approved in §2 actually happens.
-
-6. **Metrics.** §Metrics of the brief asks for exposure distribution, zero-match
-   rate, time to first mutual, mutual rate, Gini, and free/premium and
-   new/established breakdowns. `matching_runs` records per-run performance only.
-   Nothing yet computes outcome metrics over time.
-
-## How to roll this out — and why "a small cohort" is not what it sounds like
-
-The previous handoff said to enable `reciprocal_matching_v1` "for a small
-cohort". That instruction was wrong and is corrected here.
-
-`release_flags` supports per-member cohorts through `release_flag_members` and
-`rollout_percentage`, and that works for UI features. **It does not work for
-matching.** A round is built for the whole pool at once and every introduction
-is reciprocal: if A is shown B then B is shown A. Two members in the same pool
-cannot be served by different matchers, because each would have to appear in the
-other's set. Splitting the pool by member would either break reciprocity or
-silently divide the pool in half — which in a launch pool of a few hundred is
-severe, since a halved pool is a quartered candidate graph.
-
-`release_flag_active()` therefore reads the global `enabled` column and ignores
-percentage and membership. That is deliberate.
-
-The real options:
-
-- **Shadow first.** Already built. Run v1 in shadow against production data for
-  as many cycles as it takes to compare its output against what live produced.
-  This is the safe canary and costs nothing.
-- **Geographic cohort.** Because distance caps make matching local, regions are
-  near-independent pools, so one country can run v1 while others run the old
-  matcher without breaking reciprocity. This is the only true partial rollout
-  available, and it is not implemented — it would need a region predicate on the
-  pool view and a per-region flag.
-- **Whole-pool switch with instant rollback.** What the flag does today. Viable
-  at launch scale precisely because the pool is small and one bad cycle expires
-  at the next Fajr.
-
-Recommended: shadow until the comparison is convincing, then whole-pool with the
-flag as the rollback switch. Build geographic cohorting only when a single
-region is large enough for the comparison to be meaningful on its own.
-
-## Matcher V2/V3 comparison state (2026-08-13)
-
-- The pre-change baseline is preserved on local branch `matcher-v2` at commit
-  `573234b`; it has not been deleted or rewritten.
-- Matcher V3 is implemented behind the inactive config row seeded by migration
-  `20260813102643_matcher_v3_anchor_first_config.sql`. Its run label is
-  `anchored_maxmin_v2`; the active config and release flag remain on Matcher V2.
-- V3 now carries directional estimates into allocation and anchors predicted
-  mutual first-choice edges before the constrained-first fill.
-- Hosted shadow smoke evidence is partial only: 430 fake members had 1–5
-  reciprocal edges and zero one-sided edges before the existing batched shadow
-  finalizer stalled at 1,600 edges. Do not enable the release flag until the
-  finalizer completes a full run and the outcome metrics are measured.
-- The local comparison now includes a privacy-safe deterministic cohort of 455
-  profiles and about 9,120 shortlist edges. V2 and V3 both finish in under a
-  second on that graph; the legacy V1 simulator and V2 also run on 454
-  profiles. These are capacity and completion checks, not evidence that the
-  estimator predicts real preferences.
+The league is the only matcher. The `halal-mode-league` cron starts a worker each minute, and
+`league_matching` is the switch that stops new rounds being built.

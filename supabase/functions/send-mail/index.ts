@@ -45,6 +45,7 @@ interface Progress {
 
 interface Claimed {
   id: number;
+  provider: 'ses' | 'resend' | null;
   kind: 'report' | 'waitlist_welcome' | 'moderation' | 'waitlist_verification' | 'waitlist_not_joined' | 'referral_joined';
   to: string | null;
   locale: string;
@@ -327,25 +328,22 @@ interface SesAccount {
  */
 async function sesMailer(region: string, accessKeyId: string, secretAccessKey: string): Promise<Mailer | null> {
   const aws = new AwsClient({ accessKeyId, secretAccessKey, region, service: 'ses' });
-  try {
-    const response = await aws.fetch(`https://email.${region}.amazonaws.com/v2/email/account`);
-    if (!response.ok) return null;
-    const account = (await response.json()) as SesAccount;
-    if (account.ProductionAccessEnabled !== true || account.SendingEnabled !== true) return null;
-    const rate = Math.max(1, account.SendQuota?.MaxSendRate ?? 1);
-    const quota = Math.floor(account.SendQuota?.Max24HourSend ?? 0);
-    const pauseMs = Math.ceil(1000 / rate) + 20;
-    return {
-      provider: 'ses',
-      send: ses(region, accessKeyId, secretAccessKey),
-      pauseMs,
-      // About 45 seconds of sending, so a run finishes inside its minute.
-      batch: Math.max(1, Math.min(200, Math.floor(45_000 / (pauseMs + 120)))),
-      dailyLimit: quota > 10 ? quota : null,
-    };
-  } catch {
-    return null;
-  }
+  // An uncertain account response must not switch a retry to another provider.
+  const response = await aws.fetch(`https://email.${region}.amazonaws.com/v2/email/account`);
+  if (!response.ok) throw new Error('SES account check failed');
+  const account = (await response.json()) as SesAccount;
+  if (account.ProductionAccessEnabled !== true || account.SendingEnabled !== true) return null;
+  const rate = Math.max(1, account.SendQuota?.MaxSendRate ?? 1);
+  const quota = Math.floor(account.SendQuota?.Max24HourSend ?? 0);
+  const pauseMs = Math.ceil(1000 / rate) + 20;
+  return {
+    provider: 'ses',
+    send: ses(region, accessKeyId, secretAccessKey),
+    pauseMs,
+    // About 45 seconds of sending, so a run finishes inside its minute.
+    batch: Math.max(1, Math.min(200, Math.floor(45_000 / (pauseMs + 120)))),
+    dailyLimit: quota > 10 ? quota : null,
+  };
 }
 
 /** SES once it is in production, otherwise Resend, each paced for its per-second limit. */
@@ -375,54 +373,68 @@ Deno.serve(async (request) => {
   if (verified.error || verified.data !== true) return new Response('forbidden', { status: 403 });
 
   const started = Date.now();
-  const mail = await mailer();
+  const mail = await mailer().catch(() => null);
   const operator = Deno.env.get('OPERATOR_EMAIL');
-  if (!mail || !operator) return new Response('Mail provider secrets and OPERATOR_EMAIL are not set', { status: 503 });
-  const send = mail.send;
+  if (!mail) return new Response('Mail provider secrets are not set', { status: 503 });
 
-  // Runs every minute. Resend: 40 paced sends, about 2,400 an hour. SES: as
-  // many as its send rate fits in 45 seconds, up to 200 (12,000 an hour).
-  const claimed = await client.rpc('claim_mail_service', { p_limit: mail.batch, p_daily_limit: mail.dailyLimit });
-  if (claimed.error) return new Response('claim failed', { status: 500 });
-
+  // Drain pinned Resend retries before switching new mail to SES.
+  const runs = [{ mail, onlyPinned: false }];
+  const resendKey = Deno.env.get('RESEND_API_KEY');
+  if (mail.provider === 'ses' && resendKey) {
+    runs.unshift({ mail: { provider: 'resend', send: resend(resendKey), pauseMs: 600, batch: 40, dailyLimit: null }, onlyPinned: true });
+  }
   let sent = 0;
-  let first = true;
-  for (const item of (claimed.data ?? []) as Claimed[]) {
-    if (Date.now() - started > RUN_BUDGET_MS) {
-      // Out of time: hand it back for the next run without using an attempt.
-      await client.rpc('settle_mail_service', { p_id: item.id, p_ok: false, p_error: '429 rate deferred to the next run' });
-      continue;
-    }
-    if (!first) await new Promise((resolve) => setTimeout(resolve, mail.pauseMs));
-    first = false;
-    let error: string | null = null;
-    try {
-      if (item.kind === 'report' && item.report) {
-        const mail = reportEmail(item.report);
-        error = await send(operator, mail.subject, mail.html, `mail-${item.id}`);
-      } else if (item.kind === 'moderation' && item.moderation) {
-        const mail = await moderationEmail(item.moderation, client);
-        error = await send(operator, mail.subject, mail.html, `mail-${item.id}`);
-      } else if (item.kind === 'waitlist_welcome' && item.to) {
-        const mail = welcomeEmail(item.locale, item.welcome?.eligible === true);
-        error = await send(item.to, mail.subject, mail.html, `mail-${item.id}`);
-      } else if (item.kind === 'waitlist_verification' && item.to && item.verification?.token) {
-        const mail = verificationEmail(item.locale, item.verification.token, item.verification.confirmed === true);
-        error = await send(item.to, mail.subject, mail.html, `mail-${item.id}`);
-      } else if (item.kind === 'waitlist_not_joined' && item.to) {
-        const mail = notJoinedEmail(item.locale);
-        error = await send(item.to, mail.subject, mail.html, `mail-${item.id}`);
-      } else if (item.kind === 'referral_joined' && item.to && item.progress && item.verification?.token) {
-        const mail = referralJoinedEmail(item.locale, item.progress, item.verification.token);
-        error = await send(item.to, mail.subject, mail.html, `mail-${item.id}`);
-      } else {
-        error = 'nothing to send';
+  for (const run of runs) {
+    const mail = run.mail;
+    const claimToken = crypto.randomUUID();
+    const claimed = await client.rpc('claim_mail_fenced_service', { p_limit: mail.batch, p_daily_limit: mail.dailyLimit, p_claim_token: claimToken, p_provider: mail.provider, p_only_pinned: run.onlyPinned });
+    if (claimed.error) return new Response('claim failed', { status: 500 });
+
+    let first = true;
+    for (const item of (claimed.data ?? []) as Claimed[]) {
+      if (Date.now() - started > RUN_BUDGET_MS) {
+        // Out of time: hand it back for the next run without using an attempt.
+        const deferred = await client.rpc('settle_mail_fenced_service', { p_claim_token: claimToken, p_id: item.id, p_ok: false, p_error: '429 rate deferred to the next run' });
+        if (deferred.error) return new Response('settlement failed', { status: 500 });
+        continue;
       }
-    } catch (caught) {
-      error = String(caught);
+      if (!first) await new Promise((resolve) => setTimeout(resolve, mail.pauseMs));
+      first = false;
+      const send = mail.send;
+      let error: string | null = null;
+      try {
+        if ((item.kind === 'report' || item.kind === 'moderation') && !operator) {
+          error = '429 quota OPERATOR_EMAIL is not set';
+        } else if (item.kind === 'report' && item.report) {
+          const mail = reportEmail(item.report);
+          error = await send(operator!, mail.subject, mail.html, `mail-${item.id}`);
+        } else if (item.kind === 'moderation' && item.moderation) {
+          const mail = await moderationEmail(item.moderation, client);
+          error = await send(operator!, mail.subject, mail.html, `mail-${item.id}`);
+        } else if (item.kind === 'waitlist_welcome' && item.to) {
+          const mail = welcomeEmail(item.locale, item.welcome?.eligible === true);
+          error = await send(item.to, mail.subject, mail.html, `mail-${item.id}`);
+        } else if (['waitlist_verification', 'referral_joined'].includes(item.kind) && !item.verification?.token) {
+          error = 'Referral link unavailable';
+        } else if (item.kind === 'waitlist_verification' && item.to && item.verification?.token) {
+          const mail = verificationEmail(item.locale, item.verification.token, item.verification.confirmed === true);
+          error = await send(item.to, mail.subject, mail.html, `mail-${item.id}`);
+        } else if (item.kind === 'waitlist_not_joined' && item.to) {
+          const mail = notJoinedEmail(item.locale);
+          error = await send(item.to, mail.subject, mail.html, `mail-${item.id}`);
+        } else if (item.kind === 'referral_joined' && item.to && item.progress && item.verification?.token) {
+          const mail = referralJoinedEmail(item.locale, item.progress, item.verification.token);
+          error = await send(item.to, mail.subject, mail.html, `mail-${item.id}`);
+        } else {
+          error = 'nothing to send';
+        }
+      } catch (caught) {
+        error = String(caught);
+      }
+      const settled = await client.rpc('settle_mail_fenced_service', { p_claim_token: claimToken, p_id: item.id, p_ok: error === null, p_error: error });
+      if (settled.error) return new Response('settlement failed', { status: 500 });
+      if (error === null) sent += 1;
     }
-    await client.rpc('settle_mail_service', { p_id: item.id, p_ok: error === null, p_error: error });
-    if (error === null) sent += 1;
   }
   return Response.json({ provider: mail.provider, sent });
 });

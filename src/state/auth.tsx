@@ -1,4 +1,5 @@
 import { clearPendingEdits } from '@/lib/pendingEdits';
+import { clearReady } from '@/state/readyCelebration';
 import { useQuery } from '@tanstack/react-query';
 import * as Linking from 'expo-linking';
 import { useRouter, useSegments, type Href } from 'expo-router';
@@ -30,6 +31,8 @@ import { clearPrivateMediaCache } from '@/lib/privateMediaCache';
 import { shouldClearPrivateMediaCache } from '@/lib/privateMediaCachePolicy';
 import { queryClient, queryKeys } from '@/lib/queryClient';
 import { forgetThisDevice } from '@/api/notifications';
+import { claimReferralCode } from '@/api/referrals';
+import { forgetReferralCode, pendingReferralCode } from '@/lib/referralCode';
 import { requireSupabase, supabase, USE_MOCKS } from '@/lib/supabase';
 
 interface AuthValue {
@@ -42,6 +45,7 @@ interface AuthValue {
   refreshProfileStatus: () => Promise<void>;
   retryStartup: () => void;
   signOut: () => Promise<void>;
+  isCurrentUser: (userId: string | undefined) => boolean;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -53,9 +57,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profileStatusReady, setProfileStatusReady] = useState(USE_MOCKS);
   const [authError, setAuthError] = useState<'invalid_link' | null>(null);
   const [startupAttempt, setStartupAttempt] = useState(0);
+  const referralMemberId = user?.id;
   const retryStartup = useCallback(() => setStartupAttempt(value => value + 1), []);
 
   const activeUserId = useRef<string | null>(null);
+  const isCurrentUser = useCallback((userId: string | undefined) => USE_MOCKS || (!!userId && activeUserId.current === userId), []);
   const profileStatusRequest = useRef(0);
 
   const adoptUser = useCallback((nextUser: User | null) => {
@@ -66,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Query keys intentionally do not contain an account ID.
       // Clear all cached results before another member can render them.
       queryClient.clear();
+      clearReady();
       setOnboardingComplete(false);
       setProfileStatusReady(nextUserId === null);
 
@@ -158,7 +165,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await exchangeCode(initialUrl);
       }
 
-      const { data } = await withDeadline(client.auth.getUser());
+      const { data, error } = await withDeadline(client.auth.getUser());
+      if (error) throw error;
 
       if (active) {
         adoptUser(data.user);
@@ -168,7 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void load().catch(() => {
       if (active) {
-        setReady(true);
+        setReady(false);
       }
     });
 
@@ -236,6 +244,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     queryClient.clear();
+    clearReady();
     void clearPrivateMediaCache();
 
     if (activeUserId.current) {
@@ -250,6 +259,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setOnboardingComplete(USE_MOCKS);
     setProfileStatusReady(true);
   }, []);
+
+  useEffect(() => {
+    if (USE_MOCKS || !referralMemberId || !onboardingComplete) return;
+    const memberId = referralMemberId;
+    let claiming = false;
+    const retry = async () => {
+      if (claiming) return;
+      const code = await pendingReferralCode(memberId, false);
+      if (!code || activeUserId.current !== memberId) return;
+      claiming = true;
+      try {
+        await withDeadline(claimReferralCode(code, memberId));
+        if (activeUserId.current === memberId) await forgetReferralCode(memberId);
+      } finally {
+        claiming = false;
+      }
+    };
+    void retry().catch(() => {});
+    const timer = setInterval(() => void retry().catch(() => {}), 60_000);
+    return () => clearInterval(timer);
+  }, [referralMemberId, onboardingComplete]);
 
   const clearAuthError = useCallback(() => {
     setAuthError(null);
@@ -266,6 +296,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshProfileStatus,
       retryStartup,
       signOut,
+      isCurrentUser,
     }),
     [
       user,
@@ -277,6 +308,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshProfileStatus,
       retryStartup,
       signOut,
+      isCurrentUser,
     ],
   );
 
@@ -408,6 +440,19 @@ export function AuthGate({ children }: { children: ReactNode }) {
       ) : <LoadingState />}
     </Screen>
   );
+
+  // Effects replace the route after render. Keep protected screens unmounted until it matches.
+  const root = segments[0] as string | undefined;
+  const publicPage = root === 'terms' || root === 'privacy';
+  const authPage = root === 'auth' || root === 'auth-email';
+  if (!USE_MOCKS && !publicPage && (
+    (!user && !authPage) ||
+    (user && !onboardingComplete && root !== 'onboarding') ||
+    (user && onboardingComplete && (legalConsentQuery.isError || legalConsentQuery.data?.required)
+      && root !== 'legal-consent') ||
+    (user && onboardingComplete && !legalConsentQuery.isError && legalConsentQuery.data?.required === false
+      && (authPage || root === 'onboarding' || root === 'legal-consent'))
+  )) return <Screen><LoadingState /></Screen>;
 
   return <>{children}</>;
 }

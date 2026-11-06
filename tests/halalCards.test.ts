@@ -26,7 +26,7 @@ import {
 } from '../src/halalCards/engine/adventure';
 import { holds, resolveNext } from '../src/halalCards/engine/conditions';
 import { revealCard, scoreQuiz, quizNeeds } from '../src/halalCards/engine/quiz';
-import { advanceCursor, awaitingOf, contentMatches, currentTurn, initialState, isFinished } from '../src/halalCards/engine/session';
+import { advanceCursor, awaitingOf, contentMatches, inspectSession, currentTurn, initialState, isFinished } from '../src/halalCards/engine/session';
 import {
   firstTrack,
   initialSeenCursor,
@@ -524,6 +524,66 @@ test('every translation file present is complete and keeps its placeholders', as
       const text = translation.content[key];
       assert.ok(text && text.trim(), `${file}: ${key} is translated`);
       assert.deepEqual(placeholdersOf(text!), placeholdersOf(english), `${file}: ${key} keeps its placeholders`);
+    }
+  }
+});
+
+
+test('malformed persisted Cards state reaches recovery before turn interpretation', () => {
+  const lesson = LAB_LESSONS[0]!;
+  const adventure = ADVENTURES[0]!;
+  const invalid: unknown[] = [null, {}, { kind: 'lab', cursor: -1 }, { kind: 'lab', cursor: 0.5 }, { kind: 'lab', cursor: '0' }];
+  for (const state of invalid) {
+    const saved = session({ activityId: lesson.id, state: state as CardsSession['state'] });
+    assert.deepEqual(inspectSession(lesson, saved), { compatible: false });
+  }
+  const initial = startAdventure(adventure);
+  for (const patch of [{ roles: null }, { vars: [] }, { flags: null }, { history: [null] }, { reveals: [{}] }, { step: -1 }, { attempt: 0.5 }, { roles: { A: 'host', B: 'host' } }]) {
+    const saved = session({ activityId: adventure.id, state: { ...initial, ...patch } as AdventureState });
+    assert.deepEqual(inspectSession(adventure, saved), { compatible: false });
+  }
+  const valid = session({ activityId: adventure.id, state: initial });
+  assert.equal(inspectSession(adventure, valid).compatible, true);
+  assert.deepEqual(inspectSession(undefined, valid), { compatible: false });
+});
+
+test('immutable malformed quiz answers recover instead of revealing partial results', () => {
+  const quiz = QUIZZES.find((item) => item.format === 'guess_my_answer')!;
+  const key = `q:${quiz.cards[0]!.id}`;
+  for (const answer of [null, {}, { self: -1, guess: 0 }, { self: 0 }, { self: 0, guess: 999 }, { self: 0.5, guess: 0 }]) {
+    const saved = session({ activityId: quiz.id, state: { kind: 'quiz', cursor: 0 },
+      answers: { [key]: { mine: answer, theirs: { self: 0, guess: 0 }, theirReady: true } } });
+    assert.deepEqual(inspectSession(quiz, saved), { compatible: false });
+  }
+});
+
+test('unresolvable sealed story choices reach recovery without throwing in an effect', () => {
+  const adventure = ADVENTURES.find((item) => Object.values(item.scenes).some((scene) => scene.decision.mode !== 'role'))!;
+  const scene = Object.values(adventure.scenes).find((item) => item.decision.mode !== 'role')!;
+  const state = { ...startAdventure(adventure), sceneId: scene.id };
+  const saved = session({ activityId: adventure.id, state, answers: {
+    'a:0:0': { mine: 'removed-choice', theirs: 'removed-choice', theirReady: true },
+  } });
+  assert.deepEqual(inspectSession(adventure, saved), { compatible: false });
+});
+
+
+test('recovery inspection accepts the catalogue and complete answers for either quiz seat', () => {
+  for (const activity of ALL_ACTIVITIES) {
+    assert.equal(inspectSession(activity, session({ activityId: activity.id, state: initialState(activity) })).compatible, true, activity.id);
+  }
+  for (const quiz of QUIZZES) {
+    for (const mySeat of ['host', 'guest'] as const) {
+      const answerFor = (seat: 'host' | 'guest') => {
+        const needs = quizNeeds(quiz, 0, seat);
+        return { ...(needs.self ? { self: 0 } : {}), ...(needs.guess ? { guess: 0 } : {}) };
+      };
+      const saved = session({ activityId: quiz.id, state: initialState(quiz), mySeat, answers: {
+        [`q:${quiz.cards[0]!.id}`]: { mine: answerFor(mySeat), theirs: answerFor(mySeat === 'host' ? 'guest' : 'host'), theirReady: true },
+      } });
+      const inspected = inspectSession(quiz, saved);
+      assert.equal(inspected.compatible, true, `${quiz.id}/${mySeat}`);
+      assert.equal(inspected.turn?.kind, 'reveal');
     }
   }
 });

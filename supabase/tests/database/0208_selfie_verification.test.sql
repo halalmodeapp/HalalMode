@@ -23,11 +23,11 @@ select ok(
   and not has_function_privilege('authenticated', 'public.verified_selfie_path_service(uuid)', 'EXECUTE'),
   'only the checker can look up a verified selfie');
 select ok(
-  position('selfie' in pg_get_functiondef('public.settle_moderation_service(bigint,text,text)'::regprocedure)) > 0
-  and position('photo_removed' in pg_get_functiondef('public.settle_moderation_service(bigint,text,text)'::regprocedure)) > 0,
+  position('selfie' in pg_get_functiondef('public.settle_moderation_fenced_service(bigint,text,text,uuid)'::regprocedure)) > 0
+  and position('photo_removed' in pg_get_functiondef('public.settle_moderation_fenced_service(bigint,text,text,uuid)'::regprocedure)) > 0,
   'settling keeps the photo-removed notice and adds the selfie outcome');
 select ok(
-  position('selfie' in pg_get_functiondef('public.claim_moderation_service(integer)'::regprocedure)) > 0,
+  position('selfie' in pg_get_functiondef('public.claim_moderation_fenced_service(integer,uuid)'::regprocedure)) > 0,
   'the claim skips a selfie the member has since retaken');
 
 select * from finish();

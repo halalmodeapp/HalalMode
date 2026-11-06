@@ -36,6 +36,7 @@ interface RoundValue {
   emptyReason: DailyRoundEmptyReason | null;
   /** Which of the member's own must-haves to loosen first, when relevant. */
   narrowingCriterion: NarrowingCriterion | null;
+  thinCriterion: NarrowingCriterion | null;
   /** Set only while a built set waits to open, to name whose dawn it is. */
   nextSetCity: string | null;
   /** Authoritative scheduled or submitted-round Fajr instant from the server. */
@@ -130,8 +131,18 @@ export function RoundProvider({ children }: { children: ReactNode }) {
     : null;
 
   const narrowingCriterion = roundState?.narrowingCriterion ?? null;
+  const thinCriterion = roundState?.thinCriterion ?? null;
   const nextSetCity = roundState?.city ?? null;
   const nextFajrAt = roundState?.nextFajrAt ?? null;
+  const roundBoundary = round?.expiresAt ?? nextFajrAt;
+  useEffect(() => {
+    if (!roundBoundary) return;
+    const remaining = Date.parse(roundBoundary) - Date.now();
+    if (!Number.isFinite(remaining) || remaining <= 0) return;
+    // Refresh the server state when the displayed day ends, even while foregrounded.
+    const timer = setTimeout(() => void refetch(), Math.min(remaining + 100, 2_147_483_647));
+    return () => clearTimeout(timer);
+  }, [roundBoundary, refetch]);
   const owed = roundState?.owed ?? null;
   const owedAll = useMemo(() => roundState?.owedAll ?? (owed ? [owed] : []), [roundState?.owedAll, owed]);
 
@@ -154,6 +165,14 @@ export function RoundProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     selectedRef.current = selected;
   }, [selected]);
+
+  useEffect(() => {
+    const ids = new Set(live.map(item => item.id));
+    const next = selectedRef.current.filter(id => ids.has(id));
+    if (next.length === selectedRef.current.length) return;
+    selectedRef.current = next;
+    setSelected(next);
+  }, [live]);
 
   const toggleSelect = useCallback(
     (id: string) => {
@@ -310,6 +329,7 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       round,
       emptyReason,
       narrowingCriterion,
+      thinCriterion,
       nextSetCity,
       nextFajrAt,
       owed,
@@ -343,6 +363,7 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       round,
       emptyReason,
       narrowingCriterion,
+      thinCriterion,
       nextSetCity,
       nextFajrAt,
       owed,

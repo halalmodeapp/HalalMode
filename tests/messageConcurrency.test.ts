@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createKeyedSerialQueue } from '../src/lib/keyedSerialQueue';
-import { mergeMessages } from '../src/lib/mergeMessages';
+import { mergeLatestMessagePage, mergeMessages } from '../src/lib/mergeMessages';
 
 test('overlapping outbox read/modify/write operations preserve both updates', async () => {
   const run = createKeyedSerialQueue();
@@ -37,4 +37,22 @@ test('overlapping history pages deduplicate and order equal timestamps consisten
   const a = { id: 'a', createdAt: '2026-10-15T10:00:00Z' };
   const b = { ...a, id: 'b' };
   assert.deepEqual(mergeMessages([b, a], [a]), [a, b]);
+});
+
+test('polling preserves expanded scrollback, the oldest cursor and read receipts', () => {
+  const older = { id: 'a', createdAt: '2026-10-15T09:00:00Z' };
+  const recent = { id: 'b', createdAt: '2026-10-15T10:00:00Z', readAt: '2026-10-15T10:01:00Z' };
+  const newest = { id: 'c', createdAt: '2026-10-15T11:00:00Z' };
+  const current = { messages: [older, recent], hasMore: false };
+  const latest = { messages: [{ id: recent.id, createdAt: recent.createdAt }, newest], hasMore: true, nextCursor: { id: 'b' } };
+  assert.deepEqual(mergeLatestMessagePage(current, latest), { messages: [older, recent, newest], hasMore: false });
+  const cursor = { id: 'a' };
+  assert.deepEqual(mergeLatestMessagePage({ ...current, hasMore: true, nextCursor: cursor }, latest).nextCursor, cursor);
+});
+
+test('the first message page and an unexpanded refresh use the server cursor', () => {
+  const message = { id: 'a', createdAt: '2026-10-15T09:00:00Z' };
+  const latest = { messages: [message], hasMore: true, nextCursor: { id: 'a' } };
+  assert.deepEqual(mergeLatestMessagePage(undefined, latest), latest);
+  assert.deepEqual(mergeLatestMessagePage({ ...latest, hasMore: false, nextCursor: undefined }, latest), latest);
 });

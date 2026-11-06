@@ -187,7 +187,10 @@
   applyTheme(readTheme());
 
   // ---------------------------------------------------------------- auth & network
+  let refreshing = null;
+  let sessionEpoch = 0;
   function save(sess) {
+    if (!sess) sessionEpoch += 1;
     state.session = sess;
     try {
       if (sess) sessionStorage.setItem(STORE, JSON.stringify(sess));
@@ -203,11 +206,13 @@
   }
   function request(path, opts) {
     opts = opts || {};
+    const epoch = sessionEpoch;
     const headers = { apikey: KEY, 'Content-Type': 'application/json' };
     if (state.session && state.session.access_token && !opts.anon) headers.Authorization = 'Bearer ' + state.session.access_token;
     return fetch(URL_BASE + path, { method: opts.method || 'GET', headers: headers, body: opts.body ? JSON.stringify(opts.body) : undefined, credentials: 'omit', cache: 'no-store' })
       .then(function (res) {
         return res.text().then(function (text) {
+          if (!opts.anon && epoch !== sessionEpoch) throw new Error('Signed out');
           let body = null;
           try { body = text ? JSON.parse(text) : null; } catch (_e) { body = text; }
           if (!res.ok) {
@@ -221,9 +226,18 @@
   }
   function fresh() {
     if (!state.session) return Promise.reject(new Error('Signed out'));
+    if (refreshing) return refreshing;
     if (state.session.expires_at - 60 > Date.now() / 1000) return Promise.resolve();
-    return request('/auth/v1/token?grant_type=refresh_token', { method: 'POST', anon: true, body: { refresh_token: state.session.refresh_token } })
-      .then(function (t) { save(fromTokens(t)); });
+    const session = state.session;
+    // Parallel dashboard reads share one refresh; an old response cannot restore sign-out.
+    const pending = request('/auth/v1/token?grant_type=refresh_token', { method: 'POST', anon: true, body: { refresh_token: session.refresh_token } })
+      .then(function (t) {
+        if (state.session !== session) throw new Error('Signed out');
+        save(fromTokens(t));
+      });
+    refreshing = pending.finally(function () { if (refreshing === shared) refreshing = null; });
+    const shared = refreshing;
+    return shared;
   }
   function rpc(name, args) {
     return fresh().then(function () { return request('/rest/v1/rpc/' + name, { method: 'POST', body: args || {} }); });
@@ -232,20 +246,20 @@
     location.assign(URL_BASE + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(location.origin + '/admin'));
   }
   function signOut(scope, message) {
-    const done = function () {
-      save(null); clearInterval(state.timer);
-      state.me = state.overview = state.settings = null;
-      if (DEMO) { location.replace('/admin?demo'); return; }
-      showSignIn(message);
-    };
-    if (DEMO || !state.session) return done();
-    request('/auth/v1/logout' + (scope === 'global' ? '?scope=global' : ''), { method: 'POST' }).then(done, done);
+    if (!DEMO && state.session) {
+      request('/auth/v1/logout' + (scope === 'global' ? '?scope=global' : ''), { method: 'POST' }).catch(function () { return null; });
+    }
+    save(null); clearInterval(state.timer);
+    state.me = state.overview = state.settings = null;
+    if (DEMO) { location.replace('/admin?demo'); return; }
+    showSignIn(message);
   }
   function verifiedFactor(user) {
     return (user.factors || []).filter(function (f) { return f.factor_type === 'totp' && f.status === 'verified'; })[0];
   }
   function verifyCode(code) {
-    return request('/auth/v1/user').then(function (user) {
+    // Finish a pending refresh before replacing its tokens with the MFA result.
+    return fresh().then(function () { return request('/auth/v1/user'); }).then(function (user) {
       const factor = verifiedFactor(user);
       if (!factor) throw new Error('No authenticator app is set up for this account.');
       return request('/auth/v1/factors/' + factor.id + '/challenge', { method: 'POST', body: {} })
@@ -1333,20 +1347,23 @@
         if (!list.length) return empty('Nothing waiting. All clear.');
         return list.map(function (it) {
           const m = it.member;
+          function reviewButton(verdict) {
+            return h('button', { type: 'button', class: 'btn sm ghost', disabled: !canEdit(), tip: 'It’s fine, or you have dealt with it. Removes it from this list.', onclick: function () {
+              dialog({ title: verdict ? 'Mark selfie as ' + verdict + '?' : 'Mark as reviewed?', confirm: verdict ? 'Mark ' + verdict : 'Mark reviewed', run: function (why) {
+                if (DEMO) return demoWrite('review.done', { item: it.id, member: m.ref, reason: why }, function () { state.demoReview = state.demoReview.filter(function (x) { return x !== it; }); state.overview.safety.moderation_review = Math.max(0, state.overview.safety.moderation_review - 1); });
+                return rpc('admin_mark_reviewed', { p_id: it.id, p_reason: why, p_verdict: verdict || null });
+              } }).then(function (done) { if (done) { toast('Reviewed.'); reload(); } });
+            } }, verdict ? 'Mark ' + verdict : 'Mark reviewed');
+          }
           return h('section', { class: 'card' }, h('div', { class: 'card-body' },
             h('div', { style: 'display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px' },
-              pill('warn', it.kind === 'bio' ? 'Bio' : 'Photo'), h('b', { text: m.first_name + ' · ' + m.ref }),
+              pill('warn', it.kind === 'bio' ? 'Bio' : it.kind === 'selfie' ? 'Selfie' : 'Photo'), h('b', { text: m.first_name + ' · ' + m.ref }),
               h('span', { class: 'muted small', text: 'flagged ' + ago(it.flagged_at) }),
               it.still_on_profile ? null : pill('off', 'Already changed', 'The member has since changed or removed it.')),
-            it.text ? h('p', { style: 'margin-bottom:8px', text: '“' + it.text + '”' }) : h('p', { class: 'muted', style: 'margin-bottom:8px', text: 'Photo files stay private and are not shown here.' }),
+            it.text ? h('p', { style: 'margin-bottom:8px', text: '“' + it.text + '”' }) : h('p', { class: 'muted', style: 'margin-bottom:8px', text: it.kind === 'selfie' ? 'Selfie files stay private and are not shown here.' : 'Photo files stay private and are not shown here.' }),
             h('p', { class: 'muted small', text: 'Why it was flagged: ' + (it.reason || 'not given') })),
             h('div', { class: 'card-foot' },
-              h('button', { type: 'button', class: 'btn sm ghost', disabled: !canEdit(), tip: 'It’s fine, or you have dealt with it. Removes it from this list.', onclick: function () {
-                dialog({ title: 'Mark as reviewed?', confirm: 'Mark reviewed', run: function (why) {
-                  if (DEMO) return demoWrite('review.done', { item: it.id, member: m.ref, reason: why }, function () { state.demoReview = state.demoReview.filter(function (x) { return x !== it; }); state.overview.safety.moderation_review = Math.max(0, state.overview.safety.moderation_review - 1); });
-                  return rpc('admin_mark_reviewed', { p_id: it.id, p_reason: why });
-                } }).then(function (done) { if (done) { toast('Reviewed.'); reload(); } });
-              } }, 'Mark reviewed'),
+              it.kind === 'selfie' ? h('div', { style: 'display:flex;gap:8px' }, reviewButton('verified'), reviewButton('rejected')) : reviewButton(null),
               actionButtons({ user_id: m.user_id, ref: m.ref, first_name: m.first_name })));
         });
       }));
@@ -1558,7 +1575,11 @@
             kpi('Worker errors', n(w.failed_24h), 'of ' + n(w.total_24h) + ' calls, last 24 h', 'Background functions (email, moderation, matching, notifications) that answered with an error or timed out.', w.failed_24h > 0),
             kpi('Push failures', n(push.failed), n(push.sent_24h) + ' sent in 24 h', 'Notifications that failed 5 times and were given up on.', push.failed > 0),
             kpi('Email failures', n(mail.failed), n(mail.sent_24h) + ' sent in 24 h', 'Emails that failed many times and were given up on.', mail.failed > 0),
-            kpi('Matching run failures', n(mt.failed_7d), 'of ' + n(mt.runs_7d) + ' runs, last 7 days', null, mt.failed_7d > 0)),
+            kpi('Matching run failures', n(mt.failed_7d), 'of ' + n(mt.runs_7d) + ' runs, last 7 days', null, mt.failed_7d > 0),
+            kpi('Failed matching tables', n(mt.failed_tables_7d), 'last 7 days', null, mt.failed_tables_7d > 0)),
+          card('Recent failed matching tables', 'Partial sets still went out.', null, (mt.recent_failed_tables || []).length ? rows(mt.recent_failed_tables.map(function (f) {
+            return [f.cycle_date, n(f.failed_jobs) + ' failed', f.last_error || ''];
+          })) : h('p', { class: 'muted', text: 'No failed tables in the last 7 days.' })),
           card('Scheduled jobs', 'Everything the database runs on a timer.', null, h('div', { class: 'table-wrap' }, h('table', null,
             h('thead', null, h('tr', null, ['Job', 'Runs', 'Runs (24 h)', 'Failed (24 h)', 'Last run', ''].map(function (t) { return h('th', { text: t }); }))),
             h('tbody', null, jobs.length ? jobs.map(function (j) {

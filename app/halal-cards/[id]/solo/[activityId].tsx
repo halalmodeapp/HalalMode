@@ -29,8 +29,14 @@ export default function SoloScreen() {
   const found = findActivity(activityId);
   const activity = found && found.soloPreview ? found : undefined;
   const connection = useQuery({ queryKey: queryKeys.connection(id), queryFn: () => fetchConnection(id) });
+  const runKey = `${id}:${activityId}`;
+  const [startedFor, setStartedFor] = useState(runKey);
   const [run, setRun] = useState<SoloRun | null>(() => (activity ? soloStart(activity) : null));
-  const session = useMemo(() => (activity && run ? soloView(activity, run) : null), [activity, run]);
+  if (startedFor !== runKey) {
+    setStartedFor(runKey);
+    setRun(activity ? soloStart(activity) : null);
+  }
+  const session = useMemo(() => (startedFor === runKey && activity && run ? soloView(activity, run) : null), [activity, run, startedFor, runKey]);
 
   if (!activity || !run || !session) {
     return (

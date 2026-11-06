@@ -89,19 +89,11 @@ Deno.serve(async (request) => {
   // One generation per connection and language. The first request claims the
   // row; others get "not yet" and the app shows its own summary meanwhile. A
   // claim older than two minutes is treated as abandoned.
-  if (cached?.body === PENDING) {
-    // Being written by another request: say so, so the app keeps waiting.
-    if (Date.now() - Date.parse(cached.created_at) < 120_000) return reply({ summary: null, pending: true });
-    await admin.from('connection_summaries').delete()
-      .eq('connection_id', connectionId).eq('language', language).eq('body', PENDING);
-  }
-  const claim = await admin.from('connection_summaries')
-    .insert({ connection_id: connectionId, language, body: PENDING });
-  if (claim.error) return reply({ summary: null, pending: true });
-  const release = async () => {
-    await admin.from('connection_summaries').delete()
-      .eq('connection_id', connectionId).eq('language', language).eq('body', PENDING);
-  };
+  const claimToken = crypto.randomUUID();
+  const claimArgs = { p_connection_id: connectionId, p_viewer_id: me, p_language: language, p_claim_token: claimToken };
+  const claim = await admin.rpc('claim_connection_summary_service', claimArgs);
+  if (claim.error || !claim.data) return reply({ summary: null, pending: true });
+  const release = () => admin.rpc('settle_connection_summary_service', { ...claimArgs, p_body: null });
 
   // Consent or relationship state may have changed while the claim was being
   // inserted. Re-load through the same guarded RPC before using any answer.
@@ -158,8 +150,7 @@ Deno.serve(async (request) => {
     .replaceAll('Person A', realName(a) || 'Person A')
     .replaceAll('Person B', realName(b) || 'Person B');
 
-  await admin.from('connection_summaries')
-    .update({ body: named })
-    .eq('connection_id', connectionId).eq('language', language);
+  const saved = await admin.rpc('settle_connection_summary_service', { ...claimArgs, p_body: named });
+  if (saved.error || saved.data !== true) return reply({ summary: null });
   return reply({ summary: named });
 });

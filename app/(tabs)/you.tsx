@@ -76,7 +76,7 @@ export default function YouScreen() {
   const wasReady = useRef<boolean | null>(null);
   const ready = readinessQuery.data?.ready;
   useEffect(() => {
-    if (ready === undefined) return;
+    if (ready === undefined) { wasReady.current = null; return; }
     if (wasReady.current === false && ready) {
       // Held until the member moves to another page, so it never lands mid-edit.
       markReady();

@@ -15,6 +15,8 @@ import { BrandHeader } from '@/components/navigation/BrandHeader';
 import { SafetyControl } from '@/components/safety/SafetyControl';
 import { Button } from '@/components/ui/Button';
 import { EmptyState, ErrorState, InlineNotice, LoadingState } from '@/components/ui/AsyncState';
+import type { NarrowingCriterion } from '@/lib/dailyRoundState';
+import { narrowingCriterionKey } from '@/lib/narrowingCriterion';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ReadinessChecklist } from '@/components/readiness/ReadinessChecklist';
 import { Screen } from '@/components/ui/Screen';
@@ -23,8 +25,6 @@ import { Text } from '@/components/ui/Text';
 import { useNextFajr } from '@/hooks/useNextFajr';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useI18n } from '@/i18n';
-import type { TranslationKey } from '@/i18n/catalog';
-import type { NarrowingCriterion } from '@/lib/dailyRoundState';
 import { fetchMySampleMembers } from '@/api/account';
 import { fetchMyProfile, fetchMyProfileReadiness } from '@/api/profile';
 import { enableMyNotifications, fetchMyNotificationConsent } from '@/api/notifications';
@@ -49,16 +49,23 @@ import { ActionIcon } from '@/components/ui/ActionIcon';
  * Names the criterion in the member's own words, matching the label on the
  * control they would go and change.
  */
-const NARROWING_CRITERION_KEYS: Record<NarrowingCriterion, TranslationKey> = {
-  age: 'filters.ageRange',
-  height: 'filters.heightPlain',
-  build: 'filters.bodyTypes',
-  distance: 'filters.searchDistance',
-  practice: 'filters.practice',
-  timeline: 'filters.marriageTiming',
-  children: 'filters.children',
-  sect: 'filters.sect',
-};
+/**
+ * A short set says which of the member's own choices to loosen, if one of them is why. A very short one
+ * says something even when none is, since only a handful of people fit their filters and location.
+ */
+function ThinSetNotice({ criterion, count }: { criterion: NarrowingCriterion | null; count: number }) {
+  const { t } = useI18n();
+  const key = narrowingCriterionKey(criterion);
+  if (!key && count >= 3) return null;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => router.push({ pathname: '/(tabs)/you', params: { tab: 'private' } })}
+    >
+      <InlineNotice message={key ? t('daily.thinBody', { count, criterion: t(key) }) : t('daily.thinFew', { count })} />
+    </Pressable>
+  );
+}
 
 function DailyScrollScreen({ children, isRTL }: { children: ReactNode; isRTL: boolean }) {
   return (
@@ -98,6 +105,7 @@ export default function DailyScreen() {
     round,
     emptyReason,
     narrowingCriterion,
+    thinCriterion,
     nextSetCity,
     nextFajrAt,
     owedAll,
@@ -135,13 +143,27 @@ export default function DailyScreen() {
   const roundId = round?.id;
   const introductionCount = round?.introductions.length;
   const conductMemberId = user?.id ?? 'mock-member';
+  const [conductCheckedFor, setConductCheckedFor] = useState<string | null>(null);
+  const cardIds = live.map(item => item.id).join(',');
+
+  useEffect(() => {
+    // Dialog choices belong to the cards that were visible when they opened.
+    setConfirmOpen(false);
+    setFirstChoiceOpen(false);
+    setFirstChoiceId(null);
+    setNobodyOpen(false);
+    setPendingId(null);
+    setSwapOutId(null);
+    setRevealing(false);
+  }, [cardIds, conductMemberId, roundId]);
 
   useEffect(() => {
     let active = true;
     void hasAcceptedConduct(conductMemberId)
-      .then((accepted) => active && setConductVisible(!accepted))
+      .then((accepted) => { if (active) setConductVisible(!accepted); })
       // Storage should not prevent a member from entering their daily round.
-      .catch(() => active && setConductVisible(true));
+      .catch(() => { if (active) setConductVisible(true); })
+      .finally(() => { if (active) setConductCheckedFor(conductMemberId); });
     return () => { active = false; };
   }, [conductMemberId]);
 
@@ -160,13 +182,13 @@ export default function DailyScreen() {
   // The fanned reveal, once per set. Waits for the conduct sheet so it is not
   // played behind it, unseen.
   useEffect(() => {
-    if (!roundId || reducedMotion || conductVisible || (introductionCount ?? 0) < 2) return;
+    if (!roundId || reducedMotion || conductCheckedFor !== conductMemberId || conductVisible || (introductionCount ?? 0) < 2) return;
     let cancelled = false;
     void hasSeenReveal(roundId).then((seen) => {
       if (!cancelled && !seen) setRevealing(true);
     });
     return () => { cancelled = true; };
-  }, [conductVisible, introductionCount, reducedMotion, roundId]);
+  }, [conductCheckedFor, conductMemberId, conductVisible, introductionCount, reducedMotion, roundId]);
 
   const finishReveal = useCallback(() => {
     setRevealing(false);
@@ -282,7 +304,7 @@ export default function DailyScreen() {
     [live]
   );
 
-  if (isLoading) {
+  if (isLoading || conductCheckedFor !== conductMemberId) {
     return (
       <DailyScrollScreen isRTL={isRTL}>
         <DailyHeader />
@@ -408,7 +430,7 @@ export default function DailyScreen() {
           <EmptyState
             title={t('daily.filtersTooNarrowTitle')}
             message={t('daily.filtersTooNarrowBody', {
-              criterion: t(NARROWING_CRITERION_KEYS[narrowingCriterion]),
+              criterion: t(narrowingCriterionKey(narrowingCriterion) ?? 'filters.ageRange'),
             })}
           />
         </DailyScrollScreen>
@@ -492,6 +514,8 @@ export default function DailyScreen() {
       {submitError ? (
         <InlineNotice message={errorMessage({ message: submitError }, t, 'daily.submitError')} />
       ) : null}
+
+      <ThinSetNotice criterion={thinCriterion} count={live.length} />
 
       <View style={styles.stage}>
         <Animated.View style={[styles.stageFill, revealing && styles.hidden]}>

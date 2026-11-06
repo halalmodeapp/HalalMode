@@ -48,7 +48,7 @@ test('a phone that cannot reach the server is told apart from a server that refu
   assert.equal(isNetworkError(undefined), false);
 });
 
-test('the optimistic Saved toast comes at once, then at most every few seconds', () => {
+test('server-confirmed Saved toasts are limited to once every few seconds', () => {
   assert.equal(savedToastDue(1000, 0), true);
   assert.equal(savedToastDue(2000, 1000), false);
   assert.equal(savedToastDue(1000 + AUTOSAVE.savedToastGapMs, 1000), true);

@@ -15,7 +15,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
 import { useCardsCopy } from '@/halalCards/copy';
-import { contentMatches, progressOf } from '@/halalCards/engine/session';
+import { progressOf } from '@/halalCards/engine/session';
 import { useCardsSession } from '@/halalCards/hooks';
 import { backOr, cardsPaths } from '@/halalCards/navigation';
 import type { ActivityState } from '@/halalCards/types';
@@ -28,7 +28,7 @@ export default function PlayScreen() {
   const copy = useCardsCopy();
   const [leaveAsk, setLeaveAsk] = useState(false);
   const connection = useQuery({ queryKey: queryKeys.connection(id), queryFn: () => fetchConnection(id) });
-  const { query, session, activity, turn, answer, advance, respond, cancel } = useCardsSession(id, sessionId);
+  const { query, session, activity, compatible, turn, answer, advance, respond, cancel } = useCardsSession(id, sessionId);
 
   if (query.isPending || connection.isPending) {
     return (
@@ -37,7 +37,7 @@ export default function PlayScreen() {
       </Screen>
     );
   }
-  if (query.isError || !session || !activity || !connection.data) {
+  if (query.isError || !session || !connection.data) {
     return (
       <Screen>
         <ScreenHeader onAction={() => backOr(cardsPaths.hub(id))} />
@@ -53,6 +53,26 @@ export default function PlayScreen() {
     );
   }
 
+  if (!activity) {
+    return (
+      <Screen>
+        <ScreenHeader onAction={() => backOr(cardsPaths.hub(id))} />
+        <PlayCard dealKey="unknown">
+          <Text variant="display">{copy('staleTitle')}</Text>
+          <Text variant="body">{copy('staleBody')}</Text>
+          {session.status === 'active' || session.status === 'invited' ? (
+            <Button label={copy('leaveConfirm')} loading={cancel.isPending}
+              onPress={() => cancel.mutate(undefined, {
+                onSuccess: () => backOr(cardsPaths.hub(id)),
+                onError: () => showNotice(copy('brand'), copy('actionError')),
+              })} />
+          ) : null}
+          <Button label={copy('backToChat')} variant="secondary" onPress={() => router.replace(cardsPaths.chat(id) as never)} />
+        </PlayCard>
+      </Screen>
+    );
+  }
+
   const name = connection.data.profile.firstName;
   const busy = answer.isPending || advance.isPending;
   const failed = () => showNotice(copy('brand'), copy('actionError'));
@@ -63,7 +83,7 @@ export default function PlayScreen() {
       { onError: (error) => (error instanceof StaleSessionError ? undefined : failed()) }
     );
   const playable = session.status === 'active' || session.status === 'completed';
-  const stale = playable && !contentMatches(activity, session);
+  const stale = !compatible;
   const replay = () => router.replace(cardsPaths.activity(id, activity.id) as never);
 
   return (
@@ -84,7 +104,16 @@ export default function PlayScreen() {
       </View>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View style={styles.column}>
-          {session.status === 'invited' ? (
+          {stale ? (
+            <PlayCard dealKey="stale">
+              <Text variant="display">{copy('staleTitle')}</Text>
+              <Text variant="body">{copy('staleBody')}</Text>
+              <Button label={copy('restart')} loading={cancel.isPending} onPress={() =>
+                session.status === 'active' || session.status === 'invited'
+                  ? cancel.mutate(undefined, { onSuccess: replay, onError: failed }) : replay()
+              } />
+            </PlayCard>
+          ) : session.status === 'invited' ? (
             <PlayCard dealKey="invite">
               <Illustration image={activity.cover} aspectRatio={4 / 5}>
                 <OverlayText kind="eyebrow">{copy(`kind.${activity.kind}`)}</OverlayText>
@@ -122,17 +151,6 @@ export default function PlayScreen() {
               </Text>
               <Button label={copy('replay')} onPress={replay} />
               <Button label={copy('backToChat')} variant="secondary" onPress={() => router.replace(cardsPaths.chat(id) as never)} />
-            </PlayCard>
-          ) : stale ? (
-            <PlayCard dealKey="stale">
-              <Text variant="display">{copy('staleTitle')}</Text>
-              <Text variant="body">{copy('staleBody')}</Text>
-              <Button
-                label={copy('restart')}
-                onPress={() =>
-                  session.status === 'active' ? cancel.mutate(undefined, { onSuccess: replay, onError: failed }) : replay()
-                }
-              />
             </PlayCard>
           ) : (
             <PlayBody

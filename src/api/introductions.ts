@@ -20,6 +20,12 @@ export interface CurrentRoundState {
    */
   narrowingCriterion: NarrowingCriterion | null;
   /**
+   * Set only when today's set is short and the member's own must-haves are why:
+   * the one that would open up the most. Never set when the city is simply short
+   * of people, because then there is nothing for the member to change.
+   */
+  thinCriterion?: NarrowingCriterion | null;
+  /**
    * The member's city, set only while a set is built and waiting to open. It
    * names whose dawn they are waiting for, and there is no round to carry it.
    */
@@ -82,7 +88,7 @@ export async function fetchCurrentRoundState(
   }
 
   const payload = data && typeof data === 'object'
-    ? data as { status?: unknown; round?: IntroductionRound | null; criterion?: unknown; city?: unknown; nextFajrAt?: unknown; owed?: OwedAnswers | null; owedAll?: OwedAnswers[] }
+    ? data as { status?: unknown; round?: IntroductionRound | null; thin?: { criterion?: unknown } | null; criterion?: unknown; city?: unknown; nextFajrAt?: unknown; owed?: OwedAnswers | null; owedAll?: OwedAnswers[] }
     : {};
   const round = payload.round ?? undefined;
   const status = normalizeDailyRoundStatus(payload.status);
@@ -106,6 +112,7 @@ export async function fetchCurrentRoundState(
   return {
     status: round.introductions.length > 0 ? 'ready' : status,
     narrowingCriterion,
+    thinCriterion: normalizeNarrowingCriterion(payload.thin?.criterion),
     nextFajrAt: null,
     round: {
       ...round,

@@ -14,6 +14,7 @@
  * points to the admin panel instead, and old links get a 410.
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { restrictionDuration } from '../_shared/restrictionDuration.ts';
 
 const CORS = {
   'Access-Control-Allow-Origin': 'https://halalmo.de',
@@ -46,11 +47,27 @@ Deno.serve(async (request) => {
     auth: { persistSession: false },
   });
 
-  // Account actions from the admin panel's Trust & safety pages: suspend,
-  // ban or unban a member directly, without a report.
+  const runAction = async (userId: string, action: string, actor: string, reason: string, reportId: string | null) => {
+    const claimed = await client.rpc('claim_admin_action_service', {
+      p_user_id: userId, p_action: action, p_actor: actor, p_reason: reason,
+      p_report_id: reportId, p_claim_token: crypto.randomUUID(),
+    });
+    if (claimed.error || !claimed.data) return Response.json({ error: claimed.error?.message ?? 'claim failed' }, { status: 409, headers: CORS });
+    const job = claimed.data as { claim_token: string; subject_id: string; ban_until: string | null };
+    if (action !== 'dismiss') {
+      const changed = await client.auth.admin.updateUserById(job.subject_id, {
+        ban_duration: restrictionDuration(job.ban_until, Date.now()),
+      });
+      if (changed.error) return Response.json({ error: changed.error.message }, { status: 500, headers: CORS });
+    }
+    // On failure the intent remains visible and retryable, with the same deadline.
+    const applied = await client.rpc('complete_admin_action_service', { p_user_id: userId, p_claim_token: job.claim_token });
+    if (applied.error) return Response.json({ error: applied.error.message }, { status: 500, headers: CORS });
+    return Response.json({ done: action }, { headers: CORS });
+  };
+
   if (body.member) {
-    const ACCOUNT: Record<string, string> = { suspend: '168h', ban: '876000h', unban: 'none' };
-    if (!a || !(a in ACCOUNT) || !bearer.startsWith('Bearer ')) {
+    if (!a || !['suspend', 'ban', 'unban'].includes(a) || !bearer.startsWith('Bearer ')) {
       return Response.json({ error: 'invalid' }, { status: 400, headers: CORS });
     }
     const allowed = await asAdmin().rpc('admin_authorize_member_action', { p_user_id: body.member, p_action: a, p_reason: body.why ?? '' });
@@ -58,11 +75,7 @@ Deno.serve(async (request) => {
       return Response.json({ error: allowed.error?.message ?? 'forbidden', hint: allowed.error?.hint ?? null }, { status: 403, headers: CORS });
     }
     const ok = allowed.data as { actor: string; reason: string };
-    const changed = await client.auth.admin.updateUserById(body.member, { ban_duration: ACCOUNT[a] });
-    if (changed.error) return Response.json({ error: changed.error.message }, { status: 500, headers: CORS });
-    const applied = await client.rpc('apply_admin_member_action_service', { p_user_id: body.member, p_action: a, p_actor: ok.actor, p_reason: ok.reason });
-    if (applied.error) return Response.json({ error: applied.error.message }, { status: 500, headers: CORS });
-    return Response.json({ done: a }, { headers: CORS });
+    return runAction(body.member, a, ok.actor, ok.reason, null);
   }
 
   if (!r || !a || !(a in BAN_FOR) || !bearer.startsWith('Bearer ')) {
@@ -73,23 +86,7 @@ Deno.serve(async (request) => {
     return Response.json({ error: allowed.error?.message ?? 'forbidden', hint: allowed.error?.hint ?? null }, { status: 403, headers: CORS });
   }
   const admin = allowed.data as { actor: string; reason: string };
-
-  const duration = BAN_FOR[a];
-  const claimed = await client.rpc('claim_report_action_service', { p_report_id: r, p_action: a });
-  if (claimed.error) return Response.json({ error: claimed.error.message }, { status: 400, headers: CORS });
-
-  if (duration) {
-    const subject = claimed.data as string;
-    const banned = await client.auth.admin.updateUserById(subject, { ban_duration: duration });
-    if (banned.error) {
-      await client.rpc('release_report_action_service', { p_report_id: r, p_action: a });
-      return Response.json({ error: banned.error.message }, { status: 500, headers: CORS });
-    }
-  }
-  // The database action is applied only after the external Auth side effect
-  // succeeds. If the worker dies here, the claim makes the same action
-  // retryable without allowing a different action or a second notice.
-  const applied = await client.rpc('apply_admin_report_action_service', { p_report_id: r, p_action: a, p_actor: admin.actor, p_reason: admin.reason });
-  if (applied.error) return Response.json({ error: applied.error.message }, { status: 500, headers: CORS });
-  return Response.json({ done: a }, { headers: CORS });
+  const report = await client.from('reports').select('subject_id').eq('id', r).single();
+  if (report.error || !report.data) return Response.json({ error: 'Report not found' }, { status: 404, headers: CORS });
+  return runAction(report.data.subject_id, a, admin.actor, admin.reason, r);
 });

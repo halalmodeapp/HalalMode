@@ -1,0 +1,111 @@
+name: Backend simulation
+
+# Fake members use a real, throwaway copy of the backend: every migration on the
+# Supabase Postgres image, on GitHub's machine. It never touches the live project
+# and needs no secrets, so it can run unattended. The report is kept as an artifact.
+#
+#   gh workflow run backend-simulation.yml -f per_side=5000 -f days=7
+#   gh run download --name backend-simulation
+#
+# GitHub only offers the manual trigger once this file is on the default branch.
+# Until then, pushing to any backend-sim/** branch runs it with the defaults.
+on:
+  workflow_dispatch:
+    inputs:
+      per_side:
+        description: Members on each side
+        default: '5000'
+      days:
+        description: Simulated days
+        default: '7'
+      scenario:
+        description: pessimistic, base or optimistic
+        default: base
+      day_minutes:
+        description: Wall-clock minutes per simulated day (lower is harsher)
+        default: '12'
+  push:
+    branches: ['backend-sim/**']
+
+permissions:
+  contents: read
+
+jobs:
+  simulate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    env:
+      PER_SIDE: ${{ inputs.per_side || '5000' }}
+      DAYS: ${{ inputs.days || '7' }}
+      SCENARIO: ${{ inputs.scenario || 'base' }}
+      DAY_MINUTES: ${{ inputs.day_minutes || '12' }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+
+      - uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1.7.3
+        with:
+          version: 2.110.0
+
+      - name: Sign in to Docker Hub
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ -n "$DOCKERHUB_TOKEN" ]; then
+            echo "$DOCKERHUB_TOKEN" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+          else
+            echo "No Docker Hub secrets set; pulling anonymously."
+          fi
+
+      - name: Start a throwaway backend
+        run: |
+          for attempt in 1 2 3; do
+            supabase start -x studio,imgproxy,edge-runtime,realtime,mailpit,postgres-meta,vector,supavisor && exit 0
+            echo "supabase start failed (attempt $attempt); retrying in 60 seconds"
+            supabase stop --no-backup || true
+            sleep 60
+          done
+          exit 1
+
+      - name: Apply every migration
+        run: supabase db reset --local
+
+      - name: Install the database driver
+        run: npm install --no-save --no-package-lock --ignore-scripts pg@8
+
+      - name: Hold the table's rules to the database's
+        env:
+          NODE_NO_WARNINGS: '1'
+          DATABASE_URL: postgres://supabase_admin:postgres@127.0.0.1:54322/postgres
+        run: node scripts/backend-sim/parity.mts
+
+      - name: Run the simulation
+        env:
+          NODE_NO_WARNINGS: '1'
+          # supabase_admin can pause triggers while the simulated clock moves on.
+          DATABASE_URL: postgres://supabase_admin:postgres@127.0.0.1:54322/postgres
+        run: |
+          node scripts/backend-sim/run.mts --per-side "$PER_SIDE" --days "$DAYS" \
+            --scenario "$SCENARIO" --day-minutes "$DAY_MINUTES" \
+            --out sim-results/report.json
+
+      - name: Summarise, and fail if the backend broke a promise
+        if: always()
+        run: node scripts/backend-sim/summary.mjs sim-results/report.json | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: backend-simulation
+          path: sim-results/
+          retention-days: 90
+
+      - name: Stop the backend
+        if: always()
+        run: supabase stop --no-backup

@@ -38,6 +38,11 @@ insert into profiles (id, name, first_name, birth_date, gender, tier, onboarding
   ('00000000-0000-0000-0000-000000000193', 'Capacity C', 'C', '1990-01-01', 'female', 'free', true),
   ('00000000-0000-0000-0000-000000000194', 'Capacity D', 'D', '1990-01-01', 'female', 'free', true);
 
+-- Premium access comes from the entitlement, not the profile projection.
+insert into halal_mode_private.member_entitlements (user_id, tier, state, provider)
+select id, 'premium', 'active', 'test_fixture' from profiles
+where id in ('00000000-0000-0000-0000-000000000191');
+
 insert into halal_mode_private.member_legal_consent_history (
   user_id, document_type, version, acceptance_context
 )

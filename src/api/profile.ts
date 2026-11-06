@@ -262,12 +262,25 @@ let mockMaritalSettings: MaritalSettings = { status: 'never_married', accepted: 
 const asStatuses = (value: unknown): MaritalStatus[] =>
   (Array.isArray(value) ? value : []).filter((item): item is MaritalStatus => MARITAL_STATUSES.includes(item as MaritalStatus));
 
-/** About how many people can be introduced to this member under their current choices. */
-export async function fetchMyPoolSize(): Promise<number> {
-  if (USE_MOCKS) return 42;
-  const { data, error } = await requireSupabase().rpc('get_my_pool_size');
+export interface MyReach {
+  /** About how many people can be introduced to this member under their current choices. */
+  reach: number;
+  /** How many it takes for this member to be sure of a full set every day. */
+  wanted: number;
+  /** The member's own choice that is costing them the most, when they have too few. */
+  criterion: string | null;
+}
+
+export async function fetchMyReach(): Promise<MyReach> {
+  if (USE_MOCKS) return { reach: 42, wanted: 35, criterion: null };
+  const { data, error } = await requireSupabase().rpc('get_my_reach');
   if (error) throw error;
-  return typeof data === 'number' ? data : 0;
+  const row = (data ?? {}) as { reach?: unknown; wanted?: unknown; criterion?: unknown };
+  return {
+    reach: typeof row.reach === 'number' ? row.reach : 0,
+    wanted: typeof row.wanted === 'number' ? row.wanted : 35,
+    criterion: typeof row.criterion === 'string' ? row.criterion : null,
+  };
 }
 
 export async function fetchMyMaritalSettings(): Promise<MaritalSettings> {

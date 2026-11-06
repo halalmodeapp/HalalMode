@@ -1,6 +1,6 @@
 begin;
 set local search_path = public, extensions, halal_mode_private;
-select plan(11);
+select plan(13);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-000000021201', 'liker@example.test'),
@@ -11,7 +11,9 @@ values
   ('00000000-0000-0000-0000-000000021201', 'Liker Person', 'Liker', '1990-01-01', 'male', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, repeat('a', 90), array['21201/a.jpg'], true, 'never_married', now()),
   ('00000000-0000-0000-0000-000000021202', 'Liked Person', 'Liked', '1992-01-01', 'female', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, repeat('b', 90), array['21202/a.jpg'], true, 'never_married', now()),
   ('00000000-0000-0000-0000-000000021203', 'Blocked Person', 'Blocked', '1991-01-01', 'male', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, repeat('c', 90), array['21203/a.jpg'], true, 'never_married', now());
-insert into private_preferences (user_id) select id from profiles where id::text like '00000000-0000-0000-0000-0000000212%';
+-- Like-back requires explicitly saved preferences, just like an ordinary pick.
+insert into private_preferences (user_id, matching_preferences_completed_at)
+select id, now() from profiles where id::text like '00000000-0000-0000-0000-0000000212%';
 insert into halal_mode_private.member_legal_consent_history (user_id, document_type, version, acceptance_context)
 select p.id, d.document_type, d.version, 'onboarding'
 from profiles p cross join halal_mode_private.legal_document_registry d
@@ -58,12 +60,20 @@ select throws_ok($$select like_back('00000000-0000-0000-0000-000000021201')$$, '
 
 -- ---------------------------------------------------------------- what a Premium member sees and does
 select set_config('request.jwt.claims', '', true);
-update profiles set tier = 'premium' where id = '00000000-0000-0000-0000-000000021202';
+insert into halal_mode_private.member_entitlements (user_id, tier, state, provider)
+values ('00000000-0000-0000-0000-000000021202', 'premium', 'active', 'test_fixture');
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000021202","role":"authenticated"}', true);
 select ok((get_my_liked_you() -> 0 ->> 'unlocked') = 'true' and ((get_my_liked_you() -> 0) ? 'photos'),
   'a Premium member sees them in full');
 select ok(halal_mode_private.premium_sees_liker('00000000-0000-0000-0000-000000021202', '00000000-0000-0000-0000-000000021201'),
   'and may read their photos');
+-- A pass on a later showing ends it, and the like stays put so the pass is not given away.
+insert into halal_mode_private.pair_exposure (user_low, user_high, explicit_pass_count, cooldown_until)
+values ('00000000-0000-0000-0000-000000021201', '00000000-0000-0000-0000-000000021202', 1, now() + interval '30 days');
+select throws_ok($$select like_back('00000000-0000-0000-0000-000000021201')$$, 'P0002', null, 'liking back after a pass makes no connection');
+select is((select count(*)::int from liked_you_current('00000000-0000-0000-0000-000000021202')), 1, 'and the like stays in the tray');
+delete from halal_mode_private.pair_exposure
+where user_low = '00000000-0000-0000-0000-000000021201' and user_high = '00000000-0000-0000-0000-000000021202';
 select is((like_back('00000000-0000-0000-0000-000000021201') ->> 'status'), 'matched', 'liking back starts a connection');
 select is((select count(*)::int from liked_you_current('00000000-0000-0000-0000-000000021202')), 0, 'once matched they leave the tray');
 select throws_ok($$select like_back('00000000-0000-0000-0000-000000021201')$$, 'P0002', null, 'a like cannot be used twice');

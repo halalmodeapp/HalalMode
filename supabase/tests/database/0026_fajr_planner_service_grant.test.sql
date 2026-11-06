@@ -1,18 +1,11 @@
 begin;
 
 set local search_path = public, extensions;
-select plan(4);
+select plan(3);
 
 select ok(
-  has_function_privilege('service_role', 'public.generate_round_for_pairs(timestamptz)', 'EXECUTE')
-  and has_function_privilege('service_role', 'public.expire_stale_rounds()', 'EXECUTE')
-  and has_function_privilege('service_role', 'public.set_madinah_fajr_cron(text)', 'EXECUTE'),
-  'the Fajr service role can generate, expire, and plan rounds'
-);
-select ok(
-  not has_function_privilege('authenticated', 'public.set_madinah_fajr_cron(text)', 'EXECUTE')
-  and not has_function_privilege('anon', 'public.set_madinah_fajr_cron(text)', 'EXECUTE'),
-  'members and anonymous callers cannot alter the Fajr schedule'
+  has_function_privilege('service_role', 'public.expire_stale_rounds()', 'EXECUTE'),
+  'the service role can expire rounds'
 );
 select ok(
   position('accepts_subject_country' in pg_get_functiondef('public.passes_criteria(uuid,uuid)'::regprocedure)) > 0,

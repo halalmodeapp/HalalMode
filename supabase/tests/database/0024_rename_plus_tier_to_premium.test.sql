@@ -1,7 +1,7 @@
 begin;
 
 set local search_path = public, extensions;
-select plan(7);
+select plan(6);
 
 select is(
   enum_range(null::membership_tier)::text[],
@@ -28,10 +28,6 @@ select ok(
 select ok(
   not has_function_privilege('authenticated', 'public.tier_limits(membership_tier)', 'EXECUTE'),
   'tier policy remains server-internal'
-);
-select lives_ok(
-  $$ select generate_round_for_pairs(now() + interval '1 hour') $$,
-  'the matcher accepts the renamed enum value'
 );
 
 select * from finish();

@@ -3,6 +3,7 @@ import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { Platform } from 'react-native';
 
 import { PHOTO_JPEG_QUALITY, photoResizeTarget } from '@/lib/photoPolicy';
+import { validAvatarCrop } from '@/lib/avatarCrop';
 import { requireSupabase, USE_MOCKS } from '@/lib/supabase';
 import type { Profile } from '@/types';
 import { PROFILE_PHOTO_BUCKET, VOICE_INTRODUCTION_BUCKET, resolveProfileMedia } from '@/lib/resolveProfileMedia';
@@ -75,6 +76,12 @@ export async function uploadProfilePhoto(
     p_path: path,
   });
   if (attachError) {
+    // A lost response can hide a committed attachment. Never delete its bytes.
+    const current = await client.from('profiles').select('photos').eq('id', path.split('/')[0]!).maybeSingle();
+    if (!current.error && Array.isArray(current.data?.photos) && current.data.photos.includes(path)) {
+      return { path, photos: current.data.photos as string[] };
+    }
+    if (!attachError.code) throw attachError;
     const cleanup = await client.storage.from(PROFILE_PHOTO_BUCKET).remove([path]);
     if (cleanup.error) {
       throw new Error(`${attachError.message} The unused upload also needs cleanup: ${path}`);
@@ -136,6 +143,10 @@ export async function uploadVoiceIntroduction(
     p_duration_seconds: Math.round(durationSeconds),
   });
   if (attachError) {
+    const current = await client.from('profiles').select('audio_greeting_url').eq('id', path.split('/')[0]!).maybeSingle();
+    if (!current.error && current.data?.audio_greeting_url === path) return { path };
+    // Keep an uncertain upload: its attachment may still be committing.
+    if (!attachError.code) throw attachError;
     const cleanup = await client.storage.from(VOICE_INTRODUCTION_BUCKET).remove([path]);
     if (cleanup.error) {
       throw new Error(`${attachError.message} The unused upload also needs cleanup: ${path}`);
@@ -261,9 +272,7 @@ export async function fetchMyAvatarCrop(): Promise<AvatarCrop | null> {
   if (USE_MOCKS) return mockAvatarCrop;
   const { data, error } = await requireSupabase().rpc('get_my_avatar_crop');
   if (error) throw error;
-  const row = data as Partial<AvatarCrop> | null;
-  if (!row || typeof row.path !== 'string') return null;
-  return { path: row.path, cx: Number(row.cx), cy: Number(row.cy), size: Number(row.size) };
+  return validAvatarCrop(data);
 }
 
 export async function saveMyAvatarCrop(crop: AvatarCrop): Promise<void> {

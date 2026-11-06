@@ -12,8 +12,6 @@ export const AUTOSAVE = {
   retryMs: [15000, 30000, 60000],
   /** How many times in a row the server may refuse before retrying waits for the next change. */
   maxRefusals: 3,
-  /** The "Saved" toast comes this soon after an edit pauses: the change is already kept on the phone. */
-  savedToastAfterMs: 900,
   /** ...and not more often than this, however long someone keeps editing. */
   savedToastGapMs: 3000,
 } as const;
@@ -24,7 +22,7 @@ export function isNetworkError(error: unknown): boolean {
   return /network request failed|failed to fetch|network error|networkerror|load failed|timed? ?out|offline|internet|connection|econn|enotfound|unable to resolve/i.test(text);
 }
 
-/** Whether the optimistic "Saved" toast may show now. */
+/** Whether the server-confirmed "Saved" toast may show now. */
 export function savedToastDue(now: number, lastShownAt: number): boolean {
   return lastShownAt === 0 || now - lastShownAt >= AUTOSAVE.savedToastGapMs;
 }

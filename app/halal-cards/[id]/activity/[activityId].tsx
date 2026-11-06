@@ -47,7 +47,7 @@ export default function ActivityDetail() {
 
   const start = useMutation({
     mutationFn: () => {
-      if (!activity) throw new Error('Unknown activity.');
+      if (!activity || !access.data || !inTrack(activity, access.data.track)) throw new Error('Activity not available.');
       return startCardsSession(id, activity.id, initialState(activity, myGender), activity.version ?? 1);
     },
     onSuccess: (session) => {
@@ -137,6 +137,7 @@ export default function ActivityDetail() {
             <Button
               label={played ? copy('replay') : copy('invite', { name })}
               loading={start.isPending}
+              disabled={!access.data || !inTrack(activity, track)}
               onPress={() => start.mutate()}
             />
           ) : (

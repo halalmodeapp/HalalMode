@@ -1,7 +1,7 @@
 begin;
 
 set local search_path = public, extensions;
-select plan(11);
+select plan(10);
 
 insert into auth.users (id, email) values (
   '00000000-0000-0000-0000-000000019101',
@@ -79,16 +79,6 @@ select throws_ok(
   'the setter rejects unsupported methods'
 );
 
-select ok(
-  position(
-    'high_latitude_fajr_method text' in pg_get_function_result(
-      'public.members_awaiting_round_service()'::regprocedure
-    )
-  ) > 0
-  and has_function_privilege('service_role', 'public.members_awaiting_round_service()', 'EXECUTE')
-  and not has_function_privilege('authenticated', 'public.members_awaiting_round_service()', 'EXECUTE'),
-  'the service-only round scheduler receives the method without exposing its RPC'
-);
 
 select ok(
   position('nextFajrAt' in pg_get_functiondef('public.get_current_round_state()'::regprocedure)) > 0,

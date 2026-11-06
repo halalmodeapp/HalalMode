@@ -9,14 +9,13 @@ import { Text } from '@/components/ui/Text';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n, type Translate } from '@/i18n';
 import { requireSupabase } from '@/lib/supabase';
+import { withDeadline } from '@/lib/withDeadline';
 import { claimReferralCode } from '@/api/referrals';
-import { forgetReferralCode, normalizeReferralCode, pendingReferralCode } from '@/lib/referralCode';
-import { fetchMyLegalConsentStatus, recordSensitiveConsent } from '@/api/legalConsent';
+import { forgetReferralCode, normalizeReferralCode, pendingReferralCode, rememberMemberReferralCode } from '@/lib/referralCode';
+import { fetchMyLegalConsentStatus } from '@/api/legalConsent';
 import { documentFromStatus } from '@/lib/legalConsent';
 import { queryKeys } from '@/lib/queryClient';
 import { SelfieCapture } from '@/components/verification/SelfieCapture';
-import { submitSelfie } from '@/api/selfie';
-import { setMyMaritalStatus } from '@/api/profile';
 import { PermissionExplainer } from '@/components/ui/PermissionExplainer';
 import { browserDeviceCoordinates, nativeDevicePlace } from '@/lib/deviceLocation';
 import { placeFromBrowserCoordinates } from '@/lib/browserPlace';
@@ -41,7 +40,6 @@ export default function OnboardingScreen() {
   const { user, refreshProfileStatus } = useAuth();
   const queryClient = useQueryClient();
   const draftMemberId = user?.id ?? 'current';
-  const profileSavedForMember = useRef<string | null>(null);
   // Through a ref, not an effect dependency: the user object changes on every
   // token refresh, and re-running the restore then would wipe a draft in
   // progress.
@@ -71,17 +69,22 @@ export default function OnboardingScreen() {
     : undefined;
   useEffect(() => {
     let active = true;
-    void pendingReferralCode().then((code) => {
+    void pendingReferralCode(draftMemberId).then((code) => {
       if (active && code) setReferralCode((current) => current || code);
     });
     return () => {
       active = false;
     };
-  }, []);
+  }, [draftMemberId]);
   const legalStatusQuery = useQuery({
     queryKey: queryKeys.legalConsent,
     queryFn: fetchMyLegalConsentStatus,
   });
+  const displayedVersions = legalStatusQuery.data?.currentDocuments.map(document => `${document.type}:${document.version}`).join('|');
+  useEffect(() => {
+    setLegalAccepted(false);
+    setSensitiveAccepted(false);
+  }, [displayedVersions]);
 
   useEffect(() => {
     let active = true;
@@ -265,6 +268,10 @@ export default function OnboardingScreen() {
     );
     if (!legalAccepted || !sensitiveAccepted) allErrors.legal = t('onboarding.error.legal');
     if (!terms || !privacy) allErrors.legal = t('onboarding.legalUnavailable');
+    if (!selfiePath && Platform.OS !== 'web') {
+      setStep(SELFIE_STEP);
+      allErrors.city = t('onboarding.selfieRequired');
+    }
     if (Object.keys(allErrors).length > 0 || !birthDate || !draft.gender || !legalAccepted || !sensitiveAccepted || !terms || !privacy) {
       setErrors(allErrors);
       setSubmitError(t('onboarding.submitCheck'));
@@ -274,41 +281,30 @@ export default function OnboardingScreen() {
     setSaving(true);
     setSubmitError(null);
     try {
-      if (profileSavedForMember.current !== draftMemberId) {
-        const { error } = await requireSupabase().rpc('complete_onboarding', {
-          p_name: draft.fullName.trim(),
-          p_first_name: draft.firstName.trim(),
-          p_birth_date: birthDate,
-          p_gender: draft.gender,
-          p_city: draft.city.trim(),
-          p_country: draft.country.trim(),
-          p_latitude: draft.latitude,
-          p_longitude: draft.longitude,
-          p_terms_version: terms.version,
-          p_privacy_version: privacy.version,
-        });
-        if (error) {
-          // A timed-out response can follow a committed RPC. Confirm that
-          // before retrying it, because complete_onboarding rejects duplicates.
-          const { data: savedProfile, error: lookupError } = await requireSupabase()
-            .from('profiles')
-            .select('onboarding_complete')
-            .eq('id', draftMemberId)
-            .maybeSingle();
-          if (lookupError || savedProfile?.onboarding_complete !== true) throw error;
-        }
-        profileSavedForMember.current = draftMemberId;
-      }
-      // The marital status is saved once the profile exists; a retry saves it again.
-      if (draft.maritalStatus) await setMyMaritalStatus(draft.maritalStatus);
-      await recordSensitiveConsent();
-      // Send the selfie to be checked. A failure never holds up sign-up: the
-      // You tab asks for the selfie again while none is on file.
-      if (selfiePath) await submitSelfie(selfiePath).catch(() => undefined);
+      const { error } = await requireSupabase().rpc('complete_onboarding_account', {
+        p_name: draft.fullName.trim(),
+        p_first_name: draft.firstName.trim(),
+        p_birth_date: birthDate,
+        p_gender: draft.gender,
+        p_city: draft.city.trim(),
+        p_country: draft.country.trim(),
+        p_latitude: draft.latitude,
+        p_longitude: draft.longitude,
+        p_terms_version: terms.version,
+        p_privacy_version: privacy.version,
+        p_marital_status: draft.maritalStatus,
+        p_sensitive_consent: sensitiveAccepted,
+        p_selfie_path: selfiePath,
+      });
+      if (error) throw error;
       // Credit whoever invited them. It never holds up sign-up.
       const invitedBy = normalizeReferralCode(referralCode);
-      if (invitedBy) await claimReferralCode(invitedBy).catch(() => undefined);
-      await forgetReferralCode();
+      if (invitedBy) {
+        // A transport failure keeps the invitation for the signed-in retry.
+        await rememberMemberReferralCode(draftMemberId, invitedBy).catch(() => undefined);
+        await withDeadline(claimReferralCode(invitedBy, draftMemberId), 5000)
+          .then(() => forgetReferralCode(draftMemberId)).catch(() => undefined);
+      }
       await clearOnboardingDraft(draftMemberId);
       // Everything fetched before this moment was fetched about somebody who did
       // not exist yet, and is cached for five minutes. Two of those answers did
@@ -320,6 +316,7 @@ export default function OnboardingScreen() {
       setCompleted(true);
       await refreshProfileStatus();
     } catch {
+      void legalStatusQuery.refetch();
       setSubmitError(
         t('onboarding.submitGeneric')
       );

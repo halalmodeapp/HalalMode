@@ -1,7 +1,7 @@
 begin;
 
 set local search_path = public, extensions;
-select plan(31);
+select plan(27);
 
 -- The three strengths of "no", and the repetition scaling that sits behind
 -- them. Covers migrations 0070 through 0079.
@@ -101,8 +101,23 @@ select is(
   'the pair carries the pass, which is what costs it rank'
 );
 
--- --- A second pass also costs time ------------------------------------------
+-- --- A second pass closes the pair ------------------------------------------
 
+-- Asking again about the same card is still one pass.
+do $$
+begin
+  perform public.pass_introduction('00000000-0000-0000-0000-00000000700b');
+end $$;
+select is(
+  (select explicit_pass_count::int from halal_mode_private.pair_exposure
+   where user_low = '00000000-0000-0000-0000-000000007001'
+     and user_high = '00000000-0000-0000-0000-000000007002'),
+  1,
+  'asking twice about one card is one pass'
+);
+
+-- The pair comes round again on a new card.
+delete from introduction_selections where introduction_id = '00000000-0000-0000-0000-00000000700b';
 do $$
 begin
   perform public.pass_introduction('00000000-0000-0000-0000-00000000700b');
@@ -122,34 +137,11 @@ select is(
   'and is counted'
 );
 
--- Backdated past the cooldown so expiry has something to do.
-update introduction_selections
-set decided_at = now() - make_interval(
-  days => (halal_mode_private.active_matching_config()
-           ->> 'explicit_pass_cooldown_days')::int + 1
-)
-where introduction_id = '00000000-0000-0000-0000-00000000700b';
-
-do $$ begin perform halal_mode_private.expire_explicit_passes(); end $$;
-
-select is(
-  (select decision::text from introduction_selections
-   where introduction_id = '00000000-0000-0000-0000-00000000700b'),
-  'released',
-  'expiry lifts the ban'
-);
-select is(
-  (select explicit_pass_count::int from halal_mode_private.pair_exposure
-   where user_low = '00000000-0000-0000-0000-000000007001'
-     and user_high = '00000000-0000-0000-0000-000000007002'),
-  2,
-  'expiry keeps the count, which is what carries the rank penalty'
-);
 select ok(
-  (select retired_at is null from halal_mode_private.pair_exposure
+  (select retired_at is not null from halal_mode_private.pair_exposure
    where user_low = '00000000-0000-0000-0000-000000007001'
      and user_high = '00000000-0000-0000-0000-000000007002'),
-  'passing twice does not close the pair — only a member does that'
+  'a second pass closes the pair for good'
 );
 
 -- --- A submission must not undo the decision that preceded it ---------------
@@ -210,50 +202,6 @@ select ok(
   > (halal_mode_private.active_matching_config()
      ->> 'max_repeat_cooldown_days')::int,
   'and always more than simply not being chosen'
-);
-
--- --- The cooldown scales with the estimate ----------------------------------
-
-update halal_mode_private.pair_exposure
-set last_shown_at = now(), last_reciprocal_score = 0.60
-where user_low = '00000000-0000-0000-0000-000000007001'
-  and user_high = '00000000-0000-0000-0000-000000007002';
-
-select is(
-  (select cooldown_until from halal_mode_private.pair_exposure
-   where user_low = '00000000-0000-0000-0000-000000007001'
-     and user_high = '00000000-0000-0000-0000-000000007002'),
-  now() + make_interval(days => halal_mode_private.pair_cooldown_days(
-    0.60, halal_mode_private.active_matching_config()
-  )),
-  'the trigger sets the wait from the score rather than a flat number'
-);
-
-update halal_mode_private.pair_exposure
-set last_shown_at = now() + interval '1 second', last_reciprocal_score = 0.16
-where user_low = '00000000-0000-0000-0000-000000007001'
-  and user_high = '00000000-0000-0000-0000-000000007002';
-
-select ok(
-  (select cooldown_until from halal_mode_private.pair_exposure
-   where user_low = '00000000-0000-0000-0000-000000007001'
-     and user_high = '00000000-0000-0000-0000-000000007002')
-  > now() + interval '14 days',
-  'a pair barely above the floor waits weeks, freeing the slot for somebody new'
-);
-
--- Writes that are not a showing must not reset a cooldown already running.
-update halal_mode_private.pair_exposure
-set explicit_pass_count = explicit_pass_count
-where user_low = '00000000-0000-0000-0000-000000007001'
-  and user_high = '00000000-0000-0000-0000-000000007002';
-
-select ok(
-  (select cooldown_until from halal_mode_private.pair_exposure
-   where user_low = '00000000-0000-0000-0000-000000007001'
-     and user_high = '00000000-0000-0000-0000-000000007002')
-  > now() + interval '14 days',
-  'an unrelated write to the pair leaves the running cooldown alone'
 );
 
 -- --- The curve --------------------------------------------------------------
@@ -427,8 +375,7 @@ select ok(
   'members can pass and hide through the relationship-scoped entry points'
 );
 select ok(
-  not has_function_privilege('authenticated', 'halal_mode_private.expire_explicit_passes()', 'EXECUTE')
-  and not has_function_privilege('authenticated', 'halal_mode_private.hide_pair(uuid, uuid)', 'EXECUTE')
+  not has_function_privilege('authenticated', 'halal_mode_private.hide_pair(uuid, uuid)', 'EXECUTE')
   and not has_table_privilege('authenticated', 'halal_mode_private.member_hides', 'SELECT'),
   'and cannot reach the machinery behind them, or read who has hidden whom'
 );

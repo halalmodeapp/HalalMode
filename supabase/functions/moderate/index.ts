@@ -267,8 +267,13 @@ Deno.serve(async (request) => {
   if (!Deno.env.get('OPENAI_API_KEY')) return Response.json({ purged, blurred, error: 'OPENAI_API_KEY is not set' }, { status: 503 });
 
   const openai = new OpenAI();
-  const claimed = await client.rpc('claim_moderation_service', { p_limit: 10 });
+  const claimToken = crypto.randomUUID();
+  const claimed = await client.rpc('claim_moderation_fenced_service', { p_limit: 10, p_claim_token: claimToken });
   if (claimed.error) return new Response('claim failed', { status: 500 });
+  const settleModeration = async (args: Record<string, unknown>) => {
+    const result = await client.rpc('settle_moderation_fenced_service', args);
+    if (result.error) throw result.error;
+  };
   const items = (claimed.data ?? []) as Item[];
 
   const tally = { allow: 0, remove: 0, review: 0, skipped: 0, failed: 0 };
@@ -277,7 +282,7 @@ Deno.serve(async (request) => {
   for (const item of items) {
     try {
       if (!item.current) {
-        await client.rpc('settle_moderation_service', { p_id: item.id, p_decision: 'allow', p_reason: 'No longer on the profile.' });
+        await settleModeration({ p_claim_token: claimToken, p_id: item.id, p_decision: 'allow', p_reason: 'No longer on the profile.' });
         tally.skipped += 1;
         continue;
       }
@@ -303,7 +308,7 @@ Deno.serve(async (request) => {
       } else {
         verdict = await judge(openai, item.ref, false);
       }
-      await client.rpc('settle_moderation_service', {
+      await settleModeration({ p_claim_token: claimToken,
         p_id: item.id,
         p_decision: verdict.decision,
         p_reason: `${verdict.reason} (${checkedBy})`,
@@ -312,14 +317,15 @@ Deno.serve(async (request) => {
     } catch (error) {
       console.error('moderation failed', item.id, String(error));
       firstError ??= String(error).slice(0, 300);
-      await client.rpc('release_moderation_service', { p_id: item.id });
+      await client.rpc('release_moderation_fenced_service', { p_claim_token: claimToken, p_id: item.id });
       tally.failed += 1;
     }
   }
 
   // This queue is empty while the Luna metric is off. Claiming it is bounded,
   // and existing photos are never backfilled unless an operator asks for it.
-  const photoClaim = await client.rpc('claim_matching_photo_analysis_service', { p_limit: 2 });
+  const photoToken = crypto.randomUUID();
+  const photoClaim = await client.rpc('claim_matching_photo_analysis_fenced_service', { p_limit: 2, p_claim_token: photoToken });
   if (photoClaim.error) {
     firstError ??= `photo claim failed: ${photoClaim.error.message}`.slice(0, 300);
   }
@@ -370,7 +376,7 @@ Deno.serve(async (request) => {
         },
       }));
       const features = parsePresentationFeatures(result.output_text ?? '');
-      const saved = await client.rpc('complete_matching_photo_analysis_service', {
+      const saved = await client.rpc('complete_matching_photo_analysis_fenced_service', { p_claim_token: photoToken,
         p_photo_hash: photo.photo_hash,
         p_owner_id: photo.owner_id,
         p_storage_path: photo.storage_path,
@@ -383,7 +389,7 @@ Deno.serve(async (request) => {
     } catch (error) {
       console.error('matching photo analysis failed', photo.photo_hash.slice(0, 12), String(error));
       firstError ??= String(error).slice(0, 300);
-      await client.rpc('release_matching_photo_analysis_service', { p_photo_hash: photo.photo_hash });
+      await client.rpc('release_matching_photo_analysis_fenced_service', { p_claim_token: photoToken, p_photo_hash: photo.photo_hash });
       photosFailed += 1;
     }
   }

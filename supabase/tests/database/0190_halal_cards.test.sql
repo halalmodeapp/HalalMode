@@ -21,6 +21,11 @@ values
   ('00000000-0000-0000-0000-000000019002', 'Premium B', 'Bilal', '1994-01-01', 'male', true, 'premium'),
   ('00000000-0000-0000-0000-000000019003', 'Outsider', 'Omar', '1993-01-01', 'male', true, 'premium');
 
+-- Premium access comes from the entitlement, not the profile projection.
+insert into halal_mode_private.member_entitlements (user_id, tier, state, provider)
+select id, 'premium', 'active', 'test_fixture' from profiles
+where id in ('00000000-0000-0000-0000-000000019002', '00000000-0000-0000-0000-000000019003');
+
 insert into halal_mode_private.member_legal_consent_history
   (user_id, document_type, version, acceptance_context)
 select u.id, d.document_type, d.version, 'reacceptance'
@@ -139,7 +144,7 @@ select is(
 
 -- Versioned state.
 select is(
-  (public.advance_halal_cards_session((select id from session_ids), 2, '{"kind":"quiz","cursor":1}', false)->>'version')::int, 3,
+  (public.advance_halal_cards_session((select id from session_ids), 4, '{"kind":"quiz","cursor":1}', false)->>'version')::int, 5,
   'a write from the current version is applied'
 );
 select throws_ok(

@@ -9,6 +9,13 @@ export async function setProfilePaused(paused: boolean): Promise<void> {
   if (error) throw error;
 }
 
+/** Why someone is leaving. Kept with nothing that links it to them, so it outlives the account. */
+export async function recordExitAnswer(reason: string, note: string): Promise<void> {
+  if (USE_MOCKS) return;
+  const { error } = await requireSupabase().rpc('record_exit_answer', { p_reason: reason, p_note: note || null });
+  if (error) throw error;
+}
+
 /** Immediately removes the member from matching while a server-side purge is processed. */
 export async function requestAccountDeletion(): Promise<void> {
   if (USE_MOCKS) return;

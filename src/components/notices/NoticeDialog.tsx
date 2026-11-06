@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Modal, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 
@@ -29,13 +29,18 @@ export function NoticeDialog() {
   const reducedMotion = useReducedMotion();
   const queryClient = useQueryClient();
   const notices = useQuery({ queryKey: queryKeys.notices, queryFn: fetchMyNotices, refetchOnWindowFocus: true });
+  const acknowledge = useMutation({
+    mutationFn: (id: number) => markMyNoticesSeen([id]),
+    onSuccess: (_data, id) => {
+      queryClient.setQueryData<typeof notices.data>(queryKeys.notices, (current) => current?.filter((item) => item.id !== id));
+    },
+  });
   const notice = notices.data?.[0];
   if (!notice) return null;
   const wording = WORDING[notice.kind];
 
   const dismiss = () => {
-    queryClient.setQueryData(queryKeys.notices, notices.data?.slice(1) ?? []);
-    void markMyNoticesSeen([notice.id]).catch(() => undefined);
+    if (!acknowledge.isPending) acknowledge.mutate(notice.id);
   };
 
   return (
@@ -51,7 +56,8 @@ export function NoticeDialog() {
           <Text variant="displaySmall" center>{t(wording.title)}</Text>
           <Text variant="bodySmall" center style={styles.body}>{t(wording.body)}</Text>
           <View style={styles.stack}>
-            <Button label={t('notice.ok')} onPress={dismiss} style={styles.action} />
+            {acknowledge.isError ? <Text variant="caption" center>{t('common.errorTitle')}</Text> : null}
+            <Button label={t('notice.ok')} onPress={dismiss} loading={acknowledge.isPending} style={styles.action} />
           </View>
         </Animated.View>
       </Animated.View>

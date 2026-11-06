@@ -33,6 +33,8 @@ export const queryKeys = {
   selfie: ['selfie'] as const,
   maritalSettings: ['marital-settings'] as const,
   poolSize: ['pool-size'] as const,
+  farewells: ['farewells'] as const,
+  photoCoach: ['photo-coach'] as const,
   cardsAccess: (connectionId: string) => ['halal-cards', 'access', connectionId] as const,
   cardsSessions: (connectionId: string) => ['halal-cards', 'sessions', connectionId] as const,
   cardsSession: (sessionId: string) => ['halal-cards', 'session', sessionId] as const,

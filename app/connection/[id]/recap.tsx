@@ -7,7 +7,7 @@ import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, wi
 import { fetchConnection, fetchConnectionSummary, openConnection } from '@/api/connections';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { SafetyControl } from '@/components/safety/SafetyControl';
-import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
+import { ErrorState, InlineNotice, LoadingState } from '@/components/ui/AsyncState';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { LoadingDots } from '@/components/ui/LoadingDots';
@@ -32,6 +32,7 @@ export default function RecapScreen() {
   const connectionQuery = useQuery({
     queryKey: queryKeys.connection(id),
     queryFn: () => fetchConnection(id),
+    refetchInterval: (query) => query.state.data?.stage === 'answering' ? 15_000 : false,
   });
   const connection = connectionQuery.data;
 
@@ -58,14 +59,14 @@ export default function RecapScreen() {
   const summaryQuery = useQuery({
     queryKey: ['connection-summary', id, language],
     queryFn: () => fetchConnectionSummary(id, language),
-    enabled: !!connectionId && !summaryTimedOut,
+    enabled: !!connectionId && (connection?.stage === 'recap' || connection?.stage === 'open') && !summaryTimedOut,
     staleTime: Infinity,
     // Still being written: ask again every few seconds, for up to two minutes.
     refetchInterval: (query) =>
       !summaryTimedOut && query.state.data?.pending ? 3000 : false,
   });
   const botSummary = summaryQuery.data?.summary ?? null;
-  const preparing = !summaryTimedOut && !summaryQuery.isError && !botSummary
+  const preparing = connection?.stage === 'recap' && !summaryTimedOut && !summaryQuery.isError && !botSummary
     && (summaryQuery.isPending || summaryQuery.data?.pending === true);
 
   const openMutation = useMutation({
@@ -155,6 +156,7 @@ export default function RecapScreen() {
         ) : null}
 
         <View style={styles.actions}>
+          {openMutation.isError ? <InlineNotice message={t('connections.errorBody')} /> : null}
           {connection?.stage === 'open' ? (
             // Come back to reread it: the conversation is already open.
             <Button label={t('common.back')} onPress={() => (router.canGoBack() ? router.back() : router.replace(`/connection/${id}/chat`))} />
@@ -164,6 +166,7 @@ export default function RecapScreen() {
             testID={testIds.recap.open}
             label={t('recap.open')}
             loading={openMutation.isPending}
+            disabled={connection.stage !== 'recap'}
             onPress={() => openMutation.mutate()}
           />
           <Button

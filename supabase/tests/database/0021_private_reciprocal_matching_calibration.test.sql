@@ -1,7 +1,7 @@
 begin;
 
 set local search_path = public, extensions;
-select plan(21);
+select plan(14);
 
 select is(
   (select count(*)::int from halal_mode_private.matching_band_policies),
@@ -23,16 +23,6 @@ select ok(
   and not has_function_privilege('authenticated', 'halal_mode_private.accepts_subject_country(uuid,uuid)', 'EXECUTE')
   and not has_function_privilege('authenticated', 'halal_mode_private.set_matching_band_policy(gender,numeric)', 'EXECUTE'),
   'private calibration, country, and policy helpers are not callable by members'
-);
-select ok(
-  position('passes_criteria(m.id, f.id)' in pg_get_functiondef('public.generate_round_for_pairs(timestamptz)'::regprocedure)) > 0
-  and position('passes_criteria(f.id, m.id)' in pg_get_functiondef('public.generate_round_for_pairs(timestamptz)'::regprocedure)) > 0,
-  'the matcher keeps the reciprocal eligibility gate in both directions'
-);
-select ok(
-  position('coalesce(s.band, 3)' in pg_get_functiondef('public.generate_round_for_pairs(timestamptz)'::regprocedure)) > 0
-  and position('matching_band_for_score' in pg_get_functiondef('halal_mode_private.sync_selection_score_band()'::regprocedure)) > 0,
-  'the matcher uses materialized private bands and the trigger recomputes them on every score change'
 );
 
 insert into auth.users (id, email) values
@@ -170,34 +160,6 @@ select ok(
 update private_preferences set preferred_countries = array['Lebanon']
 where user_id = '00000000-0000-0000-0000-000000000212';
 
-select lives_ok(
-  $$ select generate_round_for_pairs(now() + interval '1 day') $$,
-  'the matcher can build a round with private calibration enabled'
-);
-select is(
-  (select count(*)::int from introductions
-   where (viewer_id = '00000000-0000-0000-0000-000000000211' and subject_id = '00000000-0000-0000-0000-000000000212')
-      or (viewer_id = '00000000-0000-0000-0000-000000000212' and subject_id = '00000000-0000-0000-0000-000000000211')),
-  2,
-  'a reciprocal international pair receives exactly two linked cards'
-);
-select ok(
-  exists (
-    select 1 from introductions a
-    join introductions b on b.id = a.reciprocal_id and b.reciprocal_id = a.id
-    where a.viewer_id = '00000000-0000-0000-0000-000000000211'
-      and a.subject_id = '00000000-0000-0000-0000-000000000212'
-  ),
-  'international cards retain the reciprocal twin invariant'
-);
-select ok(
-  not exists (
-    select 1 from introductions
-    where viewer_id = '00000000-0000-0000-0000-000000000211'
-      and subject_id = '00000000-0000-0000-0000-000000000213'
-  ),
-  'a local-distance-ineligible pair is not introduced'
-);
 select is(
   halal_mode_private.matching_band_for_member('00000000-0000-0000-0000-000000000211'),
   (select band from selection_scores where user_id = '00000000-0000-0000-0000-000000000211'),
@@ -210,11 +172,6 @@ select ok(
 select ok(
   not has_function_privilege('authenticated', 'halal_mode_private.matching_band_for_member(uuid)', 'EXECUTE'),
   'members cannot ask the server for their own calibration band'
-);
-select ok(
-  not has_function_privilege('authenticated', 'public.generate_round_for_pairs(timestamptz)', 'EXECUTE')
-  and not has_function_privilege('anon', 'public.generate_round_for_pairs(timestamptz)', 'EXECUTE'),
-  'members and anonymous callers cannot generate or manipulate daily rounds'
 );
 
 select * from finish();

@@ -60,9 +60,11 @@ export type ReferralClaim = 'claimed' | 'already' | 'own' | 'too_late' | 'invali
  * friend counts toward that person's rewards once this member's profile is
  * complete.
  */
-export async function claimReferralCode(code: string): Promise<ReferralClaim> {
+export async function claimReferralCode(code: string, memberId?: string): Promise<ReferralClaim> {
   if (USE_MOCKS) return 'claimed';
-  const { data, error } = await requireSupabase().rpc('claim_referral_code', { p_code: code });
+  const { data, error } = memberId
+    ? await requireSupabase().rpc('claim_referral_code_for_member', { p_code: code, p_expected_user_id: memberId })
+    : await requireSupabase().rpc('claim_referral_code', { p_code: code });
   if (error) throw error;
   const state = (data as { state?: unknown } | null)?.state;
   return state === 'claimed' || state === 'already' || state === 'own' || state === 'too_late' ? state : 'invalid';

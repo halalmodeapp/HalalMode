@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
@@ -51,6 +51,7 @@ export function PhotoCropSheet(props: PhotoCropSheetProps) {
   const [zoom, setZoom] = useState(1);
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
+  const generation = useRef(0);
 
   const scale = useSharedValue(1);
   const startScale = useSharedValue(1);
@@ -61,6 +62,8 @@ export function PhotoCropSheet(props: PhotoCropSheetProps) {
 
   // The real size, from the decoded image: pickers do not always report it.
   useEffect(() => {
+    generation.current += 1;
+    setSaving(false);
     setSize(null);
     setZoom(1);
     setFailed(false);
@@ -72,7 +75,7 @@ export function PhotoCropSheet(props: PhotoCropSheetProps) {
     ImageManipulator.manipulate(uri).renderAsync()
       .then((image) => { if (live) setSize({ width: image.width, height: image.height }); })
       .catch(() => { if (live) setFailed(true); });
-    return () => { live = false; };
+    return () => { live = false; generation.current += 1; };
   }, [uri, scale, x, y]);
 
   // How big the image is drawn at zoom 1: just covering the frame.
@@ -129,7 +132,8 @@ export function PhotoCropSheet(props: PhotoCropSheetProps) {
   };
 
   const save = async () => {
-    if (!uri || !size) return;
+    if (!uri || !size || saving) return;
+    const currentGeneration = generation.current;
     if (props.shape === 'circle') {
       // Nothing is cut: only where the circle sits on the photo is kept.
       const shown = drawnWidth * scale.value;
@@ -154,16 +158,16 @@ export function PhotoCropSheet(props: PhotoCropSheetProps) {
         .crop({ originX: Math.round(originX), originY: Math.round(originY), width: Math.round(width), height: Math.round(height) })
         .renderAsync();
       const saved = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.92 });
-      props.onDone(saved.uri);
+      if (generation.current === currentGeneration) props.onDone(saved.uri);
     } catch {
-      setFailed(true);
+      if (generation.current === currentGeneration) setFailed(true);
     } finally {
-      setSaving(false);
+      if (generation.current === currentGeneration) setSaving(false);
     }
   };
 
   return (
-    <Modal visible={uri !== null} transparent animationType="fade" onRequestClose={onCancel}>
+    <Modal visible={uri !== null} transparent animationType="fade" onRequestClose={() => { generation.current += 1; onCancel(); }}>
       <GestureHandlerRootView style={styles.scrim}>
         <View accessibilityViewIsModal style={[styles.card, isRTL && styles.rtl]}>
           <Text variant="displaySmall" center>{t(shape === 'circle' ? 'profile.avatarTitle' : 'profile.cropTitle')}</Text>
@@ -198,7 +202,7 @@ export function PhotoCropSheet(props: PhotoCropSheetProps) {
 
           <View style={styles.stack}>
             <Button label={t('profile.cropSave')} onPress={() => void save()} disabled={!size || saving} style={styles.action} />
-            <Button label={t('common.cancel')} variant="secondary" onPress={onCancel} style={styles.action} />
+            <Button label={t('common.cancel')} variant="secondary" onPress={() => { generation.current += 1; onCancel(); }} style={styles.action} />
           </View>
         </View>
       </GestureHandlerRootView>

@@ -12,7 +12,7 @@ select ok(
   'anonymous callers cannot submit a round'
 );
 select ok(
-  position('for update' in lower(pg_get_functiondef(
+  position('for no key update' in lower(pg_get_functiondef(
     'halal_mode_private.submit_round_selections_after_legal_consent(uuid,uuid[])'::regprocedure
   ))) > 0,
   'round submission locks its round row'

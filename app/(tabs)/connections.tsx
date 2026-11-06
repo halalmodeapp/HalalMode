@@ -7,6 +7,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { fetchConnections } from '@/api/connections';
 import { BrandHeader } from '@/components/navigation/BrandHeader';
+import { FarewellNotes } from '@/components/connections/FarewellNotes';
 import { LikedYouTray } from '@/components/likedYou/LikedYouTray';
 import { CompleteProfileNudge } from '@/components/readiness/CompleteProfileNudge';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/AsyncState';
@@ -66,6 +67,7 @@ export default function ConnectionsScreen() {
             onRetry={() => void connectionsQuery.refetch()}
           />
         ) : null}
+        <FarewellNotes />
         <LikedYouTray />
         <CompleteProfileNudge hasMatch={connections.length > 0} />
         {connections.map((connection) => (

@@ -13,6 +13,11 @@ values
   ('00000000-0000-0000-0000-000000021002', 'Halal', 'Halal', '1991-01-01', 'female', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, true, 'free'),
   ('00000000-0000-0000-0000-000000021003', 'Vegan', 'Vegan', '1991-01-01', 'female', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, true, 'free'),
   ('00000000-0000-0000-0000-000000021004', 'Blank', 'Blank', '1991-01-01', 'female', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, true, 'free');
+
+-- Premium access comes from the entitlement, not the profile projection.
+insert into halal_mode_private.member_entitlements (user_id, tier, state, provider)
+select id, 'premium', 'active', 'test_fixture' from profiles
+where id in ('00000000-0000-0000-0000-000000021001');
 insert into private_preferences (user_id)
 select id from profiles where id::text like '00000000-0000-0000-0000-0000000210%';
 

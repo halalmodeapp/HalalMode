@@ -12,11 +12,10 @@ import { AUTOSAVE, nextFlushDelay, retryDelay, savedToastDue } from '@/lib/autos
 export type SaveResult = 'saved' | 'offline' | 'failed' | 'invalid';
 
 /**
- * Saves edits by itself, in batches, and says so at once.
+ * Saves edits by itself, in batches, and confirms them after acknowledgement.
  *
- * An edit is kept on the phone the moment it is made, so `onLocalSave` (the
- * "Saved" toast) fires as soon as the edits pause, without waiting for the
- * server. The server send follows: `version` changes with every edit; while
+ * Pending edits are kept by the caller. The "Saved" toast waits for the
+ * server to acknowledge the current version. `version` changes with every edit; while
  * `dirty`, each change restarts a short
  * quiet timer, and the save runs when it ends, but never sooner than a minimum
  * gap after the previous one. Leaving the screen, or the app going to the
@@ -38,14 +37,13 @@ export function useAutosave({
   save: () => Promise<SaveResult>;
   /** False while something required is empty or wrong: nothing can be sent yet, so nothing says "Saved". */
   valid?: boolean;
-  /** The optimistic "Saved": the edit is safe on the phone. Not more than once every few seconds. */
+  /** The current edits reached the server. Not more than once every few seconds. */
   onLocalSave?: () => void;
   /** Called once when a run of failures begins; `offline` says the phone could not reach the server. */
   onFailure?: (kind: 'offline' | 'error') => void;
 }): { flush: () => Promise<void> } {
-  const latest = useRef({ dirty, save, onFailure, onLocalSave, valid });
-  latest.current = { dirty, save, onFailure, onLocalSave, valid };
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latest = useRef({ dirty, version, save, onFailure, onLocalSave, valid });
+  latest.current = { dirty, version, save, onFailure, onLocalSave, valid };
   const lastToastAt = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastChangeAt = useRef(0);
@@ -65,9 +63,11 @@ export function useAutosave({
   }, []);
 
   const flush = useCallback(async (): Promise<void> => {
-    clearTimer();
+    // A second flush must not cancel the newer edit's scheduled send.
     if (running.current) return running.current;
+    clearTimer();
     if (!latest.current.dirty) return;
+    const sentVersion = latest.current.version;
     const run = (async () => {
       lastSentAt.current = Date.now();
       let result: SaveResult;
@@ -78,6 +78,10 @@ export function useAutosave({
       }
       if (result === 'saved') {
         failures.current = 0;
+        if (latest.current.valid && latest.current.version === sentVersion && savedToastDue(Date.now(), lastToastAt.current)) {
+          lastToastAt.current = Date.now();
+          latest.current.onLocalSave?.();
+        }
       } else if (result === 'failed' || result === 'offline') {
         failures.current += 1;
         if (failures.current === 1) latest.current.onFailure?.(result === 'offline' ? 'offline' : 'error');
@@ -87,13 +91,17 @@ export function useAutosave({
       }
     })().finally(() => {
       running.current = null;
+      // An edit's timer may have fired while this request was still running.
+      if (latest.current.dirty && latest.current.version !== sentVersion) {
+        schedule(nextFlushDelay({ now: Date.now(), lastChangeAt: lastChangeAt.current, lastSentAt: lastSentAt.current }));
+      }
     });
     running.current = run;
     return run;
   }, [schedule]);
   flushRef.current = flush;
 
-  // Every edit restarts the quiet timer, and the optimistic "Saved" comes as soon as the edits pause.
+  // Every edit restarts the quiet timer.
   useEffect(() => {
     if (!dirty) {
       clearTimer();
@@ -101,16 +109,8 @@ export function useAutosave({
     }
     lastChangeAt.current = Date.now();
     schedule(nextFlushDelay({ now: Date.now(), lastChangeAt: lastChangeAt.current, lastSentAt: lastSentAt.current }));
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => {
-      if (latest.current.valid && savedToastDue(Date.now(), lastToastAt.current)) {
-        lastToastAt.current = Date.now();
-        latest.current.onLocalSave?.();
-      }
-    }, AUTOSAVE.savedToastAfterMs);
     return () => {
       clearTimer();
-      if (toastTimer.current) clearTimeout(toastTimer.current);
     };
   }, [dirty, version, schedule]);
 

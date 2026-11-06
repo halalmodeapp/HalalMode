@@ -29,7 +29,7 @@ import {
 } from 'react-native';
 
 import {
-  closeConnection,
+  closeConnectionWithFarewell,
   fetchConnection,
   fetchMessagesPage,
   markMessagesRead,
@@ -40,7 +40,8 @@ import { ChatCardsBanner } from '@/components/halalCards/ChatCardsBanner';
 import { SafetyControl } from '@/components/safety/SafetyControl';
 import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
 import { Screen } from '@/components/ui/Screen';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { KindChoiceSheet } from '@/components/ui/KindChoiceSheet';
+import { FAREWELL_LABELS, FAREWELL_MAX, FAREWELL_REASONS, farewellWords } from '@/lib/farewell';
 import { Text } from '@/components/ui/Text';
 import { showNotice } from '@/lib/notice';
 import { shuffledOpeners } from '@/data/openers';
@@ -51,7 +52,7 @@ import { useCardsAttention } from '@/halalCards/hooks';
 import { ILLUSTRATIONS, THUMBNAILS } from '@/halalCards/illustrations';
 import { cardsPaths } from '@/halalCards/navigation';
 import { queryKeys } from '@/lib/queryClient';
-import { mergeMessages } from '@/lib/mergeMessages';
+import { mergeLatestMessagePage, mergeMessages } from '@/lib/mergeMessages';
 import { clearPrivateMediaCache } from '@/lib/privateMediaCache';
 import { trackProductEvent } from '@/lib/analytics';
 import { enqueueMessage, getPendingMessages, removePendingMessage } from '@/lib/messageOutbox';
@@ -154,7 +155,10 @@ export default function ChatScreen() {
 
   const messagesQuery = useQuery({
     queryKey: queryKeys.messages(id),
-    queryFn: () => fetchMessagesPage(id),
+    queryFn: async () => {
+      const latest = await fetchMessagesPage(id);
+      return mergeLatestMessagePage(queryClient.getQueryData<MessagePage>(queryKeys.messages(id)), latest);
+    },
     // Conversation is the one place freshness matters.
     staleTime: 0,
     refetchInterval: visible ? 5_000 : false,
@@ -261,7 +265,7 @@ export default function ChatScreen() {
   });
 
   const close = useMutation({
-    mutationFn: () => closeConnection(id),
+    mutationFn: ({ reason, message }: { reason: string; message: string }) => closeConnectionWithFarewell(id, reason, message),
     onSuccess: async () => {
       queryClient.removeQueries({ queryKey: queryKeys.messages(id) });
       queryClient.removeQueries({ queryKey: queryKeys.connection(id) });
@@ -397,7 +401,7 @@ export default function ChatScreen() {
             testID={testIds.chat.call}
             accessibilityRole="button"
             accessibilityLabel={t('chat.callA11y', { name: connection.profile.firstName })}
-            onPress={() => setCallState('calling')}
+            onPress={() => setCallState('unavailable')}
             style={styles.callButton}
           >
             <Text style={styles.callGlyph}>☎</Text>
@@ -567,18 +571,23 @@ export default function ChatScreen() {
         state={callState}
         name={connection.profile.firstName}
         photo={getProfilePhotoSource(connection.profile.id, connection.profile.photos, 0)}
-        onConnected={() => setCallState('connected')}
         onEnd={() => setCallState(null)}
       />
-      <ConfirmDialog
+      <KindChoiceSheet
         visible={closeAsk}
         title={t('chat.closeTitle')}
-        body={t('chat.closeBody', { name: connection?.profile.firstName ?? '' })}
+        body={t('farewell.body', { name: connection?.profile.firstName ?? '' })}
+        options={FAREWELL_REASONS.map((value) => ({ value, label: t(FAREWELL_LABELS[value]) }))}
+        writeOption="other"
+        placeholder={t('farewell.placeholder')}
+        maxLength={FAREWELL_MAX}
+        preview={(reason, note) => (reason === 'other' && !note ? null : farewellWords(reason, note, t))}
         confirmLabel={t('chat.closeConfirm')}
         cancelLabel={t('chat.keep')}
-        onConfirm={() => {
+        choiceRequired
+        onConfirm={(reason, note) => {
           setCloseAsk(false);
-          close.mutate();
+          close.mutate({ reason: reason ?? 'fit', message: note });
         }}
         onCancel={() => setCloseAsk(false)}
       />
@@ -664,24 +673,17 @@ function CallOverlay({
   state,
   name,
   photo,
-  onConnected,
   onEnd,
 }: {
   visible: boolean;
   state: 'calling' | 'connected' | 'unavailable' | null;
   name: string;
   photo: ProfilePhotoSource;
-  onConnected: () => void;
   onEnd: () => void;
 }) {
   const { isRTL, t } = useI18n();
   const [muted, setMuted] = useState(false);
   const [speakerOn, setSpeakerOn] = useState(false);
-  useEffect(() => {
-    if (state !== 'calling') return;
-    const timer = setTimeout(onConnected, 1100);
-    return () => clearTimeout(timer);
-  }, [onConnected, state]);
   useEffect(() => {
     if (visible) return;
     setMuted(false);

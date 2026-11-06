@@ -7,7 +7,7 @@ import * as Location from 'expo-location';
 import { useRegisterUnsaved } from '@/state/unsavedChanges';
 import { useAutosave, type SaveResult } from '@/hooks/useAutosave';
 import { isNetworkError } from '@/lib/autosave';
-import { pendingKey } from '@/lib/pendingEdits';
+import { forgetSavedEdits, keepPendingEdits, pendingKey } from '@/lib/pendingEdits';
 import { useAuth } from '@/state/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MaritalStatusField } from '@/components/you/MaritalSections';
@@ -43,6 +43,7 @@ import { useSession } from '@/state/session';
 import type { TranslationKey } from '@/i18n/catalog';
 import { PermissionExplainer } from '@/components/ui/PermissionExplainer';
 import { PickerSheet } from '@/components/ui/PickerSheet';
+import { PhotoCoachCard } from '@/components/you/PhotoCoachCard';
 import { PhotoReorderGrid } from '@/components/you/PhotoReorderGrid';
 import { SelectField } from '@/components/ui/SelectField';
 import { optionLabel, storedLabel, type CatalogGroup } from '@/data/catalogOption';
@@ -112,6 +113,11 @@ export function ProfileTab({
 }) {
   const { localeTag, isRTL, language, t } = useI18n();
   const { tier } = useSession();
+  const { user, isCurrentUser } = useAuth();
+  const userId = user?.id;
+  const assertOwner = () => {
+    if (!isCurrentUser(userId)) throw new Error('Profile session changed.');
+  };
   const [picking, setPicking] = useState<'occupation' | 'education' | null>(null);
   const schema = useMemo(() => profileSchema(t), [t]);
   const queryClient = useQueryClient();
@@ -122,6 +128,13 @@ export function ProfileTab({
   const [media, setMedia] = useState<PhotoTile[]>(() => mediaFrom(profile));
   const photos = useMemo(() => media.map((tile) => tile.displayUrl), [media]);
   const [photoOrderError, setPhotoOrderError] = useState<string | null>(null);
+  const photoReordering = useRef(false);
+  const operationOwner = useRef<string | null>(profile.id);
+  operationOwner.current = profile.id;
+  useEffect(() => {
+    operationOwner.current = profile.id;
+    return () => { operationOwner.current = null; };
+  }, [profile.id]);
   const [voiceUrl, setVoiceUrl] = useState(profile.audioGreetingUrl);
   const [voiceDuration, setVoiceDuration] = useState(
     profile.audioDurationSeconds ?? 30
@@ -306,6 +319,7 @@ export function ProfileTab({
   const finishVoiceRecording = useCallback(async () => {
     if (finishingRecording.current || !recorder.isRecording) return;
     finishingRecording.current = true;
+    const owner = profile.id;
     setSavingVoice(true);
     try {
       const durationSeconds = Math.max(1, Math.round(recorder.currentTime));
@@ -323,10 +337,12 @@ export function ProfileTab({
         { uri: recorder.uri, mimeType: 'audio/mp4' },
         durationSeconds
       );
+      // Publication has committed; a signing outage must not report it as failed.
       const displayUrl = await createProfileMediaSignedUrl(
         VOICE_INTRODUCTION_BUCKET,
         uploaded.path
-      );
+      ).catch(() => undefined);
+      if (operationOwner.current !== owner) return;
       setVoiceUrl(displayUrl);
       setVoiceDuration(durationSeconds);
       queryClient.setQueryData<Profile>(queryKeys.profile('me'), (current) =>
@@ -345,12 +361,12 @@ export function ProfileTab({
         toast.show(`✓ ${t('filters.saved')}`);
       }
     } catch {
-      showNotice(t('profile.voiceSaveError'), t('profile.connectionError'));
+      if (operationOwner.current === owner) showNotice(t('profile.voiceSaveError'), t('profile.connectionError'));
     } finally {
       finishingRecording.current = false;
       setSavingVoice(false);
     }
-  }, [queryClient, recorder, t, toast]);
+  }, [profile.id, queryClient, recorder, t, toast]);
 
   useEffect(() => {
     if (recorderState.isRecording && recorderState.durationMillis >= 29_750) {
@@ -360,6 +376,13 @@ export function ProfileTab({
 
   const save = useMutation({
     mutationFn: async (values: FormValues) => {
+      assertOwner();
+      const savedOwn = {
+        hasChildren, religiousDress, ethnicities, heritageCountries: heritage,
+        grewUpCountries: grewUp, diet,
+        familyGoals: familyGoals ?? profile.familyGoals,
+        familyGoalsAnswered: Boolean(familyGoals) || profile.familyGoalsAnswered,
+      };
       const patch: Partial<Profile> = {
         name: values.name.trim(),
         // One name now. The column stays because introductions read it.
@@ -376,13 +399,16 @@ export function ProfileTab({
       };
       if (USE_MOCKS && photosDirty) patch.photos = photos;
       await updateMyProfile(patch);
+      assertOwner();
       await setMyProfileDetails({
         hasChildren,
         religiousDress: profile.gender === 'female' ? religiousDress : undefined,
         ethnicities,
         heritageCountries: heritage,
       });
+      assertOwner();
       await setMyLifestyle({ grewUpCountries: grewUp, diet });
+      assertOwner();
       await updateMyPreferences({
         ownHeightCm: Number(ownHeight) || 0,
         ownWeightKg: Number(ownWeight) || 0,
@@ -391,9 +417,12 @@ export function ProfileTab({
         ownBuildAlso: ownBuilds[1] ?? '',
       });
       // Sect was never in the general patch, so it silently never saved.
+      assertOwner();
       await setMySect(values.sect, values.sectDetail);
+      return savedOwn;
     },
-    onSuccess: (_data, values) => {
+    onSuccess: (savedOwn, values) => {
+      if (!isCurrentUser(userId)) return;
       const saved: Profile = {
         ...profile,
         ...values,
@@ -406,14 +435,7 @@ export function ProfileTab({
         sect: values.sect,
         timeline: values.timeline,
         // Kept in the cached profile too, so the answers survive a tab switch.
-        hasChildren,
-        religiousDress,
-        ethnicities,
-        heritageCountries: heritage,
-        grewUpCountries: grewUp,
-        diet,
-        familyGoals: familyGoals ?? profile.familyGoals,
-        familyGoalsAnswered: Boolean(familyGoals) || profile.familyGoalsAnswered,
+        ...savedOwn,
       };
       queryClient.setQueryData(queryKeys.profile('me'), saved);
       void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
@@ -423,13 +445,19 @@ export function ProfileTab({
       if (latestOwnSignature.current === sentOwnSignature.current) setOwnDirty(false);
       void queryClient.invalidateQueries({ queryKey: queryKeys.preferences });
     },
+    onError: () => {
+      if (!isCurrentUser(userId)) return;
+      // Refresh committed parts while retaining the draft for retry.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.profile('me') });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.preferences });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
+    },
   });
 
 
 
   // Edits are also kept on the phone until they have gone to the server, so closing
   // the app or losing signal first does not lose them.
-  const userId = useAuth().user?.id;
   const pendingStorageKey = pendingKey('profile', userId);
   const snapshot = JSON.stringify({
     form: draft,
@@ -438,13 +466,14 @@ export function ProfileTab({
   const latestSnapshot = useRef(snapshot);
   latestSnapshot.current = snapshot;
   useEffect(() => {
-    if (unsaved && pendingStorageKey) void AsyncStorage.setItem(pendingStorageKey, snapshot).catch(() => undefined);
+    if (unsaved && pendingStorageKey) void keepPendingEdits(pendingStorageKey, snapshot).catch(() => undefined);
   }, [unsaved, snapshot, pendingStorageKey]);
   useEffect(() => {
     let cancelled = false;
+    const initialSnapshot = latestSnapshot.current;
     if (!pendingStorageKey) return;
     void AsyncStorage.getItem(pendingStorageKey).then((stored) => {
-      if (cancelled || !stored) return;
+      if (cancelled || !stored || latestSnapshot.current !== initialSnapshot) return;
       try {
         const kept = JSON.parse(stored) as { form?: Record<string, unknown>; own?: Record<string, unknown> };
         Object.entries(kept.form ?? {}).forEach(([key, value]) => {
@@ -476,6 +505,7 @@ export function ProfileTab({
   // The automatic save. Nothing is outlined in red while someone is still typing:
   // if a required box is empty it simply waits for the next change.
   const saveQuietly = async (): Promise<SaveResult> => {
+    if (!isCurrentUser(userId)) return 'invalid';
     let result: SaveResult = 'invalid';
     await handleSubmit(
       async (values) => {
@@ -485,9 +515,9 @@ export function ProfileTab({
           await save.mutateAsync(values);
           result = 'saved';
           // Only forget the copy on the phone if nothing newer has been kept since.
-          if (latestSnapshot.current === sentSnapshot) if (pendingStorageKey) void AsyncStorage.removeItem(pendingStorageKey).catch(() => undefined);
+          if (pendingStorageKey) void forgetSavedEdits(pendingStorageKey, sentSnapshot).catch(() => undefined);
         } catch (error) {
-          result = isNetworkError(error) ? 'offline' : 'failed';
+          result = !isCurrentUser(userId) ? 'invalid' : isNetworkError(error) ? 'offline' : 'failed';
         }
       },
       () => undefined,
@@ -501,8 +531,8 @@ export function ProfileTab({
     // Nothing can be sent (or called saved) while a required box is empty.
     valid: schema.safeParse(draft).success,
     version: JSON.stringify([draft, ownSignature, photosDirty]),
-    onLocalSave: () => toast.show(`✓ ${t('filters.saved')}`),
-    onFailure: (kind) => toast.show(t(kind === 'offline' ? 'autosave.offline' : 'autosave.retry')),
+    onLocalSave: () => { if (isCurrentUser(userId)) toast.show(`✓ ${t('filters.saved')}`); },
+    onFailure: (kind) => { if (isCurrentUser(userId)) toast.show(t(kind === 'offline' ? 'autosave.offline' : 'autosave.retry')); },
     save: saveQuietly,
   });
   useRegisterUnsaved(unsaved, flush);
@@ -767,6 +797,10 @@ export function ProfileTab({
    * only exists on their own phone.
    */
   const reorderPhotos = (next: PhotoTile[]) => {
+    if (photoReordering.current) {
+      setMedia(current => [...current]);
+      return;
+    }
     const previous = media;
     setMedia(next);
     setPhotoOrderError(null);
@@ -779,10 +813,17 @@ export function ProfileTab({
 
     const paths = next.map((tile) => tile.storagePath);
     // A profile from before private buckets has no paths to send.
-    if (paths.some((path) => !path)) return;
+    if (paths.some((path) => !path)) {
+      setMedia([...previous]);
+      setPhotoOrderError(t('profile.photoOrderError'));
+      return;
+    }
 
+    photoReordering.current = true;
+    const owner = profile.id;
     void reorderProfilePhotos(paths as string[])
       .then(() => {
+        if (operationOwner.current !== owner) return;
         queryClient.setQueryData<Profile>(queryKeys.profile('me'), (current) =>
           current
             ? {
@@ -798,9 +839,11 @@ export function ProfileTab({
         toast.show(`✓ ${t('filters.saved')}`);
       })
       .catch(() => {
+        if (operationOwner.current !== owner) return;
         setMedia(previous);
         setPhotoOrderError(t('profile.photoOrderError'));
-      });
+      })
+      .finally(() => { photoReordering.current = false; });
   };
 
   return (
@@ -897,6 +940,7 @@ export function ProfileTab({
           moveEarlierLabel={t('profile.photoMoveEarlier')}
           moveLaterLabel={t('profile.photoMoveLater')}
         />
+        <PhotoCoachCard />
 
         {media.length > 1 ? (
           <Text variant="caption" style={styles.photoNote}>
@@ -943,7 +987,7 @@ export function ProfileTab({
 
       <Card>
         <Text variant="micro">{t('profile.voice')}</Text>
-        {voiceUrl && !recorderState.isRecording ? (
+        {(voiceUrl || profile.audioGreetingStoragePath) && !recorderState.isRecording ? (
           <View style={styles.voicePlayer}>
             <AudioGreeting
               durationSeconds={voiceDuration}

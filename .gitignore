@@ -33,3 +33,6 @@ deno.lock
 
 # generated walkthrough videos
 walkthrough/exports/
+
+# Backend simulation reports
+sim-results/

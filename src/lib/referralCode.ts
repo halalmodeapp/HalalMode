@@ -38,22 +38,35 @@ export async function rememberReferralCode(raw: unknown): Promise<void> {
   }
 }
 
-export async function pendingReferralCode(): Promise<string | null> {
+export async function pendingReferralCode(memberId?: string, bindUnscoped = true): Promise<string | null> {
   if (!hasStorage()) return null;
   try {
-    return normalizeReferralCode(await AsyncStorage.getItem(REFERRAL_STORAGE_KEY));
+    const key = memberId ? `${REFERRAL_STORAGE_KEY}:${memberId}` : REFERRAL_STORAGE_KEY;
+    const scoped = normalizeReferralCode(await AsyncStorage.getItem(key));
+    if (scoped || !memberId || !bindUnscoped) return scoped;
+    const pending = normalizeReferralCode(await AsyncStorage.getItem(REFERRAL_STORAGE_KEY));
+    if (pending) {
+      await AsyncStorage.setItem(key, pending);
+      await AsyncStorage.removeItem(REFERRAL_STORAGE_KEY);
+    }
+    return pending;
   } catch {
     return null;
   }
 }
 
-export async function forgetReferralCode(): Promise<void> {
+export async function forgetReferralCode(memberId?: string): Promise<void> {
   if (!hasStorage()) return;
   try {
-    await AsyncStorage.removeItem(REFERRAL_STORAGE_KEY);
+    await AsyncStorage.removeItem(memberId ? `${REFERRAL_STORAGE_KEY}:${memberId}` : REFERRAL_STORAGE_KEY);
   } catch {
     // Nothing to forget.
   }
+}
+
+export async function rememberMemberReferralCode(memberId: string, raw: unknown): Promise<void> {
+  const code = normalizeReferralCode(raw);
+  if (code && hasStorage()) await AsyncStorage.setItem(`${REFERRAL_STORAGE_KEY}:${memberId}`, code);
 }
 
 /** Remembers the code from any link that opens the app. */

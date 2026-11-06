@@ -271,6 +271,37 @@ export async function closeConnection(connectionId: string): Promise<void> {
   if (error) throw error;
 }
 
+/** Closes a connection with a kind word to the other person: a reason, or the member's own. */
+export async function closeConnectionWithFarewell(connectionId: string, reason: string, message: string): Promise<void> {
+  if (USE_MOCKS) return;
+  const { error } = await requireSupabase().rpc('close_connection_with_farewell', {
+    p_connection_id: connectionId,
+    p_reason: reason,
+    p_message: message || null,
+  });
+  if (error) throw error;
+}
+
+export interface FarewellNote {
+  connectionId: string;
+  name: string;
+  reason: string;
+  message: string | null;
+}
+
+export async function fetchMyFarewells(): Promise<FarewellNote[]> {
+  if (USE_MOCKS) return [];
+  const { data, error } = await requireSupabase().rpc('get_my_farewells');
+  if (error) throw error;
+  return (data ?? []) as FarewellNote[];
+}
+
+export async function markFarewellSeen(connectionId: string): Promise<void> {
+  if (USE_MOCKS) return;
+  const { error } = await requireSupabase().rpc('mark_farewell_seen', { p_connection_id: connectionId });
+  if (error) throw error;
+}
+
 export function messageFromRow(row: Record<string, unknown>, currentUserId: string): ChatMessage {
   return {
     id: String(row.id),

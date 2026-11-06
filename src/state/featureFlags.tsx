@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { AppState } from 'react-native';
 
 import { fetchReleaseFlags } from '@/api/releaseFlags';
 import { defaultFeatureFlags, type FeatureFlags } from '@/lib/featureFlags';
@@ -18,10 +19,13 @@ export function FeatureFlagsProvider({ children }: { children: ReactNode }) {
       return;
     }
     let cancelled = false;
-    void fetchReleaseFlags()
+    const refresh = () => void fetchReleaseFlags()
       .then((next) => { if (!cancelled) setFlags(next); })
       .catch(() => { if (!cancelled) setFlags(defaultFeatureFlags); });
-    return () => { cancelled = true; };
+    refresh();
+    const timer = setInterval(refresh, 60_000);
+    const subscription = AppState.addEventListener('change', state => { if (state === 'active') refresh(); });
+    return () => { cancelled = true; clearInterval(timer); subscription.remove(); };
   }, [userId]);
 
   const value = useMemo(() => flags, [flags]);

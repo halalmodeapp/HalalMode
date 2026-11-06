@@ -1,6 +1,6 @@
 begin;
 set local search_path = public, extensions, halal_mode_private;
-select plan(13);
+select plan(12);
 
 select ok(
   not has_table_privilege('authenticated', 'halal_mode_private.legal_document_registry', 'SELECT')
@@ -72,10 +72,6 @@ select is(
   public.get_current_round_state()->>'status',
   'legal_consent_required',
   'a stale acceptance remains gated from daily introductions'
-);
-select ok(
-  position('member_has_current_legal_consents(p.id)' in pg_get_functiondef('public.generate_round_for_pairs(timestamptz)'::regprocedure)) > 0,
-  'stale members do not occupy reciprocal introduction slots'
 );
 
 select * from finish();

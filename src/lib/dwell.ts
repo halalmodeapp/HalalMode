@@ -199,6 +199,7 @@ export class DwellLedger {
   }
 
   closed(introductionId: string): void {
+    if (this.pausedOn === introductionId) this.pausedOn = null;
     if (this.open?.introductionId !== introductionId) return;
     this.bank();
     this.pausedOn = null;
@@ -214,7 +215,7 @@ export class DwellLedger {
    * somebody else to the bottom of the set, the wrong person gets asked about.
    */
   pause(): void {
-    this.pausedOn = this.bank();
+    if (this.open) this.pausedOn = this.bank();
   }
 
   resume(): void {
@@ -223,10 +224,12 @@ export class DwellLedger {
     this.pausedOn = null;
   }
 
-  /** Closes any profile still open, so a reading in progress is not lost. */
+  /** Snapshot without ending a visit, so a failed submit can retry. */
   records(): DwellRecord[] {
-    if (this.open) this.bank();
-    this.pausedOn = null;
+    if (this.open) {
+      const introductionId = this.bank()!;
+      this.open = { introductionId, at: this.now() };
+    }
     return [...this.totals.entries()].map(([introductionId, entry]) => ({
       introductionId,
       ...entry,

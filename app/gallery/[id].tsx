@@ -107,6 +107,8 @@ export default function GalleryScreen() {
     if (safeIndex !== index) setIndex(safeIndex);
   }, [index, safeIndex]);
 
+  useEffect(() => { setZoomed(false); }, [safeIndex, width, stageHeight]);
+
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     setIndex(safeGalleryIndex(Math.round(event.nativeEvent.contentOffset.x / width), photos.length));
   };
@@ -349,6 +351,17 @@ function GallerySlide({
   const savedX = useSharedValue(0);
   const savedY = useSharedValue(0);
   const rotation = useSharedValue(0);
+
+  useEffect(() => {
+    if (zoomed) return;
+    scale.value = 1;
+    savedScale.value = 1;
+    offsetX.value = 0;
+    offsetY.value = 0;
+    savedX.value = 0;
+    savedY.value = 0;
+    rotation.value = 0;
+  }, [zoomed, scale, savedScale, offsetX, offsetY, savedX, savedY, rotation]);
 
   const clampOffsets = () => {
     'worklet';

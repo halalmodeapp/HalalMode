@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Linking from 'expo-linking';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import {
@@ -31,6 +31,11 @@ export default function LegalConsentScreen() {
     queryKey: queryKeys.legalConsent,
     queryFn: fetchMyLegalConsentStatus,
   });
+  const displayedVersions = statusQuery.data?.currentDocuments.map(document => `${document.type}:${document.version}`).join('|');
+  useEffect(() => {
+    setAccepted(false);
+    setSensitiveAccepted(false);
+  }, [displayedVersions]);
   // No navigation here. Recording the answer is enough: AuthGate owns where a
   // member belongs, and it moves them on the moment consent is no longer
   // required. This screen used to navigate as well, twice, from the success
@@ -38,7 +43,12 @@ export default function LegalConsentScreen() {
   // one re-triggering the others mid-transition until React stopped the loop
   // and a brand-new member's first sight of the app was an error screen.
   const acceptance = useMutation({
-    mutationFn: acceptCurrentLegalDocuments,
+    mutationFn: () => acceptCurrentLegalDocuments(statusQuery.data!),
+    onError: () => {
+      setAccepted(false);
+      setSensitiveAccepted(false);
+      void statusQuery.refetch();
+    },
     onSuccess: (status) => {
       queryClient.setQueryData(queryKeys.legalConsent, status);
       void queryClient.invalidateQueries({ queryKey: queryKeys.round });

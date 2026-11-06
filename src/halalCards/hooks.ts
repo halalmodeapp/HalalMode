@@ -19,7 +19,7 @@ import {
   submitCardsAnswer,
 } from '@/api/halalCards';
 import { useCardsContent } from '@/halalCards/localized';
-import { awaitingOf, currentTurn, isFinished, resolveStory, type Turn } from '@/halalCards/engine/session';
+import { awaitingOf, inspectSession, isFinished } from '@/halalCards/engine/session';
 import type { ActivityState, CardsSession, CardsTrack } from '@/halalCards/types';
 import { resolveRetryDelay } from '@/halalCards/present';
 import { queryKeys } from '@/lib/queryClient';
@@ -91,10 +91,8 @@ export function useCardsSession(connectionId: string, sessionId: string) {
   const session = query.data;
   const { findActivity } = useCardsContent();
   const activity = session ? findActivity(session.activityId) : undefined;
-  const turn: Turn | undefined = useMemo(
-    () => (session && activity && session.status === 'active' ? currentTurn(activity, session) : undefined),
-    [activity, session]
-  );
+  const inspected = useMemo(() => session ? inspectSession(activity, session) : { compatible: false }, [activity, session]);
+  const { compatible, turn, resolvedState } = inspected;
 
   const apply = (next: CardsSession) => {
     queryClient.setQueryData(key, next);
@@ -135,7 +133,7 @@ export function useCardsSession(connectionId: string, sessionId: string) {
 
   const respond = useMutation({
     mutationFn: (accept: boolean) => {
-      const awaiting = accept && session && activity ? awaitingOf(activity, { ...session, status: 'active' }) : null;
+      const awaiting = accept && compatible && session && activity ? awaitingOf(activity, { ...session, status: 'active' }) : null;
       return respondCardsInvite(sessionId, accept, awaiting);
     },
     onSuccess: apply,
@@ -163,12 +161,12 @@ export function useCardsSession(connectionId: string, sessionId: string) {
   }, [active, sessionId]);
   const [retry, setRetry] = useState(0);
   useEffect(() => {
-    if (!active || !session || !activity || turn?.kind !== 'resolve') return;
+    if (!active || !session || !activity || !resolvedState || turn?.kind !== 'resolve') return;
     if (resolvedVersion.current === session.version || advance.isPending) return;
     resolvedVersion.current = session.version;
     const generation = lifecycle.current;
     advance.mutate(
-      { state: resolveStory(activity, session.state, turn.picks), version: session.version },
+      { state: resolvedState, version: session.version },
       {
         onSuccess: () => { if (generation === lifecycle.current) setRetry(0); },
         onError: (error) => {
@@ -183,9 +181,9 @@ export function useCardsSession(connectionId: string, sessionId: string) {
         },
       }
     );
-  }, [active, activity, advance, retry, session, turn]);
+  }, [active, activity, advance, retry, session, turn, resolvedState]);
 
-  return { query, session, activity, turn, answer, advance, respond, cancel };
+  return { query, session, activity, compatible, turn, answer, advance, respond, cancel };
 }
 
 export function useGuide(connectionId: string) {

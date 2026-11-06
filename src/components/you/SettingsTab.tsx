@@ -4,13 +4,16 @@ import { router } from 'expo-router';
 import { Linking, Pressable, Switch, View } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { ADMIN_PANEL_URL, fetchIsAdmin } from '@/api/admin';
-import { fetchMyReadReceipts, fetchMySampleMembers, requestAccountDeletion, setMyReadReceipts, setMySampleMembers, setMyTestPremium, setProfilePaused } from '@/api/account';
+import { fetchMyReadReceipts, fetchMySampleMembers, recordExitAnswer, requestAccountDeletion, setMyReadReceipts, setMySampleMembers, setMyTestPremium, setProfilePaused } from '@/api/account';
 import { fetchMyHighLatitudeFajrSettings, setMyHighLatitudeFajrMethod, type HighLatitudeFajrSettings } from '@/api/profile';
 import { NotificationKindSwitches } from '@/components/you/NotificationKindSwitches';
 import { disableMyNotifications, enableMyNotifications, fetchMyNotificationConsent } from '@/api/notifications';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { KindChoiceSheet } from '@/components/ui/KindChoiceSheet';
+import { EXIT_LABELS, EXIT_REASONS } from '@/lib/farewell';
+import { withDeadline } from '@/lib/withDeadline';
 import { InlineNotice } from '@/components/ui/AsyncState';
 import { PermissionExplainer } from '@/components/ui/PermissionExplainer';
 import { Text } from '@/components/ui/Text';
@@ -572,14 +575,23 @@ export function SettingsTab({
         onCancel={() => setPauseConfirm(false)}
       />
 
-      <ConfirmDialog
+      <KindChoiceSheet
         testID={testIds.settings.deleteDialog}
         visible={deleteConfirm}
         title={t('settings.deleteTitle')}
-        body={t('settings.deleteConfirmBody')}
+        body={`${t('exit.body')} ${t('settings.deleteConfirmBody')}`}
+        options={EXIT_REASONS.map((value) => ({ value, label: t(EXIT_LABELS[value]) }))}
+        placeholder={t('exit.placeholder')}
+        maxLength={500}
+        noteAlways
+        choiceRequired={false}
         confirmLabel={t('settings.deleteAction')}
         cancelLabel={t('settings.notNow')}
-        onConfirm={() => void confirmDeletion()}
+        onConfirm={async (reason, note) => {
+          // Answering is optional, and never gets in the way of leaving.
+          if (reason || note) await withDeadline(recordExitAnswer(reason ?? 'other', note), 3000).catch(() => {});
+          void confirmDeletion();
+        }}
         onCancel={() => setDeleteConfirm(false)}
       />
 

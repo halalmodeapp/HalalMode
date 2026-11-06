@@ -21,10 +21,10 @@ select is(
    where key in (
      'in_chat_voice_notes', 'live_calling', 'push_notifications',
      'identity_verification', 'premium_purchases', 'controlled_beta',
-     'reciprocal_matching_v1'
+     'league_matching'
    )),
   7,
-  'all launch-controlled features, including reciprocal matching, have explicit flags'
+  'all launch-controlled features, including the league, have explicit flags'
 );
 select ok(
   (select bool_and(not enabled)
@@ -32,7 +32,7 @@ select ok(
    where key in (
      'in_chat_voice_notes', 'live_calling',
      'identity_verification', 'premium_purchases', 'controlled_beta',
-     'reciprocal_matching_v1'
+     'league_matching'
    )),
   'launch-gated flags fail closed'
 );
