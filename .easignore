@@ -22,6 +22,12 @@ site/img/*
 Halal Mode LLC EIN Packet/
 android/
 ios/
+# Videos, explainers and the site walkthrough. None of it is part of the app.
+explainer/
+explainer-*/
+film/
+video-reference/
+walkthrough/
 expo-env.d.ts
 
 .env
