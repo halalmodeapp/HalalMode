@@ -111,9 +111,9 @@ select is(pg_temp.claim(), array['p/8.jpg', 'p/9.jpg'], 'and Premium does');
 -- ---------------------------------------------------------------- why they left
 select pg_temp.act_as('00000000-0000-0000-0000-000000022102');
 select record_exit_answer('married', 'Thank you');
-select is((select reason from halal_mode_private.exit_answers limit 1), 'married', 'a reason for leaving is kept');
+select is((select reason from halal_mode_private.pending_exit_answers limit 1), 'married', 'a reason for leaving is kept until the account is erased');
 select record_exit_answer('other', 'And again');
-select is((select count(*)::int from halal_mode_private.exit_answers), 1, 'and an account answers only once');
+select is((select count(*)::int from halal_mode_private.pending_exit_answers), 1, 'and an account has one answer, its latest');
 select ok(
   not exists (
     select 1 from information_schema.columns

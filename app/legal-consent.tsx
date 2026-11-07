@@ -3,10 +3,14 @@ import * as Linking from 'expo-linking';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { requestAccountDeletion } from '@/api/account';
 import {
   acceptCurrentLegalDocuments,
   fetchMyLegalConsentStatus,
 } from '@/api/legalConsent';
+import { fetchMySafetyContacts } from '@/api/safety';
+import { SafetyControl } from '@/components/safety/SafetyControl';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { BrandHeader } from '@/components/navigation/BrandHeader';
 import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
 import { Button } from '@/components/ui/Button';
@@ -20,6 +24,7 @@ import { testIds } from '@/lib/testIds';
 import { alpha, color, radius, space } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
 import { showNotice } from '@/lib/notice';
+import { useAuth } from '@/state/auth';
 
 export default function LegalConsentScreen() {
   const { t, isRTL, localeTag } = useI18n();
@@ -27,6 +32,17 @@ export default function LegalConsentScreen() {
   const [accepted, setAccepted] = useState(false);
   // Separate on purpose: explicit consent may not be bundled with the terms.
   const [sensitiveAccepted, setSensitiveAccepted] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const { signOut } = useAuth();
+  // Safety comes before agreeing to anything: someone may be back only to stop a person contacting them.
+  const contactsQuery = useQuery({ queryKey: ['safety-contacts'], queryFn: fetchMySafetyContacts });
+  const deletion = useMutation({
+    mutationFn: async () => {
+      await requestAccountDeletion();
+      await signOut();
+    },
+    onError: () => showNotice(t('settings.deleteErrorTitle'), t('profile.connectionError')),
+  });
   const statusQuery = useQuery({
     queryKey: queryKeys.legalConsent,
     queryFn: fetchMyLegalConsentStatus,
@@ -157,7 +173,41 @@ export default function LegalConsentScreen() {
             {t('legal.submitError')}
           </Text>
         ) : null}
+
+        <Card style={styles.documentCard}>
+          <Text variant="label">{t('legal.safetyTitle')}</Text>
+          <Text variant="caption">{t('legal.safetyBody')}</Text>
+          {(contactsQuery.data ?? []).map((contact) => (
+            <View key={contact.connectionId} style={[styles.contact, isRTL && styles.rowReverse]}>
+              <Text variant="bodySmall" style={styles.consentText}>{contact.name}</Text>
+              <SafetyControl
+                scope={{ kind: 'connection', id: contact.connectionId }}
+                memberName={contact.name}
+                stayHere
+                onBlocked={() => void contactsQuery.refetch()}
+              />
+            </View>
+          ))}
+          <Button
+            variant="secondary"
+            label={t('settings.deleteAction')}
+            loading={deletion.isPending}
+            onPress={() => setDeleteConfirm(true)}
+          />
+        </Card>
       </ScrollView>
+      <ConfirmDialog
+        visible={deleteConfirm}
+        title={t('settings.deleteTitle')}
+        body={t('settings.deleteConfirmBody')}
+        confirmLabel={t('settings.deleteAction')}
+        cancelLabel={t('settings.notNow')}
+        onConfirm={() => {
+          setDeleteConfirm(false);
+          deletion.mutate();
+        }}
+        onCancel={() => setDeleteConfirm(false)}
+      />
     </Screen>
   );
 }
@@ -181,4 +231,5 @@ const styles = StyleSheet.create({
   checkMark: { color: color.white, fontSize: 13 },
   consentText: { flex: 1, color: color.ink },
   submitError: { color: color.inkSoft, textAlign: 'center' },
+  contact: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 44 },
 });

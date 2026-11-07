@@ -24,6 +24,17 @@ export async function fetchMyBlockedMembers(): Promise<BlockedMember[]> {
   }));
 }
 
+/** Open connections, by first name, so they can be blocked or reported before new terms are accepted. */
+export async function fetchMySafetyContacts(): Promise<{ connectionId: string; name: string }[]> {
+  if (USE_MOCKS) return [];
+  const { data, error } = await requireSupabase().rpc('get_my_safety_contacts');
+  if (error) throw error;
+  return ((data ?? []) as Record<string, unknown>[]).map((item) => ({
+    connectionId: String(item.connectionId),
+    name: String(item.name ?? ''),
+  }));
+}
+
 export async function unblockMyMember(memberId: string): Promise<void> {
   if (USE_MOCKS) return;
   const client = requireSupabase();

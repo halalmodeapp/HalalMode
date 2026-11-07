@@ -4,6 +4,7 @@
  * object after this service records a short-lived magic-byte validation.
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { cleanJpeg, cleanPng } from '../_shared/imageMetadata.ts';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -121,9 +122,18 @@ Deno.serve(async (request) => {
     : ['m4a', 'aac', 'mp3', 'webm'];
   if (!expectedExtensions.includes(extension)) return reply({ error: 'Invalid media extension' }, 400);
 
-  const download = await admin.storage.from(bucket).download(path);
-  if (download.error || !download.data) return reply({ error: 'Uploaded media was not found' }, 404);
-  const bytes = new Uint8Array(await download.data.arrayBuffer());
+  // The revision is read before the bytes, and approval names it, so a file swapped mid-check is refused.
+  const revision = async () => {
+    const result = await admin.rpc('get_profile_media_object_version_service', { p_bucket_id: bucket, p_object_path: path });
+    return result.error ? null : (result.data as string | null);
+  };
+  const read = async () => {
+    const result = await admin.storage.from(bucket).download(path);
+    return result.error || !result.data ? null : new Uint8Array(await result.data.arrayBuffer());
+  };
+  let version = await revision();
+  const bytes = version ? await read() : null;
+  if (!version || !bytes) return reply({ error: 'Uploaded media was not found' }, 404);
   const maxBytes = mediaType === 'photo' ? PHOTO_LIMIT : VOICE_LIMIT;
   if (bytes.length === 0 || bytes.length > maxBytes) return reply({ error: 'Uploaded media is too large' }, 400);
 
@@ -132,13 +142,32 @@ Deno.serve(async (request) => {
     return reply({ error: 'Uploaded bytes do not match the file type' }, 415);
   }
 
+  // A photo must be a well-formed image, and leaves without location, device or time details.
+  let stored: Uint8Array = bytes;
+  if (detectedMime === 'image/jpeg' || detectedMime === 'image/png') {
+    const cleaned = detectedMime === 'image/jpeg' ? cleanJpeg(bytes) : cleanPng(bytes);
+    if (!cleaned) return reply({ error: 'Uploaded bytes do not match the file type' }, 415);
+    if (cleaned.length !== bytes.length) {
+      const rewritten = await admin.storage.from(bucket)
+        .upload(path, new Uint8Array(cleaned), { contentType: detectedMime, upsert: true, cacheControl: '60' });
+      if (rewritten.error) return reply({ error: 'Media validation could not be recorded' }, 500);
+      version = await revision();
+      const check = version ? await read() : null;
+      if (!check || check.length !== cleaned.length || !check.every((value, index) => value === cleaned[index])) {
+        return reply({ error: 'The file changed while it was being checked' }, 409);
+      }
+      stored = cleaned;
+    }
+  }
+
   const recorded = await admin.rpc('record_profile_media_validation_service', {
     p_bucket_id: bucket,
     p_object_path: path,
     p_media_type: mediaType,
     p_detected_mime: detectedMime,
-    p_size_bytes: bytes.length,
+    p_size_bytes: stored.length,
+    p_object_version: version,
   });
   if (recorded.error) return reply({ error: 'Media validation could not be recorded' }, 500);
-  return reply({ valid: true, mimeType: detectedMime, sizeBytes: bytes.length });
+  return reply({ valid: true, mimeType: detectedMime, sizeBytes: stored.length });
 });

@@ -39,3 +39,12 @@ test('a valid push tap waits for an authenticated profile before routing', () =>
   assert.deepEqual(decideNotificationTap({ ...tap, userId: undefined, canOpen: true }), { action: 'ignore' });
   assert.deepEqual(decideNotificationTap({ ...tap, actionIdentifier: 'reply', userId: 'member-1', canOpen: true }), { action: 'ignore' });
 });
+
+test('a push meant for another account opens nothing', () => {
+  const tap = { actionIdentifier: 'default', defaultActionIdentifier: 'default', canOpen: true };
+  assert.deepEqual(decideNotificationTap({ ...tap, data: { kind: 'new_message', recipient: 'member-2' }, userId: 'member-1' }), { action: 'ignore' });
+  assert.deepEqual(decideNotificationTap({ ...tap, data: { kind: 'new_message', recipient: 'member-1' }, userId: 'member-1' }), {
+    action: 'route',
+    destination: '/(tabs)/connections',
+  });
+});

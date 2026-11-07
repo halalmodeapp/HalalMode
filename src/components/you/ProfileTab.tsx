@@ -335,7 +335,8 @@ export function ProfileTab({
 
       const uploaded = await uploadVoiceIntroduction(
         { uri: recorder.uri, mimeType: 'audio/mp4' },
-        durationSeconds
+        durationSeconds,
+        owner,
       );
       // Publication has committed; a signing outage must not report it as failed.
       const displayUrl = await createProfileMediaSignedUrl(
@@ -693,7 +694,7 @@ export function ProfileTab({
       setUploadingPhoto(true);
       try {
         // Cropping re-encodes every photo as JPEG.
-        const uploaded = await uploadProfilePhoto({ uri, mimeType: 'image/jpeg' });
+        const uploaded = await uploadProfilePhoto({ uri, mimeType: 'image/jpeg' }, profile.id);
         const displayUrl = await createProfileMediaSignedUrl(
           PROFILE_PHOTO_BUCKET,
           uploaded.path

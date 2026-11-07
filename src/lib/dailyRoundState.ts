@@ -3,6 +3,8 @@ export const dailyRoundStatuses = [
   'profile_not_ready',
   'no_suitable_introductions',
   'waiting_for_first_set',
+  // Part of today's matching failed, so the set is short through no fault of the member's.
+  'set_incomplete',
   'matching_inputs_unavailable',
   'awaiting_turn',
   // A set that exists and has not opened yet. Rounds open at each member's own

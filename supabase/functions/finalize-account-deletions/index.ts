@@ -82,5 +82,18 @@ Deno.serve(async (request) => {
       });
     }
   }
-  return Response.json({ claimed: claimed.data?.length ?? 0, deleted, failed });
+  // Files a member uploaded and never attached, or detached, are removed here rather than relying on
+  // the phone to finish its own cleanup. Best effort: the next run picks up whatever is left.
+  let abandoned = 0;
+  const leftovers = await client.rpc('list_abandoned_profile_media_service', { p_limit: 500 });
+  if (!leftovers.error) {
+    const rows = (leftovers.data ?? []) as { bucket_id: string; name: string }[];
+    for (const bucket of ['profile-photos', 'voice-introductions']) {
+      const paths = rows.filter((row) => row.bucket_id === bucket).map((row) => row.name);
+      if (!paths.length) continue;
+      const removed = await client.storage.from(bucket).remove(paths);
+      if (!removed.error) abandoned += paths.length;
+    }
+  }
+  return Response.json({ claimed: claimed.data?.length ?? 0, deleted, failed, abandoned });
 });

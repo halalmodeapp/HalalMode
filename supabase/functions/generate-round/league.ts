@@ -7,7 +7,7 @@
  * next worker simply asks what to do next.
  */
 import { playOneWay, playTable, type LeagueSettings, type LeagueTable } from '../../../src/matching/league.ts';
-import { nextFajrWindow } from '../../../src/lib/prayerTimes.ts';
+import { dawnSearchStart, nextFajrWindow } from '../../../src/lib/prayerTimes.ts';
 
 interface Rpc {
   rpc(name: string, args?: Record<string, unknown>): PromiseLike<{ data: unknown; error: { message: string } | null }>;
@@ -18,7 +18,8 @@ interface PrepareJob {
   job: Record<string, unknown>;
   /** When this day's cycle began. Dawn is worked out from this, so a retry gets the same answer. */
   after: string;
-  members: { user_id: string; latitude: number; longitude: number; high_latitude_fajr_method: string }[];
+  /** last_dawn: when this member's latest set opened, so the next one follows it and never repeats it. */
+  members: { user_id: string; latitude: number; longitude: number; high_latitude_fajr_method: string; last_dawn?: string | null }[];
 }
 
 interface TableJob {
@@ -91,7 +92,7 @@ export async function runLeagueWorker(
         const computing = performance.now();
         const windows = [];
         for (const member of next.members) {
-          const window = dawn(member, new Date(next.after));
+          const window = dawn(member, dawnSearchStart(new Date(next.after), member.last_dawn));
           if (window) windows.push({ user_id: member.user_id, opens_at: window.opensAt.toISOString(), expires_at: window.expiresAt.toISOString() });
         }
         result.computeMs += performance.now() - computing;

@@ -37,8 +37,8 @@ select ok(
   'report action claims are service-only'
 );
 select ok(
-  not has_function_privilege('authenticated', 'public.record_profile_media_validation_service(text,text,text,text,bigint)', 'EXECUTE')
-  and has_function_privilege('service_role', 'public.record_profile_media_validation_service(text,text,text,text,bigint)', 'EXECUTE'),
+  not has_function_privilege('authenticated', 'public.record_profile_media_validation_service(text,text,text,text,bigint,text)', 'EXECUTE')
+  and has_function_privilege('service_role', 'public.record_profile_media_validation_service(text,text,text,text,bigint,text)', 'EXECUTE'),
   'only the media validator can record byte validation'
 );
 select ok(

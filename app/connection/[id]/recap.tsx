@@ -6,6 +6,7 @@ import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, wi
 
 import { fetchConnection, fetchConnectionSummary, openConnection } from '@/api/connections';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
+import { FarewellSheet, useFarewellClose } from '@/components/connections/FarewellSheet';
 import { SafetyControl } from '@/components/safety/SafetyControl';
 import { ErrorState, InlineNotice, LoadingState } from '@/components/ui/AsyncState';
 import { Button } from '@/components/ui/Button';
@@ -69,6 +70,8 @@ export default function RecapScreen() {
   const preparing = connection?.stage === 'recap' && !summaryTimedOut && !summaryQuery.isError && !botSummary
     && (summaryQuery.isPending || summaryQuery.data?.pending === true);
 
+  const [closeAsk, setCloseAsk] = useState(false);
+  const close = useFarewellClose(id);
   const openMutation = useMutation({
     mutationFn: () => openConnection(id),
     onSuccess: async () => {
@@ -178,12 +181,22 @@ export default function RecapScreen() {
           <Button
             label={t('recap.close')}
             variant="quiet"
-            onPress={() => router.replace('/(tabs)/connections')}
+            loading={close.isPending}
+            onPress={() => setCloseAsk(true)}
           />
           </>
           )}
         </View>
       </ScrollView>
+      <FarewellSheet
+        visible={closeAsk}
+        name={connection.profile.firstName}
+        onConfirm={(reason, message) => {
+          setCloseAsk(false);
+          close.mutate({ reason, message });
+        }}
+        onCancel={() => setCloseAsk(false)}
+      />
     </Screen>
   );
 }

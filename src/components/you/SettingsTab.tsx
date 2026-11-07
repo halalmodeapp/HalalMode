@@ -143,6 +143,8 @@ export function SettingsTab({
     mutationFn: setMyReadReceipts,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['read-receipts'] });
+      // Receipts already on screen were fetched under the old setting.
+      queryClient.removeQueries({ queryKey: ['messages'] });
       toast.show(`✓ ${t('filters.saved')}`);
     },
     onError: () => showNotice(t('settings.activityErrorTitle'), t('settings.activityErrorBody')),
@@ -588,13 +590,14 @@ export function SettingsTab({
         options={EXIT_REASONS.map((value) => ({ value, label: t(EXIT_LABELS[value]) }))}
         placeholder={t('exit.placeholder')}
         maxLength={500}
-        noteAlways
+        writeOption="other"
+        writeOptional
         choiceRequired={false}
         confirmLabel={t('settings.deleteAction')}
         cancelLabel={t('settings.notNow')}
         onConfirm={async (reason, note) => {
-          // Answering is optional, and never gets in the way of leaving.
-          if (reason || note) await withDeadline(recordExitAnswer(reason ?? 'other', note), 3000).catch(() => {});
+          // Answering is optional, and never gets in the way of leaving. Words are kept only with "Something else".
+          if (reason) await withDeadline(recordExitAnswer(reason, reason === 'other' ? note.trim() : ''), 3000).catch(() => {});
           void confirmDeletion();
         }}
         onCancel={() => setDeleteConfirm(false)}

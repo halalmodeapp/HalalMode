@@ -22,6 +22,7 @@
     "../src/matching/league.ts",
     "../supabase/functions/_shared/photoCoach.ts",
     "../supabase/functions/_shared/photoVerdict.ts",
+    "../supabase/functions/_shared/imageMetadata.ts",
     "../src/data/marital.ts",
     "../src/data/diet.ts",
     "../src/lib/profileReadiness.ts"

@@ -212,7 +212,9 @@ export async function fetchMessagesPage(
 export async function sendMessage(
   connectionId: string,
   text: string,
-  clientRequestId?: string
+  clientRequestId?: string,
+  /** The account that wrote it. The server refuses the send if the device has switched accounts since. */
+  senderId?: string
 ): Promise<ChatMessage> {
   const message: ChatMessage = {
     id: `local-${Date.now()}`,
@@ -231,10 +233,12 @@ export async function sendMessage(
   } = await client.auth.getUser();
   if (authError) throw authError;
   if (!user) throw new Error('You must be signed in to send a message.');
+  if (senderId && user.id !== senderId) throw new Error('This message belongs to another account.');
   const { data, error } = await client.rpc('send_message', {
     p_connection_id: connectionId,
     p_body: text,
     p_client_request_id: clientRequestId ?? null,
+    ...(senderId ? { p_sender_id: senderId } : {}),
   });
   if (error) throw error;
   return messageFromRow(data as Record<string, unknown>, user.id);

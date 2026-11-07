@@ -51,14 +51,17 @@ const VOICE_LIMIT_BYTES = 15 * 1024 * 1024;
  * HEIC, which no browser will render.
  */
 export async function uploadProfilePhoto(
-  media: LocalProfileMedia & { mimeType: ProfilePhotoMimeType }
+  media: LocalProfileMedia & { mimeType: ProfilePhotoMimeType },
+  /** The account that chose the photo. If the device has switched accounts since, nothing is uploaded. */
+  ownerId?: string,
 ): Promise<{ path: string; photos: string[] }> {
   if (USE_MOCKS) return { path: media.uri, photos: [media.uri] };
 
   const client = requireSupabase();
   const compressed = await compressProfilePhoto(media.uri);
   const body = await readLocalMedia(compressed, PHOTO_LIMIT_BYTES);
-  const path = await createServerMediaPath('photo', 'image/jpeg');
+  // The path is issued for whoever is signed in now, and Storage only accepts it from that account.
+  const path = requireOwnPath(await createServerMediaPath('photo', 'image/jpeg'), ownerId);
   const { error: uploadError } = await client.storage
     .from(PROFILE_PHOTO_BUCKET)
     .upload(path, body, { contentType: 'image/jpeg', upsert: false, cacheControl: '60' });
@@ -118,13 +121,14 @@ export async function deleteProfilePhoto(path: string): Promise<void> {
 /** Replaces the private voice introduction and reports any old object needing cleanup. */
 export async function uploadVoiceIntroduction(
   media: LocalProfileMedia & { mimeType: VoiceIntroductionMimeType },
-  durationSeconds: number
+  durationSeconds: number,
+  ownerId?: string,
 ): Promise<VoiceIntroductionUpload> {
   if (USE_MOCKS) return { path: media.uri };
 
   const client = requireSupabase();
   const body = await readLocalMedia(media.uri, VOICE_LIMIT_BYTES);
-  const path = await createServerMediaPath('voice', media.mimeType);
+  const path = requireOwnPath(await createServerMediaPath('voice', media.mimeType), ownerId);
   const { error: uploadError } = await client.storage
     .from(VOICE_INTRODUCTION_BUCKET)
     .upload(path, body, { contentType: media.mimeType, upsert: false, cacheControl: '60' });
@@ -181,6 +185,11 @@ export async function hydrateProfileMedia(profile: Profile): Promise<Profile> {
   if (USE_MOCKS) return profile;
 
   return resolveProfileMedia(profile, createProfileMediaSignedUrl);
+}
+
+function requireOwnPath(path: string, ownerId: string | undefined): string {
+  if (ownerId && path.split('/')[0] !== ownerId) throw new Error('The account changed before this could be saved.');
+  return path;
 }
 
 async function createServerMediaPath(

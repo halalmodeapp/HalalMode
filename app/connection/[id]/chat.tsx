@@ -29,7 +29,6 @@ import {
 } from 'react-native';
 
 import {
-  closeConnectionWithFarewell,
   fetchDeletableMessageIds,
   fetchMessageDeletions,
   deleteMessageForEveryone,
@@ -43,8 +42,7 @@ import { ChatCardsBanner } from '@/components/halalCards/ChatCardsBanner';
 import { SafetyControl } from '@/components/safety/SafetyControl';
 import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
 import { Screen } from '@/components/ui/Screen';
-import { KindChoiceSheet } from '@/components/ui/KindChoiceSheet';
-import { FAREWELL_LABELS, FAREWELL_MAX, FAREWELL_REASONS, farewellWords } from '@/lib/farewell';
+import { FarewellSheet, useFarewellClose } from '@/components/connections/FarewellSheet';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { showNotice } from '@/lib/notice';
@@ -57,7 +55,6 @@ import { ILLUSTRATIONS, THUMBNAILS } from '@/halalCards/illustrations';
 import { cardsPaths } from '@/halalCards/navigation';
 import { queryKeys } from '@/lib/queryClient';
 import { applyMessageDeletions, mergeLatestMessagePage, mergeMessages } from '@/lib/mergeMessages';
-import { clearPrivateMediaCache } from '@/lib/privateMediaCache';
 import { trackProductEvent } from '@/lib/analytics';
 import { enqueueMessage, getPendingMessages, removePendingMessage, type PendingMessage } from '@/lib/messageOutbox';
 import { retryAllInOrder } from '@/lib/retryPolicy';
@@ -213,7 +210,7 @@ export default function ChatScreen() {
       const pending = await enqueueMessage(outboxMemberId, id, text);
       setDraft('');
       try {
-        const message = await sendMessage(id, text, pending.id);
+        const message = await sendMessage(id, text, pending.id, outboxMemberId);
         // Delivery is already durable server-side. A local cleanup failure must
         // not turn it into a false send error; the idempotency key makes a later
         // cleanup retry safe.
@@ -256,7 +253,7 @@ export default function ChatScreen() {
       if (!outboxMemberId) throw new Error('Your session is not ready to send a message.');
       const pending = await getPendingMessages(outboxMemberId, id);
       return retryAllInOrder(pending, async (item) => {
-        const message = await sendMessage(id, item.body, item.id);
+        const message = await sendMessage(id, item.body, item.id, outboxMemberId);
         void removePendingMessage(outboxMemberId, item.id).catch(() => {});
         return message;
       });
@@ -303,20 +300,7 @@ export default function ChatScreen() {
     onError: () => showNotice(t('common.errorTitle'), t('chat.deleteFailed')),
   });
 
-  const close = useMutation({
-    mutationFn: ({ reason, message }: { reason: string; message: string }) => closeConnectionWithFarewell(id, reason, message),
-    onSuccess: async () => {
-      queryClient.removeQueries({ queryKey: queryKeys.messages(id) });
-      queryClient.removeQueries({ queryKey: queryKeys.connection(id) });
-      queryClient.removeQueries({ queryKey: ['private-media'] });
-      await clearPrivateMediaCache();
-      void queryClient.invalidateQueries({ queryKey: queryKeys.connections });
-      router.replace('/(tabs)/connections');
-    },
-    onError: () => {
-      showNotice(t('chat.closeErrorTitle'), t('chat.closeErrorBody'));
-    },
-  });
+  const close = useFarewellClose(id);
 
   // Our own dialog: Alert with buttons never appears in a browser, so closing
   // a conversation on the web silently did nothing.
@@ -625,21 +609,12 @@ export default function ChatScreen() {
         photo={getProfilePhotoSource(connection.profile.id, connection.profile.photos, 0)}
         onEnd={() => setCallState(null)}
       />
-      <KindChoiceSheet
+      <FarewellSheet
         visible={closeAsk}
-        title={t('chat.closeTitle')}
-        body={t('farewell.body', { name: connection?.profile.firstName ?? '' })}
-        options={FAREWELL_REASONS.map((value) => ({ value, label: t(FAREWELL_LABELS[value]) }))}
-        writeOption="other"
-        placeholder={t('farewell.placeholder')}
-        maxLength={FAREWELL_MAX}
-        preview={(reason, note) => (reason === 'other' && !note ? null : farewellWords(reason, note, t))}
-        confirmLabel={t('chat.closeConfirm')}
-        cancelLabel={t('chat.keep')}
-        choiceRequired
-        onConfirm={(reason, note) => {
+        name={connection?.profile.firstName ?? ''}
+        onConfirm={(reason, message) => {
           setCloseAsk(false);
-          close.mutate({ reason: reason ?? 'fit', message: note });
+          close.mutate({ reason, message });
         }}
         onCancel={() => setCloseAsk(false)}
       />

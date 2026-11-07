@@ -56,32 +56,35 @@ async function finalize(failBucket?: string, failOperation?: 'list' | 'remove', 
   return { body: await response.json(), calls, files };
 }
 
+// The abandoned-upload sweep runs after every account, so it is left out when checking what came last.
+const withoutSweep = (calls: string[]) => calls.filter((call) => call !== 'list_abandoned_profile_media_service');
+
 test('finalization drains attached and orphan media from every bucket before deleting Auth', async () => {
   const { body, calls, files } = await finalize();
-  assert.deepEqual(body, { claimed: 1, deleted: 1, failed: 0 });
+  assert.deepEqual(body, { claimed: 1, deleted: 1, failed: 0, abandoned: 0 });
   for (const bucket of ['profile-photos', 'profile-photos-blurred', 'verification-selfies', 'voice-introductions']) {
     assert.equal(files.get(bucket)!.length, 0);
     assert.ok(calls.includes(`remove:${bucket}:1000`));
     assert.ok(calls.includes(`remove:${bucket}:1`));
     assert.equal(calls.filter((call) => call === `list:${bucket}`).length, 3);
   }
-  assert.equal(calls.at(-1), 'deleteUser');
+  assert.equal(withoutSweep(calls).at(-1), 'deleteUser');
 });
 
 for (const bucket of ['profile-photos', 'profile-photos-blurred', 'verification-selfies', 'voice-introductions']) {
   for (const operation of ['list', 'remove'] as const) {
     test(`a ${bucket} ${operation} failure leaves deletion retryable`, async () => {
       const { body, calls } = await finalize(bucket, operation);
-      assert.deepEqual(body, { claimed: 1, deleted: 0, failed: 1 });
+      assert.deepEqual(body, { claimed: 1, deleted: 0, failed: 1, abandoned: 0 });
       assert.ok(!calls.includes('deleteUser'));
-      assert.equal(calls.at(-1), 'record_account_deletion_failure_fenced');
+      assert.equal(withoutSweep(calls).at(-1), 'record_account_deletion_failure_fenced');
     });
   }
 }
 
 test('a worker that lost its deletion claim performs no media or Auth deletion', async () => {
   const { body, calls } = await finalize(undefined, undefined, true);
-  assert.deepEqual(body, { claimed: 1, deleted: 0, failed: 1 });
+  assert.deepEqual(body, { claimed: 1, deleted: 0, failed: 1, abandoned: 0 });
   assert.ok(!calls.some(call => call.startsWith('remove:')));
   assert.ok(!calls.includes('deleteUser'));
 });

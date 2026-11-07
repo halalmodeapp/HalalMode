@@ -454,6 +454,7 @@ export default function DailyScreen() {
     // Nobody today is not an error: it is a wait until the next Fajr, which
     // the member can be reminded of.
     if (emptyReason === 'waiting_for_first_set') return <FajrWaitState firstSet nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
+    if (emptyReason === 'set_incomplete') return <FajrWaitState incomplete nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
     if (emptyTitle === 'daily.noSuitableTitle') return <FajrWaitState nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
     return (
       <DailyScrollScreen isRTL={isRTL}>
@@ -720,7 +721,7 @@ function FajrCountdownClock({ lead, nextFajr }: { lead?: string; nextFajr: Date 
  * Fajr, and on the phone apps a one-tap reminder: the Fajr notification says
  * the new set is ready and that it is time to pray.
  */
-function FajrWaitState({ firstSet = false, nextFajrAt }: { firstSet?: boolean; nextFajrAt?: string | null }) {
+function FajrWaitState({ firstSet = false, incomplete = false, nextFajrAt }: { firstSet?: boolean; incomplete?: boolean; nextFajrAt?: string | null }) {
   const { t, isRTL, localeTag } = useI18n();
   const queryClient = useQueryClient();
   const native = Platform.OS !== 'web';
@@ -750,7 +751,7 @@ function FajrWaitState({ firstSet = false, nextFajrAt }: { firstSet?: boolean; n
       <Animated.View entering={FadeIn.duration(300)} style={styles.complete}>
         {/* "No one fitted" only when matching ran and found nobody. */}
         {firstSet ? null : (
-          <Text variant="bodySmall" center style={styles.completeBody}>{t('daily.waitBody')}</Text>
+          <Text variant="bodySmall" center style={styles.completeBody}>{t(incomplete ? 'daily.incompleteBody' : 'daily.waitBody')}</Text>
         )}
         {/* One sentence that runs straight into the clock. */}
         <FajrCountdown

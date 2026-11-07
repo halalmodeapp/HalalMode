@@ -288,6 +288,9 @@ Deno.serve(async (request) => {
     return new Response('Forbidden', { status: 403 });
   }
 
+  // Earlier sends first: Expo's tickets only said it took them. Its receipts say whether a phone did.
+  const receipts = await checkReceipts(client).catch(() => 0);
+
   const claimToken = crypto.randomUUID();
   const claimed = await client.rpc('claim_notifications_fenced_service', { p_limit: 100, p_claim_token: claimToken });
   if (claimed.error) {
@@ -295,7 +298,7 @@ Deno.serve(async (request) => {
   }
 
   const rows = (claimed.data ?? []) as Claimed[];
-  if (rows.length === 0) return Response.json({ claimed: 0, sent: 0, failed: 0 });
+  if (rows.length === 0) return Response.json({ claimed: 0, sent: 0, failed: 0, receipts });
 
   // One message per device. A notification counts as delivered if it reached
   // any of the member's phones; it is retried only if it reached none.
@@ -313,13 +316,15 @@ Deno.serve(async (request) => {
       collapseId: `halal-mode-${row.id}`,
       // Lets the app open the right screen without putting anything private
       // in the payload.
-      data: { kind: row.kind, notificationId: String(row.id) },
+      // recipient: a tap on a phone now signed in to someone else is ignored.
+      data: { kind: row.kind, notificationId: String(row.id), recipient: row.user_id },
     };
   });
 
   const delivered = new Set<number>();
   const lastError = new Map<number, string>();
   const deadTokens: string[] = [];
+  const tickets: { ticket: string; id: number; token: string }[] = [];
 
   // Expo accepts at most 100 messages per request and answers with one ticket
   // per message, in order.
@@ -347,12 +352,13 @@ Deno.serve(async (request) => {
         }
         continue;
       }
-      const payload = await response.json() as { data?: { status: string; message?: string; details?: { error?: string } }[] };
-      const tickets = payload.data ?? [];
+      const payload = await response.json() as { data?: { status: string; id?: string; message?: string; details?: { error?: string } }[] };
+      const batchTickets = payload.data ?? [];
       batchRows.forEach((row, index) => {
-        const ticket = tickets[index];
+        const ticket = batchTickets[index];
         if (ticket?.status === 'ok') {
           delivered.add(row.id);
+          if (ticket.id) tickets.push({ ticket: ticket.id, id: row.id, token: row.push_token });
           return;
         }
         if (!ticket) {
@@ -385,10 +391,38 @@ Deno.serve(async (request) => {
     p_sent: sent,
     p_failed: failed,
     p_dead_tokens: deadTokens,
+    p_tickets: tickets,
+    // Settled to avoid a duplicate, but the reason is kept.
+    p_ambiguous: sent.filter((id) => lastError.has(id)).map((id) => ({ id, error: lastError.get(id) })),
   });
   if (settled.error) {
     return Response.json({ error: settled.error.message, sent: sent.length }, { status: 500 });
   }
 
-  return Response.json({ claimed: rows.length, sent: sent.length, failed: failed.length });
+  return Response.json({ claimed: rows.length, sent: sent.length, failed: failed.length, receipts });
 });
+
+type ServiceClient = { rpc: (name: string, args?: Record<string, unknown>) => PromiseLike<{ data: unknown; error: unknown }> };
+
+/** Reads Expo receipts for tickets old enough to have one, and records what happened. */
+async function checkReceipts(client: ServiceClient): Promise<number> {
+  const due = await client.rpc('claim_push_receipts_service', { p_limit: 1000 });
+  if (due.error) return 0;
+  const ids = ((due.data ?? []) as { ticket_id: string }[]).map((row) => row.ticket_id);
+  if (!ids.length) return 0;
+  const response = await fetch('https://exp.host/--/api/v2/push/getReceipts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ ids }),
+  });
+  if (!response.ok) return 0;
+  const body = await response.json() as { data?: Record<string, { status: string; message?: string; details?: { error?: string } }> };
+  const results = Object.entries(body.data ?? {}).map(([ticket, receipt]) => ({
+    ticket,
+    status: receipt.status,
+    error: receipt.status === 'error' ? (receipt.details?.error ?? receipt.message ?? 'unknown') : null,
+  }));
+  if (!results.length) return 0;
+  const settled = await client.rpc('settle_push_receipts_service', { p_receipts: results });
+  return settled.error ? 0 : results.length;
+}

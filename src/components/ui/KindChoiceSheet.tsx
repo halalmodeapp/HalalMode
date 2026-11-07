@@ -25,6 +25,8 @@ export interface KindChoiceSheetProps {
   choiceRequired: boolean;
   /** A note is optional whatever is chosen, rather than only for the write-your-own option. */
   noteAlways?: boolean;
+  /** The write-your-own option may be confirmed without any words. */
+  writeOptional?: boolean;
   busy?: boolean;
   error?: string | null;
   onConfirm: (choice: string | null, note: string) => void;
@@ -46,6 +48,7 @@ export function KindChoiceSheet({
   cancelLabel,
   choiceRequired,
   noteAlways,
+  writeOptional,
   busy,
   error,
   onConfirm,
@@ -64,7 +67,7 @@ export function KindChoiceSheet({
   }, [visible]);
 
   const writing = noteAlways || (writeOption !== undefined && choice === writeOption);
-  const needsWords = writeOption !== undefined && choice === writeOption && !noteAlways;
+  const needsWords = writeOption !== undefined && choice === writeOption && !noteAlways && !writeOptional;
   const ready = (!choiceRequired || choice !== null) && (!needsWords || note.trim().length > 0);
   const shown = choice && preview ? preview(choice, note.trim()) : null;
 

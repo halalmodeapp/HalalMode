@@ -54,6 +54,7 @@ export function SafetyControl({
   onBlocked,
   tone = 'light',
   extraActions,
+  stayHere,
 }: {
   scope: SafetyScope;
   memberName?: string;
@@ -61,6 +62,8 @@ export function SafetyControl({
   tone?: 'light' | 'dark';
   /** More entries for the menu, above the safety ones (the chat adds "close this connection"). */
   extraActions?: { key: string; label: string; testID?: string; disabled?: boolean; onPress: () => void }[];
+  /** Stay on this screen after blocking or hiding, for screens outside the tabs (the new-terms screen). */
+  stayHere?: boolean;
 }) {
   const { isRTL, t } = useI18n();
   const { show: showToast } = useToast();
@@ -111,7 +114,7 @@ export function SafetyControl({
         // Not close(): it refuses while the mutation is pending, which it still
         // is inside onSuccess, and the sheet would be left open behind us.
         setView('closed');
-        router.replace(scope.kind === 'connection' ? '/(tabs)/connections' : '/(tabs)/daily');
+        if (!stayHere) router.replace(scope.kind === 'connection' ? '/(tabs)/connections' : '/(tabs)/daily');
         return;
       }
       setView('blocked');
@@ -132,7 +135,7 @@ export function SafetyControl({
   const finish = () => {
     const departed = view === 'blocked';
     close();
-    if (!departed) return;
+    if (!departed || stayHere) return;
     router.replace(scope.kind === 'connection' ? '/(tabs)/connections' : '/(tabs)/daily');
   };
 

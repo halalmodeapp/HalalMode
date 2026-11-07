@@ -264,3 +264,9 @@ export function nextFajrWindow(
   const expiresAt = nextFajrAfter(latitude, longitude, opensAt, highLatitudeMethod);
   return expiresAt ? { opensAt, expiresAt } : null;
 }
+
+/** Searches from the cycle start, or from the member's last dawn if that is later, so one dawn never gets two sets. */
+export function dawnSearchStart(cycleStart: Date, lastDawn?: string | null): Date {
+  const last = lastDawn ? new Date(lastDawn) : null;
+  return last && last.getTime() > cycleStart.getTime() ? last : cycleStart;
+}

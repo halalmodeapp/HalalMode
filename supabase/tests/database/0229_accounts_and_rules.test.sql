@@ -67,7 +67,7 @@ $$;
 create trigger fail_deletion before insert on account_deletion_requests for each row execute function pg_temp.fail_deletion();
 select throws_ok($$select request_my_account_deletion()$$, 'P0001', 'Deletion failed for this test', 'a deletion failure does not undo the leaving answer');
 drop trigger fail_deletion on account_deletion_requests;
-select is((select count(*)::int from exit_answers where reason = 'privacy'), 1, 'the anonymous answer counts independently');
+select is((select count(*)::int from pending_exit_answers where reason = 'privacy'), 1, 'a deletion failure does not lose the leaving answer');
 select request_my_account_deletion();
 select is(get_my_account_deletion()->>'recoverable', 'true', 'privacy departure has the same hold');
 select cancel_my_account_deletion();

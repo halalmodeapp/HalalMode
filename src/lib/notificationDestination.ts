@@ -35,6 +35,9 @@ export function decideNotificationTap(input: {
   if (input.actionIdentifier !== input.defaultActionIdentifier || !input.userId) {
     return { action: 'ignore' };
   }
+  // A push for the account that used to be signed in on this phone opens nothing.
+  const recipient = (input.data as { recipient?: unknown } | null)?.recipient;
+  if (typeof recipient === 'string' && recipient !== input.userId) return { action: 'ignore' };
   const destination = notificationDestination(input.data);
   if (!destination) return { action: 'ignore' };
   return input.canOpen ? { action: 'route', destination } : { action: 'wait' };

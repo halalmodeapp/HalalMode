@@ -4,8 +4,8 @@ set local search_path = public, extensions;
 select plan(4);
 
 select ok(
-  has_function_privilege('authenticated', 'public.send_message(uuid,text,text)', 'EXECUTE')
-  and not has_function_privilege('anon', 'public.send_message(uuid,text,text)', 'EXECUTE'),
+  has_function_privilege('authenticated', 'public.send_message(uuid,text,text,uuid)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.send_message(uuid,text,text,uuid)', 'EXECUTE'),
   'idempotent sending remains authenticated-only'
 );
 

@@ -126,6 +126,23 @@ select ok(
   'the capacity-blocked mutual is retained privately'
 );
 
+-- A waiting mutual opens only between people who could be matched at all, so make everyone ready.
+select set_config('test.saved_claims', coalesce(current_setting('request.jwt.claims', true), ''), true);
+select set_config('request.jwt.claims', '', true);
+update profiles set bio = repeat('a', 50), photos = array[id::text || '/p.jpg'], latitude = 51.5, longitude = -0.1,
+  city = 'London', country = 'United Kingdom', marital_status = 'never_married', sensitive_consent_at = now()
+where id in (select id from capacity_fillers) or id::text like '00000000-0000-0000-0000-00000000019%';
+insert into private_preferences (user_id, matching_preferences_completed_at, preferred_countries)
+select id, now(), array['United Kingdom'] from profiles
+where id in (select id from capacity_fillers) or id::text like '00000000-0000-0000-0000-00000000019%'
+on conflict (user_id) do update set matching_preferences_completed_at = now();
+insert into halal_mode_private.member_legal_consent_history (user_id, document_type, version, acceptance_context)
+select p.id, d.document_type, d.version, 'onboarding' from profiles p
+cross join halal_mode_private.legal_document_registry d
+where d.is_current and (p.id in (select id from capacity_fillers) or p.id::text like '00000000-0000-0000-0000-00000000019%')
+on conflict do nothing;
+select set_config('request.jwt.claims', current_setting('test.saved_claims'), true);
+
 create temporary table closed_capacity_fixture (id uuid) on commit drop;
 insert into closed_capacity_fixture
 select c.id from connections c
@@ -220,6 +237,20 @@ from stale_capacity_members;
 insert into mutual_connection_queue (user_a, user_b, matched_at) values
   ('00000000-0000-0000-0000-000000000205', '00000000-0000-0000-0000-000000000207', now() - interval '1 day'),
   ('00000000-0000-0000-0000-000000000206', '00000000-0000-0000-0000-000000000208', now() - interval '1 day');
+
+select set_config('request.jwt.claims', '', true);
+update profiles set bio = repeat('a', 50), photos = array[id::text || '/p.jpg'], latitude = 51.5, longitude = -0.1,
+  city = 'London', country = 'United Kingdom', marital_status = 'never_married', sensitive_consent_at = now()
+where id::text like '00000000-0000-0000-0000-00000000020%';
+insert into private_preferences (user_id, matching_preferences_completed_at, preferred_countries)
+select id, now(), array['United Kingdom'] from profiles where id::text like '00000000-0000-0000-0000-00000000020%'
+on conflict (user_id) do update set matching_preferences_completed_at = now();
+insert into halal_mode_private.member_legal_consent_history (user_id, document_type, version, acceptance_context)
+select p.id, d.document_type, d.version, 'onboarding' from profiles p
+cross join halal_mode_private.legal_document_registry d
+where d.is_current and p.id::text like '00000000-0000-0000-0000-00000000020%'
+on conflict do nothing;
+select set_config('request.jwt.claims', current_setting('test.saved_claims'), true);
 
 select is(
   halal_mode_private.promote_waiting_connections(array[
