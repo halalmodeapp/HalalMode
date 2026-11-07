@@ -1566,6 +1566,13 @@
 
   function pageHealth() {
     return h('div', { class: 'stack' },
+      // Things that should always be zero. Anything above it needs a look.
+      loading(DEMO ? Promise.resolve(sampleMatchStats(1)) : rpc('admin_match_stats', { p_days: 1 }), function (st) {
+        return [h('div', { class: 'kpis' },
+          kpi('Overdue deletions', n(st.overdue_deletions), 'asked over 31 days ago', 'Accounts whose 30-day wait is over but that have not been erased yet. Erasure retries every hour.', st.overdue_deletions > 0),
+          kpi('Stuck account actions', n(st.unfinished_account_actions), 'started over 10 min ago', 'Suspensions, bans or lifts that started but did not finish. A suspended or banned member is already hidden from matching.', st.unfinished_account_actions > 0),
+          kpi('Undelivered pushes', n(st.push_failures_today), 'last 24 h', 'Notifications Expo accepted but could not deliver to the phone, from its delivery receipts.', st.push_failures_today > 0))];
+      }),
       loading(DEMO ? Promise.resolve(state.demoHealth) : rpc('admin_system_health'), function (hl) {
         const jobs = hl.jobs || [], w = hl.workers || {}, push = hl.push || {}, mail = hl.email || {}, mt = hl.matching || {}, mod = hl.moderation || {};
         const failingJobs = jobs.filter(function (j) { return j.failed_24h > 0; }).length;
@@ -1685,7 +1692,8 @@
       days: days, shown: Math.round(6120 * f), picks: Math.round(1480 * f), matches: Math.round(41 * f), one_sided_picks: Math.round(1398 * f),
       members_shown: 296, picked_by_nobody: 38, picked_not_matched: 151, members_matched: Math.min(220, Math.round(70 * f)),
       by_gender: { female: { shown: Math.round(2900 * f), picked: Math.round(910 * f), members: 141, matched: Math.round(36 * f) }, male: { shown: Math.round(3220 * f), picked: Math.round(570 * f), members: 155, matched: Math.round(34 * f) } },
-      waiting: { members: 204, r0_3: 58, r4_7: 71, r8_13: 52, r14: 23 }, daily_matches: daily
+      waiting: { members: 204, r0_3: 58, r4_7: 71, r8_13: 52, r14: 23 }, daily_matches: daily,
+      overdue_deletions: 0, unfinished_account_actions: 0, push_failures_today: 2
     };
   }
   function sampleMatcher() {
