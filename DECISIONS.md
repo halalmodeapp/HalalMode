@@ -2,6 +2,14 @@
 
 Record only approved deviations from Halal Mode's established core here, with a one-sentence rationale for each decision.
 
+- **Answers are released to both at once (2026-11-07).** Neither person sees any of the other's answers until both have finished, then both see everything together, so nobody shapes their answers around the other's.
+- **A deletion can be undone during the 30 days (2026-11-07).** Signing back in during the hold offers to keep the account, which cancels the deletion and brings the member back as they were, paused until they resume.
+- **A mutual match waiting for room is kept, and shown (2026-11-07).** Both said yes, so it survives later preference changes. It waits while either is paused or at the connection limit, and ends only on a block, a hide or a deletion. Each person sees it on Connections as a match waiting for room, with the other's photos blurred, and is told plainly why it is waiting and what frees it. It never expires.
+- **Messages can be taken back (2026-11-07).** A message that failed to send can be deleted from the phone. A sent message can be deleted for everyone within 15 minutes, which leaves "Message deleted" for both; the window is a setting.
+- **Halal Cards after Premium ends (2026-11-07).** A game already in progress can be finished. No new game can be started.
+- **Suspensions end by themselves (2026-11-07).** When a timed suspension ends, the member comes back automatically, unless they had paused themselves first. A ban stays until an admin lifts it.
+- **Withdrawing sensitive-data consent means leaving (2026-11-07).** The app cannot match anyone without that data, so withdrawing is offered as deleting the account, with the same 30-day hold and the same way back. To be confirmed with a lawyer.
+- **Smaller rules (2026-11-07).** A selfie awaiting human review is kept until reviewed, and up to 30 days after the decision. Any marital-status change is allowed, and the suspicious-change alert stays. A leaving answer counts even if the deletion then fails. An old app that closes a connection without a reason sends a generic kind note. A farewell note survives the sender's deletion without their name. Only reminders actually sent count against the reminder budget. Removing an admin also removes their tester access and tester Premium.
 - **Five a day, whichever side is crowded (2026-11-05).** Anyone short after the two-way games gets one-way cards, least-seen people first, with no fixed cap. A yes waits up to 7 days in the other person's five. This replaces limiting sign-ups and the rule that if A is shown B, B is shown A. The founder accepted the exposure this means, both ways round.
 - **A familiar face beats an empty seat (2026-11-05).** New people first, then those seen once, then those seen more, from the next day. A hard limit on repeats left more people with nothing in every test.
 - **A second pass is for good (2026-11-05).** Live code used to release it after 90 days.

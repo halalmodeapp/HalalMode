@@ -23,7 +23,7 @@ export function FarewellNotes() {
     <View style={styles.list}>
       {notes.data.map((note) => (
         <View key={note.connectionId} style={[styles.card, isRTL && styles.rtl]}>
-          <Text variant="label">{t('farewell.noteTitle', { name: note.name })}</Text>
+          <Text variant="label">{note.name ? t('farewell.noteTitle', { name: note.name }) : t('farewell.anonymousTitle')}</Text>
           <Text variant="bodySmall">{farewellWords(note.reason, note.message, t)}</Text>
           <Pressable accessibilityRole="button" onPress={() => seen.mutate(note.connectionId)} style={styles.dismiss}>
             <Text variant="caption" style={styles.dismissLabel}>{t('farewell.noteDismiss')}</Text>

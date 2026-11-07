@@ -11,7 +11,6 @@ import {
   View,
 } from 'react-native';
 import { StretchScrollView } from '@/components/ui/StretchScrollView';
-import Animated, { FadeInUp } from 'react-native-reanimated';
 
 import { fetchConnection, fetchSavedAnswers, saveAnswer, submitAnswer } from '@/api/connections';
 import { ScreenHeader } from '@/components/navigation/ScreenHeader';
@@ -32,9 +31,7 @@ import { showNotice } from '@/lib/notice';
 /**
  * Step 2 of 3, answer each question in turn; theirs wait for the recap.
  *
- * The rule the whole screen enforces: their words stay sealed until yours are
- * committed, and yours cannot be edited afterwards. That asymmetry is what
- * makes the answers worth reading.
+ * Both finish before either reads the other's answers. Sent answers are final.
  */
 export default function AnswersScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -55,6 +52,7 @@ export default function AnswersScreen() {
   const connectionQuery = useQuery({
     queryKey: queryKeys.connection(id),
     queryFn: () => fetchConnection(id),
+    refetchInterval: 5000,
   });
 
   const connection = connectionQuery.data;
@@ -70,6 +68,7 @@ export default function AnswersScreen() {
     mutationFn: (text: string) => submitAnswer(id, current!.questionId, text),
     onSuccess: (result, text) => {
       setRevealed((state) => ({ ...state, [result.questionId]: result }));
+      void queryClient.invalidateQueries({ queryKey: queryKeys.connection(id) });
       // Daily may be waiting on these answers: it should know straight away.
       void queryClient.invalidateQueries({ queryKey: queryKeys.round });
       if (keep[result.questionId] && saved[result.questionId] !== text) {
@@ -104,6 +103,9 @@ export default function AnswersScreen() {
   }
   if (connection.stage === 'recap') return <Redirect href={`/connection/${id}/recap`} />;
   if (connection.stage === 'open') return <Redirect href={`/connection/${id}/chat`} />;
+  if (answers.length > 0 && answers.every(item => (revealed[item.questionId] ?? item).mySubmittedAt)) {
+    return <Screen><ScreenHeader /><LoadingState label={t('answers.waitingBoth')} /></Screen>;
+  }
   if (!current || !question) {
     return (
       <Screen>
@@ -231,30 +233,20 @@ export default function AnswersScreen() {
             </Text>
           ) : null}
 
-          {committed && reveal.theirAnswer ? (
-            <Animated.View
-              entering={FadeInUp.duration(350)}
-              style={styles.theirBox}
-            >
-              <Text variant="microAccent">{t('answers.theirs', { name: firstName })}</Text>
-              <Text style={styles.theirText}>{reveal.theirAnswer}</Text>
-            </Animated.View>
-          ) : (
-            <View style={styles.theirBox}>
-              <Text variant="micro">{t('answers.theirs', { name: firstName })}</Text>
-              <View style={styles.lockedWrap}>
-                <Text style={styles.lockedText}>
-                  {t('answers.locked', { name: firstName })}
-                </Text>
-                <BlurView
-                  intensity={22}
-                  tint="light"
-                  style={StyleSheet.absoluteFill}
-                />
-              </View>
-              <Text variant="bodySmall">{t('answers.hidden')}</Text>
+          <View style={styles.theirBox}>
+            <Text variant="micro">{t('answers.theirs', { name: firstName })}</Text>
+            <View style={styles.lockedWrap}>
+              <Text style={styles.lockedText}>
+                {t('answers.locked', { name: firstName })}
+              </Text>
+              <BlurView
+                intensity={22}
+                tint="light"
+                style={StyleSheet.absoluteFill}
+              />
             </View>
-          )}
+            <Text variant="bodySmall">{t('answers.hidden')}</Text>
+          </View>
         </StretchScrollView>
 
         {mutation.isError ? (
@@ -358,12 +350,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 21,
     color: color.faintest,
-  },
-  theirText: {
-    fontFamily: 'Beiruti_400Regular',
-    fontSize: 14,
-    lineHeight: 23,
-    color: color.inkSoft,
   },
 
   footer: {

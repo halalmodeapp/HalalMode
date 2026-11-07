@@ -63,6 +63,13 @@ select is(
 update connections set stage = 'recap'
 where id = '00000000-0000-0000-0000-000000002201';
 
+-- A recap fixture must represent answers completed by both members.
+insert into connection_questions (connection_id, question_id, catalog_version, picked_by_a, picked_by_b)
+values ('00000000-0000-0000-0000-000000002201', 'q1', 1, true, true);
+insert into question_answers (connection_id, user_id, question_id, body) values
+  ('00000000-0000-0000-0000-000000002201', '00000000-0000-0000-0000-000000000221', 'q1', 'A completed answer.'),
+  ('00000000-0000-0000-0000-000000002201', '00000000-0000-0000-0000-000000000222', 'q1', 'Another completed answer.');
+
 do $$ begin
   perform set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000221","role":"authenticated"}', true);
 end $$;

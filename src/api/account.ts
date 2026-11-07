@@ -1,5 +1,18 @@
 import { requireSupabase, USE_MOCKS } from '@/lib/supabase';
 
+export async function fetchMyAccountDeletion(): Promise<{ pending: boolean; recoverable?: boolean }> {
+  if (USE_MOCKS) return { pending: false };
+  const { data, error } = await requireSupabase().rpc('get_my_account_deletion');
+  if (error) throw error;
+  return data as { pending: boolean; recoverable?: boolean };
+}
+
+export async function cancelMyAccountDeletion(): Promise<void> {
+  if (USE_MOCKS) return;
+  const { error } = await requireSupabase().rpc('cancel_my_account_deletion');
+  if (error) throw error;
+}
+
 /** Changes matching eligibility through a constrained server RPC. */
 export async function setProfilePaused(paused: boolean): Promise<void> {
   if (USE_MOCKS) return;

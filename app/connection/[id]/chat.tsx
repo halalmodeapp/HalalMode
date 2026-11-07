@@ -30,6 +30,9 @@ import {
 
 import {
   closeConnectionWithFarewell,
+  fetchDeletableMessageIds,
+  fetchMessageDeletions,
+  deleteMessageForEveryone,
   fetchConnection,
   fetchMessagesPage,
   markMessagesRead,
@@ -43,6 +46,7 @@ import { Screen } from '@/components/ui/Screen';
 import { KindChoiceSheet } from '@/components/ui/KindChoiceSheet';
 import { FAREWELL_LABELS, FAREWELL_MAX, FAREWELL_REASONS, farewellWords } from '@/lib/farewell';
 import { Text } from '@/components/ui/Text';
+import { Button } from '@/components/ui/Button';
 import { showNotice } from '@/lib/notice';
 import { shuffledOpeners } from '@/data/openers';
 import { useI18n } from '@/i18n';
@@ -52,10 +56,10 @@ import { useCardsAttention } from '@/halalCards/hooks';
 import { ILLUSTRATIONS, THUMBNAILS } from '@/halalCards/illustrations';
 import { cardsPaths } from '@/halalCards/navigation';
 import { queryKeys } from '@/lib/queryClient';
-import { mergeLatestMessagePage, mergeMessages } from '@/lib/mergeMessages';
+import { applyMessageDeletions, mergeLatestMessagePage, mergeMessages } from '@/lib/mergeMessages';
 import { clearPrivateMediaCache } from '@/lib/privateMediaCache';
 import { trackProductEvent } from '@/lib/analytics';
-import { enqueueMessage, getPendingMessages, removePendingMessage } from '@/lib/messageOutbox';
+import { enqueueMessage, getPendingMessages, removePendingMessage, type PendingMessage } from '@/lib/messageOutbox';
 import { retryAllInOrder } from '@/lib/retryPolicy';
 import { USE_MOCKS } from '@/lib/supabase';
 import { testIds } from '@/lib/testIds';
@@ -99,7 +103,8 @@ export default function ChatScreen() {
     'calling' | 'connected' | 'unavailable' | null
   >(null);
   const [now, setNow] = useState(0);
-  const [pendingCount, setPendingCount] = useState(0);
+  const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
+  const pendingCount = pendingMessages.length;
   const [retryFailed, setRetryFailed] = useState(false);
   const outboxMemberId = USE_MOCKS ? 'mock' : user?.id;
   const cardsWaiting = useCardsAttention().data?.[id] ?? 0;
@@ -142,10 +147,10 @@ export default function ChatScreen() {
 
   const refreshPendingCount = useCallback(async () => {
     if (!outboxMemberId) {
-      setPendingCount(0);
+      setPendingMessages([]);
       return;
     }
-    setPendingCount((await getPendingMessages(outboxMemberId, id)).length);
+    setPendingMessages(await getPendingMessages(outboxMemberId, id));
   }, [id, outboxMemberId]);
 
   const connectionQuery = useQuery({
@@ -156,8 +161,13 @@ export default function ChatScreen() {
   const messagesQuery = useQuery({
     queryKey: queryKeys.messages(id),
     queryFn: async () => {
-      const latest = await fetchMessagesPage(id);
-      return mergeLatestMessagePage(queryClient.getQueryData<MessagePage>(queryKeys.messages(id)), latest);
+      const current = queryClient.getQueryData<MessagePage>(queryKeys.messages(id));
+      const [latest, deletions] = await Promise.all([
+        fetchMessagesPage(id),
+        fetchMessageDeletions(id, current?.messages.map(message => message.id) ?? []),
+      ]);
+      const merged = mergeLatestMessagePage(current, latest);
+      return { ...merged, messages: applyMessageDeletions(merged.messages, deletions) };
     },
     // Conversation is the one place freshness matters.
     staleTime: 0,
@@ -262,6 +272,35 @@ export default function ChatScreen() {
     },
     onError: () => setRetryFailed(true),
     onSettled: () => { void refreshPendingCount(); },
+  });
+
+  const deletableQuery = useQuery({
+    queryKey: ['deletable-messages', id],
+    queryFn: () => fetchDeletableMessageIds(id),
+    refetchInterval: visible ? 5000 : false,
+  });
+  const deleteSent = useMutation({
+    mutationFn: deleteMessageForEveryone,
+    onSuccess: async (_, messageId) => {
+      queryClient.setQueryData<MessagePage>(queryKeys.messages(id), current => current ? {
+        ...current, messages: applyMessageDeletions(current.messages, [{ id: messageId, deletedAt: new Date().toISOString() }]),
+      } : current);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.messages(id) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.connections }),
+        queryClient.invalidateQueries({ queryKey: ['deletable-messages', id] }),
+      ]);
+    },
+    onError: (error) => showNotice(t('common.errorTitle'),
+      error.message === 'Message deletion window has ended' ? t('chat.deleteTooLate') : t('chat.deleteFailed')),
+  });
+  const discardPending = useMutation({
+    mutationFn: async (messageId: string) => {
+      if (!outboxMemberId) return;
+      await removePendingMessage(outboxMemberId, messageId);
+      await refreshPendingCount();
+    },
+    onError: () => showNotice(t('common.errorTitle'), t('chat.deleteFailed')),
   });
 
   const close = useMutation({
@@ -491,7 +530,13 @@ export default function ChatScreen() {
             item.kind === 'day' ? (
               <DayMarker date={item.date} />
             ) : (
-              <Bubble message={item.message} isLastOutgoing={item.isLastOutgoing} />
+              <View>
+                <Bubble message={item.message} isLastOutgoing={item.isLastOutgoing} />
+                {item.message.sender === 'me' && !item.message.deletedAt && deletableQuery.data?.includes(item.message.id) ? (
+                  <Button testID="delete-sent-message" label={t('chat.deleteEveryone')} variant="quiet"
+                    disabled={deleteSent.isPending} onPress={() => deleteSent.mutate(item.message.id)} />
+                ) : null}
+              </View>
             )
           }
         />
@@ -505,7 +550,7 @@ export default function ChatScreen() {
             accessibilityRole="button"
             accessibilityLabel={t('chat.retryPending', { count: pendingCount })}
             accessibilityState={{ busy: retryPending.isPending }}
-            disabled={retryPending.isPending}
+            disabled={retryPending.isPending || discardPending.isPending}
             onPress={() => retryPending.mutate()}
             style={styles.pendingNotice}
           >
@@ -517,6 +562,13 @@ export default function ChatScreen() {
             </Text>
           </Pressable>
         ) : null}
+        {!send.isPending && !retryPending.isPending ? pendingMessages.map(message => (
+          <View key={message.id} style={styles.pendingNotice}>
+            <Text variant="bodySmall">{message.body}</Text>
+            <Button testID="delete-pending-message" label={t('chat.deletePhone')} variant="quiet"
+              disabled={discardPending.isPending} onPress={() => discardPending.mutate(message.id)} />
+          </View>
+        )) : null}
         {retryFailed ? (
           <Text accessibilityRole="alert" variant="caption" style={styles.sendError}>
             {t('chat.retrySomeFailed')}
@@ -602,6 +654,7 @@ function Bubble({
   message: ChatMessage;
   isLastOutgoing: boolean;
 }) {
+  const { t } = useI18n();
   const mine = message.sender === 'me';
 
   if (message.voiceUrl) {
@@ -628,7 +681,7 @@ function Bubble({
   return (
     <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
       <Text style={[styles.bubbleText, mine && styles.bubbleTextMine]}>
-        {message.text}
+        {message.deletedAt ? t('chat.messageDeleted') : message.text}
       </Text>
       <MessageMeta message={message} mine={mine} isLastOutgoing={isLastOutgoing} />
     </View>

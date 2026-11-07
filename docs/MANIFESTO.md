@@ -26,7 +26,7 @@ Halal Mode is a Muslim marriage app. It exists to get people married and off the
 
 **Who sees whom.** Introductions are two-way while seats last. Anyone still short gets one-way cards, least-seen people first, whichever side is crowded. There is no fixed cap, so in a crowded city the most-seen person may be shown to 100 or more people a week, and the founder has accepted that because they never see a count and still see only five themselves. A yes on a one-way card waits up to 7 days and takes an ordinary place in the other person's five. They see it once, and if they say yes it is a match at once. Nobody is told who is waiting. A yes may lapse unseen, so never imply it was seen or rejected.
 
-**Picks** are private. Nobody ever learns they were not picked. Both pick, and it is a connection. If either is at their limit it waits in a queue until there is room, and they stop getting new sets while full.
+**Picks** are private. Nobody ever learns they were not picked. Both pick, and it is a connection. If either is at their limit it waits until there is room, and they stop getting new sets while full. A waiting match is shown to both on Connections, photos blurred, with a plain word on why it waits. It survives later preference changes, and ends only on a block, a hide or a deletion.
 
 **A connection** moves through: choosing questions, answering (two each, released to both at once), recap, open. Contact details are filtered until then. Answers owed block the next set.
 
@@ -46,7 +46,7 @@ Halal Mode is a Muslim marriage app. It exists to get people married and off the
 
 **Halal Bot** gives a member honest, gentle advice on their own photos, only when they ask, and only they see it. It talks about the photograph and never rates the person. The first look is free and covers every photo. After that each new photo uses one of three free looks, and Premium has no limit.
 
-**Leaving.** Deleting an account asks why, and above all whether they married. Answering is optional and never gets in the way of leaving. The answer keeps nothing that says whose it was, so it outlives the account. It cannot catch someone who only uninstalls, since an app is not told that.
+**Leaving.** Deleting an account asks why, and above all whether they married. Answering is optional and never gets in the way of leaving. The account is held for 30 days, and signing back in can keep it. Withdrawing consent for sensitive data is offered as the same thing, because nobody can be matched without it. The answer keeps nothing that says whose it was, so it outlives the account. It cannot catch someone who only uninstalls, since an app is not told that.
 
 **The liked-you tray** shows free members blurred teasers of who liked them, capped at ten, and Premium unlocks them. The founder has accepted this one-sided exposure: a few are not a flood.
 

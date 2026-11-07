@@ -316,6 +316,11 @@ export function SettingsTab({
         title={t('settings.privacyTitle')}
       >
         <SettingRow
+          title={t('account.withdrawTitle')}
+          subtitle={t('account.withdrawBody')}
+          onPress={() => setDeleteConfirm(true)}
+        />
+        <SettingRow
           title={t('settings.visibility')}
           subtitle={t('settings.visibilityBody')}
           badge={t('settings.alwaysOn')}

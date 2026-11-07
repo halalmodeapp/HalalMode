@@ -77,11 +77,11 @@ select is(
      halal_mode_private.get_connection_after_legal_consent(
        '00000000-0000-0000-0000-00000000800c') -> 'questions') q
    where q ->> 'questionId' = 'q1'),
-  'two on q1',
-  'once both have answered, the first member sees it too — and keeps seeing it'
+  null,
+  'a finished member still waits until their partner finishes every answer'
 );
 
--- The question the other member has not answered stays shut, in the same read.
+-- Every partner answer remains sealed in the same read.
 select is(
   (select q ->> 'theirAnswer'
    from jsonb_array_elements(
@@ -89,7 +89,7 @@ select is(
        '00000000-0000-0000-0000-00000000800c') -> 'questions') q
    where q ->> 'questionId' = 'q2'),
   null,
-  'a released answer on one question does not release another'
+  'all questions stay sealed while either member is unfinished'
 );
 
 -- And from the other side, which is where the reveal used to live transiently.

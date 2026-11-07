@@ -79,14 +79,19 @@ export async function submitAnswer(
 ): Promise<QuestionAnswer> {
   if (USE_MOCKS) {
     await new Promise((resolve) => setTimeout(resolve, 400));
-    return {
-      questionId,
-      origin: 'both',
-      myAnswer: answer,
-      theirAnswer: MOCK_THEIR_ANSWERS[questionId],
-      mySubmittedAt: new Date().toISOString(),
-      theirSubmittedAt: new Date().toISOString(),
-    };
+    const connection = MOCK_CONNECTIONS.find(item => item.id === connectionId);
+    const question = connection?.questions.find(item => item.questionId === questionId);
+    if (!connection || !question) throw new Error('Connection not found.');
+    question.myAnswer = question.myAnswer || answer;
+    question.mySubmittedAt = question.mySubmittedAt || new Date().toISOString();
+    if (connection.questions.every(item => item.mySubmittedAt)) {
+      for (const item of connection.questions) {
+        item.theirAnswer = MOCK_THEIR_ANSWERS[item.questionId];
+        item.theirSubmittedAt = new Date().toISOString();
+      }
+      connection.stage = 'recap';
+    }
+    return { ...question };
   }
 
   const client = requireSupabase();
@@ -284,7 +289,7 @@ export async function closeConnectionWithFarewell(connectionId: string, reason: 
 
 export interface FarewellNote {
   connectionId: string;
-  name: string;
+  name: string | null;
   reason: string;
   message: string | null;
 }
@@ -307,10 +312,55 @@ export function messageFromRow(row: Record<string, unknown>, currentUserId: stri
     id: String(row.id),
     connectionId: String(row.connection_id),
     sender: row.sender_id === currentUserId ? 'me' : 'them',
+    deletedAt: row.deleted_at as string | undefined,
     text: row.body as string | undefined,
     voiceUrl: row.voice_path as string | undefined,
     voiceDurationSeconds: row.voice_duration_seconds as number | undefined,
     createdAt: String(row.created_at),
     readAt: row.read_at as string | undefined,
   };
+}
+
+export type WaitingMatch = { id: string; firstName: string; blurredPhotos: string[] };
+
+export async function fetchWaitingMatches(): Promise<WaitingMatch[]> {
+  if (USE_MOCKS) return [];
+  const { data, error } = await requireSupabase().rpc('get_my_waiting_matches');
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchDeletableMessageIds(connectionId: string): Promise<string[]> {
+  if (USE_MOCKS) return MOCK_MESSAGES.filter(m => m.connectionId === connectionId && m.sender === 'me' && !m.deletedAt).map(m => m.id);
+  const { data, error } = await requireSupabase().rpc('get_deletable_message_ids', { p_connection_id: connectionId });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function deleteMessageForEveryone(messageId: string): Promise<void> {
+  if (USE_MOCKS) {
+    const message = MOCK_MESSAGES.find(m => m.id === messageId);
+    if (message) {
+      message.deletedAt = new Date().toISOString();
+      message.text = undefined;
+      message.voiceUrl = undefined;
+      const latest = MOCK_MESSAGES.filter(m => m.connectionId === message.connectionId).at(-1);
+      const connection = MOCK_CONNECTIONS.find(c => c.id === message.connectionId);
+      if (connection && latest?.id === messageId) connection.lastMessageDeleted = true;
+    }
+    return;
+  }
+  const { error } = await requireSupabase().rpc('delete_message_for_everyone', { p_message_id: messageId });
+  if (error) throw error;
+}
+
+export async function fetchMessageDeletions(connectionId: string, messageIds: string[]): Promise<{ id: string; deletedAt: string }[]> {
+  if (USE_MOCKS) return MOCK_MESSAGES.filter(m => m.connectionId === connectionId && m.deletedAt && messageIds.includes(m.id))
+    .map(m => ({ id: m.id, deletedAt: m.deletedAt! }));
+  if (!messageIds.length) return [];
+  const { data, error } = await requireSupabase().rpc('get_connection_message_deletions', {
+    p_connection_id: connectionId, p_message_ids: messageIds,
+  });
+  if (error) throw error;
+  return data ?? [];
 }

@@ -5,9 +5,10 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { fetchConnections } from '@/api/connections';
+import { fetchConnections, fetchWaitingMatches } from '@/api/connections';
 import { BrandHeader } from '@/components/navigation/BrandHeader';
 import { FarewellNotes } from '@/components/connections/FarewellNotes';
+import { BlurredPhoto } from '@/components/likedYou/LikedYouPhoto';
 import { LikedYouTray } from '@/components/likedYou/LikedYouTray';
 import { CompleteProfileNudge } from '@/components/readiness/CompleteProfileNudge';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/AsyncState';
@@ -38,7 +39,14 @@ export default function ConnectionsScreen() {
   const connectionsQuery = useQuery({
     queryKey: queryKeys.connections,
     queryFn: fetchConnections,
+    refetchInterval: 5000,
   });
+  const waitingQuery = useQuery({
+    queryKey: ['waiting-matches'],
+    queryFn: fetchWaitingMatches,
+    refetchInterval: 5000,
+  });
+  const waiting = waitingQuery.data ?? [];
   const connections = connectionsQuery.data ?? [];
 
   return (
@@ -69,12 +77,23 @@ export default function ConnectionsScreen() {
         ) : null}
         <FarewellNotes />
         <LikedYouTray />
-        <CompleteProfileNudge hasMatch={connections.length > 0} />
+        <CompleteProfileNudge hasMatch={connections.length > 0 || waiting.length > 0} />
+        {waitingQuery.isError ? <ErrorState message={t('connections.errorBody')} onRetry={() => void waitingQuery.refetch()} /> : null}
+        {waiting.map(match => (
+          <View key={match.id} testID="waiting-match" style={[styles.row, isRTL && styles.rowRTL]}>
+            <BlurredPhoto path={match.blurredPhotos[0]} style={styles.avatar} />
+            <View style={styles.rowBody}>
+              <Text variant="label">{match.firstName}</Text>
+              <Text variant="microAccent">{t('connections.waitingMatch')}</Text>
+              <Text variant="bodySmall">{t('connections.waitingRoom')}</Text>
+            </View>
+          </View>
+        ))}
         {connections.map((connection) => (
           <ConnectionRow key={connection.id} connection={connection} />
         ))}
 
-        {!connectionsQuery.isPending && !connectionsQuery.isError && connections.length === 0 ? (
+        {!connectionsQuery.isPending && !connectionsQuery.isError && connections.length === 0 && waiting.length === 0 && !waitingQuery.isPending && !waitingQuery.isError ? (
           <EmptyState
             title={t('connections.emptyTitle')}
             message={t('connections.emptyBody')}
@@ -124,7 +143,7 @@ function ConnectionRow({ connection }: { connection: Connection }) {
           </Text>
         </View>
         <Text variant="bodySmall" numberOfLines={1}>
-          {connection.lastMessage}
+          {connection.lastMessageDeleted ? t('chat.messageDeleted') : connection.lastMessage}
         </Text>
         <Text style={styles.stage}>{t(`connections.stage.${stageKey(connection.stage)}`)}</Text>
       </View>

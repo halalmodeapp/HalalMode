@@ -161,7 +161,7 @@ select ok(exists (select 1 from moderation_queue q join profiles p on p.id = q.u
                   where q.user_id = pg_temp.member(24) and q.kind = 'photo' and q.ref = any(p.photos) and q.decided_at is null), 'verification rechecks profile photos');
 select lives_ok($$select admin_mark_reviewed(pg_temp.selfie_item(25), 'checked by owner', 'rejected')$$, 'an owner rejects the selfie');
 select is((select status from member_selfies where user_id = pg_temp.member(25)), 'rejected', 'rejection leaves review');
-select is((select purge_after from selfie_files where user_id = pg_temp.member(25)), now() + interval '1 day', 'rejection retains the file for one day');
+select is((select purge_after from selfie_files where user_id = pg_temp.member(25)), now() + interval '30 days', 'rejection retains the file for 30 days');
 select ok(exists (select 1 from member_notices where user_id = pg_temp.member(25) and kind = 'selfie_rejected'), 'rejection sends the member notice');
 select ok((select reviewed_at is not null and reviewed_by = pg_temp.member(30) from moderation_queue where id = pg_temp.selfie_item(25)), 'the verdict records the reviewer');
 insert into moderation_queue (user_id, kind, ref, decision, decided_at) values (pg_temp.member(26), 'bio', 'old bio', 'review', now());

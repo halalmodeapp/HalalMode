@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { router, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -84,6 +84,12 @@ export default function RecapScreen() {
   if (connectionQuery.isError || !connection) return (
     <Screen><ScreenHeader /><ErrorState title={t('connections.errorTitle')} message={t('connections.errorBody')} onRetry={() => void connectionQuery.refetch()} /></Screen>
   );
+
+  if (connection.stage === 'choosing_questions') return <Redirect href={`/connection/${id}/questions`} />;
+  if (connection.stage === 'answering') {
+    if (connection.questions.some(item => !item.mySubmittedAt)) return <Redirect href={`/connection/${id}/answers`} />;
+    return <Screen><ScreenHeader /><LoadingState label={t('answers.waitingBoth')} /></Screen>;
+  }
 
   return (
     <Screen style={isRTL ? styles.rtl : undefined}>

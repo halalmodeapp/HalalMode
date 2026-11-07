@@ -27,7 +27,7 @@ export function LikedYouPhoto({ liked, style }: { liked: LikedYou; style: ImageS
   return <BlurredPhoto path={liked.blurredPhoto} style={style} />;
 }
 
-function BlurredPhoto({ path, style }: { path?: string | null; style: ImageStyle }) {
+export function BlurredPhoto({ path, style }: { path?: string | null; style: ImageStyle }) {
   const media = usePrivateMedia(undefined, 'profile-photos-blurred', path ?? undefined);
   const url = media.privateMedia ? (media.url as string | undefined) : undefined;
   return (

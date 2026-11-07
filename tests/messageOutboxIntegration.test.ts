@@ -104,3 +104,15 @@ test('damaged manifest is preserved rather than overwritten by a new send', asyn
   await assert.rejects(h.api.enqueueMessage('a', 'connection', 'new'));
   assert.equal(h.storage.get(key), '{broken');
 });
+
+
+test('discarding a failed message removes its durable text and only its own manifest row', async () => {
+  const h = harness();
+  const discarded = await h.api.enqueueMessage('a', 'connection', 'failed private text');
+  const kept = await h.api.enqueueMessage('a', 'connection', 'keep this');
+  await h.api.removePendingMessage('a', discarded.id);
+  await h.api.removePendingMessage('a', discarded.id);
+  assert.deepEqual(Array.from(await h.api.getPendingMessages('a'), item => item.id), [kept.id]);
+  assert.equal([...h.secure.values()].includes('failed private text'), false);
+  assert.equal([...h.storage.values()].some(value => value.includes(discarded.id)), false);
+});

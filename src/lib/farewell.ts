@@ -19,6 +19,7 @@ export const FAREWELL_MAX = 300;
 
 /** What the other person reads: the gentle sentence, or the member's own words inside it. */
 export function farewellWords(reason: string, message: string | null | undefined, t: Translate): string {
+  if (reason === 'generic') return t('farewell.generic');
   const key = FAREWELL_LABELS[reason as FarewellReason];
   const because = reason === 'other' && message ? message : key ? t(key) : '';
   return t('farewell.words', { reason: because });

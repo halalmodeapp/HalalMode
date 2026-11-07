@@ -54,7 +54,7 @@ values(22403, pg_temp.member(1), 'selfie', pg_temp.member(1)::text || '/selfie.j
 select claim_moderation_fenced_service(10, pg_temp.token(2));
 select is((select decision from moderation_queue where id = 22403), 'review', 'exhausted moderation is handed to a person');
 select is((select status from member_selfies where user_id = pg_temp.member(1)), 'review', 'selfie verdict remains reviewable');
-select is((select purge_after from selfie_files where user_id = pg_temp.member(1)), now() + interval '30 days', 'exhaustion starts the existing review retention period');
+select is((select purge_after from selfie_files where user_id = pg_temp.member(1)), null::timestamptz, 'exhausted human review has no purge deadline');
 select is((select count(*)::int from mail_outbox where kind = 'moderation' and ref_id = '22403'), 1, 'exhaustion queues one review email');
 select claim_moderation_service(10);
 select is((select count(*)::int from mail_outbox where ref_id = '22403'), 1, 'repeated sweeping does not duplicate review');
@@ -175,8 +175,8 @@ select ok(blurs_to_remove_service(200) ? (pg_temp.member(3)::text || '/orphan.jp
 select ok(not try_enqueue_notification(pg_temp.member(3), 'quiet_match'), 'missing device does not spend a reminder');
 insert into notification_muted_kinds(user_id, kind) values(pg_temp.member(1), 'quiet_match');
 select ok(not try_enqueue_notification(pg_temp.member(1), 'quiet_match'), 'muted kind does not spend a reminder');
-select ok(try_enqueue_notification(pg_temp.member(1), 'waiting_on_you'), 'new outbox row spends a reminder');
-select ok(not try_enqueue_notification(pg_temp.member(1), 'waiting_on_you'), 'coalesced reminder does not spend another budget');
+select ok(try_enqueue_notification(pg_temp.member(1), 'waiting_on_you'), 'a new reminder enters the outbox');
+select ok(not try_enqueue_notification(pg_temp.member(1), 'waiting_on_you'), 'an existing pending reminder coalesces');
 
 -- The reminder caller respects enqueue rejection too.
 update profiles set longitude = (12 - extract(hour from now() at time zone 'utc')) * 15 where id = pg_temp.member(1);
@@ -187,7 +187,7 @@ select queue_recap_reminders();
 select is((select sent_count from retention_nudges where user_id = pg_temp.member(1) and kind = 'recap_ready'), 0, 'muted recap reminder keeps its budget');
 delete from notification_muted_kinds where user_id = pg_temp.member(1) and kind = 'recap_ready';
 select queue_recap_reminders();
-select is((select sent_count from retention_nudges where user_id = pg_temp.member(1) and kind = 'recap_ready'), 1, 'accepted recap reminder advances its budget once');
+select is((select sent_count from retention_nudges where user_id = pg_temp.member(1) and kind = 'recap_ready'), 0, 'queued recap reminder keeps its budget until delivery');
 
 -- A report/member action has one owner and one fixed restriction deadline.
 select claim_admin_action_service(pg_temp.member(3), 'suspend', pg_temp.member(4), 'reviewed account', null, pg_temp.token(1));

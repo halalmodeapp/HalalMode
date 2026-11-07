@@ -1,4 +1,6 @@
 import { clearPendingEdits } from '@/lib/pendingEdits';
+import { fetchMyAccountDeletion } from '@/api/account';
+import { AccountDeletionRecovery } from '@/components/you/AccountDeletionRecovery';
 import { clearReady } from '@/state/readyCelebration';
 import { useQuery } from '@tanstack/react-query';
 import * as Linking from 'expo-linking';
@@ -327,6 +329,12 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const router = useRouter();
   const segments = useSegments();
 
+  const deletion = useQuery({
+    queryKey: ['account-deletion', user?.id],
+    queryFn: () => withDeadline(fetchMyAccountDeletion(), 15_000),
+    enabled: !USE_MOCKS && ready && !!user,
+  });
+
   const legalConsentQuery = useQuery({
     queryKey: queryKeys.legalConsent,
     queryFn: fetchMyLegalConsentStatus,
@@ -427,6 +435,13 @@ export function AuthGate({ children }: { children: ReactNode }) {
     segments,
     user,
   ]);
+
+  // Recovery does not require accepting legal documents again or finishing onboarding.
+  if (!USE_MOCKS && ready && user) {
+    if (deletion.isPending) return <Screen><LoadingState /></Screen>;
+    if (deletion.isError) return <Screen><ErrorState message={t('profile.connectionError')} onRetry={() => void deletion.refetch()} /></Screen>;
+    if (deletion.data?.pending) return <AccountDeletionRecovery recoverable={deletion.data.recoverable === true} onKept={() => deletion.refetch()} />;
+  }
 
   if (waiting) return (
     <Screen>

@@ -302,11 +302,13 @@ export interface Connection {
    */
   compatibilityBreakdown?: CompatibilityBreakdownItem[];
   lastMessage?: string;
+  lastMessageDeleted?: boolean;
   lastMessageAt?: string;
   unread: boolean;
 }
 
 export interface ChatMessage {
+  deletedAt?: string;
   id: string;
   connectionId: string;
   sender: 'me' | 'them';

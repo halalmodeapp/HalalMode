@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createKeyedSerialQueue } from '../src/lib/keyedSerialQueue';
-import { mergeLatestMessagePage, mergeMessages } from '../src/lib/mergeMessages';
+import { applyMessageDeletions, mergeLatestMessagePage, mergeMessages } from '../src/lib/mergeMessages';
 
 test('overlapping outbox read/modify/write operations preserve both updates', async () => {
   const run = createKeyedSerialQueue();
@@ -55,4 +55,23 @@ test('the first message page and an unexpanded refresh use the server cursor', (
   const latest = { messages: [message], hasMore: true, nextCursor: { id: 'a' } };
   assert.deepEqual(mergeLatestMessagePage(undefined, latest), latest);
   assert.deepEqual(mergeLatestMessagePage({ ...latest, hasMore: false, nextCursor: undefined }, latest), latest);
+});
+
+
+test('a stale send response cannot restore a deleted message', () => {
+  const sent = { id: 'one', createdAt: '2026-11-07T10:00:00Z', text: 'private' };
+  const deleted = { ...sent, text: 'Message deleted', deletedAt: '2026-11-07T10:01:00Z' };
+  assert.deepEqual(mergeMessages([deleted], [sent]), [deleted]);
+  assert.deepEqual(mergeMessages([sent], [deleted]), [deleted]);
+});
+
+
+test('deletion polling clears loaded scrollback outside the newest page', () => {
+  const old = { id: 'old', createdAt: '2026-11-07T10:00:00Z', text: 'private', voiceUrl: 'private-file' };
+  const recent = { id: 'recent', createdAt: '2026-11-07T10:01:00Z', text: 'hello' };
+  const messages = applyMessageDeletions<{ id: string; createdAt: string; text?: string; voiceUrl?: string; deletedAt?: string }>([old, recent], [{ id: 'old', deletedAt: '2026-11-07T10:02:00Z' }]);
+  assert.equal(messages[0]?.text, undefined);
+  assert.equal(messages[0]?.voiceUrl, undefined);
+  assert.equal(messages[0]?.deletedAt, '2026-11-07T10:02:00Z');
+  assert.deepEqual(messages[1], recent);
 });
