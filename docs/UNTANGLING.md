@@ -39,7 +39,7 @@ Status: done, 11 November 2026, in `1e74231`, `f809aa6` and `926f229`. Typecheck
 - [`releaseIntroduction` and `passIntroduction`](../src/api/introductions.ts) have no app caller. Remove the client wrappers only. The `release_introduction` and `pass_introduction` RPCs stay, because installed builds and database tests still call them.
 - Keep: the `submit_round_selections_ranked` fallback in `submitKeeps` (a client can reach a database before its migration), the refresh after a failed send (a lost response may have committed), and the soft-select failure being swallowed (it is a courtesy signal and must never cost the member their round).
 
-### Second round (proposed, waiting for a go-ahead)
+### Second round (done, in `99c21f4`, `3664b6c`, `5af7e6c` and `3b3b3a9`)
 
 A review of the area after those commits found no regressions and these leftovers:
 
@@ -56,6 +56,16 @@ A review of the area after those commits found no regressions and these leftover
 **Make the picker dialog say what it is.** [FirstChoiceDialog](../src/components/introductions/FirstChoiceDialog.tsx) has default labels that both callers override, so `daily.firstChoiceBody` is never shown. Make the labels required and remove the unused string.
 
 **Make missing arguments a type error.** `submitKeeps`'s `engagement = []` default hides a missing argument. Its one caller always passes it.
+
+### Third round
+
+A second review found no regressions. Its fixes to this pass's own work are in the commit after `3b3b3a9`: a blocked send now shows its error, a wrong comment about free-member limits, and a privacy test that checked nothing.
+
+Proposed, waiting for a decision because members would see it:
+
+- **Use one at-limit dialog.** [`introduction/[id].tsx:284`](../app/introduction/%5Bid%5D.tsx) has its own copy of the at-limit dialog, with the same title, body and "Switch" label as Daily's swap picker. Confirming it only returns to the deck, where the member taps again to get the real picker. Either open the real swap picker from the profile, or send the member back to Daily with the swap already open.
+
+The send flow was checked in the web app with sample data: choose one or two, the first-choice picker, confirm, and the mutual screen. The sample data only has match screens for some profiles, so a sample "match" with someone else lands on "This match is not available". That gap is in the sample data, not in the app.
 
 **Keep matching rules explicit at each runtime boundary and extend the existing parity checks when a rule changes.** The [matcher](../src/matching/league.ts), [round worker](../supabase/functions/generate-round/league.ts), and database each have a role in deciding and writing a round. The [parity harness](../scripts/backend-sim/parity.mts) is where intentional duplication of eligibility rules can be checked together. Validate worker payloads at the database boundary where generic response casts currently hide shape changes. Keep lease recovery and quiet fallback behavior.
 
