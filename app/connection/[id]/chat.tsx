@@ -54,7 +54,7 @@ import { useCardsAttention } from '@/halalCards/hooks';
 import { ILLUSTRATIONS, THUMBNAILS } from '@/halalCards/illustrations';
 import { cardsPaths } from '@/halalCards/navigation';
 import { queryKeys } from '@/lib/queryClient';
-import { applyMessageDeletions, mergeLatestMessagePage, mergeMessages } from '@/lib/mergeMessages';
+import { applyMessageDeletions, mergeMessages, refreshMessageHistory, type MessageHistory } from '@/lib/mergeMessages';
 import { trackProductEvent } from '@/lib/analytics';
 import { enqueueMessage, getPendingMessages, removePendingMessage, type PendingMessage } from '@/lib/messageOutbox';
 import { retryAllInOrder } from '@/lib/retryPolicy';
@@ -65,8 +65,10 @@ import { useFeatureFlags } from '@/state/featureFlags';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { alpha, color, font, radius, space } from '@/theme/tokens';
 import type { ChatMessage } from '@/types';
-import type { MessagePage } from '@/api/connections';
+import type { MessageCursor } from '@/api/connections';
 import { RTL_LAYOUT } from '@/lib/rtl';
+
+type ChatHistory = MessageHistory<ChatMessage, MessageCursor>;
 
 type ConversationItem =
   | { kind: 'day'; id: string; date: string }
@@ -158,13 +160,21 @@ export default function ChatScreen() {
   const messagesQuery = useQuery({
     queryKey: queryKeys.messages(id),
     queryFn: async () => {
-      const current = queryClient.getQueryData<MessagePage>(queryKeys.messages(id));
+      const current = queryClient.getQueryData<ChatHistory>(queryKeys.messages(id));
       const [latest, deletions] = await Promise.all([
         fetchMessagesPage(id),
         fetchMessageDeletions(id, current?.messages.map(message => message.id) ?? []),
       ]);
-      const merged = mergeLatestMessagePage(current, latest);
-      return { ...merged, messages: applyMessageDeletions(merged.messages, deletions) };
+      const merged = await refreshMessageHistory(
+        () => queryClient.getQueryData<ChatHistory>(queryKeys.messages(id)),
+        latest,
+        cursor => fetchMessagesPage(id, cursor),
+      );
+      const knownIds = new Set([...(current?.messages ?? []), ...latest.messages].map(message => message.id));
+      // Older pages can be several requests behind by the time the gap closes.
+      const backfilledIds = merged.messages.filter(message => !knownIds.has(message.id)).map(message => message.id);
+      const backfilledDeletions = await fetchMessageDeletions(id, backfilledIds);
+      return { ...merged, messages: applyMessageDeletions(merged.messages, [...deletions, ...backfilledDeletions]) };
     },
     // Conversation is the one place freshness matters.
     staleTime: 0,
@@ -223,28 +233,32 @@ export default function ChatScreen() {
     onSuccess: (message) => {
       trackProductEvent('message_sent');
       shouldScrollToEndRef.current = true;
-      queryClient.setQueryData<MessagePage>(queryKeys.messages(id), (current) => ({
+      queryClient.setQueryData<ChatHistory>(queryKeys.messages(id), (current) => ({
+        ...current,
         messages: mergeMessages(current?.messages ?? [], [message]),
         hasMore: current?.hasMore ?? false,
-        ...(current?.nextCursor ? { nextCursor: current.nextCursor } : {}),
       }));
       requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
     },
   });
 
   const loadEarlier = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const cursor = messagesQuery.data?.nextCursor;
       if (!cursor) throw new Error('No earlier messages are available.');
-      return fetchMessagesPage(id, cursor);
+      return { cursor, page: await fetchMessagesPage(id, cursor) };
     },
     onMutate: () => { shouldScrollToEndRef.current = false; },
-    onSuccess: (page) => {
-      queryClient.setQueryData<MessagePage>(queryKeys.messages(id), (current) => ({
-        messages: mergeMessages(page.messages, current?.messages ?? []),
-        hasMore: page.hasMore,
-        ...(page.nextCursor ? { nextCursor: page.nextCursor } : {}),
-      }));
+    onSuccess: ({ cursor, page }) => {
+      queryClient.setQueryData<ChatHistory>(queryKeys.messages(id), (current) => {
+        if (current?.nextCursor?.id !== cursor.id || current.nextCursor.createdAt !== cursor.createdAt) return current;
+        return {
+          ...current,
+          ...page,
+          nextCursor: page.nextCursor,
+          messages: mergeMessages(page.messages, current.messages),
+        };
+      });
     },
   });
 
@@ -260,10 +274,10 @@ export default function ChatScreen() {
     },
     onMutate: () => setRetryFailed(false),
     onSuccess: ({ delivered, failedCount }) => {
-      queryClient.setQueryData<MessagePage>(queryKeys.messages(id), (current) => ({
+      queryClient.setQueryData<ChatHistory>(queryKeys.messages(id), (current) => ({
+        ...current,
         messages: mergeMessages(current?.messages ?? [], delivered),
         hasMore: current?.hasMore ?? false,
-        ...(current?.nextCursor ? { nextCursor: current.nextCursor } : {}),
       }));
       setRetryFailed(failedCount > 0);
     },
@@ -279,7 +293,7 @@ export default function ChatScreen() {
   const deleteSent = useMutation({
     mutationFn: deleteMessageForEveryone,
     onSuccess: async (_, messageId) => {
-      queryClient.setQueryData<MessagePage>(queryKeys.messages(id), current => current ? {
+      queryClient.setQueryData<ChatHistory>(queryKeys.messages(id), current => current ? {
         ...current, messages: applyMessageDeletions(current.messages, [{ id: messageId, deletedAt: new Date().toISOString() }]),
       } : current);
       await Promise.all([

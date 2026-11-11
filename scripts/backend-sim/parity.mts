@@ -65,8 +65,8 @@ for (let i = 0; i < COUNT; i += 1) {
      values ($1,'P','P',$2,$3,$4,'C',$5,$6,$7,'b','{}',true,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)`,
     [id, `${2026 - age}-01-01`, male ? 'male' : 'female', chance(0.5) ? 'premium' : 'free', place[0], lat, lat === null ? null : place[2] + random() - 0.5,
       pickFrom(random, PRACTICE), pickFrom(random, TIMELINE), sect, sect === 'sunni' && chance(0.6) ? pickFrom(random, DETAILS) : null, pickFrom(random, FAMILY),
-      pickFrom(random, ['no', 'yes', 'prefer_not_to_say']), chance(0.2) ? '' : pickFrom(random, ['engineer', 'teacher']),
-      chance(0.2) ? null : pickFrom(random, ['University', 'School']), chance(0.3) ? null : pickFrom(random, ['hijab', 'modest']),
+      pickFrom(random, ['no', 'yes', 'prefer_not_to_say']), chance(0.2) ? '' : pickFrom(random, ['engineer', 'teacher', 'prefer_not_to_say']),
+      chance(0.2) ? null : pickFrom(random, ['University', 'School', 'prefer_not_to_say']), chance(0.3) ? null : pickFrom(random, ['hijab', 'modest']),
       someOf(LANGUAGES), orDeclined(ETHNIC), orDeclined(['SA', 'PK']), someOf(['GB', 'TR']), someOf(['halal_only', 'vegetarian']), pickFrom(random, MARITAL)],
   );
   const sects = someOf(SECTS.slice(0, 2));

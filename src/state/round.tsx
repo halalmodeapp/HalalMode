@@ -26,10 +26,10 @@ import {
 } from '@/lib/matchingEngagement';
 import type { DailyRoundEmptyReason, NarrowingCriterion } from '@/lib/dailyRoundState';
 import { queryKeys } from '@/lib/queryClient';
-import { resolveActiveId } from '@/lib/roundInvariants';
+import { resolveActiveId, roundPickRules } from '@/lib/roundInvariants';
 import { useAuth } from '@/state/auth';
 import { useSession } from '@/state/session';
-import { TIER_LIMITS, type Introduction, type IntroductionRound } from '@/types';
+import type { Introduction, IntroductionRound } from '@/types';
 
 interface RoundValue {
   round: IntroductionRound | undefined;
@@ -55,8 +55,9 @@ interface RoundValue {
   active: Introduction | null;
   setActive: (id: string) => void;
 
-  /** How many the member may send interest to at once at their tier. */
+  /** How many the member may send interest to in this set. */
   keepLimit: number;
+  allowsSelectAll: boolean;
   /** Introduction ids with interest shown, oldest first. The order is the rank. */
   selected: string[];
   /**
@@ -118,12 +119,19 @@ export function RoundProvider({ children }: { children: ReactNode }) {
     error,
     refetch,
   } = useQuery({
-    queryKey: [...queryKeys.round, tier],
+    queryKey: [...queryKeys.round, USE_MOCKS ? tier : memberId],
     queryFn: () => fetchCurrentRoundState(tier),
     // The provider is mounted above the route stack, including public auth.
     // Do not call the member-only RPC until a verified account is present.
     enabled: USE_MOCKS || !!memberId,
   });
+  const previousTier = useRef(tier);
+  useEffect(() => {
+    const changed = previousTier.current !== tier;
+    previousTier.current = tier;
+    // A membership change can affect capacity without replacing the loaded set.
+    if (changed && !USE_MOCKS && memberId) void refetch();
+  }, [tier, memberId, refetch]);
 
   const round = roundState?.round;
   const emptyReason = roundState?.status && roundState.status !== 'ready'
@@ -146,7 +154,7 @@ export function RoundProvider({ children }: { children: ReactNode }) {
   const owed = roundState?.owed ?? null;
   const owedAll = useMemo(() => roundState?.owedAll ?? (owed ? [owed] : []), [roundState?.owedAll, owed]);
 
-  const keepLimit = TIER_LIMITS[tier].keeps;
+  const { keepLimit, allowsSelectAll } = roundPickRules(round?.tier, tier);
 
   const live = useMemo(() => round?.introductions ?? [], [round]);
 
@@ -199,13 +207,14 @@ export function RoundProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const selectAll = useCallback(() => {
+    if (!allowsSelectAll) return;
     const current = selectedRef.current;
     selectedRef.current = [
       ...current,
       ...live.map((item) => item.id).filter((id) => !current.includes(id)),
     ].slice(0, keepLimit);
     setSelected(selectedRef.current);
-  }, [keepLimit, live]);
+  }, [allowsSelectAll, keepLimit, live]);
 
   // A ref, not state: reading a profile must never re-render the round.
   const ledger = useRef(new DwellLedger()).current;
@@ -342,6 +351,7 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       active,
       setActive: setActiveId,
       keepLimit,
+      allowsSelectAll,
       selected,
       toggleSelect,
       switchSelection,
@@ -375,6 +385,7 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       resolvedActiveId,
       active,
       keepLimit,
+      allowsSelectAll,
       selected,
       toggleSelect,
       switchSelection,

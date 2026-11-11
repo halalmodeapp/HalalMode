@@ -1,3 +1,10 @@
+import { TIER_LIMITS, type MembershipTier } from '../types';
+
+export function roundPickRules(roundTier: MembershipTier | undefined, memberTier: MembershipTier) {
+  const tier = roundTier ?? memberTier;
+  return { keepLimit: TIER_LIMITS[tier].keeps, allowsSelectAll: tier === 'premium' };
+}
+
 export interface RoundInteractionState {
   inChosenZone: boolean;
   remaining: number;

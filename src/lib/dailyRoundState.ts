@@ -54,3 +54,80 @@ export function normalizeDailyRoundStatus(value: unknown): DailyRoundStatus {
     ? value as DailyRoundStatus
     : 'no_suitable_introductions';
 }
+
+/** The least the presentation needs to know about a round. */
+export type DailyRoundCards = { introductions: readonly unknown[] };
+
+export type DailyPresentation<R extends DailyRoundCards = DailyRoundCards> =
+  | { kind: 'loading' }
+  | { kind: 'fetch-error' }
+  | { kind: 'owed-list' }
+  | { kind: 'profile-readiness' }
+  | { kind: 'consent' }
+  | { kind: 'server-complete' }
+  | { kind: 'scheduled' }
+  | { kind: 'filters-too-narrow'; criterion: NarrowingCriterion }
+  | { kind: 'empty-state'; reason: 'awaiting-turn' | 'at-capacity' | 'matching-inputs' }
+  | { kind: 'first-set' }
+  | { kind: 'incomplete' }
+  | { kind: 'generic-wait' }
+  | { kind: 'local-complete' }
+  | { kind: 'live-cards'; round: R };
+
+export type DailyPresentationInput<R extends DailyRoundCards> = {
+  isLoading: boolean;
+  conductReady: boolean;
+  hasFetchError: boolean;
+  round: R | null | undefined;
+  emptyReason: DailyRoundEmptyReason | null;
+  owedCount: number;
+  profileReady?: boolean;
+  narrowingCriterion: NarrowingCriterion | null;
+  submitted: boolean;
+};
+
+/**
+ * Resolve the Daily screen before choosing a renderer. Order is intentional:
+ * a usable owed list wins first, readiness is only a gate without cards,
+ * consent can override cards, and server completion is only for an empty set.
+ */
+export function resolveDailyPresentation<R extends DailyRoundCards>(
+  input: DailyPresentationInput<R>
+): DailyPresentation<R> {
+  const cards = input.round && input.round.introductions.length > 0 ? input.round : null;
+  if (input.isLoading || !input.conductReady) return { kind: 'loading' };
+  if (input.hasFetchError) return { kind: 'fetch-error' };
+  if (input.emptyReason === 'answers_owed' && input.owedCount > 0) return { kind: 'owed-list' };
+
+  if (
+    !cards
+    && (input.emptyReason === 'profile_not_ready' || input.profileReady === false)
+  ) {
+    return { kind: 'profile-readiness' };
+  }
+
+  if (input.emptyReason === 'legal_consent_required') return { kind: 'consent' };
+  if (!cards && input.emptyReason === 'set_complete') return { kind: 'server-complete' };
+
+  if (!cards) {
+    if (input.emptyReason === 'next_set_scheduled') return { kind: 'scheduled' };
+    if (input.emptyReason === 'filters_too_narrow' && input.narrowingCriterion) {
+      return { kind: 'filters-too-narrow', criterion: input.narrowingCriterion };
+    }
+    if (input.emptyReason === 'awaiting_turn') {
+      return { kind: 'empty-state', reason: 'awaiting-turn' };
+    }
+    if (input.emptyReason === 'at_match_capacity') {
+      return { kind: 'empty-state', reason: 'at-capacity' };
+    }
+    if (input.emptyReason === 'matching_inputs_unavailable') {
+      return { kind: 'empty-state', reason: 'matching-inputs' };
+    }
+    if (input.emptyReason === 'waiting_for_first_set') return { kind: 'first-set' };
+    if (input.emptyReason === 'set_incomplete') return { kind: 'incomplete' };
+    return { kind: 'generic-wait' };
+  }
+
+  if (input.submitted) return { kind: 'local-complete' };
+  return { kind: 'live-cards', round: cards };
+}

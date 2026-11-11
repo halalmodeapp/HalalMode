@@ -1,5 +1,9 @@
+type MessageIdentity = { id: string; createdAt: string; readAt?: string; deletedAt?: string };
+type MessagePage<T, C> = { messages: T[]; hasMore: boolean; nextCursor?: C };
+export type MessageHistory<T, C> = MessagePage<T, C> & { newestFetchedId?: string };
+
 /** One identity per delivered message, irrespective of arrival order or transport. */
-export function mergeMessages<T extends { id: string; createdAt: string; readAt?: string; deletedAt?: string }>(
+export function mergeMessages<T extends MessageIdentity>(
   existing: readonly T[],
   incoming: readonly T[],
 ): T[] {
@@ -16,10 +20,10 @@ export function mergeMessages<T extends { id: string; createdAt: string; readAt?
 }
 
 /** A latest-page refresh keeps scrollback and its older-page cursor. */
-export function mergeLatestMessagePage<T extends { id: string; createdAt: string; readAt?: string; deletedAt?: string }, C>(
-  current: { messages: T[]; hasMore: boolean; nextCursor?: C } | undefined,
-  latest: { messages: T[]; hasMore: boolean; nextCursor?: C },
-): { messages: T[]; hasMore: boolean; nextCursor?: C } {
+export function mergeLatestMessagePage<T extends MessageIdentity, C>(
+  current: MessagePage<T, C> | undefined,
+  latest: MessagePage<T, C>,
+): MessagePage<T, C> {
   if (!current?.messages.length) return latest;
   const first = current.messages[0]!;
   const incoming = latest.messages[0];
@@ -29,6 +33,38 @@ export function mergeLatestMessagePage<T extends { id: string; createdAt: string
     ...(keepsOlder ? current : latest),
     messages: mergeMessages(current.messages, latest.messages),
   };
+}
+
+/** Repair a gap before joining the refresh to the cached scrollback. */
+export async function refreshMessageHistory<T extends MessageIdentity, C>(
+  getCurrent: () => MessageHistory<T, C> | undefined,
+  latest: MessagePage<T, C>,
+  fetchEarlier: (cursor: C) => Promise<MessagePage<T, C>>,
+): Promise<MessageHistory<T, C>> {
+  // Send acknowledgements can add newer messages to the cache. Only a fetched
+  // message proves that the new pages reached the previously fetched range.
+  const anchor = getCurrent()?.newestFetchedId;
+  const newestFetchedId = latest.messages.at(-1)?.id;
+  let oldestPage = latest;
+  let fetched = latest.messages;
+  let overlaps = !!anchor && fetched.some(message => message.id === anchor);
+  for (let pages = 0; anchor && !overlaps && oldestPage.hasMore
+      && oldestPage.nextCursor !== undefined && pages < 4; pages += 1) {
+    oldestPage = await fetchEarlier(oldestPage.nextCursor);
+    fetched = mergeMessages(oldestPage.messages, fetched);
+    overlaps = fetched.some(message => message.id === anchor);
+  }
+
+  // An older-page load or a deletion may have updated the cache while fetching.
+  const current = getCurrent();
+  if (overlaps && current?.newestFetchedId === anchor) {
+    return { ...mergeLatestMessagePage(current, { ...oldestPage, messages: fetched }), newestFetchedId };
+  }
+  // If the gap is too large for this refresh, retain the fetched range and its
+  // cursor so ordinary history paging can reach everything before it.
+  const fetchedIds = new Set(fetched.map(message => message.id));
+  const cachedCopies = current?.messages.filter(message => fetchedIds.has(message.id)) ?? [];
+  return { ...oldestPage, messages: mergeMessages(cachedCopies, fetched), newestFetchedId };
 }
 
 /** A deletion remains visible even when its message is outside the newest page. */

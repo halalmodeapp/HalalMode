@@ -5,7 +5,14 @@ import {
   deckDirectionForAccessibilityAction,
   getRoundInteractionState,
   resolveActiveId,
+  roundPickRules,
 } from '../src/lib/roundInvariants';
+
+test('a mid-set membership change leaves the set’s pick controls alone', () => {
+  assert.deepEqual(roundPickRules('free', 'premium'), { keepLimit: 3, allowsSelectAll: false });
+  assert.deepEqual(roundPickRules('premium', 'free'), { keepLimit: 10, allowsSelectAll: true });
+  assert.deepEqual(roundPickRules(undefined, 'premium'), { keepLimit: 10, allowsSelectAll: true });
+});
 
 test('Premium Pop mode remains available in the chosen zone until one remains', () => {
   assert.deepEqual(getRoundInteractionState(3, 3), {

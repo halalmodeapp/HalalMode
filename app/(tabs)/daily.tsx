@@ -15,7 +15,7 @@ import { BrandHeader } from '@/components/navigation/BrandHeader';
 import { SafetyControl } from '@/components/safety/SafetyControl';
 import { Button } from '@/components/ui/Button';
 import { EmptyState, ErrorState, InlineNotice, LoadingState } from '@/components/ui/AsyncState';
-import type { NarrowingCriterion } from '@/lib/dailyRoundState';
+import { resolveDailyPresentation, type NarrowingCriterion } from '@/lib/dailyRoundState';
 import { narrowingCriterionKey } from '@/lib/narrowingCriterion';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ReadinessChecklist } from '@/components/readiness/ReadinessChecklist';
@@ -38,7 +38,6 @@ import { readinessSteps, type ReadinessStep } from '@/lib/profileReadiness';
 import { testIds } from '@/lib/testIds';
 import { useRound } from '@/state/round';
 import { useAuth } from '@/state/auth';
-import { useSession } from '@/state/session';
 import { alpha, color, font, space } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
 import { errorMessage } from '@/lib/errorMessage';
@@ -94,7 +93,6 @@ export default function DailyScreen() {
   const wideLayout = breakpoint !== 'phone';
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const { tier } = useSession();
   const headerProfile = useQuery({ queryKey: queryKeys.profile('me'), queryFn: fetchMyProfile });
   const readinessQuery = useQuery({
     queryKey: queryKeys.profileReadiness,
@@ -116,6 +114,7 @@ export default function DailyScreen() {
     activeId,
     active,
     keepLimit,
+    allowsSelectAll,
     selected,
     toggleSelect,
     switchSelection,
@@ -304,109 +303,102 @@ export default function DailyScreen() {
     [live]
   );
 
-  if (isLoading || conductCheckedFor !== conductMemberId) {
-    return (
-      <DailyScrollScreen isRTL={isRTL}>
-        <DailyHeader />
-        <LoadingState label={t('daily.loading')} />
-      </DailyScrollScreen>
-    );
-  }
+  const presentation = resolveDailyPresentation({
+    isLoading,
+    conductReady: conductCheckedFor === conductMemberId,
+    hasFetchError: !!error,
+    round,
+    emptyReason,
+    owedCount: owedAll.length,
+    profileReady: readinessQuery.data?.ready,
+    narrowingCriterion,
+    submitted,
+  });
 
-  if (error) {
-    return (
-      <DailyScrollScreen isRTL={isRTL}>
-        <DailyHeader />
-        <ErrorState
-          title={t('daily.loadErrorTitle')}
-          message={t('daily.loadErrorBody')}
-          onRetry={refresh}
-        />
-      </DailyScrollScreen>
-    );
-  }
+  switch (presentation.kind) {
+    case 'loading':
+      return (
+        <DailyScrollScreen isRTL={isRTL}>
+          <DailyHeader />
+          <LoadingState label={t('daily.loading')} />
+        </DailyScrollScreen>
+      );
 
-  // Someone is waiting on this member. No set until they have caught up.
-  // Names everyone they owe, with one button each. Answering one refreshes
-  // this at once (the answer screens invalidate the round), so the list
-  // shrinks and then gives way to the countdown.
-  if (emptyReason === 'answers_owed' && owedAll.length > 0) {
-    const names = listNames(owedAll.map((item) => item.name), localeTag);
-    return (
-      <DailyScrollScreen isRTL={isRTL}>
-        <DailyHeader />
-        <View style={styles.readinessEmpty}>
-          <EmptyState
-            title={t('daily.owedListTitle', { names })}
-            message={t('daily.owedListBody')}
+    case 'fetch-error':
+      return (
+        <DailyScrollScreen isRTL={isRTL}>
+          <DailyHeader />
+          <ErrorState
+            title={t('daily.loadErrorTitle')}
+            message={t('daily.loadErrorBody')}
+            onRetry={refresh}
           />
-          {owedAll.map((item) => (
-            <Button
-              key={item.connectionId}
-              label={t(item.step === 'questions' ? 'daily.owedPicksAction' : 'daily.owedAction', { name: item.name })}
-              onPress={() => router.push(`/connection/${item.connectionId}/${item.step}`)}
+        </DailyScrollScreen>
+      );
+
+    case 'owed-list': {
+      // Someone is waiting on this member. No set until they have caught up.
+      // Answering one refreshes the round, so this list shrinks as they reply.
+      const names = listNames(owedAll.map((item) => item.name), localeTag);
+      return (
+        <DailyScrollScreen isRTL={isRTL}>
+          <DailyHeader />
+          <View style={styles.readinessEmpty}>
+            <EmptyState
+              title={t('daily.owedListTitle', { names })}
+              message={t('daily.owedListBody')}
             />
-          ))}
-        </View>
-      </DailyScrollScreen>
-    );
-  }
-
-  if (
-    (!round || round.introductions.length === 0)
-    && (emptyReason === 'profile_not_ready' || (readinessQuery.data && !readinessQuery.data.ready))
-  ) {
-    // The same checklist as the profile, so a member sees exactly what is left
-    // and that introductions start the moment it is done.
-    const steps = readinessSteps(readinessQuery.data?.missing ?? [], headerProfile.data?.gender);
-    const openStep = (step: ReadinessStep) =>
-      router.push({ pathname: '/(tabs)/you', params: { tab: step === 'preferences' ? 'private' : 'profile' } });
-    const next = steps.find((step) => !step.done);
-    return (
-      <DailyScrollScreen isRTL={isRTL}>
-        <DailyHeader />
-        <View style={styles.readinessGate}>
-          <Text variant="display" style={styles.gateTitle}>{t('readiness.gateTitle')}</Text>
-          <View style={styles.gateCard}>
-            <ReadinessChecklist steps={steps} lead={t('readiness.lead')} onPressStep={openStep} />
+            {owedAll.map((item) => (
+              <Button
+                key={item.connectionId}
+                label={t(item.step === 'questions' ? 'daily.owedPicksAction' : 'daily.owedAction', { name: item.name })}
+                onPress={() => router.push(`/connection/${item.connectionId}/${item.step}`)}
+              />
+            ))}
           </View>
-          <Button
-            label={next?.id === 'preferences' ? t('daily.finishPreferences') : t('daily.finishProfile')}
-            onPress={() => openStep(next?.id ?? 'photo')}
-          />
-        </View>
-      </DailyScrollScreen>
-    );
-  }
+        </DailyScrollScreen>
+      );
+    }
 
-  if (emptyReason === 'legal_consent_required') {
-    return (
-      <DailyScrollScreen isRTL={isRTL}>
-        <DailyHeader />
-        <LoadingState label={t('legal.redirecting')} />
-      </DailyScrollScreen>
-    );
-  }
+    case 'profile-readiness': {
+      // The same checklist as the profile, so a member sees exactly what is left
+      // and that introductions start the moment it is done.
+      const steps = readinessSteps(readinessQuery.data?.missing ?? [], headerProfile.data?.gender);
+      const openStep = (step: ReadinessStep) =>
+        router.push({ pathname: '/(tabs)/you', params: { tab: step === 'preferences' ? 'private' : 'profile' } });
+      const next = steps.find((step) => !step.done);
+      return (
+        <DailyScrollScreen isRTL={isRTL}>
+          <DailyHeader />
+          <View style={styles.readinessGate}>
+            <Text variant="display" style={styles.gateTitle}>{t('readiness.gateTitle')}</Text>
+            <View style={styles.gateCard}>
+              <ReadinessChecklist steps={steps} lead={t('readiness.lead')} onPressStep={openStep} />
+            </View>
+            <Button
+              label={next?.id === 'preferences' ? t('daily.finishPreferences') : t('daily.finishProfile')}
+              onPress={() => openStep(next?.id ?? 'photo')}
+            />
+          </View>
+        </DailyScrollScreen>
+      );
+    }
 
-  // The same screen as the moment after choosing, so a reload looks the same.
-  if (emptyReason === 'set_complete' && (!round || round.introductions.length === 0)) {
-    return <SetCompleteState waitingForConnection={false} nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
-  }
+    case 'consent':
+      return (
+        <DailyScrollScreen isRTL={isRTL}>
+          <DailyHeader />
+          <LoadingState label={t('legal.redirecting')} />
+        </DailyScrollScreen>
+      );
 
-  if (!round || round.introductions.length === 0) {
-    const matchingInputsUnavailable = emptyReason === 'matching_inputs_unavailable';
-    const awaitingTurn = emptyReason === 'awaiting_turn';
-    const atMatchCapacity = emptyReason === 'at_match_capacity';
-    // Only shown when the server named a criterion. Without one the message
-    // would ask a member to loosen something without saying what, which is
-    // worse than the established wording.
-    const filtersTooNarrow =
-      emptyReason === 'filters_too_narrow' && narrowingCriterion !== null;
+    // The same screen as the moment after choosing, so a reload looks the same.
+    case 'server-complete':
+      return <SetCompleteState waitingForConnection={false} nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
 
-    // A set that is built and simply has not opened yet. Every other message
-    // below describes something being wrong; this one is a member waiting for
-    // their own dawn, which is the app working exactly as intended.
-    if (emptyReason === 'next_set_scheduled') {
+    // A set that is built and simply has not opened yet; it is an ordinary wait
+    // for the member's own dawn, not an empty matching result.
+    case 'scheduled':
       return (
         <DailyScrollScreen isRTL={isRTL}>
           <DailyHeader />
@@ -421,55 +413,54 @@ export default function DailyScreen() {
           <FajrCountdown nextFajrAt={nextFajrAt} />
         </DailyScrollScreen>
       );
-    }
 
-    if (filtersTooNarrow) {
+    case 'filters-too-narrow':
       return (
         <DailyScrollScreen isRTL={isRTL}>
           <DailyHeader />
           <EmptyState
             title={t('daily.filtersTooNarrowTitle')}
             message={t('daily.filtersTooNarrowBody', {
-              criterion: t(narrowingCriterionKey(narrowingCriterion) ?? 'filters.ageRange'),
+              criterion: t(narrowingCriterionKey(presentation.criterion) ?? 'filters.ageRange'),
             })}
           />
         </DailyScrollScreen>
       );
+
+    case 'empty-state': {
+      const copy = {
+        'awaiting-turn': ['daily.awaitingTurnTitle', 'daily.awaitingTurnBody'],
+        'at-capacity': ['daily.atCapacityTitle', 'daily.atCapacityBody'],
+        'matching-inputs': ['daily.matchingInputsUnavailableTitle', 'daily.matchingInputsUnavailableBody'],
+      } as const;
+      const [title, body] = copy[presentation.reason];
+      return (
+        <DailyScrollScreen isRTL={isRTL}>
+          <DailyHeader />
+          <EmptyState title={t(title)} message={t(body)} />
+        </DailyScrollScreen>
+      );
     }
 
-    const emptyTitle = awaitingTurn
-      ? 'daily.awaitingTurnTitle'
-      : atMatchCapacity
-        ? 'daily.atCapacityTitle'
-        : matchingInputsUnavailable
-          ? 'daily.matchingInputsUnavailableTitle'
-          : 'daily.noSuitableTitle';
-    const emptyBody = awaitingTurn
-      ? 'daily.awaitingTurnBody'
-      : atMatchCapacity
-        ? 'daily.atCapacityBody'
-        : matchingInputsUnavailable
-          ? 'daily.matchingInputsUnavailableBody'
-          : 'daily.noSuitableBody';
-    // Nobody today is not an error: it is a wait until the next Fajr, which
-    // the member can be reminded of.
-    if (emptyReason === 'waiting_for_first_set') return <FajrWaitState firstSet nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
-    if (emptyReason === 'set_incomplete') return <FajrWaitState incomplete nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
-    if (emptyTitle === 'daily.noSuitableTitle') return <FajrWaitState nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
-    return (
-      <DailyScrollScreen isRTL={isRTL}>
-        <DailyHeader />
-        <EmptyState
-          title={t(emptyTitle)}
-          message={t(emptyBody)}
-        />
-      </DailyScrollScreen>
-    );
+    case 'first-set':
+      return <FajrWaitState firstSet nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
+
+    case 'incomplete':
+      return <FajrWaitState incomplete nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
+
+    // With no named status, including a legacy or sparse response, keep the
+    // established least-revealing wait and countdown.
+    case 'generic-wait':
+      return <FajrWaitState nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
+
+    case 'local-complete':
+      return <SetCompleteState waitingForConnection={waitingForConnection} nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
+
+    case 'live-cards':
+      break;
   }
 
-  if (submitted) {
-    return <SetCompleteState waitingForConnection={waitingForConnection} nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
-  }
+  const liveRound = presentation.round;
 
   const activeChosen = !!active && selected.includes(active.id);
   const nameOf = (id: string | null) =>
@@ -477,7 +468,7 @@ export default function DailyScreen() {
   const selectedIntroductions = selected
     .map((id) => live.find((item) => item.id === id))
     .filter((item): item is NonNullable<typeof item> => !!item);
-  const canSelectAll = tier === 'premium' && live.length > 1 && selected.length < Math.min(keepLimit, live.length);
+  const canSelectAll = allowsSelectAll && live.length > 1 && selected.length < Math.min(keepLimit, live.length);
   const activeIndex = Math.max(0, live.findIndex((item) => item.id === activeId));
 
   return (
@@ -495,17 +486,17 @@ export default function DailyScreen() {
           {/* What this is, first; when it changes, underneath and quieter. */}
           <Text variant="display" style={styles.title}>
             {t(
-              round.introductions.length === 1
+              liveRound.introductions.length === 1
                 ? 'daily.titleOne'
-                : round.introductions.length === 2
+                : liveRound.introductions.length === 2
                   ? 'daily.titleTwo'
                   : 'daily.title',
-              { count: round.introductions.length }
+              { count: liveRound.introductions.length }
             )}
           </Text>
           <Text variant="micro" style={styles.countdown}>
             {[
-              round.city ? t('daily.resetsIn', { city: round.city }) : t('daily.resets'),
+              liveRound.city ? t('daily.resetsIn', { city: liveRound.city }) : t('daily.resets'),
               countdownLabel,
             ].filter(Boolean).join(' · ')}
           </Text>

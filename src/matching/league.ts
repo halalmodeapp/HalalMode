@@ -122,10 +122,12 @@ function premiumFiltersAllow(viewer: LeagueMember, subject: LeagueMember): boole
   if (must(flags, 'has_children') && viewer.preferredHasChildren.length > 0 && subject.hasChildren !== null
       && subject.hasChildren !== 'prefer_not_to_say' && !viewer.preferredHasChildren.includes(subject.hasChildren)) return false;
   if (must(flags, 'occupations') && viewer.preferredOccupations.length > 0 && subject.occupation
+      && subject.occupation !== 'prefer_not_to_say'
       && !viewer.preferredOccupations.includes(subject.occupation)) return false;
   if (must(flags, 'languages') && viewer.preferredLanguages.length > 0 && subject.languagesSpoken.length > 0
       && !overlaps(subject.languagesSpoken, viewer.preferredLanguages)) return false;
   if (must(flags, 'education') && viewer.preferredEducation.length > 0 && subject.education !== null
+      && subject.education !== 'prefer_not_to_say'
       && !viewer.preferredEducation.includes(subject.education)) return false;
   if (must(flags, 'dress') && viewer.preferredDress.length > 0 && subject.religiousDress !== null
       && !viewer.preferredDress.includes(subject.religiousDress)) return false;
