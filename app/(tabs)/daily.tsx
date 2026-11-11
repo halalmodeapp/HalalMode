@@ -116,7 +116,7 @@ export default function DailyScreen() {
     narrowingCriterion,
     thinCriterion,
     nextSetCity,
-    nextFajrAt,
+    resetsAt,
     owedAll,
     isLoading,
     error,
@@ -207,7 +207,6 @@ export default function DailyScreen() {
 
   // Use the exact server-generated end of this member's round. The scheduler
   // calculates that instant as their next Fajr with the shared astronomy code.
-  const resetsAt = round?.expiresAt;
   const [countdown, setCountdown] = useState(() => countdownTo(resetsAt));
   useEffect(() => {
     setCountdown(countdownTo(resetsAt));
@@ -388,7 +387,7 @@ export default function DailyScreen() {
 
     // The same screen as the moment after choosing, so a reload looks the same.
     case 'server-complete':
-      return <SetCompleteState waitingForConnection={false} nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
+      return <SetCompleteState waitingForConnection={false} nextFajrAt={resetsAt} />;
 
     // A set that is built and simply has not opened yet; it is an ordinary wait
     // for the member's own dawn, not an empty matching result.
@@ -404,7 +403,7 @@ export default function DailyScreen() {
                 : t('daily.nextSetBodyPlain')
             }
           />
-          <FajrCountdown nextFajrAt={nextFajrAt} />
+          <FajrCountdown nextFajrAt={resetsAt} />
         </DailyScrollScreen>
       );
 
@@ -437,18 +436,18 @@ export default function DailyScreen() {
     }
 
     case 'first-set':
-      return <FajrWaitState firstSet nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
+      return <FajrWaitState firstSet nextFajrAt={resetsAt} />;
 
     case 'incomplete':
-      return <FajrWaitState incomplete nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
+      return <FajrWaitState incomplete nextFajrAt={resetsAt} />;
 
     // With no named status, including a legacy or sparse response, keep the
     // established least-revealing wait and countdown.
     case 'generic-wait':
-      return <FajrWaitState nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
+      return <FajrWaitState nextFajrAt={resetsAt} />;
 
     case 'local-complete':
-      return <SetCompleteState waitingForConnection={waitingForConnection} nextFajrAt={round?.expiresAt ?? nextFajrAt} />;
+      return <SetCompleteState waitingForConnection={waitingForConnection} nextFajrAt={resetsAt} />;
 
     case 'live-cards':
       break;
@@ -462,7 +461,7 @@ export default function DailyScreen() {
   const selectedIntroductions = selected
     .map((id) => live.find((item) => item.id === id))
     .filter((item): item is NonNullable<typeof item> => !!item);
-  const canSelectAll = allowsSelectAll && live.length > 1 && selected.length < Math.min(keepLimit, live.length);
+  const canSelectAll = allowsSelectAll && live.length > 1 && selected.length < keepLimit;
   const activeIndex = Math.max(0, live.findIndex((item) => item.id === activeId));
 
   return (
@@ -509,7 +508,6 @@ export default function DailyScreen() {
             <HeroCard
               profiles={live.map((item) => item.profile)}
               activeId={active.profile.id}
-              chosen={activeChosen}
               chosenIds={live.filter((item) => selected.includes(item.id)).map((item) => item.profile.id)}
               corner={
                 <SafetyControl
@@ -552,8 +550,8 @@ export default function DailyScreen() {
             style={[styles.captionText, wideLayout && styles.captionTextWide]}
           >
             {selected.length > 0
-              ? t('daily.chosenOf', { count: selected.length, limit: Math.min(keepLimit, live.length) })
-              : t('daily.chooseUpTo', { limit: Math.min(keepLimit, live.length) })}
+              ? t('daily.chosenOf', { count: selected.length, limit: keepLimit })
+              : t('daily.chooseUpTo', { limit: keepLimit })}
           </Text>
           {selected.length === 0 ? (
             // Choosing nobody is a real answer, not something to be pushed past.
@@ -572,7 +570,7 @@ export default function DailyScreen() {
           <Button
             testID={testIds.daily.select}
             label={activeChosen
-              ? `✓ ${t('daily.interested')} ${selected.length}/${Math.min(keepLimit, live.length)}`
+              ? `✓ ${t('daily.interested')} ${selected.length}/${keepLimit}`
               : t('daily.select')}
             variant={activeChosen ? 'gold' : 'secondary'}
             disabled={!active}

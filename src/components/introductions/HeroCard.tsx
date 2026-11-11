@@ -113,10 +113,8 @@ export interface HeroCardProps {
   profiles: Profile[];
   activeId: string;
 
-  chosen: boolean;
-
   /** Every chosen profile, so each keeps its gold glow wherever it sits in the deck. */
-  chosenIds?: readonly string[];
+  chosenIds: readonly string[];
 
   /** Pinned to the top corner of the centred card, e.g. the report button. */
   corner?: React.ReactNode;
@@ -135,7 +133,6 @@ export interface HeroCardProps {
 export function HeroCard({
   profiles,
   activeId,
-  chosen,
   chosenIds,
   corner,
   onPress,
@@ -768,7 +765,7 @@ export function HeroCard({
               isActive={
                 profile.id === activeId
               }
-              chosen={chosenIds ? chosenIds.includes(profile.id) : profile.id === activeId && chosen}
+              chosen={chosenIds.includes(profile.id)}
               reducedMotion={reducedMotion}
             />
           ),

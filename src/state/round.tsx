@@ -40,8 +40,11 @@ interface RoundValue {
   thinCriterion: NarrowingCriterion | null;
   /** Set only while a built set waits to open, to name whose dawn it is. */
   nextSetCity: string | null;
-  /** Authoritative scheduled or submitted-round Fajr instant from the server. */
-  nextFajrAt: string | null;
+  /**
+   * When the member's current day ends: the loaded set's own end, otherwise
+   * the server's scheduled or submitted-round Fajr.
+   */
+  resetsAt: string | null;
   /** Everyone the member still owes answers to, oldest first. */
   owedAll: OwedAnswers[];
   isLoading: boolean;
@@ -54,7 +57,7 @@ interface RoundValue {
   active: Introduction | null;
   setActive: (id: string) => void;
 
-  /** How many the member may send interest to in this set. */
+  /** How many the member may send interest to in this set, never more than it holds. */
   keepLimit: number;
   allowsSelectAll: boolean;
   /** Introduction ids with interest shown, oldest first. The order is the rank. */
@@ -138,20 +141,22 @@ export function RoundProvider({ children }: { children: ReactNode }) {
   const thinCriterion = roundState?.thinCriterion ?? null;
   const nextSetCity = roundState?.city ?? null;
   const nextFajrAt = roundState?.nextFajrAt ?? null;
-  const roundBoundary = round?.expiresAt ?? nextFajrAt;
+  const resetsAt = round?.expiresAt ?? nextFajrAt;
   useEffect(() => {
-    if (!roundBoundary) return;
-    const remaining = Date.parse(roundBoundary) - Date.now();
+    if (!resetsAt) return;
+    const remaining = Date.parse(resetsAt) - Date.now();
     if (!Number.isFinite(remaining) || remaining <= 0) return;
     // Refresh the server state when the displayed day ends, even while foregrounded.
     const timer = setTimeout(() => void refetch(), Math.min(remaining + 100, 2_147_483_647));
     return () => clearTimeout(timer);
-  }, [roundBoundary, refetch]);
+  }, [resetsAt, refetch]);
   const owedAll = useMemo(() => roundState?.owedAll ?? [], [roundState?.owedAll]);
 
-  const { keepLimit, allowsSelectAll } = roundPickRules(round?.tier, tier);
-
   const live = useMemo(() => round?.introductions ?? [], [round]);
+
+  const rules = roundPickRules(round?.tier, tier);
+  const keepLimit = Math.min(rules.keepLimit, live.length);
+  const { allowsSelectAll } = rules;
 
   const resolvedActiveId = useMemo(
     () => resolveActiveId(live, activeId),
@@ -319,7 +324,7 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       narrowingCriterion,
       thinCriterion,
       nextSetCity,
-      nextFajrAt,
+      resetsAt,
       owedAll,
       isLoading,
       error: (error as Error) ?? null,
@@ -352,7 +357,7 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       narrowingCriterion,
       thinCriterion,
       nextSetCity,
-      nextFajrAt,
+      resetsAt,
       owedAll,
       isLoading,
       error,
