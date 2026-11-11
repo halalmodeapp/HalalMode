@@ -266,7 +266,6 @@ export const ur: TranslationCatalog = {
   'filters.sect.other': 'دیگر',
   'filters.sect.unstated': 'نہیں بتانا چاہتا/چاہتی',
   'daily.firstChoiceTitle': 'پہلا کون ہے؟',
-  'daily.firstChoiceBody': 'آپ سب کو دلچسپی بھیج رہے ہیں۔ ہمیں بتائیں آپ سب سے زیادہ کس کا جواب چاہتے ہیں, نہ انہیں کبھی بتایا جائے گا، نہ باقیوں کو۔',
   'daily.thinBody': "آج صرف {{count}}۔ {{criterion}} میں نرمی سے سب سے زیادہ مواقع کھلیں گے۔",
   'daily.thinFew': 'آج صرف {{count}}۔ اس وقت آپ کے فلٹرز اور مقام سے ملنے والے لوگ کم ہیں۔',
   'daily.filtersTooNarrowTitle': 'آپ کے فلٹر کافی محدود ہیں',

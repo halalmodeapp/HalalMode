@@ -266,7 +266,6 @@ export const zhHans: TranslationCatalog = {
   'filters.sect.other': '其他',
   'filters.sect.unstated': '不愿透露',
   'daily.firstChoiceTitle': '谁排第一？',
-  'daily.firstChoiceBody': '您正在向所有人表达好感。请告诉我们您最希望谁回应,对方和其他人都不会知道。',
   'daily.thinBody': "今天只有 {{count}} 位。放宽{{criterion}}能打开最多的选择。",
   'daily.thinFew': '今天只有 {{count}} 位。目前符合你的筛选条件和所在地的人较少。',
   'daily.filtersTooNarrowTitle': '您的筛选条件比较严格',

@@ -266,7 +266,6 @@ export const am: TranslationCatalog = {
   'filters.sect.other': 'ሌላ',
   'filters.sect.unstated': 'መናገር አልፈልግም',
   'daily.firstChoiceTitle': 'የመጀመሪያ ምርጫዎ ማን ነው?',
-  'daily.firstChoiceBody': 'ለሁሉም ፍላጎት እያሳዩ ነው። ከማን መስማት እንደሚፈልጉ ይንገሩን, እሳቸውም ሆኑ ሌሎቹ በፍጹም አያውቁም።',
   'daily.thinBody': "ዛሬ {{count}} ብቻ። {{criterion}}ን ማላላት ብዙ አማራጮችን ይከፍታል።",
   'daily.thinFew': 'ዛሬ {{count}} ብቻ። አሁን ከማጣሪያዎችዎ እና ከአካባቢዎ ጋር የሚዛመዱ ሰዎች ጥቂት ናቸው።',
   'daily.filtersTooNarrowTitle': 'ማጣሪያዎችዎ በጣም ጥብቅ ናቸው',

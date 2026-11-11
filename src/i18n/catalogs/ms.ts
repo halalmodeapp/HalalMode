@@ -266,7 +266,6 @@ export const ms: TranslationCatalog = {
   'filters.sect.other': 'Lain-lain',
   'filters.sect.unstated': 'Memilih untuk tidak menyatakan',
   'daily.firstChoiceTitle': 'Siapa yang pertama?',
-  'daily.firstChoiceBody': 'Anda menghantar minat kepada semua. Beritahu kami siapa yang paling anda harap akan membalas, dia tidak akan diberitahu, begitu juga yang lain.',
   'daily.thinBody': "Hanya {{count}} hari ini. Melonggarkan {{criterion}} akan membuka paling banyak pilihan.",
   'daily.thinFew': 'Hanya {{count}} hari ini. Buat masa ini, hanya sedikit orang yang sepadan dengan penapis dan lokasi anda.',
   'daily.filtersTooNarrowTitle': 'Penapis anda agak sempit',

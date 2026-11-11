@@ -266,7 +266,6 @@ export const fr: TranslationCatalog = {
   'filters.sect.other': 'Autre',
   'filters.sect.unstated': 'Je préfère ne pas le dire',
   'daily.firstChoiceTitle': 'Qui passe en premier ?',
-  'daily.firstChoiceBody': 'Vous envoyez votre intérêt à toutes ces personnes. Dites-nous de qui vous aimeriez le plus avoir une réponse, personne ne le saura jamais.',
   'daily.thinBody': "Seulement {{count}} aujourd’hui. Assouplir {{criterion}} ouvrirait le plus de possibilités.",
   'daily.thinFew': 'Seulement {{count}} aujourd’hui. Peu de personnes correspondent à vos filtres et à votre lieu pour le moment.',
   'daily.filtersTooNarrowTitle': 'Vos critères sont assez stricts',

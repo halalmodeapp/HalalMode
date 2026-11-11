@@ -266,7 +266,6 @@ export const tr: TranslationCatalog = {
   'filters.sect.other': 'Diğer',
   'filters.sect.unstated': 'Belirtmek istemiyorum',
   'daily.firstChoiceTitle': 'Önce kim gelsin?',
-  'daily.firstChoiceBody': 'Hepsine ilgi gönderiyorsunuz. En çok kimden cevap almak istediğinizi söyleyin, ne o ne de diğerleri bunu asla öğrenmez.',
   'daily.thinBody': "Bugün yalnızca {{count}}. {{criterion}} seçimini esnetmek en çok seçeneği açar.",
   'daily.thinFew': 'Bugün yalnızca {{count}}. Şu anda filtrelerinize ve konumunuza uyan kişi sayısı az.',
   'daily.filtersTooNarrowTitle': 'Filtreleriniz oldukça dar',

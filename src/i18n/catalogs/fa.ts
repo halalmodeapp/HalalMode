@@ -266,7 +266,6 @@ export const fa: TranslationCatalog = {
   'filters.sect.other': 'دیگر',
   'filters.sect.unstated': 'ترجیح می‌دهم نگویم',
   'daily.firstChoiceTitle': 'اولویت با کیست؟',
-  'daily.firstChoiceBody': 'به همه ابراز علاقه می‌کنید. بگویید بیش از همه دوست دارید از چه کسی پاسخ بگیرید, نه او و نه دیگران هرگز باخبر نمی‌شوند.',
   'daily.thinBody': "امروز فقط {{count}} نفر. کم کردن سخت‌گیری در {{criterion}} بیشترین گزینه را باز می‌کند.",
   'daily.thinFew': 'امروز فقط {{count}} نفر. اکنون افراد کمی با فیلترها و موقعیت شما مطابقت دارند.',
   'daily.filtersTooNarrowTitle': 'فیلترهای شما نسبتاً سخت‌گیرانه است',

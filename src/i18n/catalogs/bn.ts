@@ -266,7 +266,6 @@ export const bn: TranslationCatalog = {
   'filters.sect.other': 'অন্যান্য',
   'filters.sect.unstated': 'বলতে চাই না',
   'daily.firstChoiceTitle': 'প্রথম পছন্দ কে?',
-  'daily.firstChoiceBody': 'আপনি সবাইকে আগ্রহ পাঠাচ্ছেন। বলুন কার কাছ থেকে উত্তর সবচেয়ে বেশি চান, তিনি বা অন্যরা কখনো জানবেন না।',
   'daily.thinBody': "আজ মাত্র {{count}}টি। {{criterion}} শিথিল করলে সবচেয়ে বেশি সুযোগ খুলবে।",
   'daily.thinFew': 'আজ মাত্র {{count}} জন। এখন আপনার ফিল্টার ও অবস্থানের সঙ্গে মেলে এমন মানুষ কম।',
   'daily.filtersTooNarrowTitle': 'আপনার ফিল্টার বেশ কড়া',

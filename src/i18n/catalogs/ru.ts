@@ -266,7 +266,6 @@ export const ru: TranslationCatalog = {
   'filters.sect.other': 'Другое',
   'filters.sect.unstated': 'Предпочитаю не указывать',
   'daily.firstChoiceTitle': 'Кто на первом месте?',
-  'daily.firstChoiceBody': 'Вы отправляете интерес всем. Скажите, от кого вам больше всего хотелось бы получить ответ, об этом не узнает ни этот человек, ни остальные.',
   'daily.thinBody': "Сегодня только {{count}}. Больше всего вариантов откроет смягчение критерия «{{criterion}}».",
   'daily.thinFew': 'Сегодня только {{count}}. Сейчас вашим фильтрам и местоположению соответствует мало людей.',
   'daily.filtersTooNarrowTitle': 'Ваши фильтры довольно строгие',

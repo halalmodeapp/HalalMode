@@ -266,7 +266,6 @@ export const ha: TranslationCatalog = {
   'filters.sect.other': 'Wani',
   'filters.sect.unstated': 'Na fi son kada in faɗa',
   'daily.firstChoiceTitle': 'Wane ne zaɓinku na farko?',
-  'daily.firstChoiceBody': 'Kuna nuna sha’awa ga kowa. Faɗa mana wanda kuka fi son jin daga gare shi, shi ko sauran ba za su taɓa sani ba.',
   'daily.thinBody': "{{count}} kawai a yau. Sassauta {{criterion}} zai fi buɗe dama.",
   'daily.thinFew': '{{count}} kawai yau. A yanzu mutane kaɗan ne suka dace da matatunku da wurinku.',
   'daily.filtersTooNarrowTitle': 'Matatun ku sun yi tsauri',

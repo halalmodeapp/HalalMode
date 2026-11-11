@@ -266,7 +266,6 @@ export const es: TranslationCatalog = {
   'filters.sect.other': 'Otra',
   'filters.sect.unstated': 'Prefiero no decirlo',
   'daily.firstChoiceTitle': '¿Quién va primero?',
-  'daily.firstChoiceBody': 'Envías interés a todos. Dinos de quién te gustaría más recibir respuesta: nunca se le dirá, ni a los demás.',
   'daily.thinBody': "Solo {{count}} hoy. Ampliar {{criterion}} es lo que más opciones abriría.",
   'daily.thinFew': 'Solo {{count}} hoy. Ahora mismo hay pocas personas que encajen con tus filtros y tu ubicación.',
   'daily.filtersTooNarrowTitle': 'Tus filtros son bastante estrictos',

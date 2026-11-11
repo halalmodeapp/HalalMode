@@ -266,7 +266,6 @@ export const so: TranslationCatalog = {
   'filters.sect.other': 'Kale',
   'filters.sect.unstated': 'Ma doonayo inaan sheego',
   'daily.firstChoiceTitle': 'Yaa ah doorashadaada koowaad?',
-  'daily.firstChoiceBody': 'Xiise ayaad u muujinaysaa qof walba. Noo sheeg qofka aad ugu jeceshahay inaad ka maqasho, isaga iyo kuwa kaleba weligood ma ogaan doonaan.',
   'daily.thinBody': "Maanta {{count}} oo keliya. Dabcinta {{criterion}} ayaa furi doonta fursadaha ugu badan.",
   'daily.thinFew': 'Maanta {{count}} kaliya. Hadda dad yar ayaa ku habboon shaandhooyinkaaga iyo goobtaada.',
   'daily.filtersTooNarrowTitle': 'Shaandhooyinkaagu aad bay u adag yihiin',

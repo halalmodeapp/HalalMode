@@ -9,7 +9,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { ArcCarousel } from '@/components/introductions/ArcCarousel';
 import { ConductAcknowledgement } from '@/components/introductions/ConductAcknowledgement';
 import { FanReveal } from '@/components/introductions/FanReveal';
-import { FirstChoiceDialog } from '@/components/introductions/FirstChoiceDialog';
+import { PickOneDialog } from '@/components/introductions/PickOneDialog';
 import { HeroCard } from '@/components/introductions/HeroCard';
 import { BrandHeader } from '@/components/navigation/BrandHeader';
 import { SafetyControl } from '@/components/safety/SafetyControl';
@@ -592,7 +592,7 @@ export default function DailyScreen() {
         </View>
       </StretchScrollView>
 
-      <FirstChoiceDialog
+      <PickOneDialog
         visible={dialog.kind === 'swap'}
         introductions={selectedIntroductions}
         selectedId={dialog.kind === 'swap' ? dialog.swapOutId : null}
@@ -619,12 +619,20 @@ export default function DailyScreen() {
         onCancel={closeDialog}
       />
 
-      <FirstChoiceDialog
+      {/*
+        Only a member with more than one choice is asked: with one, it is their
+        first choice by definition. Without an order, mutual first choice, the
+        measure this system is judged against, is blind for exactly the members
+        with the most say. The order is never disclosed to anyone.
+      */}
+      <PickOneDialog
         visible={dialog.kind === 'first-choice'}
         introductions={selectedIntroductions}
         selectedId={dialog.kind === 'first-choice' ? dialog.firstChoiceId : null}
         onSelect={(firstChoiceId) => setDialog((current) => current.kind === 'first-choice' ? { ...current, firstChoiceId } : current)}
+        title={t('daily.firstChoiceTitle')}
         body={t('daily.firstChoicePick')}
+        confirmLabel={t('daily.yesSend')}
         cancelLabel={t('daily.notYet')}
         onConfirm={sendWithFirstChoice}
         onCancel={closeDialog}

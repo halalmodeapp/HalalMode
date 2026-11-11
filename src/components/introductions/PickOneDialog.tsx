@@ -9,35 +9,25 @@ import { useI18n } from '@/i18n';
 import { alpha, color, radius, shadow, space } from '@/theme/tokens';
 import type { Introduction } from '@/types';
 
-export interface FirstChoiceDialogProps {
+export interface PickOneDialogProps {
   visible: boolean;
-  /** The keeps this member is about to send interest to. */
+  /** The people to choose between: the member's current choices. */
   introductions: Introduction[];
   selectedId: string | null;
   onSelect: (introductionId: string) => void;
   onConfirm: () => void;
   onCancel: () => void;
-  /** Overrides, so the same picker can ask who to deselect. */
-  title?: string;
-  body?: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
+  title: string;
+  body: string;
+  confirmLabel: string;
+  cancelLabel: string;
 }
 
 /**
- * Asks a Premium member which of their keeps comes first.
- *
- * Free members never see this: keeping one of five makes their pick their first
- * choice by definition. Premium keeps up to three, and without an order their
- * actual first choice is unknowable, which leaves mutual first choice, the
- * measure this whole system is judged against, blind for exactly the members
- * who have the most say.
- *
- * The answer is never disclosed. Being told you were someone's third choice is
- * precisely the comparison this product exists to avoid, so the order lives
- * server-side and reaches nobody.
+ * Asks the member to pick one person from their current choices, for example
+ * who comes first or who to swap out. Confirm stays disabled until one is picked.
  */
-export function FirstChoiceDialog({
+export function PickOneDialog({
   visible,
   introductions,
   selectedId,
@@ -48,8 +38,8 @@ export function FirstChoiceDialog({
   body,
   confirmLabel,
   cancelLabel,
-}: FirstChoiceDialogProps) {
-  const { t, isRTL } = useI18n();
+}: PickOneDialogProps) {
+  const { isRTL } = useI18n();
 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onCancel}>
@@ -57,14 +47,14 @@ export function FirstChoiceDialog({
         <Pressable
           style={StyleSheet.absoluteFill}
           onPress={onCancel}
-          accessibilityLabel={t('daily.notYet')}
+          accessibilityLabel={cancelLabel}
         />
         <Animated.View entering={FadeInUp.duration(200)} style={styles.card}>
           <Text variant="displaySmall" center>
-            {title ?? t('daily.firstChoiceTitle')}
+            {title}
           </Text>
           <Text variant="bodySmall" center style={styles.body}>
-            {body ?? t('daily.firstChoiceBody')}
+            {body}
           </Text>
 
           <View style={styles.options}>
@@ -102,14 +92,14 @@ export function FirstChoiceDialog({
 
           <View style={styles.actions}>
             <Button
-              label={confirmLabel ?? t('daily.yesSend')}
+              label={confirmLabel}
               variant="gold"
               disabled={selectedId === null}
               onPress={onConfirm}
               style={styles.action}
             />
             <Button
-              label={cancelLabel ?? t('daily.notYet')}
+              label={cancelLabel}
               variant="secondary"
               onPress={onCancel}
               style={styles.action}

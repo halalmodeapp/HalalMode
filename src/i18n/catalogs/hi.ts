@@ -266,7 +266,6 @@ export const hi: TranslationCatalog = {
   'filters.sect.other': 'अन्य',
   'filters.sect.unstated': 'नहीं बताना चाहता/चाहती',
   'daily.firstChoiceTitle': 'सबसे पहले कौन?',
-  'daily.firstChoiceBody': 'आप सबको रुचि भेज रहे हैं। बताएँ आप सबसे ज़्यादा किसका जवाब चाहते हैं, न उन्हें कभी बताया जाएगा, न बाक़ियों को।',
   'daily.thinBody': "आज सिर्फ़ {{count}}। {{criterion}} में ढील देने से सबसे ज़्यादा विकल्प खुलेंगे।",
   'daily.thinFew': 'आज सिर्फ़ {{count}}। अभी आपके फ़िल्टर और स्थान से मेल खाने वाले लोग कम हैं।',
   'daily.filtersTooNarrowTitle': 'आपके फ़िल्टर काफ़ी सख़्त हैं',
