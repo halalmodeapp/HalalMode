@@ -195,7 +195,7 @@
   matchV.innerHTML = `
     <div class="ap-close">✕</div>
     <div class="ap-micro ap-brand">Halal Mode</div>
-    <div class="ap-display">It is a mutual match.</div>
+    <div class="ap-display">It's mutual!</div>
     <div class="ap-pair">
       <div class="ap-plate ap-pl"><div class="ap-avatar ap-yous"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21c0-5 3.8-8 8.5-8s8.5 3 8.5 8"/></svg></div><b>You</b></div>
       <div class="ap-heart">♥</div>
