@@ -26,9 +26,8 @@ export const testIds = {
   daily: {
     reset: 'daily-reset',
     deck: 'daily-hero-deck',
-    pop: 'daily-pop-mode',
+    select: 'daily-select',
     primary: 'daily-primary-action',
-    confirmPass: 'daily-confirm-pass',
   },
   you: {
     profile: 'you-tab-profile',

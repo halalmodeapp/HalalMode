@@ -570,7 +570,7 @@ export default function DailyScreen() {
 
         <View style={[styles.actions, isRTL && styles.rowReverse]}>
           <Button
-            testID={testIds.daily.pop}
+            testID={testIds.daily.select}
             label={activeChosen
               ? `✓ ${t('daily.interested')} ${selected.length}/${Math.min(keepLimit, live.length)}`
               : t('daily.select')}

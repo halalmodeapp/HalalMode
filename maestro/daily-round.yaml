@@ -4,6 +4,6 @@ appId: com.halalmode.app
 - assertVisible:
     id: daily-primary-action
 - tapOn:
-    id: daily-pop-mode
+    id: daily-select
 - assertVisible:
     id: daily-primary-action

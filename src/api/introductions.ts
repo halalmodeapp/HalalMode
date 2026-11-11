@@ -181,10 +181,9 @@ export async function submitKeeps(
 /**
  * Records that this member read the subject at length but had no keep left.
  *
- * Not confirmed, unlike a pass. A pass is a judgement about somebody and gets a
- * question; this only notes that they lingered, costs them nothing if it is
- * wrong, and is never shown to anyone. The server refuses it outright for a
- * pair that has been passed.
+ * It only notes that they lingered, costs them nothing if it is wrong, and is
+ * never shown to anyone. The server refuses it outright for a pair that has
+ * been passed.
  */
 export async function softSelectIntroduction(introductionId: string): Promise<void> {
   if (USE_MOCKS) return;
