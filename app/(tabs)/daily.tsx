@@ -125,7 +125,6 @@ export default function DailyScreen() {
     submitted,
     waitingForConnection,
     submitError,
-    recordSoftSelect,
   } = useRound();
 
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -261,11 +260,9 @@ export default function DailyScreen() {
     setConfirmOpen(false);
     setFirstChoiceOpen(false);
     setNobodyOpen(false);
-    // Before the choices land, so the reading that produced it is still what
-    // the round looked like. Swallows its own failures.
-    await recordSoftSelect();
+    if (!roundId) return;
     try {
-      const mutual = await submit(ordered);
+      const mutual = await submit(roundId, ordered);
       if (mutual.length > 0 && mutual[0]) {
         router.push(`/match/${mutual[0]}`);
       }
@@ -274,7 +271,7 @@ export default function DailyScreen() {
       // state, so a send that went through shows as done rather than failed.
       void queryClient.invalidateQueries({ queryKey: queryKeys.round });
     }
-  }, [queryClient, recordSoftSelect, selected, submit]);
+  }, [queryClient, roundId, selected, submit]);
 
   const sendWithFirstChoice = useCallback(() => {
     if (!firstChoiceId) return;

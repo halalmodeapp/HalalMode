@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { MatchingEngagementLedger } from '../src/lib/matchingEngagement';
+import { MatchingEngagementLedger, submissionEngagement } from '../src/lib/matchingEngagement';
 
 test('bio and each photo accumulate independently, excluding time in the background', () => {
   let now = 0;
@@ -56,4 +56,19 @@ test('does not retain remote URLs or report time below one rounded unit', () => 
   now = 2_000;
 
   assert.deepEqual(ledger.snapshot(), []);
+});
+
+test('profile reading time joins the visibility snapshot on the same bounded scale', () => {
+  const snapshot = [{ introductionId: 'intro-1', bioSeconds: 10 }];
+  const reading = [
+    { introductionId: 'intro-1', totalMs: 12_400 },
+    { introductionId: 'intro-2', totalMs: 900_000 },
+    { introductionId: 'intro-3', totalMs: 2_000 },
+  ];
+
+  assert.deepEqual(submissionEngagement(snapshot, reading), [
+    { introductionId: 'intro-1', bioSeconds: 10, profileSeconds: 10 },
+    { introductionId: 'intro-2', profileSeconds: 120 },
+  ]);
+  assert.deepEqual(snapshot, [{ introductionId: 'intro-1', bioSeconds: 10 }]);
 });

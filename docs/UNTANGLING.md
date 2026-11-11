@@ -19,16 +19,27 @@ The sections below record follow-up decisions. The Daily presentation change is 
 
 ## Submitting a Daily set and generating future sets
 
-**Give the round provider one submission operation and give the screen one active dialog at a time.** The provider should own the order of writes and the round identity they apply to. The screen can own transient dialog state and the draft interaction.
+Status: proposed, 11 November 2026. Waiting for a go-ahead before code changes.
 
-- The [Daily route](../app/%28tabs%29/daily.tsx) records a soft selection before submitting ranked picks because submission closes the write window. The [round provider](../src/state/round.tsx) already owns both operations and can express the order in one place. Preserve the behavior when recording the signal fails, as well as the installed-client submission fallback in the [API](../src/api/introductions.ts).
-- Independent flags and IDs can describe more than one active dialog. An explicit dialog state would keep each action paired with its introduction ID. The profile ID still identifies the person on a card.
-- The API and provider adapt an owed question from the first item of the owed list. Trace remaining consumers before removing the singular field. Keep support for incomplete or older responses at the API boundary.
-- Keep the client countdown, countdown screen, and server refresh distinct. They display time, explain the next set, and discover an authoritative change respectively.
+**Give the round provider one `submit(roundId, ordered)` that does the whole send.** It records the soft select, builds the engagement payload and submits, in that order, against the round the member was looking at. The screen only says who, in what order, for which round.
+
+- [`daily.tsx:266`](../app/%28tabs%29/daily.tsx) must call `recordSoftSelect()` before `submit()`, because submitting closes the write window. Nothing enforces that order; a second caller of `submit` would silently lose the signal.
+- [`round.tsx:269`](../src/state/round.tsx) returns an empty success when there is no round. The screen then shows "set complete" for a send that never happened. Submitting without a round should fail like any other send.
+- [`round.tsx:283`](../src/state/round.tsx) turns the dwell and engagement ledgers into the submitted payload inline (5-second buckets, 120-second cap). It is a pure rule with no test. Move it to [`matchingEngagement.ts`](../src/lib/matchingEngagement.ts) next to the ledger it reads, and test it there.
+- `recordSoftSelect` leaves the provider's public interface, because only `submit` needs it.
+
+**Give the screen one active dialog instead of six independent pieces of state.** A single `dialog` value (`none`, `swap` with the pending and swap-out ids, `confirm`, `first-choice` with its pick, `nobody`) keeps each action paired with its ids, makes two dialogs at once impossible, and turns the reset on a new set into one assignment.
+
+- [`daily.tsx:131`](../app/%28tabs%29/daily.tsx) holds `confirmOpen`, `firstChoiceOpen`, `firstChoiceId`, `nobodyOpen`, `pendingId` and `swapOutId` separately. Every path that closes one has to remember the others (lines 150, 250, 261, 620).
+
+**Remove the round fields and wrappers nothing reads, and keep the compatibility the server still needs.**
+
+- [`round.tsx:154`](../src/state/round.tsx) exposes a singular `owed` that no screen reads. Everything uses `owedAll`. Keep the API's fallback that builds `owedAll` from an older `owed`-only response.
+- [`daily.tsx:518`](../app/%28tabs%29/daily.tsx) always passes `popMode={false}`, so the Pop badge in [HeroCard](../src/components/introductions/HeroCard.tsx) never renders. Remove the prop, the badge and its styles. The `daily.popLabel` string goes with it.
+- [`releaseIntroduction` and `passIntroduction`](../src/api/introductions.ts) have no app caller. Remove the client wrappers only. The `release_introduction` and `pass_introduction` RPCs stay, because installed builds and database tests still call them.
+- Keep: the `submit_round_selections_ranked` fallback in `submitKeeps` (a client can reach a database before its migration), the refresh after a failed send (a lost response may have committed), and the soft-select failure being swallowed (it is a courtesy signal and must never cost the member their round).
 
 **Keep matching rules explicit at each runtime boundary and extend the existing parity checks when a rule changes.** The [matcher](../src/matching/league.ts), [round worker](../supabase/functions/generate-round/league.ts), and database each have a role in deciding and writing a round. The [parity harness](../scripts/backend-sim/parity.mts) is where intentional duplication of eligibility rules can be checked together. Validate worker payloads at the database boundary where generic response casts currently hide shape changes. Keep lease recovery and quiet fallback behavior.
-
-**Remove obsolete client branches after confirming callers.** The Daily route always passes `popMode={false}` to [HeroCard](../src/components/introductions/HeroCard.tsx), while the old Pop display remains behind that flag. The pass and release API wrappers have no current app caller. Check mock and installed-client contracts before removing compatibility behavior. Database operations used by installed builds or database tests have their own lifecycle.
 
 ## Connections and chat
 

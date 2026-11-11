@@ -22,7 +22,7 @@ import {
 import { DwellLedger, inferSoftSelect } from '@/lib/dwell';
 import {
   MatchingEngagementLedger,
-  type MatchingEngagementObservation,
+  submissionEngagement,
 } from '@/lib/matchingEngagement';
 import type { DailyRoundEmptyReason, NarrowingCriterion } from '@/lib/dailyRoundState';
 import { queryKeys } from '@/lib/queryClient';
@@ -76,15 +76,12 @@ interface RoundValue {
   /** Visibility timers for optional, private matching signals. */
   bioVisibility: (introductionId: string, visible: boolean) => void;
   photoVisibility: (introductionId: string, storagePath: string | null | undefined, visible: boolean) => void;
-  /**
-   * Notes whoever was read longest but not chosen, before the set is sent.
-   * Never shown to anyone.
-   */
-  recordSoftSelect: () => Promise<void>;
-
   submitting: boolean;
-  /** Sends interest to the selection. Resolves with the mutual matches. */
-  submit: (keptIntroductionIds?: string[]) => Promise<string[]>;
+  /**
+   * Sends interest for this set, first choice first, and resolves with the
+   * mutual matches. Rejects when the set on screen is no longer the loaded one.
+   */
+  submit: (roundId: string, orderedIntroductionIds: string[]) => Promise<string[]>;
   /** True once interest is sent, drives the "Nothing more today" state. */
   submitted: boolean;
   /** A mutual is held only until both members have an open conversation slot. */
@@ -247,27 +244,21 @@ export function RoundProvider({ children }: { children: ReactNode }) {
     [matchingEngagement]
   );
 
-  const softSelectMutation = useMutation({ mutationFn: softSelectIntroduction });
-  const recordSoftSelect = useCallback(async () => {
-    const notChosen = live
-      .map((item) => item.id)
-      .filter((id) => !selectedRef.current.includes(id));
-    const candidate = inferSoftSelect(ledger.records(), notChosen);
-    if (!candidate) return;
-    try {
-      await softSelectMutation.mutateAsync(candidate);
-    } catch {
-      // A courtesy signal. Losing it must never cost the member their round.
-    }
-  }, [ledger, live, softSelectMutation]);
-
   const submitMutation = useMutation({
-    mutationFn: async ({ keptIntroductionIds, engagement }: {
-      keptIntroductionIds: string[];
-      engagement: ReturnType<MatchingEngagementLedger['snapshot']>;
+    mutationFn: async ({ roundId, ordered, notChosen }: {
+      roundId: string;
+      ordered: string[];
+      notChosen: string[];
     }) => {
-      if (!round) return { mutualProfileIds: [] };
-      return submitKeeps(round.id, keptIntroductionIds, engagement);
+      // Submitting closes the set to further signals, so this goes first.
+      const softSelect = inferSoftSelect(ledger.records(), notChosen);
+      if (softSelect) {
+        await softSelectIntroduction(softSelect).catch(() => {
+          // A courtesy signal. Losing it must never cost the member their round.
+        });
+      }
+      const engagement = submissionEngagement(matchingEngagement.snapshot(), ledger.records());
+      return submitKeeps(roundId, ordered, engagement);
     },
     onSuccess: (result) => {
       setSubmitted(true);
@@ -279,29 +270,17 @@ export function RoundProvider({ children }: { children: ReactNode }) {
   });
 
   const submit = useCallback(
-    async (keptIntroductionIds?: string[]) => {
-      const engagement = new Map<string, MatchingEngagementObservation>(
-        matchingEngagement.snapshot().map((observation) => [observation.introductionId, observation] as const)
-      );
-      for (const record of ledger.records()) {
-        const profileSeconds = Math.min(120, Math.round(record.totalMs / 5000) * 5);
-        if (profileSeconds <= 0) continue;
-        const observation = engagement.get(record.introductionId) ?? {
-          introductionId: record.introductionId,
-        };
-        observation.profileSeconds = profileSeconds;
-        engagement.set(record.introductionId, observation);
-      }
-      const observations = [...engagement.values()].filter((observation) =>
-        observation.profileSeconds !== undefined || observation.bioSeconds !== undefined || !!observation.photos?.length
-      );
+    async (roundId: string, ordered: string[]) => {
+      if (round?.id !== roundId) throw new Error('round_changed');
+      const chosen = new Set(ordered);
       const result = await submitMutation.mutateAsync({
-        keptIntroductionIds: keptIntroductionIds ?? selectedRef.current,
-        engagement: observations,
+        roundId,
+        ordered,
+        notChosen: live.map((item) => item.id).filter((id) => !chosen.has(id)),
       });
       return result.mutualProfileIds;
     },
-    [ledger, matchingEngagement, submitMutation]
+    [live, round?.id, submitMutation]
   );
 
   const clearLocal = useCallback(() => {
@@ -360,7 +339,6 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       profileClosed,
       bioVisibility,
       photoVisibility,
-      recordSoftSelect,
       submitting: submitMutation.isPending,
       submit,
       submitted,
@@ -394,7 +372,6 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       profileClosed,
       bioVisibility,
       photoVisibility,
-      recordSoftSelect,
       submitMutation.isPending,
       submit,
       submitted,

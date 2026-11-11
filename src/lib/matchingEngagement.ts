@@ -121,6 +121,28 @@ export class MatchingEngagementLedger {
   }
 }
 
+/**
+ * The engagement sent with a round submission: the visibility snapshot plus
+ * each profile's reading time, on the same bounded scale. Introductions with
+ * nothing to report are left out.
+ */
+export function submissionEngagement(
+  snapshot: readonly MatchingEngagementObservation[],
+  reading: readonly { introductionId: string; totalMs: number }[]
+): MatchingEngagementObservation[] {
+  const byId = new Map(snapshot.map((observation) => [observation.introductionId, { ...observation }]));
+  for (const record of reading) {
+    const profileSeconds = toBoundedFiveSecondUnits(record.totalMs);
+    if (profileSeconds <= 0) continue;
+    const observation = byId.get(record.introductionId) ?? { introductionId: record.introductionId };
+    observation.profileSeconds = profileSeconds;
+    byId.set(record.introductionId, observation);
+  }
+  return [...byId.values()].filter((observation) =>
+    observation.profileSeconds !== undefined || observation.bioSeconds !== undefined || !!observation.photos?.length
+  );
+}
+
 function toBoundedFiveSecondUnits(milliseconds: number): number {
   return Math.min(120, Math.round(milliseconds / 5000) * 5);
 }
