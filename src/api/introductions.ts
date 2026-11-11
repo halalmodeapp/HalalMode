@@ -138,7 +138,7 @@ export async function fetchCurrentRoundState(
 export async function submitKeeps(
   roundId: string,
   keptIntroductionIds: string[],
-  engagement: MatchingEngagementObservation[] = []
+  engagement: MatchingEngagementObservation[]
 ): Promise<{ mutualProfileIds: string[]; waitingMutualProfileIds?: string[] }> {
   if (USE_MOCKS) {
     // The sample flow always mutuals on the first keep so the match reveal,
