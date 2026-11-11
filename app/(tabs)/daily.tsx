@@ -10,6 +10,7 @@ import { ArcCarousel } from '@/components/introductions/ArcCarousel';
 import { ConductAcknowledgement } from '@/components/introductions/ConductAcknowledgement';
 import { FanReveal } from '@/components/introductions/FanReveal';
 import { PickOneDialog } from '@/components/introductions/PickOneDialog';
+import { SwapChoiceDialog } from '@/components/introductions/SwapChoiceDialog';
 import { HeroCard } from '@/components/introductions/HeroCard';
 import { BrandHeader } from '@/components/navigation/BrandHeader';
 import { SafetyControl } from '@/components/safety/SafetyControl';
@@ -85,8 +86,8 @@ type DailyDialog =
   | { kind: 'none' }
   | { kind: 'confirm' }
   | { kind: 'nobody' }
-  /** Choosing someone at the limit: who they are, and who to swap out for them. */
-  | { kind: 'swap'; pendingId: string; swapOutId: string | null }
+  /** Choosing someone at the limit: who they are. */
+  | { kind: 'swap'; pendingId: string }
   | { kind: 'first-choice'; firstChoiceId: string | null };
 
 const NO_DIALOG: DailyDialog = { kind: 'none' };
@@ -128,7 +129,6 @@ export default function DailyScreen() {
     allowsSelectAll,
     selected,
     toggleSelect,
-    switchSelection,
     selectAll,
     setActive,
     submit,
@@ -238,15 +238,10 @@ export default function DailyScreen() {
         if (!wasSelected) void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         return;
       }
-      setDialog({ kind: 'swap', pendingId: id, swapOutId: selected[0] ?? null });
+      setDialog({ kind: 'swap', pendingId: id });
     },
     [selected, toggleSelect]
   );
-
-  const confirmSwitch = useCallback(() => {
-    if (dialog.kind === 'swap' && dialog.swapOutId) switchSelection(dialog.swapOutId, dialog.pendingId);
-    setDialog(NO_DIALOG);
-  }, [dialog, switchSelection]);
 
   /**
    * Sends the choices in the order given: the first is this member's first
@@ -592,18 +587,7 @@ export default function DailyScreen() {
         </View>
       </StretchScrollView>
 
-      <PickOneDialog
-        visible={dialog.kind === 'swap'}
-        introductions={selectedIntroductions}
-        selectedId={dialog.kind === 'swap' ? dialog.swapOutId : null}
-        onSelect={(swapOutId) => setDialog((current) => current.kind === 'swap' ? { ...current, swapOutId } : current)}
-        title={t('daily.limitTitle', { limit: keepLimit })}
-        body={t('daily.limitBody', { name: nameOf(dialog.kind === 'swap' ? dialog.pendingId : null) })}
-        confirmLabel={t('daily.switchSelection')}
-        cancelLabel={t('common.cancel')}
-        onConfirm={confirmSwitch}
-        onCancel={closeDialog}
-      />
+      <SwapChoiceDialog pendingId={dialog.kind === 'swap' ? dialog.pendingId : null} onClose={closeDialog} />
 
       <ConfirmDialog
         visible={dialog.kind === 'confirm'}

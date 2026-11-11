@@ -10,7 +10,7 @@ import { ScreenHeader } from '@/components/navigation/ScreenHeader';
 import { SafetyControl } from '@/components/safety/SafetyControl';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { SwapChoiceDialog } from '@/components/introductions/SwapChoiceDialog';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
@@ -26,10 +26,11 @@ export default function IntroductionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { localeTag, isRTL, language, t } = useI18n();
   const {
-    round, refresh, selected, toggleSelect, keepLimit, profileOpened, profileClosed,
+    round, refresh, selected, toggleSelect, profileOpened, profileClosed,
     bioVisibility, photoVisibility,
   } = useRound();
-  const [limitOpen, setLimitOpen] = useState(false);
+  // Someone chosen while at the limit, waiting on who to swap out for them.
+  const [pendingId, setPendingId] = useState<string | null>(null);
   const timingLayout = useRef({
     focused: false,
     offset: 0,
@@ -273,7 +274,7 @@ export default function IntroductionDetailScreen() {
               if (toggleSelect(introduction.id)) {
                 if (!chosen) router.back();
               } else {
-                setLimitOpen(true);
+                setPendingId(introduction.id);
               }
             }}
             style={styles.sendInterest}
@@ -281,18 +282,13 @@ export default function IntroductionDetailScreen() {
         </View>
       </ScrollView>
 
-      <ConfirmDialog
-        visible={limitOpen}
-        title={t('daily.limitTitle', { limit: keepLimit })}
-        body={t('daily.limitBody', { name: profile.firstName })}
-        confirmLabel={t('daily.switchSelection')}
-        cancelLabel={t('common.cancel')}
-        onConfirm={() => {
-          // The picker of who to swap out lives on the deck.
-          setLimitOpen(false);
-          router.back();
+      <SwapChoiceDialog
+        pendingId={pendingId}
+        onClose={(switched) => {
+          setPendingId(null);
+          // As with an ordinary choice, go back to the deck once they are chosen.
+          if (switched) router.back();
         }}
-        onCancel={() => setLimitOpen(false)}
       />
     </Screen>
   );

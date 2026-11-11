@@ -61,9 +61,9 @@ A review of the area after those commits found no regressions and these leftover
 
 A second review found no regressions. Its fixes to this pass's own work are in the commit after `3b3b3a9`: a blocked send now shows its error, a wrong comment about free-member limits, and a privacy test that checked nothing.
 
-Proposed, waiting for a decision because members would see it:
+Decided and done:
 
-- **Use one at-limit dialog.** [`introduction/[id].tsx:284`](../app/introduction/%5Bid%5D.tsx) has its own copy of the at-limit dialog, with the same title, body and "Switch" label as Daily's swap picker. Confirming it only returns to the deck, where the member taps again to get the real picker. Either open the real swap picker from the profile, or send the member back to Daily with the swap already open.
+- **Use one at-limit dialog.** Done: `SwapChoiceDialog` reads the round itself, and Daily and the profile page both use it. Switching on a profile makes the swap there and returns to the deck. Checked in the web app with sample data. [`introduction/[id].tsx:284`](../app/introduction/%5Bid%5D.tsx) has its own copy of the at-limit dialog, with the same title, body and "Switch" label as Daily's swap picker. Confirming it only returns to the deck, where the member taps again to get the real picker.
 
 The send flow was checked in the web app with sample data: choose one or two, the first-choice picker, confirm, and the mutual screen. The sample data only has match screens for some profiles, so a sample "match" with someone else lands on "This match is not available". That gap is in the sample data, not in the app.
 
