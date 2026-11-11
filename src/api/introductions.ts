@@ -32,9 +32,10 @@ export interface CurrentRoundState {
   city?: string | null;
   /** Authoritative server-scheduled Fajr for upcoming or completed rounds. */
   nextFajrAt?: string | null;
-  /** Set only with `answers_owed`: whose questions to go back to. */
-  owed?: OwedAnswers | null;
-  /** Everyone still owed answers, oldest first; `owed` is the first of them. */
+  /**
+   * Set only with `answers_owed`: everyone still owed answers, oldest first.
+   * Older databases send only the first of them, as `owed`.
+   */
   owedAll?: OwedAnswers[];
 }
 
@@ -103,7 +104,6 @@ export async function fetchCurrentRoundState(
       // with no round to carry it.
       city: typeof payload.city === 'string' ? payload.city : null,
       nextFajrAt: typeof payload.nextFajrAt === 'string' ? payload.nextFajrAt : null,
-      owed: payload.owed && typeof payload.owed.connectionId === 'string' ? payload.owed : null,
       owedAll: Array.isArray(payload.owedAll)
         ? payload.owedAll.filter((item) => typeof item?.connectionId === 'string' && typeof item?.name === 'string')
         : payload.owed && typeof payload.owed.connectionId === 'string' ? [payload.owed] : [],
@@ -177,24 +177,6 @@ export async function submitKeeps(
   };
 }
 
-/**
- * Records that an introduction was released. Fire-and-forget from the UI's
- * point of view, the arc animates immediately and this reconciles behind it.
- *
- * The server uses release events to tune the private selection score. Nobody is
- * ever told they were passed over.
- */
-export async function releaseIntroduction(
-  introductionId: string
-): Promise<void> {
-  if (USE_MOCKS) return;
-
-  const client = requireSupabase();
-  const { error } = await client.rpc('release_introduction', {
-    p_introduction_id: introductionId,
-  });
-  if (error) throw error;
-}
 
 /**
  * Records that this member read the subject at length but had no keep left.
@@ -214,20 +196,3 @@ export async function softSelectIntroduction(introductionId: string): Promise<vo
   if (error) throw error;
 }
 
-/**
- * Upgrades a release to a deliberate pass, after the member has confirmed it in
- * their own words. The first costs the pair rank and a month of quiet; a second,
- * months later, also holds them apart.
- *
- * The subject is told nothing, here or ever. The only thing that reaches the
- * server is the decision, how long anyone read anything stays on the device.
- */
-export async function passIntroduction(introductionId: string): Promise<void> {
-  if (USE_MOCKS) return;
-
-  const client = requireSupabase();
-  const { error } = await client.rpc('pass_introduction', {
-    p_introduction_id: introductionId,
-  });
-  if (error) throw error;
-}

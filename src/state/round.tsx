@@ -23,6 +23,7 @@ import { DwellLedger, inferSoftSelect } from '@/lib/dwell';
 import {
   MatchingEngagementLedger,
   submissionEngagement,
+  type MatchingEngagementObservation,
 } from '@/lib/matchingEngagement';
 import type { DailyRoundEmptyReason, NarrowingCriterion } from '@/lib/dailyRoundState';
 import { queryKeys } from '@/lib/queryClient';
@@ -41,8 +42,6 @@ interface RoundValue {
   nextSetCity: string | null;
   /** Authoritative scheduled or submitted-round Fajr instant from the server. */
   nextFajrAt: string | null;
-  /** Whose questions the member must answer before seeing a set. */
-  owed: OwedAnswers | null;
   /** Everyone the member still owes answers to, oldest first. */
   owedAll: OwedAnswers[];
   isLoading: boolean;
@@ -148,8 +147,7 @@ export function RoundProvider({ children }: { children: ReactNode }) {
     const timer = setTimeout(() => void refetch(), Math.min(remaining + 100, 2_147_483_647));
     return () => clearTimeout(timer);
   }, [roundBoundary, refetch]);
-  const owed = roundState?.owed ?? null;
-  const owedAll = useMemo(() => roundState?.owedAll ?? (owed ? [owed] : []), [roundState?.owedAll, owed]);
+  const owedAll = useMemo(() => roundState?.owedAll ?? [], [roundState?.owedAll]);
 
   const { keepLimit, allowsSelectAll } = roundPickRules(round?.tier, tier);
 
@@ -245,19 +243,18 @@ export function RoundProvider({ children }: { children: ReactNode }) {
   );
 
   const submitMutation = useMutation({
-    mutationFn: async ({ roundId, ordered, notChosen }: {
+    mutationFn: async ({ roundId, ordered, softSelect, engagement }: {
       roundId: string;
       ordered: string[];
-      notChosen: string[];
+      softSelect: string | null;
+      engagement: MatchingEngagementObservation[];
     }) => {
       // Submitting closes the set to further signals, so this goes first.
-      const softSelect = inferSoftSelect(ledger.records(), notChosen);
       if (softSelect) {
         await softSelectIntroduction(softSelect).catch(() => {
           // A courtesy signal. Losing it must never cost the member their round.
         });
       }
-      const engagement = submissionEngagement(matchingEngagement.snapshot(), ledger.records());
       return submitKeeps(roundId, ordered, engagement);
     },
     onSuccess: (result) => {
@@ -272,15 +269,18 @@ export function RoundProvider({ children }: { children: ReactNode }) {
   const submit = useCallback(
     async (roundId: string, ordered: string[]) => {
       if (round?.id !== roundId) throw new Error('round_changed');
+      // Raw reading times stay here; only the inferred id and bounded totals go on.
       const chosen = new Set(ordered);
+      const reading = ledger.records();
       const result = await submitMutation.mutateAsync({
         roundId,
         ordered,
-        notChosen: live.map((item) => item.id).filter((id) => !chosen.has(id)),
+        softSelect: inferSoftSelect(reading, live.map((item) => item.id).filter((id) => !chosen.has(id))),
+        engagement: submissionEngagement(matchingEngagement.snapshot(), reading),
       });
       return result.mutualProfileIds;
     },
-    [live, round?.id, submitMutation]
+    [ledger, live, matchingEngagement, round?.id, submitMutation]
   );
 
   const clearLocal = useCallback(() => {
@@ -320,7 +320,6 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       thinCriterion,
       nextSetCity,
       nextFajrAt,
-      owed,
       owedAll,
       isLoading,
       error: (error as Error) ?? null,
@@ -354,7 +353,6 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       thinCriterion,
       nextSetCity,
       nextFajrAt,
-      owed,
       owedAll,
       isLoading,
       error,

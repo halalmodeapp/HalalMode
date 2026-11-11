@@ -198,7 +198,6 @@ export const fa: TranslationCatalog = {
   'daily.limitTitle': 'در هر زمان فقط می‌توانید به {{limit}} نفر ابراز علاقه کنید.',
   'daily.limitBody': 'برای باز کردن جا برای {{name}} یک نفر را از انتخاب خارج کنید؟',
   'daily.switchSelection': 'تعویض انتخاب',
-  'daily.popLabel': 'حالت حذف',
   'daily.owedTitle': '{{name}} به پرسش‌های شما پاسخ داد',
   'daily.owedBody': 'پیش از ادامه به پرسش‌های او پاسخ دهید. پس از آن مجموعه بعدی شما می‌رسد.',
   'daily.owedPicksTitle': '{{name}} پرسش‌های شما را انتخاب کرد',

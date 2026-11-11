@@ -198,7 +198,6 @@ export const fr: TranslationCatalog = {
   'daily.limitTitle': 'Vous ne pouvez montrer votre intérêt qu’à {{limit}} personnes à la fois.',
   'daily.limitBody': 'Désélectionner quelqu’un pour faire de la place à {{name}} ?',
   'daily.switchSelection': 'Changer la sélection',
-  'daily.popLabel': 'Mode retrait',
   'daily.owedTitle': '{{name}} a répondu à vos questions',
   'daily.owedBody': 'Répondez aux siennes avant de continuer. Votre prochaine sélection arrivera ensuite.',
   'daily.owedPicksTitle': '{{name}} a choisi vos questions',

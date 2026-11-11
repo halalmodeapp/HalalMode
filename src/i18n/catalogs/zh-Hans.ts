@@ -198,7 +198,6 @@ export const zhHans: TranslationCatalog = {
   'daily.limitTitle': '您一次最多只能向 {{limit}} 位表达好感。',
   'daily.limitBody': '要取消选择某位来为 {{name}} 腾出位置吗？',
   'daily.switchSelection': '更换选择',
-  'daily.popLabel': '移除模式',
   'daily.owedTitle': '{{name}} 已回答您的问题',
   'daily.owedBody': '继续之前请先回答对方的问题。完成后您的下一组推荐就会到来。',
   'daily.owedPicksTitle': '{{name}} 已为您选好问题',

@@ -198,7 +198,6 @@ export const ur: TranslationCatalog = {
   'daily.limitTitle': 'آپ ایک وقت میں صرف {{limit}} افراد کو دلچسپی بھیج سکتے ہیں۔',
   'daily.limitBody': '{{name}} کے لیے جگہ بنانے کو کسی کا انتخاب ہٹائیں؟',
   'daily.switchSelection': 'انتخاب بدلیں',
-  'daily.popLabel': 'ہٹانے کا موڈ',
   'daily.owedTitle': '{{name}} نے آپ کے سوالوں کے جواب دیے ہیں',
   'daily.owedBody': 'جاری رکھنے سے پہلے ان کے سوالوں کے جواب دیں۔ اس کے بعد آپ کا اگلا سیٹ آ جائے گا۔',
   'daily.owedPicksTitle': '{{name}} نے آپ کے سوال چن لیے ہیں',

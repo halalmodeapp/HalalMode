@@ -198,7 +198,6 @@ export const ru: TranslationCatalog = {
   'daily.limitTitle': 'Одновременно можно проявить интерес к {{limit}} людям.',
   'daily.limitBody': 'Снять выбор с кого-то, чтобы освободить место для {{name}}?',
   'daily.switchSelection': 'Заменить выбор',
-  'daily.popLabel': 'Режим отсеивания',
   'daily.owedTitle': '{{name}} ответил(а) на ваши вопросы',
   'daily.owedBody': 'Ответьте на вопросы собеседника, прежде чем продолжить. После этого придёт ваша следующая подборка.',
   'daily.owedPicksTitle': '{{name}} выбрал(а) вопросы для вас',

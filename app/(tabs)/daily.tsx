@@ -509,7 +509,6 @@ export default function DailyScreen() {
             <HeroCard
               profiles={live.map((item) => item.profile)}
               activeId={active.profile.id}
-              popMode={false}
               chosen={activeChosen}
               chosenIds={live.filter((item) => selected.includes(item.id)).map((item) => item.profile.id)}
               corner={

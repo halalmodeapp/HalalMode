@@ -198,7 +198,6 @@ export const id: TranslationCatalog = {
   'daily.limitTitle': 'Anda hanya dapat mengirim minat kepada {{limit}} orang sekaligus.',
   'daily.limitBody': 'Batalkan pilihan seseorang untuk memberi tempat bagi {{name}}?',
   'daily.switchSelection': 'Ganti pilihan',
-  'daily.popLabel': 'Mode lepas',
   'daily.owedTitle': '{{name}} sudah menjawab pertanyaan Anda',
   'daily.owedBody': 'Jawab pertanyaannya sebelum melanjutkan. Set berikutnya akan muncul setelah itu.',
   'daily.owedPicksTitle': '{{name}} sudah memilih pertanyaan Anda',

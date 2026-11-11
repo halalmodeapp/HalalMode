@@ -198,7 +198,6 @@ export const bn: TranslationCatalog = {
   'daily.limitTitle': 'একসঙ্গে শুধু {{limit}} জনকে আগ্রহ পাঠাতে পারবেন।',
   'daily.limitBody': '{{name}}-এর জন্য জায়গা করতে কাউকে বাদ দেবেন?',
   'daily.switchSelection': 'বাছাই বদলান',
-  'daily.popLabel': 'বাদ দেওয়ার মোড',
   'daily.owedTitle': '{{name}} আপনার প্রশ্নের উত্তর দিয়েছেন',
   'daily.owedBody': 'চালিয়ে যাওয়ার আগে তাঁর প্রশ্নের উত্তর দিন। এরপরই আপনার পরের সেট আসবে।',
   'daily.owedPicksTitle': '{{name}} আপনার প্রশ্ন বেছে নিয়েছেন',

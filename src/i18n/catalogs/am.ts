@@ -198,7 +198,6 @@ export const am: TranslationCatalog = {
   'daily.limitTitle': 'በአንድ ጊዜ ለ{{limit}} ሰዎች ብቻ ፍላጎት ማሳየት ይችላሉ።',
   'daily.limitBody': 'ለ{{name}} ቦታ ለመስጠት አንድ ሰው ይቀነስ?',
   'daily.switchSelection': 'ምርጫ ቀይር',
-  'daily.popLabel': 'የማስወገጃ ሁነታ',
   'daily.owedTitle': '{{name}} ጥያቄዎችዎን መልሰዋል',
   'daily.owedBody': 'ከመቀጠልዎ በፊት የእነሱን ጥያቄዎች ይመልሱ። የሚቀጥለው ስብስብዎ ከዚያ በኋላ ይመጣል።',
   'daily.owedPicksTitle': '{{name}} ጥያቄዎችዎን መርጠዋል',

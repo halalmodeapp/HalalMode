@@ -198,7 +198,6 @@ export const so: TranslationCatalog = {
   'daily.limitTitle': 'Hal mar waxaad xiise u muujin kartaa {{limit}} qof oo keliya.',
   'daily.limitBody': 'Ma ka saartaa qof si {{name}} meel ugu banaanaato?',
   'daily.switchSelection': 'Beddel doorashada',
-  'daily.popLabel': 'Habka ka saarista',
   'daily.owedTitle': '{{name}} wuxuu ka jawaabay su’aalahaaga',
   'daily.owedBody': 'Ka jawaab su’aalahooda ka hor intaadan sii wadin. Kooxdaada xigta waxay imanaysaa kadib.',
   'daily.owedPicksTitle': '{{name}} wuxuu doortay su’aalahaaga',

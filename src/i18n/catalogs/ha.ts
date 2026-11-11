@@ -198,7 +198,6 @@ export const ha: TranslationCatalog = {
   'daily.limitTitle': 'Za ku iya nuna sha’awa ga mutum {{limit}} ne kawai a lokaci ɗaya.',
   'daily.limitBody': 'Cire wani don ba wa {{name}} wuri?',
   'daily.switchSelection': 'Canza zaɓi',
-  'daily.popLabel': 'Yanayin cirewa',
   'daily.owedTitle': '{{name}} ya amsa tambayoyinku',
   'daily.owedBody': 'Amsa tambayoyinsu kafin ku ci gaba. Saitinku na gaba zai zo bayan haka.',
   'daily.owedPicksTitle': '{{name}} ya zaɓi tambayoyinku',

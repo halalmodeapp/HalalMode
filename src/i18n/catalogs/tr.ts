@@ -198,7 +198,6 @@ export const tr: TranslationCatalog = {
   'daily.limitTitle': 'Aynı anda yalnızca {{limit}} kişiye ilgi gönderebilirsiniz.',
   'daily.limitBody': '{{name}} için yer açmak üzere birinin seçimini kaldırmak ister misiniz?',
   'daily.switchSelection': 'Seçimi değiştir',
-  'daily.popLabel': 'Eleme modu',
   'daily.owedTitle': '{{name}} sorularınızı cevapladı',
   'daily.owedBody': 'Devam etmeden önce onun sorularını cevaplayın. Bir sonraki setiniz ondan sonra gelir.',
   'daily.owedPicksTitle': '{{name}} sorularınızı seçti',

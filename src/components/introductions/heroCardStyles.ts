@@ -95,25 +95,4 @@ export const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
   },
-
-  popBadge: {
-    position: 'absolute',
-    zIndex: 4,
-    top: 14,
-    left: 14,
-    backgroundColor:
-      'rgba(252,252,251,0.94)',
-    borderRadius: radius.pill,
-    paddingVertical: 7,
-    paddingHorizontal: 12,
-  },
-
-  popBadgeLabel: {
-    fontFamily:
-      'Beiruti_700Bold',
-    fontSize: 9.5,
-    letterSpacing: 1.7,
-    textTransform: 'uppercase',
-    color: color.ink,
-  },
 });

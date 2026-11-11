@@ -198,7 +198,6 @@ export const ms: TranslationCatalog = {
   'daily.limitTitle': 'Anda hanya boleh menghantar minat kepada {{limit}} orang pada satu masa.',
   'daily.limitBody': 'Nyahpilih seseorang untuk memberi ruang kepada {{name}}?',
   'daily.switchSelection': 'Tukar pilihan',
-  'daily.popLabel': 'Mod lepas',
   'daily.owedTitle': '{{name}} telah menjawab soalan anda',
   'daily.owedBody': 'Jawab soalan dia sebelum meneruskan. Set anda yang seterusnya akan tiba selepas itu.',
   'daily.owedPicksTitle': '{{name}} telah memilih soalan anda',

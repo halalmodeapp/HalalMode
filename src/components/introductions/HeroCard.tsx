@@ -113,9 +113,6 @@ export interface HeroCardProps {
   profiles: Profile[];
   activeId: string;
 
-  /** Shown on the currently centred card while Pop mode is active. */
-  popMode: boolean;
-
   chosen: boolean;
 
   /** Every chosen profile, so each keeps its gold glow wherever it sits in the deck. */
@@ -138,7 +135,6 @@ export interface HeroCardProps {
 export function HeroCard({
   profiles,
   activeId,
-  popMode,
   chosen,
   chosenIds,
   corner,
@@ -772,7 +768,6 @@ export function HeroCard({
               isActive={
                 profile.id === activeId
               }
-              popMode={popMode}
               chosen={chosenIds ? chosenIds.includes(profile.id) : profile.id === activeId && chosen}
               reducedMotion={reducedMotion}
             />
@@ -894,7 +889,6 @@ interface DeckCardProps {
   tiltY: SharedValue<number>;
   ringYaw: SharedValue<number>;
   isActive: boolean;
-  popMode: boolean;
   chosen: boolean;
   reducedMotion: boolean;
 }
@@ -909,11 +903,10 @@ function DeckCard({
   tiltY,
   ringYaw,
   isActive,
-  popMode,
   chosen,
   reducedMotion,
 }: DeckCardProps) {
-  const { t, isRTL, language } =
+  const { isRTL, language } =
     useI18n();
 
   const pivotDepth = Math.max(
@@ -1283,22 +1276,6 @@ function DeckCard({
           {occupationLabel(profile.occupation, language)}
         </Text>
       </View>
-
-      {isActive &&
-      popMode ? (
-        <View
-          style={styles.popBadge}
-          pointerEvents="none"
-        >
-          <Text
-            style={
-              styles.popBadgeLabel
-            }
-          >
-            {t('daily.popLabel')}
-          </Text>
-        </View>
-      ) : null}
     </Animated.View>
   );
 }
