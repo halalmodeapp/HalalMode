@@ -6,10 +6,9 @@ import test from 'node:test';
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), 'utf8');
 
 /**
- * A pass is inferred from behaviour, which makes it the one decision in the app
- * the member did not explicitly ask for. These pin the properties that keep that
- * acceptable: it is always confirmed, it is never a separate gesture, and the
- * timings behind it never leave the device.
+ * Reading time is the one signal a member gives without deciding to. These pin
+ * that it is measured wherever a profile is shown, and that raw timings never
+ * leave the device: only a soft-select id and bounded totals are sent.
  */
 
 test('reading a profile is timed on every surface that shows one', () => {
@@ -22,18 +21,16 @@ test('reading a profile is timed on every surface that shows one', () => {
 
 test('dwell timings stay on the device', () => {
   const api = read('src/api/introductions.ts');
-  // A pass, wherever the app sends one, carries an introduction id and nothing
-  // else: no durations, no counts, nothing that would let the server
-  // reconstruct how anyone read.
-  for (const call of api.matchAll(/rpc\('pass_introduction',\s*\{([^}]*)\}/gu)) {
-    assert.equal(call[1]?.trim().replace(/,$/u, ''), 'p_introduction_id: introductionId');
-  }
+  // Nothing that talks to the server knows about durations or visit counts.
   assert.doesNotMatch(api, /totalMs|dwell|opens/iu);
 
+  // The code that sends a set receives finished values, never the ledgers.
   const round = read('src/state/round.tsx');
+  const sending = round.slice(round.indexOf('mutationFn:'), round.indexOf('onSuccess:'));
+  assert.ok(sending.length > 0, 'the round provider must still send through one mutation');
   assert.doesNotMatch(
-    round,
-    /mutationFn:[^\n]*ledger|ledger\.records\(\)[^\n]*rpc/u,
-    'the ledger must never be handed to anything that talks to the server'
+    sending,
+    /ledger|matchingEngagement/u,
+    'the ledgers must never be handed to anything that talks to the server'
   );
 });

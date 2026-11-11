@@ -254,6 +254,8 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       softSelect: string | null;
       engagement: MatchingEngagementObservation[];
     }) => {
+      // A send is for the set the member was looking at, never a newer one.
+      if (round?.id !== roundId) throw new Error('round_changed');
       // Submitting closes the set to further signals, so this goes first.
       if (softSelect) {
         await softSelectIntroduction(softSelect).catch(() => {
@@ -273,7 +275,6 @@ export function RoundProvider({ children }: { children: ReactNode }) {
 
   const submit = useCallback(
     async (roundId: string, ordered: string[]) => {
-      if (round?.id !== roundId) throw new Error('round_changed');
       // Raw reading times stay here; only the inferred id and bounded totals go on.
       const chosen = new Set(ordered);
       const reading = ledger.records();
@@ -285,7 +286,7 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       });
       return result.mutualProfileIds;
     },
-    [ledger, live, matchingEngagement, round?.id, submitMutation]
+    [ledger, live, matchingEngagement, submitMutation]
   );
 
   const clearLocal = useCallback(() => {
