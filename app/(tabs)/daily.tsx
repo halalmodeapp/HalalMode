@@ -80,6 +80,17 @@ function DailyScrollScreen({ children, isRTL }: { children: ReactNode; isRTL: bo
   );
 }
 
+/** The one dialog the Daily screen can have open, with the choices it holds. */
+type DailyDialog =
+  | { kind: 'none' }
+  | { kind: 'confirm' }
+  | { kind: 'nobody' }
+  /** Choosing someone at the limit: who they are, and who to swap out for them. */
+  | { kind: 'swap'; pendingId: string; swapOutId: string | null }
+  | { kind: 'first-choice'; firstChoiceId: string | null };
+
+const NO_DIALOG: DailyDialog = { kind: 'none' };
+
 export default function DailyScreen() {
   const { t, isRTL, localeTag } = useI18n();
   // Back from Settings or Profile: undo any page scroll a phone keyboard left
@@ -127,14 +138,8 @@ export default function DailyScreen() {
     submitError,
   } = useRound();
 
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [firstChoiceOpen, setFirstChoiceOpen] = useState(false);
-  const [firstChoiceId, setFirstChoiceId] = useState<string | null>(null);
-  const [nobodyOpen, setNobodyOpen] = useState(false);
-  // Someone the member tried to choose while already at their limit, and who
-  // they are thinking of swapping out for them.
-  const [pendingId, setPendingId] = useState<string | null>(null);
-  const [swapOutId, setSwapOutId] = useState<string | null>(null);
+  const [dialog, setDialog] = useState<DailyDialog>(NO_DIALOG);
+  const closeDialog = useCallback(() => setDialog(NO_DIALOG), []);
   const [conductVisible, setConductVisible] = useState(false);
   const [revealing, setRevealing] = useState(false);
   const reducedMotion = useReducedMotion();
@@ -146,12 +151,7 @@ export default function DailyScreen() {
 
   useEffect(() => {
     // Dialog choices belong to the cards that were visible when they opened.
-    setConfirmOpen(false);
-    setFirstChoiceOpen(false);
-    setFirstChoiceId(null);
-    setNobodyOpen(false);
-    setPendingId(null);
-    setSwapOutId(null);
+    setDialog(NO_DIALOG);
     setRevealing(false);
   }, [cardIds, conductMemberId, roundId]);
 
@@ -239,17 +239,15 @@ export default function DailyScreen() {
         if (!wasSelected) void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         return;
       }
-      setPendingId(id);
-      setSwapOutId(selected[0] ?? null);
+      setDialog({ kind: 'swap', pendingId: id, swapOutId: selected[0] ?? null });
     },
     [selected, toggleSelect]
   );
 
   const confirmSwitch = useCallback(() => {
-    if (pendingId && swapOutId) switchSelection(swapOutId, pendingId);
-    setPendingId(null);
-    setSwapOutId(null);
-  }, [pendingId, swapOutId, switchSelection]);
+    if (dialog.kind === 'swap' && dialog.swapOutId) switchSelection(dialog.swapOutId, dialog.pendingId);
+    setDialog(NO_DIALOG);
+  }, [dialog, switchSelection]);
 
   /**
    * Sends the choices in the order given: the first is this member's first
@@ -257,9 +255,7 @@ export default function DailyScreen() {
    * the order they happened to tap being taken as a ranking.
    */
   const handleSubmit = useCallback(async (ordered: string[] = selected) => {
-    setConfirmOpen(false);
-    setFirstChoiceOpen(false);
-    setNobodyOpen(false);
+    setDialog(NO_DIALOG);
     if (!roundId) return;
     try {
       const mutual = await submit(roundId, ordered);
@@ -274,9 +270,10 @@ export default function DailyScreen() {
   }, [queryClient, roundId, selected, submit]);
 
   const sendWithFirstChoice = useCallback(() => {
-    if (!firstChoiceId) return;
-    void handleSubmit([firstChoiceId, ...selected.filter((id) => id !== firstChoiceId)]);
-  }, [firstChoiceId, handleSubmit, selected]);
+    if (dialog.kind !== 'first-choice' || !dialog.firstChoiceId) return;
+    const first = dialog.firstChoiceId;
+    void handleSubmit([first, ...selected.filter((id) => id !== first)]);
+  }, [dialog, handleSubmit, selected]);
 
   /**
    * The card deck reports the exact profile it selected rather than only a
@@ -561,7 +558,7 @@ export default function DailyScreen() {
           </Text>
           {selected.length === 0 ? (
             // Choosing nobody is a real answer, not something to be pushed past.
-            <Pressable accessibilityRole="button" onPress={() => setNobodyOpen(true)} hitSlop={8}>
+            <Pressable accessibilityRole="button" onPress={() => setDialog({ kind: 'nobody' })} hitSlop={8}>
               <Text variant="caption" style={styles.selectAll}>{t('daily.nobodyToday')}</Text>
             </Pressable>
           ) : null}
@@ -590,12 +587,7 @@ export default function DailyScreen() {
             disabled={selected.length === 0}
             loading={submitting}
             onPress={() => {
-              if (selected.length > 1) {
-                setFirstChoiceId(null);
-                setFirstChoiceOpen(true);
-              } else {
-                setConfirmOpen(true);
-              }
+              setDialog(selected.length > 1 ? { kind: 'first-choice', firstChoiceId: null } : { kind: 'confirm' });
             }}
             style={styles.primaryAction}
           />
@@ -604,23 +596,20 @@ export default function DailyScreen() {
       </StretchScrollView>
 
       <FirstChoiceDialog
-        visible={pendingId !== null}
+        visible={dialog.kind === 'swap'}
         introductions={selectedIntroductions}
-        selectedId={swapOutId}
-        onSelect={setSwapOutId}
+        selectedId={dialog.kind === 'swap' ? dialog.swapOutId : null}
+        onSelect={(swapOutId) => setDialog((current) => current.kind === 'swap' ? { ...current, swapOutId } : current)}
         title={t('daily.limitTitle', { limit: keepLimit })}
-        body={t('daily.limitBody', { name: nameOf(pendingId) })}
+        body={t('daily.limitBody', { name: nameOf(dialog.kind === 'swap' ? dialog.pendingId : null) })}
         confirmLabel={t('daily.switchSelection')}
         cancelLabel={t('common.cancel')}
         onConfirm={confirmSwitch}
-        onCancel={() => {
-          setPendingId(null);
-          setSwapOutId(null);
-        }}
+        onCancel={closeDialog}
       />
 
       <ConfirmDialog
-        visible={confirmOpen}
+        visible={dialog.kind === 'confirm'}
         title={
           selected.length === 1
             ? t('daily.sendToName', { name: nameOf(selected[0] ?? null) })
@@ -630,28 +619,28 @@ export default function DailyScreen() {
         confirmLabel={t('daily.yesSend')}
         cancelLabel={t('daily.notYet')}
         onConfirm={() => void handleSubmit()}
-        onCancel={() => setConfirmOpen(false)}
+        onCancel={closeDialog}
       />
 
       <FirstChoiceDialog
-        visible={firstChoiceOpen}
+        visible={dialog.kind === 'first-choice'}
         introductions={selectedIntroductions}
-        selectedId={firstChoiceId}
-        onSelect={setFirstChoiceId}
+        selectedId={dialog.kind === 'first-choice' ? dialog.firstChoiceId : null}
+        onSelect={(firstChoiceId) => setDialog((current) => current.kind === 'first-choice' ? { ...current, firstChoiceId } : current)}
         body={t('daily.firstChoicePick')}
         cancelLabel={t('daily.notYet')}
         onConfirm={sendWithFirstChoice}
-        onCancel={() => setFirstChoiceOpen(false)}
+        onCancel={closeDialog}
       />
 
       <ConfirmDialog
-        visible={nobodyOpen}
+        visible={dialog.kind === 'nobody'}
         title={t('daily.nobodyTodayTitle')}
         body={t('daily.nobodyTodayBody')}
         confirmLabel={t('daily.nobodyToday')}
         cancelLabel={t('daily.notYet')}
         onConfirm={() => void handleSubmit([])}
-        onCancel={() => setNobodyOpen(false)}
+        onCancel={closeDialog}
       />
 
       <ConductAcknowledgement visible={conductVisible} onAccept={acknowledgeConduct} />
