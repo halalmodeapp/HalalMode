@@ -19,7 +19,7 @@ The sections below record follow-up decisions. The Daily presentation change is 
 
 ## Submitting a Daily set and generating future sets
 
-Status: proposed, 11 November 2026. Waiting for a go-ahead before code changes.
+Status: done, 11 November 2026, in `1e74231`, `f809aa6` and `926f229`. Typecheck, lint and 574 tests pass, and the web build bundles. Not run in a browser (the preview pane was hidden).
 
 **Give the round provider one `submit(roundId, ordered)` that does the whole send.** It records the soft select, builds the engagement payload and submits, in that order, against the round the member was looking at. The screen only says who, in what order, for which round.
 
@@ -38,6 +38,24 @@ Status: proposed, 11 November 2026. Waiting for a go-ahead before code changes.
 - [`daily.tsx:518`](../app/%28tabs%29/daily.tsx) always passes `popMode={false}`, so the Pop badge in [HeroCard](../src/components/introductions/HeroCard.tsx) never renders. Remove the prop, the badge and its styles. The `daily.popLabel` string goes with it.
 - [`releaseIntroduction` and `passIntroduction`](../src/api/introductions.ts) have no app caller. Remove the client wrappers only. The `release_introduction` and `pass_introduction` RPCs stay, because installed builds and database tests still call them.
 - Keep: the `submit_round_selections_ranked` fallback in `submitKeeps` (a client can reach a database before its migration), the refresh after a failed send (a lost response may have committed), and the soft-select failure being swallowed (it is a courtesy signal and must never cost the member their round).
+
+### Second round (proposed, waiting for a go-ahead)
+
+A review of the area after those commits found no regressions and these leftovers:
+
+**Remove what Pop mode and the old pass question left behind.**
+- [`dwell.ts:67`](../src/lib/dwell.ts) `inferPassCandidate` and the module header describe the removed pass question. Only its own test calls it. The stale comment above `softSelectIntroduction` in [the API](../src/api/introductions.ts) goes too.
+- [`roundInvariants.ts:8`](../src/lib/roundInvariants.ts) `getRoundInteractionState` (with `canPop`) is only called by its test.
+- [`testIds.ts:29`](../src/lib/testIds.ts) still names the Select button `daily-pop-mode`. Rename it together with [`maestro/daily-round.yaml`](../maestro/daily-round.yaml).
+
+**Say each Daily rule once.**
+- `Math.min(keepLimit, live.length)` appears four times in [daily.tsx](../app/%28tabs%29/daily.tsx). The round provider should expose the effective pick limit once.
+- `round?.expiresAt ?? nextFajrAt` appears five times in daily.tsx and is the provider's `roundBoundary`. Expose it from the provider.
+- [HeroCard](../src/components/introductions/HeroCard.tsx) accepts both `chosen` and `chosenIds`. The only caller passes `chosenIds`, so make it required and drop `chosen`.
+
+**Make the picker dialog say what it is.** [FirstChoiceDialog](../src/components/introductions/FirstChoiceDialog.tsx) has default labels that both callers override, so `daily.firstChoiceBody` is never shown. Make the labels required and remove the unused string.
+
+**Make missing arguments a type error.** `submitKeeps`'s `engagement = []` default hides a missing argument. Its one caller always passes it.
 
 **Keep matching rules explicit at each runtime boundary and extend the existing parity checks when a rule changes.** The [matcher](../src/matching/league.ts), [round worker](../supabase/functions/generate-round/league.ts), and database each have a role in deciding and writing a round. The [parity harness](../scripts/backend-sim/parity.mts) is where intentional duplication of eligibility rules can be checked together. Validate worker payloads at the database boundary where generic response casts currently hide shape changes. Keep lease recovery and quiet fallback behavior.
 
