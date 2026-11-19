@@ -29,7 +29,13 @@ interface TableJob {
   settings: LeagueSettings;
 }
 
-type NextJob = PrepareJob | TableJob | { kind: 'off' | 'wait' | 'done' | 'again' };
+type NextJob =
+  | PrepareJob
+  | TableJob
+  | { kind: 'off' }
+  | { kind: 'wait' }
+  | { kind: 'done' }
+  | { kind: 'again' };
 
 export type DawnWindow = (member: PrepareJob['members'][number], after: Date) => { opensAt: Date; expiresAt: Date } | null;
 

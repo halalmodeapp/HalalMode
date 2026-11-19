@@ -50,8 +50,11 @@ select lives_ok($$select record_profile_media_validation_service('profile-photos
 -- An attached file cannot be deleted by the member, so a profile never points at nothing.
 select pg_temp.act_as(1);
 select attach_profile_photo(pg_temp.photo(1, 1));
+-- Exercise our row guard on this database-only fixture, behind Storage's SQL gate.
+set local storage.allow_delete_query = 'true';
 select throws_ok($$delete from storage.objects where name = pg_temp.photo(1, 1)$$, '42501', 'This file is attached to a profile',
   'an attached photo cannot be deleted');
+set local storage.allow_delete_query = 'false';
 
 -- A8. Old files that nothing uses are found for cleanup, and nothing in use is.
 select pg_temp.service();

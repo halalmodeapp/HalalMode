@@ -14,6 +14,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // Installed by hand for this tool, so it is not an app dependency.
+// eslint-disable-next-line import/no-unresolved -- The embedded server is optional on app and CI installations.
 const { default: EmbeddedPostgres } = await import('embedded-postgres');
 
 const here = dirname(fileURLToPath(import.meta.url));
