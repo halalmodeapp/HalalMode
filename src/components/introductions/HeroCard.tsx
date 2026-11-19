@@ -10,7 +10,7 @@ import { TILT_STILL, baselineStep, turnRate } from '@/lib/tiltBaseline';
 import Animated, { cancelAnimation, Easing, runOnJS, SensorType, useAnimatedReaction, useAnimatedSensor, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 import { Text } from '@/components/ui/Text';
-import { SelectionGlow } from '@/components/introductions/SelectionGlow';
+import { CardSelectionGlow } from '@/components/introductions/CardSelectionGlow';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useScreenActive } from '@/hooks/useScreenActive';
 import { useI18n } from '@/i18n';
@@ -1252,7 +1252,7 @@ function DeckCard({
       </Animated.View>
 
       {chosen ? (
-        <SelectionGlow identity={`deck-${profile.id}`} shape="card" />
+        <CardSelectionGlow identity={`deck-${profile.id}`} animate={isActive && !reducedMotion} />
       ) : null}
 
       <View
