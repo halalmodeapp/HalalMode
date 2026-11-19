@@ -73,8 +73,8 @@ create function pg_temp.used() returns int language sql as $$
   select free_looks_used from halal_mode_private.photo_coach_usage where user_id = '00000000-0000-0000-0000-000000022101';
 $$;
 create function pg_temp.lapse() returns void language sql as $$
-  update halal_mode_private.photo_coach_reviews set claimed_at = now() - interval '3 minutes'
-  where user_id = '00000000-0000-0000-0000-000000022101' and advice is null;
+  update halal_mode_private.photo_coach_runs set started_at = now() - interval '4 minutes'
+  where user_id = '00000000-0000-0000-0000-000000022101' and finished_at is null;
 $$;
 
 select is(pg_temp.claim(), array['p/1.jpg', 'p/2.jpg'], 'the first look covers every photo');
@@ -82,24 +82,26 @@ select pg_temp.look('p/1.jpg');
 select pg_temp.lapse();
 select is(pg_temp.claim(), array['p/2.jpg'], 'a photo the first look missed can be tried again');
 select pg_temp.look('p/2.jpg');
-select is(pg_temp.used(), 0, 'and all of it uses up none of the free looks');
+select is(pg_temp.used(), 2, 'two successful sessions use two of the free analyses');
+select pg_temp.lapse();
 
 update profiles set photos = array['p/1.jpg', 'p/2.jpg', 'p/4.jpg'] where id = '00000000-0000-0000-0000-000000022101';
 select is(pg_temp.claim(), array['p/4.jpg'], 'after that, only the new photo is looked at');
-select is(pg_temp.used(), 0, 'and a look that has not finished costs nothing yet');
+select is(pg_temp.used(), 2, 'and a look that has not finished costs nothing yet');
 select lives_ok(
   $$ select photo_coach_save_service('00000000-0000-0000-0000-000000022101', 'p/4.jpg', gen_random_uuid(), '{"summary":"late"}', 'm') $$,
   'a worker whose claim has gone is ignored'
 );
-select is(pg_temp.used(), 0, 'and spends nothing');
+select is(pg_temp.used(), 2, 'and spends nothing');
 select pg_temp.look('p/4.jpg');
-select is(pg_temp.used(), 1, 'a finished look on a new photo uses one');
+select is(pg_temp.used(), 3, 'a finished look on a new photo uses the final free session');
+select pg_temp.lapse();
 
--- Two free looks left: swapping photos during a look cannot get more than two.
+-- Replacing photos cannot restore the free allowance.
 update profiles set photos = array['p/5.jpg', 'p/6.jpg', 'p/7.jpg'] where id = '00000000-0000-0000-0000-000000022101';
-select is(pg_temp.claim(), array['p/5.jpg', 'p/6.jpg'], 'only the looks left can be claimed');
+select is(pg_temp.claim(), '{}'::text[], 'the free allowance is exhausted');
 update profiles set photos = array['p/8.jpg', 'p/9.jpg'] where id = '00000000-0000-0000-0000-000000022101';
-select is(pg_temp.claim(), '{}'::text[], 'and looks running hold theirs, however the photos change');
+select is(pg_temp.claim(), '{}'::text[], 'replacing the photos does not restore the allowance');
 
 update halal_mode_private.photo_coach_usage set free_looks_used = 3 where user_id = '00000000-0000-0000-0000-000000022101';
 select pg_temp.lapse();

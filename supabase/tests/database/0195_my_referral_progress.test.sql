@@ -57,8 +57,8 @@ insert into public.profiles (
   array['profile/friend.jpg'], array['English'], 'University', 'no', now(),
   'hijab', array['arab'], array['GB'], true
 );
-insert into public.private_preferences (user_id, matching_preferences_completed_at)
-values ('00000000-0000-0000-0000-000000019506', now());
+insert into public.private_preferences (user_id, own_build, matching_preferences_completed_at)
+values ('00000000-0000-0000-0000-000000019506', 'Average', now());
 select is(public.my_referral_progress()->>'referral_count', '0',
   'a profile whose bio is not written yet does not count');
 -- The bio is the last step, so the referral must be noticed then.

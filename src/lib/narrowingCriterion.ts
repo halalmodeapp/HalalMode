@@ -11,6 +11,15 @@ const NARROWING_CRITERION_KEYS: Record<NarrowingCriterion, TranslationKey> = {
   children: 'filters.children',
   sect: 'filters.sect',
   countries: 'filters.countries',
+  has_children: 'filters.hasChildren',
+  occupations: 'filters.career',
+  languages: 'filters.languages',
+  education: 'filters.education',
+  dress: 'filters.dress',
+  ethnicities: 'filters.ethnicity',
+  heritage: 'profile.heritage',
+  grew_up: 'profile.grewUp',
+  diet: 'profile.diet',
 };
 
 /** The words for a member's own choice the server named, or null if it named none it should have. */

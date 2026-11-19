@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { fetchMyMaritalSettings, setMyMaritalPreferences, setMyMaritalStatus, type MaritalSettings } from '@/api/profile';
+import { fetchMyMaritalSettings, setMyMaritalStatus, type MaritalSettings } from '@/api/profile';
 import { Chip } from '@/components/ui/Chip';
 import { Text } from '@/components/ui/Text';
 import { ACCEPTED_KEYS, acceptableStatuses, declarableStatuses, MARITAL_STATUS_KEYS } from '@/data/marital';
@@ -31,16 +31,7 @@ function useMaritalSettings() {
     },
     onError,
   });
-  const accepted = useMutation({
-    mutationFn: setMyMaritalPreferences,
-    onSuccess: (_, next) => {
-      queryClient.setQueryData<MaritalSettings>(queryKeys.maritalSettings, (current) => (current ? { ...current, accepted: next } : current));
-      void queryClient.invalidateQueries({ queryKey: queryKeys.poolSize });
-      toast.show(`✓ ${t('filters.saved')}`);
-    },
-    onError,
-  });
-  return { query, status, accepted };
+  return { query, status };
 }
 
 /** "Marital status", as one more profile choice among the others: what the member is, shown to everyone they are introduced to. */
@@ -68,15 +59,13 @@ export function MaritalStatusField({ gender, choiceStyle, chipsStyle }: { gender
 }
 
 /** "Who would you accept": one more of the preferences, the statuses a match may have (at least one stays on). */
-export function MaritalPreferencesField({ gender, sectionStyle, chipsStyle }: { gender: Gender; sectionStyle?: StyleProp<ViewStyle>; chipsStyle?: StyleProp<ViewStyle> }) {
+export function MaritalPreferencesField({ gender, current, onChange, sectionStyle, chipsStyle }: {
+  gender: Gender; current: MaritalStatus[]; onChange: (next: MaritalStatus[]) => void; sectionStyle?: StyleProp<ViewStyle>; chipsStyle?: StyleProp<ViewStyle> }) {
   const { t } = useI18n();
-  const { query, accepted } = useMaritalSettings();
-  if (!query.data) return null;
   const toggle = (option: MaritalStatus) => {
-    const current = query.data?.accepted ?? [];
     const next = current.includes(option) ? current.filter((item) => item !== option) : [...current, option];
     // At least one choice stays on, or nobody could be introduced.
-    if (next.length > 0 && !accepted.isPending) accepted.mutate(next);
+    if (next.length > 0) onChange(next);
   };
   return (
     <View style={sectionStyle} testID="preferences-marital">
@@ -87,7 +76,7 @@ export function MaritalPreferencesField({ gender, sectionStyle, chipsStyle }: { 
           <Chip
             key={option}
             label={t(ACCEPTED_KEYS[option])}
-            selected={query.data?.accepted.includes(option) ?? false}
+            selected={current.includes(option)}
             showMark
             onPress={() => toggle(option)}
           />

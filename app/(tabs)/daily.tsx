@@ -42,6 +42,7 @@ import { useAuth } from '@/state/auth';
 import { alpha, color, font, space } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
 import { errorMessage } from '@/lib/errorMessage';
+import { TIER_LIMITS } from '@/types';
 import { useBreakpoint } from '@/theme/breakpoints';
 import { ActionIcon } from '@/components/ui/ActionIcon';
 
@@ -53,16 +54,17 @@ import { ActionIcon } from '@/components/ui/ActionIcon';
  * A short set says which of the member's own choices to loosen, if one of them is why. A very short one
  * says something even when none is, since only a handful of people fit their filters and location.
  */
-function ThinSetNotice({ criterion, count }: { criterion: NarrowingCriterion | null; count: number }) {
+function ThinSetNotice({ criterion, count, incomplete }: { criterion: NarrowingCriterion | null; count: number; incomplete: boolean }) {
   const { t } = useI18n();
   const key = narrowingCriterionKey(criterion);
-  if (!key && count >= 3) return null;
+  if (incomplete) return <InlineNotice message={t('daily.incompleteBody')} />;
+  if (!key) return <InlineNotice message={t('daily.thinFew', { count })} />;
   return (
     <Pressable
       accessibilityRole="button"
       onPress={() => router.push({ pathname: '/(tabs)/you', params: { tab: 'private' } })}
     >
-      <InlineNotice message={key ? t('daily.thinBody', { count, criterion: t(key) }) : t('daily.thinFew', { count })} />
+      <InlineNotice message={t('daily.thinBody', { count, criterion: t(key) })} />
     </Pressable>
   );
 }
@@ -116,6 +118,7 @@ export default function DailyScreen() {
     emptyReason,
     narrowingCriterion,
     thinCriterion,
+    incomplete,
     nextSetCity,
     resetsAt,
     owedAll,
@@ -495,7 +498,9 @@ export default function DailyScreen() {
         <InlineNotice message={errorMessage({ message: submitError }, t, 'daily.submitError')} />
       ) : null}
 
-      <ThinSetNotice criterion={thinCriterion} count={live.length} />
+      {live.length < TIER_LIMITS[liveRound.tier ?? 'free'].introductions && (
+        <ThinSetNotice criterion={thinCriterion} count={live.length} incomplete={incomplete} />
+      )}
 
       <View style={styles.stage}>
         <Animated.View style={[styles.stageFill, revealing && styles.hidden]}>
@@ -777,7 +782,7 @@ function SetCompleteState({ waitingForConnection, nextFajrAt }: {
  */
 function DailyHeader() {
   const { t } = useI18n();
-  const { reset } = useRound();
+  const { reset, resetting } = useRound();
   const tester = useQuery({ queryKey: ['sample-members'], queryFn: fetchMySampleMembers });
   const show = USE_MOCKS || tester.data?.allowed;
   return (
@@ -788,7 +793,8 @@ function DailyHeader() {
           accessibilityRole="button"
           accessibilityLabel={t('daily.demoResetLabel')}
           hitSlop={8}
-          onPress={reset}
+          disabled={resetting}
+          onPress={() => reset()}
           style={styles.headerReset}
         >
           <ActionIcon name="refresh" size={15} color={color.muted} />

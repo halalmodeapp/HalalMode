@@ -32,11 +32,10 @@ export function BrandHeader({ trailing }: { trailing?: ReactNode } = {}) {
 const styles = StyleSheet.create({
   header: {
     width: '100%', maxWidth: 720, alignSelf: 'center',
-    height: 34,
+    height: 44,
     paddingHorizontal: 26,
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingBottom: 4,
+    alignItems: 'center',
   },
   spacer: { flex: 1 },
   trailing: { marginRight: 8 },

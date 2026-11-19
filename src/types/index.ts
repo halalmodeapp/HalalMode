@@ -140,6 +140,8 @@ export interface Profile {
  * and RLS enforces that (see `0002_rls.sql`).
  */
 export interface PrivatePreferences {
+  editRevision?: string;
+  acceptedMaritalStatuses?: MaritalStatus[];
   minAge: number;
   maxAge: number;
   minHeightCm: number;
@@ -174,7 +176,6 @@ export interface PrivatePreferences {
   mustHave: Partial<Record<MustHaveCriterion, boolean>>;
   /** The member's own figures, stored privately, never rendered on a profile. */
   ownHeightCm: number;
-  ownWeightKg?: number;
   ownBuild?: string;
   /** An optional second body type (migration 0176). */
   ownBuildAlso?: string;

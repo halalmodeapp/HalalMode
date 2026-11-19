@@ -21,8 +21,8 @@ insert into profiles (id, name, first_name, birth_date, gender, city, country, l
 select pg_temp.member(n), 'Member', 'Member', '1995-01-01', 'male', 'London', 'United Kingdom', 51.5, -0.1,
        repeat('a', 50), array[pg_temp.member(n)::text || '/photo.jpg'], true, 'never_married'
 from generate_series(1, 16) n;
-insert into private_preferences (user_id, matching_preferences_completed_at)
-select pg_temp.member(n), now() from generate_series(1, 16) n;
+insert into private_preferences (user_id, own_build, matching_preferences_completed_at)
+select pg_temp.member(n), 'Average', now() from generate_series(1, 16) n;
 
 -- Every provider and grace state obeys the same deadline, without waiting for cron.
 insert into member_entitlements (user_id, tier, state, provider, expires_at) values
@@ -140,6 +140,8 @@ values (pg_temp.member(16), pg_temp.member(16)::text || '/photo.jpg', true, pg_t
 select ok(not photo_coach_save_fenced_service(pg_temp.member(16), pg_temp.member(16)::text || '/photo.jpg', pg_temp.member(16), '{}', 'test'), 'a stale save reports that no advice was saved');
 select photo_coach_save_service(pg_temp.member(16), pg_temp.member(16)::text || '/photo.jpg', pg_temp.member(16), '{}', 'test');
 select is((select free_looks_used from photo_coach_usage where user_id = pg_temp.member(16)), 0, 'an expired claim costs nothing');
+insert into photo_coach_runs(token, user_id, free_session)
+values(pg_temp.member(16), pg_temp.member(16), true);
 update photo_coach_reviews set claimed_at = now() where user_id = pg_temp.member(16);
 update profiles set photos = '{}' where id = pg_temp.member(16);
 select photo_coach_save_service(pg_temp.member(16), pg_temp.member(16)::text || '/photo.jpg', pg_temp.member(16), '{}', 'test');

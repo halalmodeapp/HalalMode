@@ -25,6 +25,7 @@ export interface CurrentRoundState {
    * of people, because then there is nothing for the member to change.
    */
   thinCriterion?: NarrowingCriterion | null;
+  incomplete?: boolean;
   /**
    * The member's city, set only while a set is built and waiting to open. It
    * names whose dawn they are waiting for, and there is no round to carry it.
@@ -89,7 +90,7 @@ export async function fetchCurrentRoundState(
   }
 
   const payload = data && typeof data === 'object'
-    ? data as { status?: unknown; round?: IntroductionRound | null; thin?: { criterion?: unknown } | null; criterion?: unknown; city?: unknown; nextFajrAt?: unknown; owed?: OwedAnswers | null; owedAll?: OwedAnswers[] }
+    ? data as { status?: unknown; round?: IntroductionRound | null; thin?: { criterion?: unknown; incomplete?: unknown } | null; criterion?: unknown; city?: unknown; nextFajrAt?: unknown; owed?: OwedAnswers | null; owedAll?: OwedAnswers[] }
     : {};
   const round = payload.round ?? undefined;
   const status = normalizeDailyRoundStatus(payload.status);
@@ -112,6 +113,7 @@ export async function fetchCurrentRoundState(
   return {
     status: round.introductions.length > 0 ? 'ready' : status,
     narrowingCriterion,
+    incomplete: payload.thin?.incomplete === true,
     thinCriterion: normalizeNarrowingCriterion(payload.thin?.criterion),
     nextFajrAt: null,
     round: {
@@ -175,22 +177,3 @@ export async function submitKeeps(
     waitingMutualProfileIds?: string[];
   };
 }
-
-
-/**
- * Records that this member read the subject at length but had no keep left.
- *
- * It only notes that they lingered, costs them nothing if it is wrong, and is
- * never shown to anyone. The server refuses it outright for a pair that has
- * been passed.
- */
-export async function softSelectIntroduction(introductionId: string): Promise<void> {
-  if (USE_MOCKS) return;
-
-  const client = requireSupabase();
-  const { error } = await client.rpc('soft_select_introduction', {
-    p_introduction_id: introductionId,
-  });
-  if (error) throw error;
-}
-

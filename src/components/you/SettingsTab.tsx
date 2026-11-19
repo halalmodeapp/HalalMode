@@ -6,7 +6,6 @@ import * as WebBrowser from 'expo-web-browser';
 import { ADMIN_PANEL_URL, fetchIsAdmin } from '@/api/admin';
 import { fetchMyReadReceipts, fetchMySampleMembers, recordExitAnswer, requestAccountDeletion, setMyReadReceipts, setMySampleMembers, setMyTestPremium, setProfilePaused } from '@/api/account';
 import { fetchMyHighLatitudeFajrSettings, setMyHighLatitudeFajrMethod, type HighLatitudeFajrSettings } from '@/api/profile';
-import { NotificationKindSwitches } from '@/components/you/NotificationKindSwitches';
 import { disableMyNotifications, enableMyNotifications, fetchMyNotificationConsent } from '@/api/notifications';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -15,7 +14,6 @@ import { KindChoiceSheet } from '@/components/ui/KindChoiceSheet';
 import { EXIT_LABELS, EXIT_REASONS } from '@/lib/farewell';
 import { withDeadline } from '@/lib/withDeadline';
 import { InlineNotice } from '@/components/ui/AsyncState';
-import { PermissionExplainer } from '@/components/ui/PermissionExplainer';
 import { Text } from '@/components/ui/Text';
 import { ModerationSheet } from '@/components/safety/ModerationSheet';
 import { BlockedMembersSheet } from '@/components/you/BlockedMembersSheet';
@@ -61,13 +59,12 @@ export function SettingsTab({
   const { pushNotifications } = useFeatureFlags();
   const queryClient = useQueryClient();
   const toast = useToast();
-  const { reset: resetRound } = useRound();
+  const { reset: resetRound, resetting } = useRound();
   const [paused, setPaused] = useState(profilePaused);
   const [pauseConfirm, setPauseConfirm] = useState(false);
   const [premiumConfirm, setPremiumConfirm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [blockedOpen, setBlockedOpen] = useState(false);
-  const [notificationsExplainer, setNotificationsExplainer] = useState(false);
   const [moderationOpen, setModerationOpen] = useState(false);
   /** Security and account each open as their own page within Settings. */
   const testPremium = useMutation({
@@ -122,9 +119,8 @@ export function SettingsTab({
     },
     onError: (error) => {
       const code = error instanceof Error ? error.message : '';
-      const key = code === 'permission_denied'
-        ? 'settings.notificationPermissionBody'
-        : code === 'unsupported_device'
+      if (code === 'permission_denied') return;
+      const key = code === 'unsupported_device'
           ? 'settings.notificationDeviceBody'
           : code === 'unsupported_runtime'
             ? 'settings.notificationBuildBody'
@@ -239,40 +235,22 @@ export function SettingsTab({
         ) : null}
         <SettingRow
           title={t('settings.notifications')}
-          subtitle={t('settings.notificationsBody')}
           value={notificationsQuery.data ?? false}
           testID={testIds.settings.notifications}
           disabled={!pushNotifications || notifications.isPending || notificationsQuery.isPending || notificationsQuery.isError}
-          // Turning them on asks why first; turning them off is immediate. A
-          // member switching something off has already decided, and stopping
-          // them to explain would only be an obstacle.
-          onValueChange={(enabled) => {
-            if (enabled) setNotificationsExplainer(true);
-            else notifications.mutate(false);
-          }}
+          onValueChange={(enabled) => notifications.mutate(enabled)}
           badge={!pushNotifications ? t('settings.comingLater') : undefined}
         />
-        {pushNotifications && notificationsQuery.data ? <NotificationKindSwitches /> : null}
-        <PermissionExplainer
-          visible={notificationsExplainer}
-          eyebrow={t('permission.notifications.eyebrow')}
-          title={t('permission.notifications.title')}
-          body={t('permission.notifications.body')}
-          points={[
-            t('permission.notifications.p1'),
-            t('permission.notifications.p2'),
-            t('permission.notifications.p3'),
-          ]}
-          reassurance={t('permission.notifications.reassurance')}
-          continueLabel={t('permission.continue')}
-          cancelLabel={t('permission.notNow')}
-          onContinue={() => {
-            setNotificationsExplainer(false);
-            notifications.mutate(true);
-          }}
-          onCancel={() => setNotificationsExplainer(false)}
-          testID={testIds.settings.notificationExplainer}
-        />
+        {pushNotifications ? (
+          <SettingRow title={t('settings.notificationSettings')} onPress={() => router.push('/notification-settings' as never)} />
+        ) : null}
+        {notifications.error?.message === 'permission_denied' ? (
+          <InlineNotice
+            message={t('settings.notificationPermissionBody')}
+            actionLabel={t('settings.systemNotificationSettings')}
+            onAction={() => void Linking.openSettings()}
+          />
+        ) : null}
         {notificationsQuery.isError ? (
           <InlineNotice
             message={t('settings.notificationLoadError')}
@@ -519,10 +497,8 @@ export function SettingsTab({
             <Button
               label={`↺ ${t('daily.demoResetLabel')}`}
               variant="quiet"
-              onPress={() => {
-                resetRound();
-                toast.show(`✓ ${t('filters.saved')}`);
-              }}
+              loading={resetting}
+              onPress={() => resetRound()}
             />
           </View>
         ) : null}
@@ -666,7 +642,7 @@ function SettingRow({
   onPress,
 }: {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   value?: boolean;
   disabled?: boolean;
   onValueChange?: (next: boolean) => void;

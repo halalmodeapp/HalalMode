@@ -101,8 +101,35 @@ export async function fetchMyProfile(): Promise<Profile> {
   return hydrateProfileMedia(profileFromRow(data as Record<string, unknown>));
 }
 
+let mockNameAvailableAt: string | null = null;
+
+export async function fetchDisplayNameAvailableAt(): Promise<string | null> {
+  if (USE_MOCKS) return mockNameAvailableAt;
+  const { data, error } = await requireSupabase().rpc('my_display_name_available_at');
+  if (error) throw error;
+  return data as string | null;
+}
+
+let mockCompletionSeen = false;
+export async function claimProfileCompletionMessage(): Promise<boolean> {
+  if (USE_MOCKS) {
+    if (mockCompletionSeen) return false;
+    mockCompletionSeen = true;
+    return true;
+  }
+  const { data, error } = await requireSupabase().rpc('claim_profile_completion_message');
+  if (error) throw error;
+  return data === true;
+}
+
 export async function updateMyProfile(patch: Partial<Profile>): Promise<void> {
   if (USE_MOCKS) {
+    if (patch.name !== undefined && patch.name !== MOCK_SELF.name) {
+      if (mockNameAvailableAt && Date.parse(mockNameAvailableAt) > Date.now()) throw new Error('Display name cooldown');
+      const date = new Date();
+      date.setMonth(date.getMonth() + 3);
+      mockNameAvailableAt = date.toISOString();
+    }
     Object.assign(MOCK_SELF, patch);
     return;
   }
@@ -132,22 +159,6 @@ export async function setMySect(sect: Profile['sect'], detail: string | undefine
   const { error } = await requireSupabase().rpc('set_my_sect', {
     p_sect: sect,
     p_detail: detail ?? null,
-  });
-  if (error) throw error;
-}
-
-/** Traditions must sit under a chosen sect; the server checks that too. */
-export async function setMyPreferredSects(
-  sects: PrivatePreferences['preferredSects'],
-  details: string[],
-): Promise<void> {
-  if (USE_MOCKS) {
-    Object.assign(MOCK_PREFERENCES, { preferredSects: sects, preferredSectDetails: details });
-    return;
-  }
-  const { error } = await requireSupabase().rpc('set_my_preferred_sects', {
-    p_sects: sects,
-    p_details: details,
   });
   if (error) throw error;
 }
@@ -182,27 +193,37 @@ export async function setMyLifestyle(answers: Pick<Profile, 'grewUpCountries' | 
   if (error) throw error;
 }
 
-/** Premium filters. The server refuses this for anyone not on Premium. */
-export async function setMyPremiumPreferences(preferences: PrivatePreferences): Promise<void> {
+/** A draft is committed against the same revision the member edited. */
+export async function saveMyMatchingPreferences(draft: PrivatePreferences, premium: boolean): Promise<string> {
+  const { ownHeightCm, ownBuild, ownBuildAlso, ...matching } = draft;
+  void [ownHeightCm, ownBuild, ownBuildAlso];
   if (USE_MOCKS) {
-    Object.assign(MOCK_PREFERENCES, preferences);
-    return;
+    if (draft.editRevision !== MOCK_PREFERENCES.editRevision) throw Object.assign(new Error('Preferences changed'), { code: '40001' });
+    const editRevision = String(Number(MOCK_PREFERENCES.editRevision ?? 0) + 1);
+    Object.assign(MOCK_PREFERENCES, matching, { editRevision });
+    return editRevision;
   }
-  const { error } = await requireSupabase().rpc('set_my_premium_preferences', {
-    p_patch: {
-      has_children: preferences.preferredHasChildren ?? [],
-      occupations: preferences.preferredOccupations ?? [],
-      languages: preferences.preferredLanguages ?? [],
-      education: preferences.preferredEducation ?? [],
-      dress: preferences.preferredDress ?? [],
-      ethnicities: preferences.preferredEthnicities ?? [],
-      heritage: preferences.preferredHeritageCountries ?? [],
-      grew_up: preferences.preferredGrewUpCountries ?? [],
-      diet: preferences.preferredDiet ?? [],
-      must_have: preferences.premiumMustHave ?? {},
-    },
+  const { data, error } = await requireSupabase().rpc('save_my_matching_preferences', {
+    p_revision: draft.editRevision ?? null,
+    p_base: preferencesPatchToRow(matching),
+    p_statuses: draft.acceptedMaritalStatuses ?? null,
+    p_sects: draft.preferredSects ?? [],
+    p_details: draft.preferredSectDetails ?? [],
+    p_premium: premium ? {
+      has_children: draft.preferredHasChildren ?? [],
+      occupations: draft.preferredOccupations ?? [],
+      languages: draft.preferredLanguages ?? [],
+      education: draft.preferredEducation ?? [],
+      dress: draft.preferredDress ?? [],
+      ethnicities: draft.preferredEthnicities ?? [],
+      heritage: draft.preferredHeritageCountries ?? [],
+      grew_up: draft.preferredGrewUpCountries ?? [],
+      diet: draft.preferredDiet ?? [],
+      must_have: draft.premiumMustHave ?? {},
+    } : null,
   });
   if (error) throw error;
+  return data as string;
 }
 
 /** Location changes are accepted only from the explicit device-location flow. */
@@ -228,7 +249,7 @@ export async function updateMyLocation(location: DeviceLocationUpdate): Promise<
  * definer function that returns matches, never the preference rows themselves.
  */
 export async function fetchMyPreferences(): Promise<PrivatePreferences> {
-  if (USE_MOCKS) return MOCK_PREFERENCES;
+  if (USE_MOCKS) return { ...MOCK_PREFERENCES };
 
   const client = requireSupabase();
   const { data, error } = await client.rpc('get_my_private_preferences');
@@ -284,7 +305,7 @@ export async function fetchMyReach(): Promise<MyReach> {
 }
 
 export async function fetchMyMaritalSettings(): Promise<MaritalSettings> {
-  if (USE_MOCKS) return mockMaritalSettings;
+  if (USE_MOCKS) return { ...mockMaritalSettings, accepted: MOCK_PREFERENCES.acceptedMaritalStatuses ?? [...DEFAULT_ACCEPTED] };
   const { data, error } = await requireSupabase().rpc('get_my_marital_settings');
   if (error) throw error;
   const row = (data ?? {}) as { status?: string | null; accepted?: unknown };
@@ -300,15 +321,6 @@ export async function setMyMaritalStatus(status: MaritalStatus): Promise<void> {
     return;
   }
   const { error } = await requireSupabase().rpc('set_my_marital_status', { p_status: status });
-  if (error) throw error;
-}
-
-export async function setMyMaritalPreferences(accepted: MaritalStatus[]): Promise<void> {
-  if (USE_MOCKS) {
-    mockMaritalSettings = { ...mockMaritalSettings, accepted };
-    return;
-  }
-  const { error } = await requireSupabase().rpc('set_my_marital_preferences', { p_statuses: accepted });
   if (error) throw error;
 }
 
@@ -374,6 +386,8 @@ function profileFromRow(raw: Record<string, unknown>): Profile {
 
 function preferencesFromRow(row: Record<string, unknown>): PrivatePreferences {
   return {
+    editRevision: row.edit_revision as string | undefined,
+    acceptedMaritalStatuses: asStatuses(row.accepted_marital_statuses),
     minAge: Number(row.min_age),
     maxAge: Number(row.max_age),
     minHeightCm: Number(row.min_height_cm),
@@ -402,7 +416,6 @@ function preferencesFromRow(row: Record<string, unknown>): PrivatePreferences {
     mustHave:
       (row.must_have as PrivatePreferences['mustHave'] | null) ?? {},
     ownHeightCm: Number(row.own_height_cm ?? 0),
-    ownWeightKg: row.own_weight_kg as number | undefined,
     ownBuild: row.own_build as string | undefined,
     ownBuildAlso: (row.own_build_also as string | null) ?? undefined,
   };
@@ -426,19 +439,13 @@ function preferencesPatchToRow(
     ['preferredSects', 'preferred_sects'],
     ['mustHave', 'must_have'],
     ['ownHeightCm', 'own_height_cm'],
-    ['ownWeightKg', 'own_weight_kg'],
     ['ownBuild', 'own_build'],
     ['ownBuildAlso', 'own_build_also'],
   ];
   for (const [property, column] of fields) {
     if (patch[property] !== undefined) row[column] = patch[property];
   }
-  // A height or weight nobody entered is read as 0, and the server rightly
-  // refuses a 0 cm member: every preferences save failed until one was typed.
-  // Unentered is sent as unentered.
-  for (const column of ['own_height_cm', 'own_weight_kg']) {
-    if (column in row && !(Number(row[column]) > 0)) row[column] = null;
-  }
+  if ('own_height_cm' in row && !(Number(row.own_height_cm) > 0)) row.own_height_cm = null;
   return row;
 }
 

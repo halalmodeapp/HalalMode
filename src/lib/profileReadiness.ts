@@ -44,7 +44,7 @@ export function isReadinessIssue(value: unknown): value is ProfileReadinessIssue
  * Only these stand between a member and their first introduction. The rest are
  * recommended: asked for once there is a match, never held against anyone.
  */
-export const REQUIRED_ISSUES: readonly ProfileReadinessIssue[] = ['name', 'location', 'bio', 'photo'];
+export const REQUIRED_ISSUES: readonly ProfileReadinessIssue[] = ['name', 'location', 'bio', 'photo', 'body_type'];
 
 export function getProfileReadiness(input: ProfileReadinessInput) {
   const found: ProfileReadinessIssue[] = [];
@@ -77,7 +77,7 @@ export function getProfileReadiness(input: ProfileReadinessInput) {
  * Name and location are set at sign-up, so they appear only when missing.
  */
 export type ReadinessStep =
-  | 'essentials' | 'photo' | 'bio' | 'details' | 'children' | 'faith' | 'background' | 'body' | 'preferences';
+  | 'bodyType' | 'essentials' | 'photo' | 'bio' | 'details' | 'children' | 'faith' | 'background' | 'body' | 'preferences';
 
 const STEP_ISSUES: Record<ReadinessStep, readonly ProfileReadinessIssue[]> = {
   essentials: ['name', 'location'],
@@ -87,16 +87,22 @@ const STEP_ISSUES: Record<ReadinessStep, readonly ProfileReadinessIssue[]> = {
   children: ['has_children', 'children_when'],
   faith: ['dress', 'ethnicity', 'heritage'],
   background: ['ethnicity', 'heritage'],
-  body: ['height', 'body_type'],
+  body: ['height'],
+  bodyType: ['body_type'],
   preferences: ['preferences'],
 };
 
 /** The optional steps, once the required ones are done. */
 export function recommendedSteps(recommended: readonly ProfileReadinessIssue[], gender?: string | null) {
-  return readinessSteps(recommended, gender).filter((step) => !step.done);
+  return checklistSteps(recommended, gender).filter((step) => !step.done);
 }
 
 export function readinessSteps(missing: readonly ProfileReadinessIssue[], gender?: string | null) {
+  return checklistSteps(missing, gender).filter(step =>
+    STEP_ISSUES[step.id].some(issue => REQUIRED_ISSUES.includes(issue)));
+}
+
+function checklistSteps(missing: readonly ProfileReadinessIssue[], gender?: string | null) {
   // Men are not asked about religious dress, so theirs is "Ethnicity and heritage".
   const skip: ReadinessStep = gender === 'female' ? 'background' : 'faith';
   return (Object.keys(STEP_ISSUES) as ReadinessStep[])

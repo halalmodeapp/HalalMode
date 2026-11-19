@@ -12,8 +12,8 @@ values
   ('00000000-0000-0000-0000-000000021202', 'Liked Person', 'Liked', '1992-01-01', 'female', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, repeat('b', 90), array['21202/a.jpg'], true, 'never_married', now()),
   ('00000000-0000-0000-0000-000000021203', 'Blocked Person', 'Blocked', '1991-01-01', 'male', 'Madinah', 'Saudi Arabia', 24.4672, 39.6024, repeat('c', 90), array['21203/a.jpg'], true, 'never_married', now());
 -- Like-back requires explicitly saved preferences, just like an ordinary pick.
-insert into private_preferences (user_id, matching_preferences_completed_at)
-select id, now() from profiles where id::text like '00000000-0000-0000-0000-0000000212%';
+insert into private_preferences (user_id, own_build, matching_preferences_completed_at)
+select id, 'Average', now() from profiles where id::text like '00000000-0000-0000-0000-0000000212%';
 insert into halal_mode_private.member_legal_consent_history (user_id, document_type, version, acceptance_context)
 select p.id, d.document_type, d.version, 'onboarding'
 from profiles p cross join halal_mode_private.legal_document_registry d

@@ -132,10 +132,10 @@ select set_config('request.jwt.claims', '', true);
 update profiles set bio = repeat('a', 50), photos = array[id::text || '/p.jpg'], latitude = 51.5, longitude = -0.1,
   city = 'London', country = 'United Kingdom', marital_status = 'never_married', sensitive_consent_at = now()
 where id in (select id from capacity_fillers) or id::text like '00000000-0000-0000-0000-00000000019%';
-insert into private_preferences (user_id, matching_preferences_completed_at, preferred_countries)
-select id, now(), array['United Kingdom'] from profiles
+insert into private_preferences (user_id, own_build, matching_preferences_completed_at, preferred_countries)
+select id, 'Average', now(), array['United Kingdom'] from profiles
 where id in (select id from capacity_fillers) or id::text like '00000000-0000-0000-0000-00000000019%'
-on conflict (user_id) do update set matching_preferences_completed_at = now();
+on conflict (user_id) do update set matching_preferences_completed_at = now(), own_build = excluded.own_build;
 insert into halal_mode_private.member_legal_consent_history (user_id, document_type, version, acceptance_context)
 select p.id, d.document_type, d.version, 'onboarding' from profiles p
 cross join halal_mode_private.legal_document_registry d
@@ -242,9 +242,9 @@ select set_config('request.jwt.claims', '', true);
 update profiles set bio = repeat('a', 50), photos = array[id::text || '/p.jpg'], latitude = 51.5, longitude = -0.1,
   city = 'London', country = 'United Kingdom', marital_status = 'never_married', sensitive_consent_at = now()
 where id::text like '00000000-0000-0000-0000-00000000020%';
-insert into private_preferences (user_id, matching_preferences_completed_at, preferred_countries)
-select id, now(), array['United Kingdom'] from profiles where id::text like '00000000-0000-0000-0000-00000000020%'
-on conflict (user_id) do update set matching_preferences_completed_at = now();
+insert into private_preferences (user_id, own_build, matching_preferences_completed_at, preferred_countries)
+select id, 'Average', now(), array['United Kingdom'] from profiles where id::text like '00000000-0000-0000-0000-00000000020%'
+on conflict (user_id) do update set matching_preferences_completed_at = now(), own_build = excluded.own_build;
 insert into halal_mode_private.member_legal_consent_history (user_id, document_type, version, acceptance_context)
 select p.id, d.document_type, d.version, 'onboarding' from profiles p
 cross join halal_mode_private.legal_document_registry d

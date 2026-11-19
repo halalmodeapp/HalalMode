@@ -17,7 +17,8 @@ const STEP_LABEL: Record<ReadinessStep, TranslationKey> = {
   children: 'readiness.step.children',
   faith: 'readiness.step.faith',
   background: 'readiness.step.background',
-  body: 'readiness.step.body',
+  body: 'filters.yourHeight',
+  bodyType: 'filters.yourBodyType',
   preferences: 'readiness.step.preferences',
 };
 

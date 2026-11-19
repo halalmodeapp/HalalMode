@@ -26,7 +26,6 @@ export function NotificationKindSwitches() {
 
   return (
     <View style={styles.wrap}>
-      <Text variant="micro">{t('notifKinds.title')}</Text>
       {SWITCHABLE_NOTIFICATIONS.map((kind) => (
         <View key={kind} style={[styles.row, isRTL && styles.rowRTL]}>
           <Text variant="bodySmall" style={styles.label}>{t(`notifKinds.${kind}`)}</Text>

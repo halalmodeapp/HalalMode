@@ -151,7 +151,6 @@ export function ProfileTab({
   // Your own figures: private, never on your profile, but they are about you,
   // so they are filled in here rather than among the partner filters.
   const [ownHeight, setOwnHeight] = useState(preferences?.ownHeightCm ? String(preferences.ownHeightCm) : '');
-  const [ownWeight, setOwnWeight] = useState(preferences?.ownWeightKg ? String(preferences.ownWeightKg) : '');
   // Up to two body types; the first is the main one matching compares.
   const [ownBuilds, setOwnBuilds] = useState<string[]>(
     [preferences?.ownBuild, preferences?.ownBuildAlso].filter((build): build is string => Boolean(build))
@@ -238,11 +237,11 @@ export function ProfileTab({
   const unsaved = isDirty || photosDirty || ownDirty;
   // Everything edited outside the form, as one string: it changes with each edit,
   // and tells a save which of these edits it carried.
-  const ownSignature = JSON.stringify([ownHeight, ownWeight, ownBuilds, hasChildren, familyGoals, religiousDress, ethnicities, heritage, grewUp, diet]);
+  const ownSignature = JSON.stringify([ownHeight, ownBuilds, hasChildren, familyGoals, religiousDress, ethnicities, heritage, grewUp, diet]);
   const latestOwnSignature = useRef(ownSignature);
   latestOwnSignature.current = ownSignature;
   const sentOwnSignature = useRef(ownSignature);
-  const readyToShow = !unsaved && liveReadiness.ready
+  const readyToShow = liveReadiness.ready
     && (USE_MOCKS || serverReadinessQuery.data?.ready === true);
   const steps = readinessSteps(liveReadiness.missing, profile.gender);
   // Optional, and shown only once the required steps are done.
@@ -257,7 +256,7 @@ export function ProfileTab({
       return;
     }
     const targetName: ChecklistTarget = step === 'essentials'
-      ? (String(draft.name ?? '').trim().length < 2 ? 'displayName' : 'location')
+      ? 'location'
       : step === 'details'
         ? (!(draft.education ?? '').trim() ? 'education' : 'languages')
         : step === 'children'
@@ -385,9 +384,6 @@ export function ProfileTab({
         familyGoalsAnswered: Boolean(familyGoals) || profile.familyGoalsAnswered,
       };
       const patch: Partial<Profile> = {
-        name: values.name.trim(),
-        // One name now. The column stays because introductions read it.
-        firstName: values.name.trim().slice(0, 60),
         occupation: values.occupation.trim(),
         // The server converts an empty string to NULL, so members can clear it.
         education: values.education.trim(),
@@ -412,9 +408,8 @@ export function ProfileTab({
       assertOwner();
       await updateMyPreferences({
         ownHeightCm: Number(ownHeight) || 0,
-        ownWeightKg: Number(ownWeight) || 0,
-        ownBuild,
-        // An empty second answer clears it; the server stores it as none.
+        // Clearing the last build must also pause eligibility on the server.
+        ownBuild: ownBuild ?? '',
         ownBuildAlso: ownBuilds[1] ?? '',
       });
       // Sect was never in the general patch, so it silently never saved.
@@ -427,7 +422,8 @@ export function ProfileTab({
       const saved: Profile = {
         ...profile,
         ...values,
-        firstName: values.name.trim().slice(0, 60),
+        name: profile.name,
+        firstName: profile.firstName,
         education: values.education.trim() || undefined,
         photos,
         chips: splitProfileList(values.values),
@@ -440,6 +436,7 @@ export function ProfileTab({
       };
       queryClient.setQueryData(queryKeys.profile('me'), saved);
       void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.photoCoach });
       // Keep anything typed while this was being sent: only the saved values become the new baseline.
       reset(values, { keepValues: true });
       setPhotosDirty(false);
@@ -452,6 +449,7 @@ export function ProfileTab({
       void queryClient.invalidateQueries({ queryKey: queryKeys.profile('me') });
       void queryClient.invalidateQueries({ queryKey: queryKeys.preferences });
       void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.photoCoach });
     },
   });
 
@@ -462,7 +460,7 @@ export function ProfileTab({
   const pendingStorageKey = pendingKey('profile', userId);
   const snapshot = JSON.stringify({
     form: draft,
-    own: { ownHeight, ownWeight, ownBuilds, hasChildren, familyGoals, religiousDress, ethnicities, heritage, grewUp, diet },
+    own: { ownHeight, ownBuilds, hasChildren, familyGoals, religiousDress, ethnicities, heritage, grewUp, diet },
   });
   const latestSnapshot = useRef(snapshot);
   latestSnapshot.current = snapshot;
@@ -482,7 +480,6 @@ export function ProfileTab({
         });
         const own = kept.own ?? {};
         if (typeof own.ownHeight === 'string') setOwnHeight(own.ownHeight);
-        if (typeof own.ownWeight === 'string') setOwnWeight(own.ownWeight);
         if (Array.isArray(own.ownBuilds)) setOwnBuilds(own.ownBuilds as string[]);
         if (own.hasChildren) setHasChildren(own.hasChildren as Profile['hasChildren']);
         if (own.familyGoals) setFamilyGoals(own.familyGoals as Profile['familyGoals']);
@@ -556,6 +553,7 @@ export function ProfileTab({
           current ? { ...current, city: resolved.city, country: resolved.country } : current
         );
         void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.photoCoach });
         void queryClient.invalidateQueries({ queryKey: queryKeys.round });
         return;
       }
@@ -589,6 +587,7 @@ export function ProfileTab({
         current ? { ...current, city: resolved.city, country: resolved.country } : current
       );
       void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.photoCoach });
       void queryClient.invalidateQueries({ queryKey: queryKeys.round });
     } catch {
       setLocationError(t('profile.locationUpdateError'));
@@ -610,6 +609,7 @@ export function ProfileTab({
         current ? { ...current, city: place.city, country: place.country } : current
       );
       void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.photoCoach });
       void queryClient.invalidateQueries({ queryKey: queryKeys.round });
     } catch {
       setLocationError(t('profile.locationUpdateError'));
@@ -717,6 +717,7 @@ export function ProfileTab({
             : current
         );
         void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.photoCoach });
         toast.show(`✓ ${t('filters.saved')}`);
       } catch {
         showNotice(t('profile.uploadError'), t('profile.connectionError'));
@@ -753,6 +754,7 @@ export function ProfileTab({
           : current
       );
       void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.photoCoach });
     };
 
     if (USE_MOCKS) {
@@ -837,6 +839,7 @@ export function ProfileTab({
               }
             : current,
         );
+        void queryClient.invalidateQueries({ queryKey: queryKeys.photoCoach });
         toast.show(`✓ ${t('filters.saved')}`);
       })
       .catch(() => {
@@ -851,37 +854,17 @@ export function ProfileTab({
     <View style={[styles.wrap, isRTL && styles.rtl]}>
       <View style={styles.stack}>
       <SelfieVerificationCard />
-      <Card tone="filled" style={styles.readinessCard}>
-        {readyToShow ? (
-          <>
-            <Text variant="label">{t('profile.readinessReadyTitle')}</Text>
-            <Text variant="caption" style={styles.readinessBody}>
-              {t('profile.readinessReadyBody')}
-            </Text>
-          </>
-        ) : (
-          <ReadinessChecklist
-            steps={steps}
-            lead={liveReadiness.ready ? t('readiness.saveToFinish') : t('readiness.lead')}
-            isPressable={(step) => step !== 'preferences' || Boolean(onOpenPreferences)}
-            onPressStep={pressChecklistStep}
-          />
-        )}
+      {!readyToShow ? <Card tone="filled" style={styles.readinessCard}>
+        <ReadinessChecklist
+          steps={steps}
+          lead={liveReadiness.ready ? t('readiness.saveToFinish') : t('readiness.lead')}
+          isPressable={(step) => step !== 'preferences' || Boolean(onOpenPreferences)}
+          onPressStep={pressChecklistStep}
+        />
         {save.isPending ? (
           <Text variant="caption" style={styles.readinessBody}>{t('common.saving')}</Text>
         ) : null}
-      </Card>
-      {liveReadiness.ready && optionalSteps.length > 0 ? (
-        <Card tone="filled" style={styles.readinessCard}>
-          <ReadinessChecklist
-            title={t('readiness.optionalTitle')}
-            steps={optionalSteps}
-            lead={t('readiness.optionalLead')}
-            isPressable={(step) => step !== 'preferences' || Boolean(onOpenPreferences)}
-            onPressStep={pressChecklistStep}
-          />
-        </Card>
-      ) : null}
+      </Card> : null}
       <View ref={(target) => setChecklistTarget('photo', target)} collapsable={false}>
       {photos.length === 0 ? (
         <Card testID={testIds.you.photoGuide} tone="filled" style={styles.photoGuide}>
@@ -941,7 +924,18 @@ export function ProfileTab({
           moveEarlierLabel={t('profile.photoMoveEarlier')}
           moveLaterLabel={t('profile.photoMoveLater')}
         />
-        <PhotoCoachCard />
+        <PhotoCoachCard photoPaths={media.map(item => item.storagePath ?? item.displayUrl)} />
+      {liveReadiness.ready && optionalSteps.length > 0 ? (
+        <Card tone="filled" style={styles.readinessCard}>
+          <ReadinessChecklist
+            title={t('readiness.optionalTitle')}
+            steps={optionalSteps}
+            lead={t('readiness.optionalLead')}
+            isPressable={(step) => step !== 'preferences' || Boolean(onOpenPreferences)}
+            onPressStep={pressChecklistStep}
+          />
+        </Card>
+      ) : null}
 
         {media.length > 1 ? (
           <Text variant="caption" style={styles.photoNote}>
@@ -1048,25 +1042,6 @@ export function ProfileTab({
         <Text variant="caption" style={styles.requiredNote}>
           {t('profile.requiredNote')}
         </Text>
-        <View
-          ref={(target) => setChecklistTarget('displayName', target)}
-          collapsable={false}
-          style={styles.formRow}
-        >
-          <Controller
-            control={control}
-            name="name"
-            render={({ field }) => (
-              <Field
-                label={required(t('profile.displayName'))}
-                value={field.value}
-                onChangeText={field.onChange}
-                error={errors.name?.message}
-              />
-            )}
-          />
-        </View>
-
         <View ref={(target) => setChecklistTarget('location', target)} collapsable={false} style={styles.locationBlock}>
           <Text variant="micro">{required(t('profile.locationCurrent'))}</Text>
           <Text
@@ -1519,12 +1494,6 @@ export function ProfileTab({
               keyboardType="number-pad"
               value={ownHeight}
               onChangeText={(text) => { setOwnHeight(text.replace(/\D/g, '')); setOwnDirty(true); }}
-            />
-            <Field
-              label={t('filters.yourWeight')}
-              keyboardType="number-pad"
-              value={ownWeight}
-              onChangeText={(text) => { setOwnWeight(text.replace(/\D/g, '')); setOwnDirty(true); }}
             />
           </View>
           <View ref={(target) => setChecklistTarget('bodyType', target)} collapsable={false}>

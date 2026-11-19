@@ -2,7 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 
 import { useI18n } from '@/i18n';
 import { guardNavigation } from '@/state/unsavedChanges';
@@ -33,7 +33,7 @@ const GEAR_PATH = (() => {
 })();
 
 /**
- * Settings, in the top right of every main screen: an outline gear in Halal Gold.
+ * Settings, aligned with the wordmark.
  * It dims a little under the finger and nothing more.
  */
 export function SettingsGear() {
@@ -45,7 +45,6 @@ export function SettingsGear() {
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={t('you.tab.settings')}
-      hitSlop={10}
       onPressIn={() => {
         dim.value = withTiming(0.45, { duration: 90 });
       }}
@@ -60,9 +59,8 @@ export function SettingsGear() {
       style={styles.button}
     >
       <Animated.View style={style}>
-        <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
-          <Path d={GEAR_PATH} stroke={color.gold} strokeWidth={2.2} strokeLinejoin="round" />
-          <Circle cx={12} cy={12} r={3.9} stroke={color.gold} strokeWidth={2.2} />
+        <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+          <Path d={GEAR_PATH + " M16 12 A4 4 0 1 0 8 12 A4 4 0 1 0 16 12 Z"} fill={color.ink} fillRule="evenodd" />
         </Svg>
       </Animated.View>
     </Pressable>
@@ -70,10 +68,9 @@ export function SettingsGear() {
 }
 
 const styles = StyleSheet.create({
-  // No circle behind it: just the gear, in Halal Gold.
   button: {
-    width: 34,
-    height: 34,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },

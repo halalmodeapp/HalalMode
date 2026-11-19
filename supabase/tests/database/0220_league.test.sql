@@ -23,8 +23,8 @@ from (values
   ('06', 'male', 'London', 'United Kingdom', 51.5, -0.1)
 ) as m(n, gender, city, country, lat, lng);
 
-insert into private_preferences (user_id, matching_preferences_completed_at, preferred_countries)
-select id, now(), case when id = '00000000-0000-0000-0000-000000022006' then array['United Kingdom'] else array['United Kingdom', 'Turkey'] end
+insert into private_preferences (user_id, own_build, matching_preferences_completed_at, preferred_countries)
+select id, 'Average', now(), case when id = '00000000-0000-0000-0000-000000022006' then array['United Kingdom'] else array['United Kingdom', 'Turkey'] end
 from profiles where id::text like '00000000-0000-0000-0000-0000000220%';
 
 insert into halal_mode_private.member_legal_consent_history (user_id, document_type, version, acceptance_context)

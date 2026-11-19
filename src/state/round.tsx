@@ -15,11 +15,10 @@ import { AppState } from 'react-native';
 
 import {
   fetchCurrentRoundState,
-  softSelectIntroduction,
   submitKeeps,
   type OwedAnswers,
 } from '@/api/introductions';
-import { DwellLedger, inferSoftSelect } from '@/lib/dwell';
+import { DwellLedger } from '@/lib/dwell';
 import {
   MatchingEngagementLedger,
   submissionEngagement,
@@ -28,6 +27,8 @@ import {
 import type { DailyRoundEmptyReason, NarrowingCriterion } from '@/lib/dailyRoundState';
 import { queryKeys } from '@/lib/queryClient';
 import { resolveActiveId, roundPickRules } from '@/lib/roundInvariants';
+import { useToast } from '@/state/toast';
+import { useI18n } from '@/i18n';
 import { useAuth } from '@/state/auth';
 import { useSession } from '@/state/session';
 import type { Introduction, IntroductionRound } from '@/types';
@@ -38,6 +39,7 @@ interface RoundValue {
   /** Which of the member's own must-haves to loosen first, when relevant. */
   narrowingCriterion: NarrowingCriterion | null;
   thinCriterion: NarrowingCriterion | null;
+  incomplete: boolean;
   /** Set only while a built set waits to open, to name whose dawn it is. */
   nextSetCity: string | null;
   /**
@@ -91,6 +93,7 @@ interface RoundValue {
   submitError: string | null;
 
   reset: () => void;
+  resetting: boolean;
 }
 
 const RoundContext = createContext<RoundValue | null>(null);
@@ -105,6 +108,8 @@ export function RoundProvider({ children }: { children: ReactNode }) {
   const { tier } = useSession();
   const { user } = useAuth();
   const memberId = user?.id;
+  const { t } = useI18n();
+  const toast = useToast();
   const queryClient = useQueryClient();
 
   const [selected, setSelected] = useState<string[]>([]);
@@ -248,20 +253,13 @@ export function RoundProvider({ children }: { children: ReactNode }) {
   );
 
   const submitMutation = useMutation({
-    mutationFn: async ({ roundId, ordered, softSelect, engagement }: {
+    mutationFn: async ({ roundId, ordered, engagement }: {
       roundId: string;
       ordered: string[];
-      softSelect: string | null;
       engagement: MatchingEngagementObservation[];
     }) => {
       // A send is for the set the member was looking at, never a newer one.
       if (round?.id !== roundId) throw new Error('round_changed');
-      // Submitting closes the set to further signals, so this goes first.
-      if (softSelect) {
-        await softSelectIntroduction(softSelect).catch(() => {
-          // A courtesy signal. Losing it must never cost the member their round.
-        });
-      }
       return submitKeeps(roundId, ordered, engagement);
     },
     onSuccess: (result) => {
@@ -275,18 +273,16 @@ export function RoundProvider({ children }: { children: ReactNode }) {
 
   const submit = useCallback(
     async (roundId: string, ordered: string[]) => {
-      // Raw reading times stay here; only the inferred id and bounded totals go on.
-      const chosen = new Set(ordered);
+      // Only bounded foreground totals leave the device. The server interprets them at commit.
       const reading = ledger.records();
       const result = await submitMutation.mutateAsync({
         roundId,
         ordered,
-        softSelect: inferSoftSelect(reading, live.map((item) => item.id).filter((id) => !chosen.has(id))),
         engagement: submissionEngagement(matchingEngagement.snapshot(), reading),
       });
       return result.mutualProfileIds;
     },
-    [ledger, live, matchingEngagement, submitMutation]
+    [ledger, matchingEngagement, submitMutation]
   );
 
   const clearLocal = useCallback(() => {
@@ -299,18 +295,19 @@ export function RoundProvider({ children }: { children: ReactNode }) {
     setWaitingForConnection(false);
   }, [ledger, matchingEngagement]);
 
-  const reset = useCallback(() => {
-    // Live, this is the testers' reset: the server clears sample rounds and
-    // connections (and refuses anyone who is not a tester) before the app
-    // forgets its local choices and asks for a fresh set.
-    void (USE_MOCKS ? Promise.resolve() : resetMySampleFlow())
-      .catch(() => undefined)
-      .then(() => {
-        clearLocal();
-        void queryClient.invalidateQueries({ queryKey: queryKeys.round });
-        void queryClient.invalidateQueries({ queryKey: queryKeys.connections });
-      });
-  }, [clearLocal, queryClient]);
+  const resetMutation = useMutation({
+    mutationFn: resetMySampleFlow,
+    onSuccess: async () => {
+      clearLocal();
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.round }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.connections }),
+      ]);
+      toast.show(t('daily.demoResetDone'));
+    },
+    onError: () => toast.show(t('daily.demoResetFailed')),
+  });
+  const { mutate: reset, isPending: resetting } = resetMutation;
 
   // Choices belong to one member and one set.
   const roundId = round?.id;
@@ -324,6 +321,7 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       emptyReason,
       narrowingCriterion,
       thinCriterion,
+      incomplete: roundState?.incomplete === true,
       nextSetCity,
       resetsAt,
       owedAll,
@@ -351,12 +349,14 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       // Supabase errors are not always Error instances; keep their message either way.
       submitError: submitMutation.error ? String((submitMutation.error as { message?: unknown }).message ?? 'failed') : null,
       reset,
+      resetting,
     }),
     [
       round,
       emptyReason,
       narrowingCriterion,
       thinCriterion,
+      roundState?.incomplete,
       nextSetCity,
       resetsAt,
       owedAll,
@@ -382,6 +382,7 @@ export function RoundProvider({ children }: { children: ReactNode }) {
       waitingForConnection,
       submitMutation.error,
       reset,
+      resetting,
     ]
   );
 

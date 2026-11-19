@@ -33,15 +33,15 @@ test('profile readiness separates what is required from what is recommended', ()
     religiousDress: 'hijab', gender: 'female', ethnicities: ['arab'], heritageCountries: ['LB', 'US'], ownHeightCm: 165, ownBuild: 'slim', preferencesSaved: true,
   };
   assert.deepEqual(getProfileReadiness(complete), { ready: true, missing: [], recommended: [] });
-  // Everything past name, location, a bio and a photo is recommended, not required.
+  // Body type is required alongside the basic profile. Other details are recommended.
   // Religious dress is asked of women only.
   assert.deepEqual(getProfileReadiness({ ...complete, gender: 'female', religiousDress: undefined }), { ready: true, missing: [], recommended: ['dress'] });
   assert.deepEqual(getProfileReadiness({ ...complete, gender: 'male', religiousDress: undefined }), { ready: true, missing: [], recommended: [] });
   assert.deepEqual(getProfileReadiness({ ...complete, bio: 'Too short to say much about anyone.' }).missing, ['bio']);
   assert.deepEqual(getProfileReadiness({}), {
     ready: false,
-    missing: ['name', 'location', 'bio', 'photo'],
-    recommended: ['languages', 'education', 'has_children', 'children_when', 'ethnicity', 'heritage', 'height', 'body_type'],
+    missing: ['name', 'location', 'bio', 'photo', 'body_type'],
+    recommended: ['languages', 'education', 'has_children', 'children_when', 'ethnicity', 'heritage', 'height'],
   });
 });
 

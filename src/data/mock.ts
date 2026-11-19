@@ -249,6 +249,8 @@ export const MOCK_SELF: Profile = {
 };
 
 export const MOCK_PREFERENCES: PrivatePreferences = {
+  editRevision: '0',
+  acceptedMaritalStatuses: ['never_married', 'divorced', 'widowed'],
   minAge: 23,
   maxAge: 30,
   minHeightCm: 160,
@@ -272,7 +274,6 @@ export const MOCK_PREFERENCES: PrivatePreferences = {
   // otherwise, which is the whole point of the must-have model.
   mustHave: {},
   ownHeightCm: 182,
-  ownWeightKg: 78,
   ownBuild: 'Athletic',
 };
 

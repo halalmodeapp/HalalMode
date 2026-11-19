@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeInLeft, FadeInRight } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
-import { fetchMyPreferences, fetchMyProfile, fetchMyProfileReadiness } from '@/api/profile';
+import { claimProfileCompletionMessage, fetchMyPreferences, fetchMyProfile, fetchMyProfileReadiness } from '@/api/profile';
 import { BrandHeader } from '@/components/navigation/BrandHeader';
 import { ErrorState, LoadingState } from '@/components/ui/AsyncState';
 import { Screen } from '@/components/ui/Screen';
@@ -17,9 +17,13 @@ import { PrivateTab } from '@/components/you/PrivateTab';
 import { ProfileAvatar } from '@/components/you/ProfileAvatar';
 import { ProfileTab } from '@/components/you/ProfileTab';
 import { guardNavigation } from '@/state/unsavedChanges';
-import { markReady, releaseReady } from '@/state/readyCelebration';
+import { useToast } from '@/state/toast';
+import { useAuth } from '@/state/auth';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { ProfileName } from '@/components/you/ProfileName';
 import { useI18n } from '@/i18n';
 import { trackProductEvent } from '@/lib/analytics';
+import { USE_MOCKS } from '@/lib/supabase';
 import { queryKeys } from '@/lib/queryClient';
 import { color, radius, space } from '@/theme/tokens';
 import { RTL_LAYOUT } from '@/lib/rtl';
@@ -28,6 +32,10 @@ type Tab = 'profile' | 'private';
 
 export default function YouScreen() {
   const { t, isRTL } = useI18n();
+  const toast = useToast();
+  const reducedMotion = useReducedMotion();
+  const { user, isCurrentUser } = useAuth();
+  const memberId = user?.id;
   const { tab: requestedTab } = useLocalSearchParams<{ tab?: string }>();
   const [tab, setTab] = useState<Tab>('profile');
   const changeTab = (next: Tab) => {
@@ -35,7 +43,6 @@ export default function YouScreen() {
     guardNavigation(() => {
       void Haptics.selectionAsync();
       setTab(next);
-      releaseReady();
     });
   };
 
@@ -73,22 +80,24 @@ export default function YouScreen() {
     // completed the checklist since this was last fetched.
     refetchOnMount: 'always',
   });
-  const wasReady = useRef<boolean | null>(null);
   const ready = readinessQuery.data?.ready;
+  const readinessSeen = useRef<{ owner?: string; ready?: boolean; attempted?: boolean }>({});
   useEffect(() => {
-    if (ready === undefined) { wasReady.current = null; return; }
-    if (wasReady.current === false && ready) {
-      // Held until the member moves to another page, so it never lands mid-edit.
-      markReady();
-      trackProductEvent('profile_completed');
-    }
-    wasReady.current = ready;
-  }, [ready]);
+    if (readinessSeen.current.owner !== memberId) readinessSeen.current = { owner: memberId };
+    if (ready === undefined) return;
+    const state = readinessSeen.current;
+    const canClaim = ready && !state.attempted && (USE_MOCKS ? state.ready === false : !!memberId);
+    state.ready = ready;
+    if (!canClaim) return;
 
-  // Leaving the You screen (another tab, Settings) lets a waiting celebration show.
-  useFocusEffect(
-    useCallback(() => () => releaseReady(), []),
-  );
+    state.attempted = true;
+    void claimProfileCompletionMessage().then(claimed => {
+      if (claimed && (!memberId || isCurrentUser(memberId))) {
+        toast.show(t('profile.readinessReadyTitle'));
+        trackProductEvent('profile_completed');
+      }
+    }).catch(() => { state.attempted = false; });
+  }, [ready, readinessQuery.dataUpdatedAt, memberId, isCurrentUser, t, toast]);
 
   useEffect(() => {
     if (requestedTab === 'profile' || requestedTab === 'private') setTab(requestedTab);
@@ -130,6 +139,7 @@ export default function YouScreen() {
 
       <View style={styles.tabsRow}>
         <Segmented
+          animated
           value={tab}
           onChange={changeTab}
           testIDPrefix="you-tab"
@@ -150,9 +160,7 @@ export default function YouScreen() {
           {/* Tap to move or zoom the circle on the main photo. */}
           <ProfileAvatar profile={profile} />
           <View style={styles.identityText}>
-            <Text variant="displaySmall" style={styles.name}>
-              {profile.name}
-            </Text>
+            <ProfileName key={profile.id} memberId={profile.id} name={profile.name} />
             <Text variant="caption">
               {t(tab === 'profile' ? 'you.subtitle.profile' : 'you.subtitle.matching')}
             </Text>
@@ -162,7 +170,7 @@ export default function YouScreen() {
         {/* Each tab slides in from the side it sits on. */}
         <Animated.View
           key={tab}
-          entering={(tab === 'private' ? FadeInRight : FadeInLeft).duration(260)}
+          entering={reducedMotion ? undefined : (tab === 'private' ? FadeInRight : FadeInLeft).duration(260)}
         >
           {tab === 'profile' ? (
             <ProfileTab
@@ -204,5 +212,4 @@ const styles = StyleSheet.create({
     backgroundColor: color.ink,
   },
   identityText: { flex: 1, gap: 5 },
-  name: { fontSize: 22 },
 });

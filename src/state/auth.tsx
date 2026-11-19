@@ -1,7 +1,6 @@
 import { clearPendingEdits } from '@/lib/pendingEdits';
 import { fetchMyAccountDeletion } from '@/api/account';
 import { AccountDeletionRecovery } from '@/components/you/AccountDeletionRecovery';
-import { clearReady } from '@/state/readyCelebration';
 import { useQuery } from '@tanstack/react-query';
 import * as Linking from 'expo-linking';
 import { useRouter, useSegments, type Href } from 'expo-router';
@@ -74,7 +73,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Query keys intentionally do not contain an account ID.
       // Clear all cached results before another member can render them.
       queryClient.clear();
-      clearReady();
       setOnboardingComplete(false);
       setProfileStatusReady(nextUserId === null);
 
@@ -246,7 +244,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     queryClient.clear();
-    clearReady();
     void clearPrivateMediaCache();
 
     if (activeUserId.current) {

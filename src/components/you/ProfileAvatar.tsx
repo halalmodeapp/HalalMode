@@ -1,9 +1,10 @@
+import { Asset } from 'expo-asset';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ProfileImage as Image } from '@/components/ui/ProfileImage';
 import { getProfilePhotoSource } from '@/data/demoProfilePhotos';
 import { usePrivateMedia } from '@/hooks/usePrivateMedia';
-import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { fetchMyAvatarCrop, saveMyAvatarCrop, type AvatarCrop } from '@/api/profileMedia';
 import { PhotoCropSheet } from '@/components/you/PhotoCropSheet';
@@ -24,16 +25,46 @@ export function ProfileAvatar({ profile }: { profile: Profile }) {
   const toast = useToast();
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
+  const [editorUri, setEditorUri] = useState<string | null>(null);
+  const [sourceFailed, setSourceFailed] = useState(false);
+  const editorAttempt = useRef(0);
+  const [editorPath, setEditorPath] = useState('');
+
   const [aspect, setAspect] = useState(4 / 3);
   const crop = useQuery({ queryKey: KEY, queryFn: fetchMyAvatarCrop });
 
   const original = getProfilePhotoSource(profile.id, profile.photos, 0);
   const media = usePrivateMedia(original, 'profile-photos', profile.photoMedia?.[0]?.storagePath);
   const source = (media.privateMedia ? media.url ?? '' : original) as typeof original;
-  const url = typeof source === 'string' ? source : profile.photos[0];
-  const canEdit = typeof source === 'string';
-  const path = profile.photoMedia?.[0]?.storagePath ?? url ?? '';
-  if (!url) return <View style={styles.circle} />;
+  const url = typeof source === 'string' ? source : typeof source === 'object' ? source.uri : undefined;
+  const path = profile.photoMedia?.[0]?.storagePath ?? profile.photos[0] ?? '';
+  const canEdit = Boolean(path && (media.privateMedia || typeof original === 'number' || url));
+  if (!canEdit && !url) return <View style={styles.circle} />;
+
+  const open = async (retry = false) => {
+    const attempt = ++editorAttempt.current;
+    setEditorPath(path);
+    setEditorUri(null);
+    setSourceFailed(false);
+    setEditing(true);
+    try {
+      let resolved;
+      if (media.privateMedia) {
+        resolved = await media.ensure(retry);
+      } else if (typeof original === 'number') {
+        const asset = Asset.fromModule(original);
+        if (!asset.localUri) await asset.downloadAsync();
+        resolved = asset.localUri ?? asset.uri;
+      } else {
+        resolved = url;
+      }
+      if (attempt !== editorAttempt.current) return;
+      if (typeof resolved !== 'string' || !resolved) throw new Error('Photo unavailable');
+      setEditorUri(resolved);
+    } catch {
+      if (attempt === editorAttempt.current) setSourceFailed(true);
+    }
+  };
 
   // A crop set on a different main photo no longer applies.
   const saved = crop.data && crop.data.path === path ? crop.data : null;
@@ -56,9 +87,10 @@ export function ProfileAvatar({ profile }: { profile: Profile }) {
         accessibilityRole="button"
         accessibilityLabel={t('profile.avatarEditA11y')}
         disabled={!canEdit}
-        onPress={() => setEditing(true)}
+        onPress={() => void open()}
         style={({ pressed }) => [styles.circle, pressed && styles.pressed]}
       >
+        {media.loading && !media.url ? <ActivityIndicator color={color.white} /> : null}
         <Image
           source={source}
           onLoad={(event) => setAspect(event.source.height / Math.max(event.source.width, 1))}
@@ -75,16 +107,19 @@ export function ProfileAvatar({ profile }: { profile: Profile }) {
       </Pressable>
       <PhotoCropSheet
         shape="circle"
-        uri={editing && canEdit ? url : null}
+        open={editing && editorPath === path}
+        uri={editing && editorPath === path ? editorUri : null}
+        sourceFailed={sourceFailed}
+        onRetry={() => void open(true)}
         initial={saved}
         onCircle={save}
-        onCancel={() => setEditing(false)}
+        onCancel={() => { editorAttempt.current += 1; setEditing(false); setEditorUri(null); }}
       />
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  circle: { width: SIZE, height: SIZE, borderRadius: radius.pill, overflow: 'hidden', backgroundColor: color.ink },
+  circle: { width: SIZE, height: SIZE, borderRadius: radius.pill, overflow: 'hidden', backgroundColor: color.ink, justifyContent: 'center' },
   pressed: { opacity: 0.75 },
 });

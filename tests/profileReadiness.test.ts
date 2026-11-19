@@ -9,12 +9,17 @@ const bare = {
   country: 'United Kingdom',
   bio: 'x'.repeat(80),
   photoCount: 1,
+  ownBuild: 'Average',
 };
 
-test('a name, location, bio and photo are all that introductions need', () => {
+test('a name, location, bio, photo and body type satisfy readiness', () => {
   const result = getProfileReadiness(bare);
   assert.equal(result.ready, true);
   assert.deepEqual(result.missing, []);
+});
+
+test('body type is required before introductions', () => {
+  assert.deepEqual(getProfileReadiness({ ...bare, ownBuild: undefined }).missing, ['body_type']);
 });
 
 test('every other answer is recommended, not required', () => {

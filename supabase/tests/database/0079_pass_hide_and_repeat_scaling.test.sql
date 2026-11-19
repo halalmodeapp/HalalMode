@@ -304,14 +304,14 @@ select is(
   (select soft_select_count::int from halal_mode_private.pair_exposure
    where user_low = '00000000-0000-0000-0000-000000007001'
      and user_high = '00000000-0000-0000-0000-000000007002'),
-  1,
-  'reading somebody at length and having no keep left is recorded'
+  0,
+  'a legacy pre-submit call records no interest before picks commit'
 );
 select is(
   (select decision::text from introduction_selections
    where introduction_id = '00000000-0000-0000-0000-00000000700d'),
-  'soft_select',
-  'and is its own outcome, not an ordinary release'
+  null::text,
+  'the legacy call leaves the introduction undecided'
 );
 
 do $$

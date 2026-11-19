@@ -1,9 +1,7 @@
 /**
  * How long each profile in a set was read, kept on the device.
  *
- * Two things use it. Before a set is sent, the profile read longest among
- * those not chosen is recorded as a soft select. With the submission, a
- * separately configured backend signal receives each profile's time rounded to
+ * At submission the server receives each profile’s reading time rounded to
  * five seconds and capped at two minutes; raw milliseconds and visit counts
  * stay on-device, and the database discards that value whenever the signal is
  * switched off.
@@ -15,59 +13,6 @@ export interface DwellRecord {
   /** Total time on the profile across every visit this round. */
   totalMs: number;
   opens: number;
-}
-
-export interface DwellThresholds {
-  /**
-   * Below this a profile was not read, a mis-tap, or a screen opened and
-   * immediately backed out of. Counted as never opened, which is what it
-   * amounts to.
-   */
-  minMeaningfulMs: number;
-}
-
-export const DWELL_THRESHOLDS: DwellThresholds = {
-  minMeaningfulMs: 1_500,
-};
-
-/**
- * Picks the profile that was read most among those let go.
- *
- * A free member keeps one of five. The person they read for longest after the
- * one they kept is not a rejection, they are a casualty of the budget, and
- * recording that as an ordinary release throws away the strongest positive
- * signal a round produces.
- *
- * It only says the member lingered, costs them nothing if it is wrong, and is
- * never shown to anyone. Two genuinely read profiles are enough for "most" to
- * have content.
- *
- * A tie returns null: if two were read equally, neither is the one, and
- * choosing by array order would be inventing it.
- */
-export function inferSoftSelect(
-  records: DwellRecord[],
-  releasedIntroductionIds: Iterable<string>,
-  thresholds: DwellThresholds = DWELL_THRESHOLDS
-): string | null {
-  const read = records.filter((r) => r.totalMs >= thresholds.minMeaningfulMs);
-  if (read.length < 2) return null;
-
-  const released = new Set(releasedIntroductionIds);
-  const candidates = read.filter((r) => released.has(r.introductionId));
-  if (!candidates.length) return null;
-
-  let longest: DwellRecord | null = null;
-  let tied = false;
-  for (const record of candidates) {
-    if (!longest || record.totalMs > longest.totalMs) {
-      longest = record;
-      tied = false;
-    } else if (record.totalMs === longest.totalMs) {
-      tied = true;
-    }
-  }
-  return longest && !tied ? longest.introductionId : null;
 }
 
 /**

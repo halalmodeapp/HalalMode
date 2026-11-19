@@ -20,7 +20,7 @@
  * Members are asked to accept it on their next visit.
  */
 
-export const LEGAL_VERSION = '2026-10-28';
+export const LEGAL_VERSION = '2026-11-19';
 
 /** Where both documents live: halalmo.de/legal/terms and /legal/privacy. */
 export const LEGAL_SITE = 'https://halalmo.de';
@@ -112,6 +112,7 @@ export const TERMS: LegalDocument = {
       heading: 'Payment',
       body: [
         'Halal Mode Premium is an optional paid membership. Prices are shown before you pay.',
+        'Premium includes unlimited Halal Bot Photo Wingman analysis for new profile photos, subject to fair use. Temporary limits may apply to unusually frequent or automated requests so the service stays available.',
         'Premium is a subscription that renews automatically at the end of each period, at the price shown when you subscribed, until you cancel. Cancelling stops the next renewal; Premium continues until the end of the period you paid for.',
         'Payment is handled by the app store you bought it from, and their refund rules apply. You can cancel from your app store account at any time.',
         'Premium changes how many introductions you receive. It does not buy anyone’s attention, and it does not make anyone more likely to choose you.',

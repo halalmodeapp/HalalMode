@@ -11,7 +11,7 @@ Halal Mode is a Muslim marriage app. It exists to get people married and off the
 | An open market. Everyone chases the same few. Women who are 5s go after the jocks who get all the girls, and average men, and those women, end up empty handed. That is hypergamy, and it is mostly wasted interest. | **Five curated introductions a day, and like meets like.** Nobody browses. People are shown others at their own level. |
 | An average woman sees 1000+ likes in a day or two and realises she has been paraded in front of tens of thousands of men. Humble women leave or blur their photos. Who remains is narcissists. The rest come to think all men are disgusting. | **Women are not paraded.** No flood of likes or views. No need to blur a photo to feel safe. A person is shown to a handful of people a day, and never knows a count. |
 | Ugly, careless photos put everyone off. | **We tell people how to look better:** photo quality, pose, smile, glow up, looksmax. Desirability is something we help with. |
-| Men match, learn her weight, then ghost or trail off. She never learns why, and he will not say it. | **Build and weight are declared and matched on preferences,** so each person knows the other accepts them. Only matching uses them. They are not on the profile. |
+| Men match, learn her weight, then ghost or trail off. She never learns why, and he will not say it. | **Each member declares a private body type before matching.** Members may choose two descriptions and make body type a must-have. Other members never see the declaration. Exact weight is not collected. |
 | Decision fatigue. Men swipe right on everything. Women drown in likes. | **Five people, three picks, then you are done for the day.** |
 | Infinite choice makes people pickier: grass is greener, ego swiping. | **Scarcity is the product.** One set a day. There is always a reason to take this one seriously. |
 | Dry one-word texts. Ghosting. People who are not serious. | **Earn the conversation.** Choose questions, answer them, then you can talk. Owe an answer and you get no new set until you give it. |
@@ -32,7 +32,7 @@ Halal Mode is a Muslim marriage app. It exists to get people married and off the
 
 **Eligibility, all hard rules:** opposite gender, both ready, not paused, consent given, not blocked, not hidden, never connected before, not passed on. Every must-have binds. Both sides have to accept each other.
 
-**Must-haves.** Free members can make age, height, body type, distance and sect absolute. Premium adds practice, marriage timing, children and background (ethnicity, heritage, language, education, dress, diet, where they grew up). Declining to answer is never held against anyone.
+**Must-haves.** Free members can make age, height, body type, distance and sect absolute. Premium adds practice, marriage timing, children and background (ethnicity, heritage, language, education, dress, diet, where they grew up). Declining an optional question is never held against anyone. A primary body type is required before introductions.
 
 **Countries.** Choose as many as you like, and introductions only come from those. None chosen means your own. Your own is an ordinary choice, so you can leave it out. Both people must have chosen each other's country. Wanting someone abroad is not the same as wanting to move, so this has nothing to do with `relocation`.
 
@@ -40,11 +40,11 @@ Halal Mode is a Muslim marriage app. It exists to get people married and off the
 
 **Repeats.** New people come first, then people seen once, then people seen more. A familiar face beats an empty seat, so someone can return as soon as the next day, never the same day. A pass closes the pair for 30 days, two passes close it for good, hiding closes it both ways for good, immediately. While a yes is waiting, that pair is not dealt again.
 
-**Too few.** Five is the promise, and a short set still goes out: three possible means three shown. Someone whose own filters leave them too few is told so, and told which filter costs them the most. Never name a filter if the real cause is the city or who they have already seen. Fewer than three always gets a plain word: few people match your filters and location right now. Launch is city by city, because a small city simply runs out of people.
+**Too few.** Five is the promise, and a short set still goes out: three possible means three shown. Someone whose own filters leave them too few is told so, and told which filter costs them the most. Never name a filter if the real cause is the city or who they have already seen. Every short set shows how many introductions were found. Explain a known matching failure. When the cause is uncertain, give the count without guessing. Launch is city by city, because a small city simply runs out of people.
 
 **Closing a connection** is never a silent disappearance. The one who closes picks a kind reason or writes their own words, and the other person gets a gentle note: "Sorry, I don't think we are a good match: {reason}. I wish you the best."
 
-**Halal Bot** gives a member honest, gentle advice on their own photos, only when they ask, and only they see it. It talks about the photograph and never rates the person. The first look is free and covers every photo. After that each new photo uses one of three free looks, and Premium has no limit.
+**Halal Bot** gives a member honest, gentle advice on their own photos, only when they ask, and only they see it. It talks about the photograph and never rates the person. Free members get three successful photo analysis sessions total. Each session covers new or changed photos. Premium includes unlimited sessions subject to fair use.
 
 **Leaving.** Deleting an account asks why, and above all whether they married. Answering is optional and never gets in the way of leaving. The account is held for 30 days, and signing back in can keep it. Withdrawing consent for sensitive data is offered as the same thing, because nobody can be matched without it. The answer keeps nothing that says whose it was, so it outlives the account. It cannot catch someone who only uninstalls, since an app is not told that.
 

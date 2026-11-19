@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { fetchMyProfile, setMyPreferredSects, setMyPremiumPreferences, updateMyPreferences } from '@/api/profile';
+import { fetchMyProfile, fetchMyPreferences, saveMyMatchingPreferences } from '@/api/profile';
 import { Button } from '@/components/ui/Button';
 import { InlineNotice } from '@/components/ui/AsyncState';
 import { Card } from '@/components/ui/Card';
@@ -79,32 +79,29 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
   const save = useMutation({
     mutationFn: async () => {
       assertOwner();
-      // Only what this tab edits. The member's own height, weight and body type
-      // belong to the Profile tab; sending this tab's older copy would overwrite them.
-      const { ownHeightCm: _h, ownWeightKg: _w, ownBuild: _b, ownBuildAlso: _a, ...matching } = draft;
-      void [_h, _w, _b, _a];
-      await updateMyPreferences(matching);
-      assertOwner();
-      await setMyPreferredSects(draft.preferredSects ?? [], draft.preferredSectDetails ?? []);
-      assertOwner();
-      if (isPremium) await setMyPremiumPreferences(draft);
+      return saveMyMatchingPreferences(draft, isPremium);
     },
     onSuccess: () => {
       if (!isCurrentUser(userId)) return;
       void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
       void queryClient.invalidateQueries({ queryKey: queryKeys.preferences });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.poolSize });
-    },
-    onError: () => {
-      if (!isCurrentUser(userId)) return;
-      // Earlier RPCs may have committed before a later one failed.
-      void queryClient.invalidateQueries({ queryKey: queryKeys.preferences });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.profileReadiness });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.maritalSettings });
       void queryClient.invalidateQueries({ queryKey: queryKeys.poolSize });
     },
   });
 
   // What was last saved: the baseline the draft is compared with.
+  const conflict = (save.error as { code?: string } | null)?.code === '40001';
+  const reloadSaved = async () => {
+    const previousDraft = JSON.stringify(latestDraft.current);
+    const fresh = await fetchMyPreferences();
+    if (!isCurrentUser(userId) || JSON.stringify(latestDraft.current) !== previousDraft) return;
+    savedRef.current = JSON.stringify(fresh);
+    setSavedVersion(savedRef.current);
+    setDraft(fresh);
+    if (pendingStorageKey) void forgetSavedEdits(pendingStorageKey, previousDraft).catch(() => undefined);
+    save.reset();
+  };
   const pendingStorageKey = pendingKey('preferences', userId);
   const savedRef = useRef(JSON.stringify(preferences));
   const [savedVersion, setSavedVersion] = useState(savedRef.current);
@@ -120,17 +117,20 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
     onLocalSave: () => { if (isCurrentUser(userId)) toast.show(`✓ ${t('filters.saved')}`); },
     onFailure: (kind) => { if (isCurrentUser(userId)) toast.show(t(kind === 'offline' ? 'autosave.offline' : 'autosave.retry')); },
     save: async () => {
-      if (!isCurrentUser(userId)) return 'invalid';
+      if (!isCurrentUser(userId) || conflict) return 'invalid';
       const sent = JSON.stringify(draft);
       try {
-        await save.mutateAsync();
-        savedRef.current = sent;
-        setSavedVersion(sent);
+        const editRevision = await save.mutateAsync();
+        if (!isCurrentUser(userId)) return 'invalid';
+        savedRef.current = JSON.stringify({ ...draft, editRevision });
+        setSavedVersion(savedRef.current);
+        setDraft(current => ({ ...current, editRevision }));
         // Only forget the copy on the phone if nothing newer has been kept since.
         if (pendingStorageKey) void forgetSavedEdits(pendingStorageKey, sent).catch(() => undefined);
         return 'saved';
       } catch (error) {
         if (!isCurrentUser(userId)) return 'invalid';
+        if ((error as { code?: string })?.code === '40001') return 'invalid';
         return isNetworkError(error) ? 'offline' : 'failed';
       }
     },
@@ -457,7 +457,15 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
           </View>
 
           {/* A normal preference, with the others: who they would accept. */}
-          {meQuery.data ? <MaritalPreferencesField gender={meQuery.data.gender} sectionStyle={styles.section} chipsStyle={styles.chips} /> : null}
+          {meQuery.data && draft.acceptedMaritalStatuses ? (
+            <MaritalPreferencesField
+              gender={meQuery.data.gender}
+              current={draft.acceptedMaritalStatuses}
+              onChange={next => patch('acceptedMaritalStatuses', next)}
+              sectionStyle={styles.section}
+              chipsStyle={styles.chips}
+            />
+          ) : null}
 
           {/* Everything below is Premium. Shown to everyone, so a free member
               can see what it offers; only a Premium member can change it. */}
@@ -593,9 +601,16 @@ export function PrivateTab({ preferences }: { preferences: PrivatePreferences })
             onPress={() => setClearConfirm(true)}
           />
 
-          {save.isError ? <InlineNotice message={errorMessage(save.error, t, 'filters.saveError')} /> : null}
+
         </Card>
       )}
+
+      {conflict ? (
+        <View>
+          <InlineNotice message={t('filters.conflict')} />
+          <Button label={t('filters.reloadSaved')} onPress={() => void reloadSaved().catch(() => toast.show(t('filters.saveError')))} />
+        </View>
+      ) : save.isError ? <InlineNotice message={errorMessage(save.error, t, 'filters.saveError')} /> : null}
 
       <CountrySheet
         visible={countrySheet}

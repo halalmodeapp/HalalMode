@@ -16,8 +16,8 @@ select ('00000000-0000-0000-0000-0000000222' || m.n)::uuid, 'Member ' || m.n, 'M
        true, 'never_married', now(), 'free'
 from (values ('01', 'male'), ('02', 'male'), ('03', 'male'), ('04', 'female')) as m(n, gender);
 
-insert into private_preferences (user_id, matching_preferences_completed_at, preferred_countries)
-select id, now(), array['United Kingdom'] from profiles where id::text like '00000000-0000-0000-0000-0000000222%';
+insert into private_preferences (user_id, own_build, matching_preferences_completed_at, preferred_countries)
+select id, 'Average', now(), array['United Kingdom'] from profiles where id::text like '00000000-0000-0000-0000-0000000222%';
 
 insert into halal_mode_private.member_legal_consent_history (user_id, document_type, version, acceptance_context)
 select p.id, d.document_type, d.version, 'onboarding'

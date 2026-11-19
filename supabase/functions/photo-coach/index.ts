@@ -44,14 +44,16 @@ Deno.serve(async (request) => {
 
   const claimed = await admin.rpc('photo_coach_claim_service', { p_user: me });
   if (claimed.error) return reply({ error: claimed.error.message }, 500);
-  const { token: claim, photos } = claimed.data as { token: string; photos: string[] };
+  const { token: claim, photos, reason } = claimed.data as { token: string | null; photos: string[]; reason?: string };
 
-  const openai = new OpenAI();
-  let looked = 0;
-  for (const photo of photos) {
+  if (!claim) return reply({ looked: 0, asked: 0, reason });
+
+  // Keep a full gallery within its lease even if some photos need the fallback model.
+  const openai = new OpenAI({ timeout: 25_000, maxRetries: 0 });
+  const reviewPhoto = async (photo: string): Promise<boolean> => {
     try {
       const file = await admin.storage.from('profile-photos').download(photo);
-      if (file.error || !file.data) continue;
+      if (file.error || !file.data) return false;
       const type = ['image/jpeg', 'image/png', 'image/webp'].includes(file.data.type) ? file.data.type : 'image/jpeg';
       const image = `data:${type};base64,${encodeBase64(new Uint8Array(await file.data.arrayBuffer()))}`;
       const ask = (model: string) => openai.responses.create({
@@ -71,12 +73,20 @@ Deno.serve(async (request) => {
         return ask(FALLBACK_MODEL);
       });
       const advice = parsePhotoAdvice(answer.output_text ?? '');
-      if (!advice) continue;
+      if (!advice) return false;
       const saved = await admin.rpc('photo_coach_save_fenced_service', { p_user: me, p_photo: photo, p_token: claim, p_advice: advice, p_model: model });
-      if (!saved.error && saved.data === true) looked += 1;
+      return !saved.error && saved.data === true;
     } catch (error) {
       console.error('photo coach look failed:', error);
+      return false;
     }
+  };
+  let looked = 0;
+  for (let start = 0; start < photos.length; start += 3) {
+    const results = await Promise.all(photos.slice(start, start + 3).map(reviewPhoto));
+    looked += results.filter(Boolean).length;
   }
+  const finished = await admin.rpc('photo_coach_finish_service', { p_user: me, p_token: claim });
+  if (finished.error) console.error('Photo Wingman could not finish the session:', finished.error.message);
   return reply({ looked, asked: photos.length });
 });

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Slider } from '@/components/ui/Slider';
 import { Text } from '@/components/ui/Text';
 import { useI18n } from '@/i18n';
+import { withDeadline } from '@/lib/withDeadline';
 import { RTL_LAYOUT } from '@/lib/rtl';
 import { color, radius, shadow, space } from '@/theme/tokens';
 
@@ -32,7 +33,7 @@ type PhotoCropSheetProps = {
   /** A gallery photo: cut to the 3:4 card, once, on upload. */
   | { shape: 'card'; onDone: (croppedUri: string) => void }
   /** The profile picture: a circle placed on the main photo, nothing cut. */
-  | { shape: 'circle'; initial?: CircleCrop | null; onCircle: (crop: CircleCrop) => void }
+  | { shape: 'circle'; initial?: CircleCrop | null; open?: boolean; sourceFailed?: boolean; onRetry?: () => void; onCircle: (crop: CircleCrop) => void }
 );
 
 /**
@@ -72,11 +73,12 @@ export function PhotoCropSheet(props: PhotoCropSheetProps) {
     y.value = 0;
     if (!uri) return;
     let live = true;
-    ImageManipulator.manipulate(uri).renderAsync()
+    const load = shape === 'circle' ? Image.loadAsync(uri) : ImageManipulator.manipulate(uri).renderAsync();
+    withDeadline<{ width: number; height: number }>(load, 12_000)
       .then((image) => { if (live) setSize({ width: image.width, height: image.height }); })
       .catch(() => { if (live) setFailed(true); });
     return () => { live = false; generation.current += 1; };
-  }, [uri, scale, x, y]);
+  }, [uri, scale, x, y, shape]);
 
   // How big the image is drawn at zoom 1: just covering the frame.
   const cover = size ? Math.max(frameWidth / size.width, frameHeight / size.height) : 1;
@@ -167,7 +169,7 @@ export function PhotoCropSheet(props: PhotoCropSheetProps) {
   };
 
   return (
-    <Modal visible={uri !== null} transparent animationType="fade" onRequestClose={() => { generation.current += 1; onCancel(); }}>
+    <Modal visible={props.shape === 'circle' ? props.open ?? !!uri : !!uri} transparent animationType="fade" onRequestClose={() => { generation.current += 1; onCancel(); }}>
       <GestureHandlerRootView style={styles.scrim}>
         <View accessibilityViewIsModal style={[styles.card, isRTL && styles.rtl]}>
           <Text variant="displaySmall" center>{t(shape === 'circle' ? 'profile.avatarTitle' : 'profile.cropTitle')}</Text>
@@ -182,14 +184,14 @@ export function PhotoCropSheet(props: PhotoCropSheetProps) {
                   </Animated.View>
                 </Animated.View>
               </GestureDetector>
-            ) : failed ? (
+            ) : failed || (props.shape === 'circle' && props.sourceFailed) ? (
               <Text variant="caption" center>{t('profile.cropError')}</Text>
             ) : (
               <ActivityIndicator color={color.ink} />
             )}
           </View>
 
-          <View style={styles.zoom}>
+          {size && !failed ? <View style={styles.zoom}>
             <Slider
               min={1}
               max={MAX_ZOOM}
@@ -198,10 +200,14 @@ export function PhotoCropSheet(props: PhotoCropSheetProps) {
               onChange={changeZoom}
               accessibilityLabel={t('profile.cropZoom')}
             />
-          </View>
+          </View> : null}
 
           <View style={styles.stack}>
-            <Button label={t('profile.cropSave')} onPress={() => void save()} disabled={!size || saving} style={styles.action} />
+            {props.shape === 'circle' && (failed || props.sourceFailed) && props.onRetry ? (
+              <Button label={t('common.tryAgain')} onPress={props.onRetry} style={styles.action} />
+            ) : (
+              <Button label={t('profile.cropSave')} onPress={() => void save()} disabled={!size || saving} style={styles.action} />
+            )}
             <Button label={t('common.cancel')} variant="secondary" onPress={() => { generation.current += 1; onCancel(); }} style={styles.action} />
           </View>
         </View>

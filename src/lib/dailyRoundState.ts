@@ -31,6 +31,7 @@ export type DailyRoundStatus = (typeof dailyRoundStatuses)[number];
  */
 export const mustHaveCriteria = [
   'age', 'height', 'build', 'distance', 'practice', 'timeline', 'children', 'sect', 'countries',
+  'has_children', 'occupations', 'languages', 'education', 'dress', 'ethnicities', 'heritage', 'grew_up', 'diet',
 ] as const;
 
 export type NarrowingCriterion = (typeof mustHaveCriteria)[number];

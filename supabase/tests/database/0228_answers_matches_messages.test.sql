@@ -24,8 +24,8 @@ insert into profiles (id, name, first_name, birth_date, gender, city, country, l
 select pg_temp.member(n), 'Private surname', 'First', '1995-01-01', case when n % 2 = 0 then 'female' else 'male' end::gender,
        'London', 'United Kingdom', 51.5, -0.1, repeat('a', 50), array[pg_temp.member(n)::text || '/p.jpg'],
        true, 'never_married', now() from generate_series(1, 20) n;
-insert into private_preferences (user_id, matching_preferences_completed_at, preferred_countries)
-select pg_temp.member(n), now(), array['United Kingdom'] from generate_series(1, 20) n;
+insert into private_preferences (user_id, own_build, matching_preferences_completed_at, preferred_countries)
+select pg_temp.member(n), 'Average', now(), array['United Kingdom'] from generate_series(1, 20) n;
 insert into member_legal_consent_history (user_id, document_type, version, acceptance_context)
 select pg_temp.member(n), d.document_type, d.version, 'onboarding'
 from generate_series(1, 20) n cross join legal_document_registry d where d.is_current;

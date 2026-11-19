@@ -19,10 +19,12 @@ export function usePrivateMedia(source: unknown, bucket: PrivateMediaBucket, sto
   return {
     url: privateMedia ? query.data : source,
     privateMedia,
-    ensure: async () => {
+    loading: privateMedia && query.isFetching,
+    ensure: async (refresh = false) => {
       if (!privateMedia) return source;
       if (!user || !active) return undefined;
-      return client.fetchQuery(signedMediaOptions(user.id, bucket, path!));
+      const options = signedMediaOptions(user.id, bucket, path!);
+      return client.fetchQuery(refresh ? { ...options, staleTime: 0 } : options);
     },
     retry: () => { if (privateMedia && user && active) void query.refetch({ cancelRefetch: false }); },
   };
